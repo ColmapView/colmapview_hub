@@ -1,0 +1,15 @@
+node_modules/
+.wrangler/
+.tmp/
+dist/
+public/assets/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.env
+.env.*
+*.tsbuildinfo
+playwright-report/
+test-results/
+private/
+wordlists/

@@ -1,0 +1,30 @@
+{
+  "name": "colmapview_hub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run build:client && node scripts/dev.mjs",
+    "build:client": "node scripts/build-client.mjs",
+    "types": "wrangler types --strict-vars=false",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:browser": "playwright test --workers=1",
+    "build": "npm run build:client && wrangler deploy --dry-run --outdir .tmp/build",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "deploy": "npm run build:client && wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.58.0",
+    "@types/node": "^24.0.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.2",
+    "vitest": "4.1.11",
+    "wrangler": "4.149.0"
+  }
+}

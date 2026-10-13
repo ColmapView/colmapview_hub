@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+
+const directory = path.resolve(process.argv[2] ?? '');
+assert(process.argv[2], 'Pass the private dictionary directory outside the repository.');
+const repo = path.resolve(import.meta.dirname, '..');
+const relative = path.relative(repo, directory);
+assert(relative.startsWith('..' + path.sep) || relative === '..' || path.isAbsolute(relative), 'Private dictionaries must stay outside the repository.');
+const metadata = JSON.parse(readFileSync(path.join(directory, 'metadata.json'), 'utf8'));
+const load = (name, count) => {
+  const bytes = readFileSync(path.join(directory, `${name}.txt`));
+  const words = bytes.toString('utf8').trim().split(/\r?\n/);
+  assert.equal(words.length, count);
+  assert.equal(new Set(words).size, count);
+  assert(words.every(word => /^[a-z]{3,14}$/.test(word)));
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  assert.equal(metadata.wordlists?.[name]?.count, count);
+  assert.equal(metadata.wordlists?.[name]?.sha256, sha256, `${name} differs from its reviewed dictionary.`);
+  return { words, sha256 };
+};
+const adjectives = load('adjectives', 4096);
+const nouns = load('nouns', 8192);
+const output = path.join(directory, 'wordlists-v1.json');
+const record = { version: 1, adjectives: adjectives.words, nouns: nouns.words, sourceLicense: readFileSync(path.join(directory, 'SOURCE-LICENSE.txt'), 'utf8') };
+assert.equal(metadata.private, true);
+const serialized = JSON.stringify(record);
+assert(Buffer.byteLength(serialized) <= 128 * 1024);
+writeFileSync(output, serialized + '\n', { mode: 0o600 });
+console.log(JSON.stringify({ privateFile: output, adjectives: adjectives.words.length, nouns: nouns.words.length, bytes: Buffer.byteLength(serialized), hashes: { adjectives: adjectives.sha256, nouns: nouns.sha256 } }, null, 2));

@@ -1,0 +1,3 @@
+# Local-only values. Production uses wrangler secret put; never commit real keys.
+HUB_KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
