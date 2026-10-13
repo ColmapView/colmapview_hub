@@ -79,12 +79,11 @@ export async function readOwnership(bucket: R2Bucket, id: string): Promise<Owner
     fingerprint: typeof record.fingerprint === 'string' ? record.fingerprint : '' };
 }
 
-let wordlists: Promise<Wordlists> | null = null;
+let wordlists: Wordlists | null = null;
 
-/** Version-1 lists never change, so each isolate reads them once; a failed read is retried by the next request. */
-export function readWordlists(bucket: R2Bucket): Promise<Wordlists> {
-  wordlists ??= loadWordlists(bucket).catch((error: unknown) => { wordlists = null; throw error; });
-  return wordlists;
+/** Version-1 lists never change, so each isolate keeps them once read. Requests never share a pending read, and a failed read is retried by the next request. */
+export async function readWordlists(bucket: R2Bucket): Promise<Wordlists> {
+  return wordlists ??= await loadWordlists(bucket);
 }
 
 /** Tests replace the lists between cases. */

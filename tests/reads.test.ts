@@ -87,6 +87,23 @@ describe('tolerant reads', () => {
     expect((await create(input({ managementSecret: 'D'.repeat(43) }))).id).toBe('CalmRiver');
   });
 
+  it("never makes a request wait on another request's word-list read", async () => {
+    let reading!: () => void;
+    let release!: () => void;
+    const started = new Promise<void>(resolve => { reading = resolve; });
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    // Stands in for a read whose request was cancelled: it settles only when released.
+    const stalling = { put: env.LINKS.put.bind(env.LINKS),
+      get: async (key: string) => { if (key === WORDLIST_KEY) { reading(); await gate; } return env.LINKS.get(key); } } as unknown as R2Bucket;
+    const first = post(input(), ip, { LINKS: stalling });
+    await started;
+    const second = post(input({ managementSecret: 'B'.repeat(43) }));
+    const outcome = await Promise.race([second.then(() => 'finished'), scheduler.wait(2000).then(() => 'waited')]);
+    release();
+    expect([(await first).status, (await second).status]).toEqual([201, 201]);
+    expect(outcome).toBe('finished');
+  });
+
   it('accepts word lists larger than the request limit', async () => {
     const letters = (value: number) => value.toString(26).split('').map(digit => String.fromCharCode(97 + Number.parseInt(digit, 26))).join('');
     const nouns = Array.from({ length: 8192 }, (_, index) => `noun${letters(index).padStart(10, 'a')}`);
