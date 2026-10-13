@@ -1,6 +1,6 @@
 import { ID_PATTERN } from '../shared/model';
-import type { CardRecord, LinkRecord, Ownership } from '../shared/model';
-import { clientIdentity, deriveLegacyId, deriveShortId, equalHashes, hash } from './crypto';
+import type { CardRecord, LinkMetadata, LinkRecord, Ownership } from '../shared/model';
+import { clientIdentity, deriveLongId, deriveShortId, equalHashes, hash } from './crypto';
 import { cardPage, galleryPage, errorPage, hubLocation, managementPage } from './pages';
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
@@ -52,21 +52,17 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   if (input.listed && env.HUB_LISTINGS_ENABLED !== 'true') return json({ error: 'Listings are turned off.' }, 403);
   const words = await readWordlists(env.LINKS);
   const ownerHash = await hash(input.managementSecret);
-  const metadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
+  const metadata: LinkMetadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
     ...(input.license ? { license: input.license } : {}), ...(input.assets ? { assets: input.assets } : {}) };
   const fingerprint = await hash(metadataFingerprint(metadata));
-  const result = (id: string) => json({ id, url: `${location.base}/${id}`, managementPath: `${location.path}/manage/${id}` }, 201);
-  const replay = (id: string, record: Ownership): Response => {
-    if (!equalHashes(record.fingerprint, fingerprint)) throw new InputError('This draft changed. Create a new link instead.', 409);
-    return result(id);
-  };
-  const legacyId = await deriveLegacyId(env.HUB_KEY, input.managementSecret, words, input.listed);
-  if (!input.listed) {
-    const legacy = await readOwnership(env.LINKS, legacyId);
-    if (legacy && equalHashes(legacy.ownerHash, ownerHash)) return replay(legacyId, legacy);
-  }
-  const ids = input.listed ? [legacyId] : [...new Set(await Promise.all(Array.from({ length: 16 }, (_, attempt) =>
-    deriveShortId(env.HUB_KEY, input.managementSecret, words, attempt))))];
+  const created = (id: string) => json({ id, url: `${location.base}/${id}`, managementPath: `${location.path}/manage/${id}` }, 201);
+  /** The same owner retrying: identical content replays, changed content is refused. */
+  const replay = (id: string, record: Ownership) => equalHashes(record.fingerprint, fingerprint)
+    ? created(id) : json({ error: 'This draft changed. Create a new link instead.' }, 409);
+  // Private and listed links get one long name; public links try sixteen short ones.
+  const long = input.access === 'private' || input.listed;
+  const ids = long ? [await deriveLongId(env.HUB_KEY, input.managementSecret, words, input.listed)]
+    : [...new Set(await Promise.all(Array.from({ length: 16 }, (_, attempt) => deriveShortId(env.HUB_KEY, input.managementSecret, words, attempt))))];
   // Check every candidate before using a vacancy: an earlier collision may have been deleted
   // since this owner's first request. Its existing link must still win on a retry.
   const existing = await Promise.all(ids.map(id => readOwnership(env.LINKS, id)));
@@ -78,15 +74,15 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
     const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(),
       listed: input.listed, ...(input.access === 'private' ? { access: 'private' as const } : {}) };
     const stored = await env.LINKS.put(recordKey(id), JSON.stringify(record), {
-      onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType: 'application/json' },
+      onlyIf: new Headers({ 'If-None-Match': '*' }), httpMetadata: { contentType: 'application/json' },
       ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt,
         ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
     });
-    if (stored) return result(id);
+    if (stored) return created(id);
     const current = await readOwnership(env.LINKS, id);
     if (current && equalHashes(current.ownerHash, ownerHash)) return replay(id, current);
   }
-  throw new Error('Unable to allocate a short name');
+  return json({ error: long ? 'This link name is taken. Create a new link.' : 'No free link name. Create a new link.' }, 409);
 }
 
 async function lookup(request: Request, env: Env, location: HubLocation, id: string, image: boolean, supported: boolean): Promise<Response> {

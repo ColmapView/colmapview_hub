@@ -3,7 +3,7 @@ import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from 'c
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN, isListedId, MAX_REQUEST_BYTES } from '../src/shared/model';
 import type { LinkRecord } from '../src/shared/model';
-import { base64Url, deriveLegacyId, deriveShortId } from '../src/worker/crypto';
+import { base64Url, deriveLongId, deriveShortId } from '../src/worker/crypto';
 import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { preview } from './fixtures/preview';
 import { assets, base, create, guard, input, ip, listings, origin, owner, request, resetState, words } from './helpers';
@@ -137,7 +137,7 @@ describe('unlisted records and social cards', () => {
     const original = await create();
     const blocked = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input({ managementSecret: 'B'.repeat(43), title: 'Replacement' })) });
-    expect(blocked.status).toBe(503);
+    expect(blocked.status).toBe(409);
     expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
     expect(await (await request(`/${original.id}`)).text()).toContain('Demo reconstruction');
     expect(await (await guard()).check()).toBe(0);
@@ -156,16 +156,15 @@ describe('unlisted records and social cards', () => {
     expect((await request(`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } })).status).toBe(204);
   });
 
-  it('keeps legacy suffixed links and their original creation retries and management keys valid', async () => {
+  it('keeps legacy suffixed links readable and deletable, and replays them for private requests', async () => {
     const link = await create();
     const record = await (await env.LINKS.get(recordKey(link.id)))!.json<LinkRecord>();
-    const legacyId = await deriveLegacyId(env.HUB_KEY, owner, words);
+    const legacyId = await deriveLongId(env.HUB_KEY, owner, words);
     await env.LINKS.delete(recordKey(link.id));
     await env.LINKS.put(recordKey(legacyId), JSON.stringify({ ...record, id: legacyId }));
     expect((await request(`/${legacyId}`)).status).toBe(200);
     expect((await request(`/${legacyId}/preview.jpg`, { method: 'HEAD' })).status).toBe(200);
-    expect(await create()).toEqual({ id: legacyId, url: `${base}/${legacyId}`, managementPath: `/hub/manage/${legacyId}` });
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect(await create(input({ access: 'private' }))).toEqual({ id: legacyId, url: `${base}/${legacyId}`, managementPath: `/hub/manage/${legacyId}` });
     expect((await request(`/api/links/${legacyId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } })).status).toBe(204);
   });
 

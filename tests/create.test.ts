@@ -1,8 +1,9 @@
 import { env } from 'cloudflare:workers';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAX_RECORD_BYTES } from '../src/shared/model';
-import { recordKey } from '../src/worker/records';
-import { assets, create, input, ip, listings, origin, post, remove, request, resetState } from './helpers';
+import { deriveLongId } from '../src/worker/crypto';
+import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
+import { assets, create, input, ip, listings, origin, owner, post, remove, request, resetState, words } from './helpers';
 
 beforeEach(async () => {
   await resetState();
@@ -79,5 +80,43 @@ describe('creation contract', () => {
     expect((await request(`/${link.id}`)).status).toBe(200);
     expect((await remove(link.id)).status).toBe(204);
     expect(await recordCount()).toBe(0);
+  });
+});
+
+describe('names follow access', () => {
+  it('gives a private link one long name from the link: derivation, replays it, and refuses changed drafts', async () => {
+    const link = await create(input({ access: 'private' }));
+    expect(link.id).toBe(await deriveLongId(env.HUB_KEY, owner, words, false));
+    expect(link.id).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+-[A-Za-z0-9_-]{16}$/);
+    expect(await create(input({ access: 'private' }))).toEqual(link);
+    expect((await post(input({ access: 'private', title: 'Changed' }))).status).toBe(409);
+  });
+
+  it('no longer probes the legacy long name for public requests, which keeps resolving', async () => {
+    const legacy = await create(input({ access: 'private' }));
+    const record = await stored(legacy.id);
+    delete record.access;
+    await env.LINKS.put(recordKey(legacy.id), JSON.stringify(record));
+    const short = await create(input());
+    expect(short.id).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+$/);
+    expect((await request(`/${legacy.id}`)).status).toBe(200);
+  });
+
+  it('refuses a private request whose long name another owner holds', async () => {
+    const id = await deriveLongId(env.HUB_KEY, owner, words, false);
+    const other = await create(input({ access: 'private', managementSecret: 'B'.repeat(43) }));
+    await env.LINKS.put(recordKey(id), JSON.stringify({ ...await stored(other.id), id }));
+    const response = await post(input({ access: 'private' }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'This link name is taken. Create a new link.' });
+  });
+
+  it('answers 409 when every short name is taken', async () => {
+    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
+    resetWordlistCache();
+    await create(input());
+    const response = await post(input({ managementSecret: 'B'.repeat(43), title: 'Replacement' }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'No free link name. Create a new link.' });
   });
 });

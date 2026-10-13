@@ -34,8 +34,8 @@ export async function deriveShortId(key: string, secret: string, words: Wordlist
   return wordPair(await keyedHash(key, `short-link:${secret}:${attempt}`), words);
 }
 
-/** Preserve existing records and creation retries from before word-pair links. */
-export async function deriveLegacyId(key: string, secret: string, words: Wordlists, listed = false): Promise<string> {
+/** Private and listed links: one name with a 96-bit suffix. Also the scheme of unlisted links made before word pairs, which keep resolving. */
+export async function deriveLongId(key: string, secret: string, words: Wordlists, listed = false): Promise<string> {
   const digest = await keyedHash(key, `${listed ? 'listed-link' : 'link'}:${secret}`);
   return `${wordPair(digest, words)}-${listed ? 'L' : ''}${base64Url(digest.slice(4, 16))}`;
 }
