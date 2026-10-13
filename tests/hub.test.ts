@@ -200,6 +200,7 @@ describe('unlisted records and social cards', () => {
 });
 
 describe('three-distinct-miss guard', () => {
+  // Nine refusals, each held for REFUSAL_FLOOR_MS, come close to the default five-second timeout.
   it('counts repeated page, image and HEAD misses once, then blocks every lookup surface', async () => {
     const link = await create();
     expect((await request('/missing')).status).toBe(404);
@@ -217,7 +218,7 @@ describe('three-distinct-miss guard', () => {
     expect((await request(`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } })).status).toBe(429);
     expect((await request(`/${link.id}`, {}, '192.0.2.2')).status).toBe(200);
     expect(third.headers.get('Cache-Control')).toBe('no-store');
-  });
+  }, 15_000);
 
   it('does not let concurrent misses reset the counter or evade the cooldown', async () => {
     const responses = await Promise.all(Array.from({ length: 12 }, (_, index) => request(`/missing-${index}`)));

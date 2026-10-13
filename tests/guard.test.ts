@@ -1,7 +1,7 @@
 import { runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clientNetwork } from '../src/worker/crypto';
-import { BLOCK_MS, MISS_WINDOW_MS, type GuardState } from '../src/worker/guard';
+import { clientNetwork, hash } from '../src/worker/crypto';
+import { BLOCK_MS, MISS_WINDOW_MS, REFUSAL_FLOOR_MS, type GuardState } from '../src/worker/guard';
 import { create, guard, input, ip, request, resetState } from './helpers';
 
 beforeEach(async () => {
@@ -38,12 +38,18 @@ describe('lookup guard', () => {
     await request('/missing'); await request('/missing/preview.jpg'); await request('/missing', { method: 'HEAD' });
     const first = await storage();
     expect(Object.keys(first.state!.misses)).toHaveLength(1);
+    expect(Object.keys(first.state!.misses)).toEqual([await hash('missing')]);
     const firstExpiry = Object.values(first.state!.misses)[0] + MISS_WINDOW_MS;
     expect(first.alarm).toBe(firstExpiry);
     await request('/another');
     const second = await storage();
     expect(Object.keys(second.state!.misses)).toHaveLength(2);
     expect(second.alarm).toBe(firstExpiry);
+  });
+
+  it('records a miss whose fingerprint matches an inherited property name', async () => {
+    expect(await (await guard()).lookup('constructor')).toBe(0);
+    expect(Object.keys((await storage()).state?.misses ?? {})).toEqual(['constructor']);
   });
 
   it('blocks on the third distinct miss, drops the misses, and wakes at the block end', async () => {
@@ -53,6 +59,16 @@ describe('lookup guard', () => {
     expect(state!.misses).toEqual({});
     expect(state!.blockedUntil! - Date.now()).toBeGreaterThan(BLOCK_MS - 60_000);
     expect(alarm).toBe(state!.blockedUntil);
+  });
+
+  it('holds refusals until the floor, whether or not the guess names a record', async () => {
+    const link = await create(input());
+    await request('/one'); await request('/two'); await request('/three');
+    for (const path of [`/${link.id}`, '/MissingName']) {
+      const before = Date.now();
+      expect((await request(path)).status, path).toBe(429);
+      expect(Date.now() - before, path).toBeGreaterThanOrEqual(REFUSAL_FLOOR_MS);
+    }
   });
 
   it('deletes all storage when the alarm finds nothing pending', async () => {
@@ -81,15 +97,15 @@ describe('lookup guard', () => {
   it('calls the guard once per request', async () => {
     const link = await create(input());
     const guards = countingGuards();
-    const cases: Array<[string, RequestInit]> = [
-      [`/${link.id}`, {}], [`/${link.id}/preview.jpg`, {}], ['/missing', {}],
-      [`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${'B'.repeat(43)}` } }],
-      ['/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ managementSecret: 'C'.repeat(43) })) }],
+    const cases: Array<[string, RequestInit, string[]]> = [
+      [`/${link.id}`, {}, ['lookup']], [`/${link.id}/preview.jpg`, {}, ['lookup']], ['/', {}, ['lookup']], ['/missing', {}, ['lookup-miss']],
+      [`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${'B'.repeat(43)}` } }, ['lookup-miss']],
+      ['/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ managementSecret: 'C'.repeat(43) })) }, ['admitCreation']],
     ];
-    for (const [path, init] of cases) {
+    for (const [path, init, expected] of cases) {
       guards.calls.length = 0;
       await request(path, init, ip, guards.overrides);
-      expect(guards.calls, path).toHaveLength(1);
+      expect(guards.calls, path).toEqual(expected);
     }
   });
 
@@ -112,6 +128,11 @@ describe('lookup guard', () => {
     ['::ffff:c000:201', '192.0.2.1'],
     ['192.0.2.1', '192.0.2.1'],
     ['not-an-address', 'not-an-address'],
+    ['1::2::3', '1::2::3'],
+    ['fe80::1%eth0', 'fe80::1%eth0'],
+    ['::ffff:256.0.0.1', '::ffff:256.0.0.1'],
+    ['64:ff9b::192.0.2.1', '64:ff9b:0:0::/64'],
+    ['1:2:3:4:5:6:7:8:9', '1:2:3:4:5:6:7:8:9'],
   ])('maps %s to the network %s', (address, network) => expect(clientNetwork(address)).toBe(network));
 
   it('counts letter-case variants of one guess once, but not changes inside a long suffix', async () => {

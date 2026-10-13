@@ -6,6 +6,8 @@ export const CREATE_WINDOW_MS = 60 * 60 * 1000;
 export const MAX_MISSES = 3;
 export const VERIFIED_BOT_MAX_MISSES = 30;
 export const MAX_CREATES = 20;
+/** A refusal leaves no sooner than this after the request arrived, so its timing never shows whether a guess read a record. */
+export const REFUSAL_FLOOR_MS = 500;
 const STATE_KEY = 'state';
 
 /** Distinct miss fingerprints with first-seen times, an active block, and the creation window. */
@@ -42,7 +44,7 @@ export class LookupGuard extends DurableObject<Env> {
     const stored = this.ctx.storage.kv.get<GuardState>(STATE_KEY);
     const state = liveState(stored, now);
     if (state.blockedUntil) return secondsUntil(state.blockedUntil, now);
-    if (missFingerprint === null || missFingerprint in state.misses) return 0;
+    if (missFingerprint === null || Object.hasOwn(state.misses, missFingerprint)) return 0;
     const misses = { ...state.misses, [missFingerprint]: now };
     const next: GuardState = Object.keys(misses).length >= maxMisses
       ? { misses: {}, blockedUntil: now + BLOCK_MS, ...(state.creations ? { creations: state.creations } : {}) }

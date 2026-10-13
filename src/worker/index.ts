@@ -5,7 +5,7 @@ import { cardPage, galleryPage, errorPage, hubLocation, managementPage } from '.
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, parseCreateInput, readBoundedJson } from './validation';
-import { MAX_MISSES } from './guard';
+import { MAX_MISSES, REFUSAL_FLOOR_MS } from './guard';
 import { missKey } from './ids';
 export { LookupGuard } from './guard';
 
@@ -152,12 +152,14 @@ async function route(request: Request, env: Env, location: HubLocation): Promise
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const arrived = Date.now();
     let result: Response;
     let location: HubLocation;
     try { location = hubLocation(env); }
     catch { return json({ error: 'The Hub is temporarily unavailable. Please try again.' }, 503); }
     try { result = await route(request, env, location); }
     catch (error) { result = json({ error: error instanceof InputError ? error.message : 'The Hub is temporarily unavailable. Please try again.' }, error instanceof InputError ? error.status : 503); }
+    if (result.status === 429) await scheduler.wait(Math.max(0, arrived + REFUSAL_FLOOR_MS - Date.now()));
     const origin = allowedOrigin(request, location);
     if (origin && new URL(request.url).pathname.startsWith(location.path + '/api/')) {
       result.headers.set('Access-Control-Allow-Origin', origin);
