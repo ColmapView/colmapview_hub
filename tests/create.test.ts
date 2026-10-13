@@ -1,7 +1,8 @@
 import { env } from 'cloudflare:workers';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MAX_RECORD_BYTES } from '../src/shared/model';
 import { recordKey } from '../src/worker/records';
-import { create, input, ip, listings, origin, post, resetState } from './helpers';
+import { assets, create, input, ip, listings, origin, post, remove, request, resetState } from './helpers';
 
 beforeEach(async () => {
   await resetState();
@@ -52,5 +53,31 @@ describe('creation contract', () => {
   it('keeps camera fragments and ordinary source parameters', async () => {
     const link = await create(input({ viewerUrl: `${origin}/?url=${encodeURIComponent('https://data.example/scene.zip?download=1')}#camera=43` }));
     expect((await stored(link.id)).viewerUrl).toContain('#camera=43');
+  });
+
+  it.each([
+    { field: 'viewer', limit: 32768, link: `${origin}/?url=${'€'.repeat(4000)}`, payload: (link: string) => input({ viewerUrl: link }),
+      error: 'Enter a valid ColmapView link.' },
+    { field: 'license', limit: 2048, link: `https://licenses.example/${'€'.repeat(300)}`, payload: (link: string) => input({ license: { url: link } }),
+      error: 'License link is invalid.' },
+  ])('refuses a $field link that passes its limit only once normalized, without saving a record', async ({ limit, link, payload, error }) => {
+    // Normalizing percent-encodes each '€' as nine characters.
+    expect(link.length).toBeLessThanOrEqual(limit);
+    expect(new URL(link).href.length).toBeGreaterThan(limit);
+    const response = await post(payload(link));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error });
+    expect(await recordCount()).toBe(0);
+  });
+
+  it('stores a request at its size limits under the record limit, and keeps it readable and deletable', async () => {
+    const viewerUrl = `${origin}/?url=${'a'.repeat(32000)}`;
+    const license = { id: '€'.repeat(80), name: '€'.repeat(160), url: `https://licenses.example/${'a'.repeat(2048 - 25)}` };
+    expect(license.url).toHaveLength(2048);
+    const link = await create(input({ viewerUrl, title: '€'.repeat(120), description: '€'.repeat(280), license, assets }));
+    expect((await env.LINKS.head(recordKey(link.id)))!.size).toBeLessThan(MAX_RECORD_BYTES);
+    expect((await request(`/${link.id}`)).status).toBe(200);
+    expect((await remove(link.id)).status).toBe(204);
+    expect(await recordCount()).toBe(0);
   });
 });

@@ -57,6 +57,8 @@ function viewerUrl(value: unknown): string {
   if (typeof value !== 'string' || value.length > 32768 || /\s/.test(value) || hasControls(value)) throw new InputError('Enter a valid ColmapView link.');
   let url: URL;
   try { url = new URL(value); } catch { throw new InputError('Enter a valid ColmapView link.'); }
+  // Normalizing percent-encodes characters such as '€' (one becomes nine); bounding the stored form keeps records under MAX_RECORD_BYTES.
+  if (url.href.length > 32768) throw new InputError('Enter a valid ColmapView link.');
   if (!VIEWER_ORIGINS.has(url.origin) || !/^\/(?:latest\/|dev\/|v\d+\.\d+\.\d+\/)?$/.test(url.pathname)) {
     throw new InputError('Use the OpsiClear or GitHub Pages ColmapView viewer.');
   }
@@ -81,6 +83,8 @@ function licenseInfo(value: unknown): LicenseInfo | undefined {
       if (parsed.protocol !== 'https:' || parsed.username || parsed.password) throw new Error();
       url = parsed.href;
     } catch { throw new InputError('Use an HTTPS license link.'); }
+    // The normalized link can be longer than the input, as in viewerUrl().
+    if (url.length > 2048) throw new InputError('License link is invalid.');
   }
   return id || name || url ? { ...(id ? { id } : {}), ...(name ? { name } : {}), ...(url ? { url } : {}) } : undefined;
 }
