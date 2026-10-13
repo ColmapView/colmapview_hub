@@ -1,57 +1,15 @@
-import { env, exports } from 'cloudflare:workers';
-import { evictDurableObject, listDurableObjectIds, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
+import { env } from 'cloudflare:workers';
+import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN, isListedId, MAX_REQUEST_BYTES } from '../src/shared/model';
-import type { AssetSummary, CreateLinkInput, LinkRecord } from '../src/shared/model';
-import { base64Url, clientIdentity, deriveLegacyId, deriveShortId } from '../src/worker/crypto';
+import type { LinkRecord } from '../src/shared/model';
+import { base64Url, deriveLegacyId, deriveShortId } from '../src/worker/crypto';
 import { recordKey, WORDLIST_KEY } from '../src/worker/records';
 import { preview } from './fixtures/preview';
-
-const origin = 'https://colmapview.opsiclear.com';
-const base = `${origin}/hub`;
-const ip = '192.0.2.1';
-const owner = 'A'.repeat(43);
-const words = {
-  adjectives: ['happy', 'funny', 'calm', 'bright', 'brave', 'gentle', 'quiet', 'quick'],
-  nouns: ['tree', 'ball', 'stone', 'cloud', 'river', 'flower', 'mountain', 'forest'],
-};
-const assets: AssetSummary = { format: 'zip', imageFormat: 'jpeg', colmap: { files: 5, cameras: 83, points: 83749 },
-  images: 83, masks: 82, splats: 1, viewerSettings: true, preview: false };
-interface LinkResult { id: string; url: string; managementPath: string }
-
-function input(overrides: Partial<CreateLinkInput> = {}): CreateLinkInput {
-  return { viewerUrl: `${origin}/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43`, title: 'Demo reconstruction', description: 'A small test scene.', thumbnailBase64: preview, managementSecret: owner, listed: false, publicAcknowledged: true, ...overrides };
-}
-
-function request(path: string, init: RequestInit = {}, clientIp = ip): Promise<Response> {
-  const headers = new Headers(init.headers);
-  headers.set('CF-Connecting-IP', clientIp);
-  if (init.method === 'POST' || init.method === 'DELETE' || init.method === 'OPTIONS') {
-    if (!headers.has('Origin')) headers.set('Origin', origin);
-  }
-  return exports.default.fetch(new Request(`${base}${path}`, { ...init, headers }));
-}
-
-async function create(payload = input(), clientIp = ip): Promise<LinkResult> {
-  const response = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }, clientIp);
-  expect(response.status, await response.clone().text()).toBe(201);
-  return response.json<LinkResult>();
-}
-
-async function guard(clientIp = ip) { return env.CLIENT_GUARDS.getByName(await clientIdentity(env.HUB_KEY, clientIp)); }
+import { assets, base, create, guard, input, ip, listings, origin, owner, request, resetState, words } from './helpers';
 
 beforeEach(async () => {
-  // The current plugin's exported Worker bindings retain storage across tests.
-  // Reset only this local fixture's bucket and actors, never production resources.
-  for (const object of (await env.LINKS.list()).objects) await env.LINKS.delete(object.key);
-  for (const id of await listDurableObjectIds(env.CLIENT_GUARDS)) {
-    await runInDurableObject(env.CLIENT_GUARDS.get(id), async (_, state) => {
-      state.storage.sql.exec('DELETE FROM misses');
-      state.storage.sql.exec('UPDATE guard SET blockedUntil = 0, creationStarted = 0, creationCount = 0');
-      await state.storage.deleteAlarm();
-    });
-  }
-  await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, ...words }));
+  await resetState();
   vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
 });
 afterEach(() => { vi.restoreAllMocks(); });
@@ -391,8 +349,8 @@ describe('ownership and request validation', () => {
 describe('opt-in results gallery', () => {
   it('has no submission form and shows only explicit listings', async () => {
     const unlisted = await create();
-    const listed = await create(input({ listed: true, title: 'Public result', managementSecret: 'B'.repeat(43), assets }));
-    const html = await (await request('/')).text();
+    const listed = await create(input({ listed: true, title: 'Public result', managementSecret: 'B'.repeat(43), assets }), ip, listings);
+    const html = await (await request('/', {}, ip, listings)).text();
     expect(html).toContain(listed.id);
     expect(html).toContain('Public result');
     expect(html).toContain('5 COLMAP files · 83 images (JPEG) · 82 masks · 1 Gaussian splat');
@@ -403,28 +361,28 @@ describe('opt-in results gallery', () => {
     expect(await env.LINKS.get(recordKey(listed.id))).not.toBeNull();
     const deleted = await request(`/api/links/${listed.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${'B'.repeat(43)}` } });
     expect(deleted.status).toBe(204);
-    expect(await (await request('/')).text()).not.toContain(listed.id);
+    expect(await (await request('/', {}, ip, listings)).text()).not.toContain(listed.id);
     expect((await request(`/${unlisted.id}`)).status).toBe(200);
   });
 
   it('separates public and unlisted IDs even when an owner reuses a management key', async () => {
     const unlisted = await create();
-    const listed = await create(input({ listed: true }));
+    const listed = await create(input({ listed: true }), ip, listings);
     expect(listed.id).not.toBe(unlisted.id);
     expect(listed.id.replace('-L', '-')).not.toBe(unlisted.id);
     expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(1);
     expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
-    expect(await create(input({ listed: true }))).toEqual(listed);
+    expect(await create(input({ listed: true }), ip, listings)).toEqual(listed);
   });
 
   it('paginates only opted-in records without exposing unlisted keys or cursor data', async () => {
     const privateLink = await create();
     const listed = [];
-    for (let index = 0; index < 13; index++) listed.push(await create(input({ listed: true, title: `Result ${index}`, managementSecret: 'B'.repeat(42) + String.fromCharCode(65 + index) })));
-    const first = await (await request('/')).text();
+    for (let index = 0; index < 13; index++) listed.push(await create(input({ listed: true, title: `Result ${index}`, managementSecret: 'B'.repeat(42) + String.fromCharCode(65 + index) }), ip, listings));
+    const first = await (await request('/', {}, ip, listings)).text();
     const next = first.match(/href="\/hub\/\?cursor=([^"]+)"/);
     expect(next).not.toBeNull();
-    const second = await (await request(`/?cursor=${next![1]}`)).text();
+    const second = await (await request(`/?cursor=${next![1]}`, {}, ip, listings)).text();
     expect(listed.filter(link => first.includes(link.id))).toHaveLength(12);
     expect(listed.filter(link => second.includes(link.id))).toHaveLength(1);
     expect(first + second).not.toContain(privateLink.id);
@@ -437,6 +395,6 @@ describe('opt-in results gallery', () => {
     delete record.listed;
     await env.LINKS.put(recordKey(link.id), JSON.stringify(record));
     expect((await request(`/${link.id}`)).status).toBe(200);
-    expect(await (await request('/')).text()).not.toContain(link.id);
+    expect(await (await request('/', {}, ip, listings)).text()).not.toContain(link.id);
   });
 });

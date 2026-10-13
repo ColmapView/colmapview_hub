@@ -3,14 +3,14 @@ import { randomBytes } from 'node:crypto';
 import { preview } from '../tests/fixtures/preview';
 
 for (const width of [1280, 360]) {
-  test(`shows, plays, and deletes a ${width === 360 ? 'listed' : 'unlisted'} result at ${width}px without a submission form`, async ({ page }, testInfo) => {
+  test(`shows, plays, and deletes a result at ${width}px without a submission form`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 900 });
     const owner = randomBytes(32).toString('base64url');
     const origin = 'http://localhost:5201';
     const created = await page.request.post('/hub/api/links', { headers: { Origin: origin }, data: {
       viewerUrl: 'https://colmapview.opsiclear.com/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43',
       title: 'Example reconstruction', description: 'Public metadata, private source permissions.',
-      thumbnailBase64: preview, managementSecret: owner, publicAcknowledged: true, listed: width === 360,
+      thumbnailBase64: preview, managementSecret: owner, publicAcknowledged: true, listed: false,
       assets: { format: 'zip', imageFormat: 'jpeg', colmap: { files: 5, cameras: 83, points: 83749 },
         images: 83, masks: 82, splats: 1, viewerSettings: true, preview: false },
     } });
@@ -22,8 +22,7 @@ for (const width of [1280, 360]) {
       await page.goto('/hub/');
       await expect(page.getByRole('heading', { name: 'Shared results' })).toBeVisible();
       await expect(page.locator('input,textarea,form')).toHaveCount(0);
-      await expect(page.locator('a.gallery-card')).toHaveCount(width === 360 ? 1 : 0);
-      if (width === 360) await expect(page.locator('a.gallery-card .asset-summary')).toContainText('83 images (JPEG)');
+      await expect(page.locator('a.gallery-card')).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.screenshot({ path: testInfo.outputPath(`gallery-${width}.png`) });
       await page.goto(link.url);

@@ -4,6 +4,7 @@ export const MAX_PREVIEW_BYTES = 64 * 1024;
 export const MAX_REQUEST_BYTES = 128 * 1024;
 export const ID_PATTERN = /^[A-Z][a-z]{2,13}[A-Z][a-z]{2,13}(?:-(?:L)?[A-Za-z0-9_-]{16})?$/;
 export const isListedId = (id: string) => /-L[A-Za-z0-9_-]{16}$/.test(id);
+export type LinkAccess = 'public' | 'private';
 
 export interface LicenseInfo {
   id?: string;
@@ -34,6 +35,7 @@ export interface LinkMetadata {
 export interface CreateLinkInput extends LinkMetadata {
   managementSecret: string;
   listed: boolean;
+  access: LinkAccess;
   publicAcknowledged: true;
 }
 
@@ -44,6 +46,8 @@ export interface LinkRecord extends LinkMetadata {
   fingerprint: string;
   createdAt: string;
   listed: boolean;
+  /** Present only on private links; a missing value means public. */
+  access?: 'private';
 }
 
 export interface ListedLink { id: string; title: string; createdAt: string; assets?: AssetSummary }

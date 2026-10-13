@@ -49,6 +49,7 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   const quota = await guard.admitCreation();
   if (quota) return blocked(quota);
   const input = parseCreateInput(await readBoundedJson(request));
+  if (input.listed && env.HUB_LISTINGS_ENABLED !== 'true') return json({ error: 'Listings are turned off.' }, 403);
   const words = await readWordlists(env.LINKS);
   const ownerHash = await hash(input.managementSecret);
   const metadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
@@ -75,7 +76,8 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   if (finalDelay) return blocked(finalDelay);
   for (const [index, id] of ids.entries()) {
     if (existing[index]) continue;
-    const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(), listed: input.listed };
+    const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(),
+      listed: input.listed, ...(input.access === 'private' ? { access: 'private' as const } : {}) };
     const stored = await env.LINKS.put(recordKey(id), JSON.stringify(record), {
       onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType: 'application/json' },
       ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt,

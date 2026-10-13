@@ -38,10 +38,17 @@ function text(value: unknown, name: string, max: number, optional = false): stri
 }
 
 const VIEWER_ORIGINS = new Set(['https://colmapview.opsiclear.com', 'https://colmapview.github.io']);
-const CREDENTIAL_PARAMS = new Set(['access_token', 'refresh_token', 'secret_access_key', 'aws_secret_access_key', 'secretkey']);
+const CREDENTIAL_PARAMS = new Set(['access_token', 'refresh_token', 'secret_access_key', 'aws_secret_access_key', 'secretkey',
+  'x-amz-signature', 'x-amz-credential', 'x-amz-security-token', 'x-goog-signature', 'x-goog-credential',
+  'sig', 'signature', 'token', 'awsaccesskeyid']);
+
+/** Query and fragment parameter names: a presigned link can carry credentials in either. */
+function parameterNames(url: URL): string[] {
+  return [...url.searchParams.keys(), ...new URLSearchParams(url.hash.slice(1)).keys()];
+}
 
 function rejectCredentials(url: URL): void {
-  if (url.username || url.password || [...url.searchParams.keys()].some(key => CREDENTIAL_PARAMS.has(key.toLowerCase()))) {
+  if (url.username || url.password || parameterNames(url).some(key => CREDENTIAL_PARAMS.has(key.toLowerCase()))) {
     throw new InputError('Use a viewer link without access credentials.');
   }
 }
@@ -126,14 +133,18 @@ export function parseMetadata(value: Record<string, unknown>): LinkMetadata {
   };
 }
 
+const CREATE_KEYS = new Set(['viewerUrl', 'title', 'description', 'thumbnailBase64', 'license', 'assets', 'managementSecret', 'listed',
+  'access', 'publicAcknowledged']);
+
 export function parseCreateInput(value: unknown): CreateLinkInput {
-  if (!isObject(value) || Object.keys(value).some(key => !['viewerUrl', 'title', 'description', 'thumbnailBase64', 'license', 'assets', 'managementSecret', 'listed', 'publicAcknowledged'].includes(key))) {
-    throw new InputError('Invalid link request.');
-  }
+  if (!isObject(value) || Object.keys(value).some(key => !CREATE_KEYS.has(key))) throw new InputError('Invalid link request.');
   if (value.publicAcknowledged !== true) throw new InputError('Confirm that this link and preview will be accessible to anyone with the link.');
   if (typeof value.managementSecret !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(value.managementSecret)) throw new InputError('Management key is invalid.');
+  if (value.access !== undefined && value.access !== 'public' && value.access !== 'private') throw new InputError('Access must be public or private.');
   if (value.listed !== undefined && typeof value.listed !== 'boolean') throw new InputError('Listing choice is invalid.');
-  return { ...parseMetadata(value), managementSecret: value.managementSecret, listed: value.listed === true, publicAcknowledged: true };
+  const access = value.access === 'private' ? 'private' : 'public';
+  if (value.listed === true && access === 'private') throw new InputError('Private links cannot be listed.');
+  return { ...parseMetadata(value), managementSecret: value.managementSecret, listed: value.listed === true, access, publicAcknowledged: true };
 }
 
 export function parseStoredRecord(value: unknown, id: string): LinkRecord {
