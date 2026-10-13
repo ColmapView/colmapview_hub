@@ -1,6 +1,6 @@
 import { ID_PATTERN } from '../shared/model';
 import type { LinkRecord } from '../shared/model';
-import { clientIdentity, deriveId, equalHashes, hash } from './crypto';
+import { clientIdentity, deriveLegacyId, deriveShortId, equalHashes, hash } from './crypto';
 import { cardPage, galleryPage, errorPage, hubLocation, managementPage } from './pages';
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readRecord, readWordlists, recordKey } from './records';
@@ -50,33 +50,42 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   if (quota) return blocked(quota);
   const input = parseCreateInput(await readBoundedJson(request));
   const words = await readWordlists(env.LINKS);
-  const id = await deriveId(env.HUB_KEY, input.managementSecret, words, input.listed);
   const ownerHash = await hash(input.managementSecret);
   const metadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
     ...(input.license ? { license: input.license } : {}), ...(input.assets ? { assets: input.assets } : {}) };
   const fingerprint = await hash(metadataFingerprint(metadata));
-  const result = () => json({ id, url: `${location.base}/${id}`, managementPath: `${location.path}/manage/${id}` }, 201);
+  const result = (id: string) => json({ id, url: `${location.base}/${id}`, managementPath: `${location.path}/manage/${id}` }, 201);
   const replay = (record: LinkRecord): Response => {
     if (!equalHashes(record.ownerHash, ownerHash)) throw new Error('Unable to save link');
     if (!equalHashes(record.fingerprint, fingerprint)) throw new InputError('This draft changed. Create a new link instead.', 409);
-    return result();
+    return result(record.id);
   };
-  const existing = await readRecord(env.LINKS, id);
-  if (existing) return replay(existing);
+  const legacyId = await deriveLegacyId(env.HUB_KEY, input.managementSecret, words, input.listed);
+  if (!input.listed) {
+    const legacy = await readRecord(env.LINKS, legacyId);
+    if (legacy && equalHashes(legacy.ownerHash, ownerHash)) return replay(legacy);
+  }
+  const ids = input.listed ? [legacyId] : [...new Set(await Promise.all(Array.from({ length: 16 }, (_, attempt) =>
+    deriveShortId(env.HUB_KEY, input.managementSecret, words, attempt))))];
+  // Check every candidate before using a vacancy: an earlier collision may have been deleted
+  // since this owner's first request. Its existing link must still win on a retry.
+  const existing = await Promise.all(ids.map(id => readRecord(env.LINKS, id)));
+  for (const record of existing) if (record && equalHashes(record.ownerHash, ownerHash)) return replay(record);
   const finalDelay = await guard.check();
   if (finalDelay) return blocked(finalDelay);
-  const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(), listed: input.listed };
-  const stored = await env.LINKS.put(recordKey(id), JSON.stringify(record), {
-    onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType: 'application/json' },
-    ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt,
-      ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
-  });
-  if (!stored) {
+  for (const [index, id] of ids.entries()) {
+    if (existing[index]) continue;
+    const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(), listed: input.listed };
+    const stored = await env.LINKS.put(recordKey(id), JSON.stringify(record), {
+      onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType: 'application/json' },
+      ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt,
+        ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
+    });
+    if (stored) return result(id);
     const current = await readRecord(env.LINKS, id);
-    if (!current) throw new Error('Unable to save link');
-    return replay(current);
+    if (current && equalHashes(current.ownerHash, ownerHash)) return replay(current);
   }
-  return result();
+  throw new Error('Unable to allocate a short name');
 }
 
 async function lookup(request: Request, env: Env, location: HubLocation, id: string, image: boolean, supported: boolean): Promise<Response> {

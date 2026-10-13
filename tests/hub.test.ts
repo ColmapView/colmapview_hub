@@ -1,9 +1,9 @@
 import { env, exports } from 'cloudflare:workers';
 import { evictDurableObject, listDurableObjectIds, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ID_PATTERN, MAX_REQUEST_BYTES } from '../src/shared/model';
-import type { AssetSummary, CreateLinkInput } from '../src/shared/model';
-import { clientIdentity } from '../src/worker/crypto';
+import { ID_PATTERN, isListedId, MAX_REQUEST_BYTES } from '../src/shared/model';
+import type { AssetSummary, CreateLinkInput, LinkRecord } from '../src/shared/model';
+import { base64Url, clientIdentity, deriveLegacyId, deriveShortId } from '../src/worker/crypto';
 import { recordKey, WORDLIST_KEY } from '../src/worker/records';
 import { preview } from './fixtures/preview';
 
@@ -11,6 +11,10 @@ const origin = 'https://colmapview.opsiclear.com';
 const base = `${origin}/hub`;
 const ip = '192.0.2.1';
 const owner = 'A'.repeat(43);
+const words = {
+  adjectives: ['happy', 'funny', 'calm', 'bright', 'brave', 'gentle', 'quiet', 'quick'],
+  nouns: ['tree', 'ball', 'stone', 'cloud', 'river', 'flower', 'mountain', 'forest'],
+};
 const assets: AssetSummary = { format: 'zip', imageFormat: 'jpeg', colmap: { files: 5, cameras: 83, points: 83749 },
   images: 83, masks: 82, splats: 1, viewerSettings: true, preview: false };
 interface LinkResult { id: string; url: string; managementPath: string }
@@ -47,7 +51,7 @@ beforeEach(async () => {
       await state.storage.deleteAlarm();
     });
   }
-  await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy', 'funny'], nouns: ['tree', 'ball'] }));
+  await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, ...words }));
   vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
 });
 afterEach(() => { vi.restoreAllMocks(); });
@@ -99,6 +103,7 @@ describe('unlisted records and social cards', () => {
     const payload = input({ license: { id: 'cc-by-4.0', name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } });
     const link = await create(payload);
     expect(ID_PATTERN.test(link.id)).toBe(true);
+    expect(link.id).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+$/);
     expect(link.url).toBe(`${base}/${link.id}`);
     const stored = await env.LINKS.get(recordKey(link.id));
     const raw = await stored!.text();
@@ -139,6 +144,68 @@ describe('unlisted records and social cards', () => {
     const other = await create(input({ managementSecret: 'B'.repeat(43) }));
     expect(other.id).not.toBe(one.id);
     expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(2);
+  });
+
+  it('allocates colliding word pairs atomically and replays the assigned name after the first vacancy returns', async () => {
+    const small = { adjectives: ['happy', 'funny'], nouns: ['tree', 'ball'] };
+    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, ...small }));
+    const firstChoice = await deriveShortId(env.HUB_KEY, owner, small, 0);
+    let otherOwner = '';
+    for (let index = 1; index < 256; index++) {
+      const secret = base64Url(new Uint8Array(32).fill(index));
+      if (await deriveShortId(env.HUB_KEY, secret, small, 0) === firstChoice) { otherOwner = secret; break; }
+    }
+    expect(otherOwner).not.toBe('');
+    const payloads = [input(), input({ managementSecret: otherOwner, title: 'Other result' })];
+    const links = await Promise.all(payloads.map(payload => create(payload)));
+    expect(new Set(links.map(link => link.id)).size).toBe(2);
+    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(2);
+    for (const [index, link] of links.entries()) expect(await (await request(`/${link.id}`)).text()).toContain(payloads[index].title);
+    const winner = links.findIndex(link => link.id === firstChoice);
+    expect(winner).toBeGreaterThanOrEqual(0);
+    await request(`/api/links/${links[winner].id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${payloads[winner].managementSecret}` } });
+    const remaining = 1 - winner;
+    expect(await create(payloads[remaining])).toEqual(links[remaining]);
+    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    const changed = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payloads[remaining], title: 'Changed after collision' }) });
+    expect(changed.status).toBe(409);
+  });
+
+  it('fails bounded allocation without replacing a link when all candidate names are occupied', async () => {
+    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
+    const original = await create();
+    const blocked = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input({ managementSecret: 'B'.repeat(43), title: 'Replacement' })) });
+    expect(blocked.status).toBe(503);
+    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect(await (await request(`/${original.id}`)).text()).toContain('Demo reconstruction');
+    expect(await (await guard()).check()).toBe(0);
+  });
+
+  it('treats seventeen-letter word-pair names as unlisted across reading, previews and deletion', async () => {
+    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['bright'], nouns: ['watermelons'] }));
+    const link = await create();
+    expect(link.id).toBe('BrightWatermelons');
+    expect(link.id).toHaveLength(17);
+    expect(isListedId(link.id)).toBe(false);
+    expect(await env.LINKS.get(`links/${link.id}.json`)).not.toBeNull();
+    expect((await request(`/${link.id}`)).status).toBe(200);
+    expect((await request(`/${link.id}/preview.jpg`, { method: 'HEAD' })).status).toBe(200);
+    expect((await request(`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } })).status).toBe(204);
+  });
+
+  it('keeps legacy suffixed links and their original creation retries and management keys valid', async () => {
+    const link = await create();
+    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<LinkRecord>();
+    const legacyId = await deriveLegacyId(env.HUB_KEY, owner, words);
+    await env.LINKS.delete(recordKey(link.id));
+    await env.LINKS.put(recordKey(legacyId), JSON.stringify({ ...record, id: legacyId }));
+    expect((await request(`/${legacyId}`)).status).toBe(200);
+    expect((await request(`/${legacyId}/preview.jpg`, { method: 'HEAD' })).status).toBe(200);
+    expect(await create()).toEqual({ id: legacyId, url: `${base}/${legacyId}`, managementPath: `/hub/manage/${legacyId}` });
+    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect((await request(`/api/links/${legacyId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } })).status).toBe(204);
   });
 
   it('does not overwrite a record when concurrent drafts reuse an ownership key', async () => {

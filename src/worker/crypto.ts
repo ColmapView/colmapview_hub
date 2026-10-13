@@ -21,13 +21,23 @@ export async function clientIdentity(key: string, ip: string): Promise<string> {
   return hex(await keyedHash(key, `client:${ip}`));
 }
 
-export async function deriveId(key: string, secret: string, words: { adjectives: string[]; nouns: string[] }, listed = false): Promise<string> {
-  const digest = await keyedHash(key, `${listed ? 'listed-link' : 'link'}:${secret}`);
+interface Wordlists { adjectives: string[]; nouns: string[] }
+
+function wordPair(digest: Uint8Array, words: Wordlists): string {
   const adjective = words.adjectives[((digest[0] << 8) | digest[1]) % words.adjectives.length];
   const noun = words.nouns[((digest[2] << 8) | digest[3]) % words.nouns.length];
   const titleCase = (word: string) => word[0].toUpperCase() + word.slice(1);
-  // The suffix has 96 independent bits even if every dictionary word becomes known.
-  return `${titleCase(adjective)}${titleCase(noun)}-${listed ? 'L' : ''}${base64Url(digest.slice(4, 16))}`;
+  return `${titleCase(adjective)}${titleCase(noun)}`;
+}
+
+export async function deriveShortId(key: string, secret: string, words: Wordlists, attempt: number): Promise<string> {
+  return wordPair(await keyedHash(key, `short-link:${secret}:${attempt}`), words);
+}
+
+/** Preserve existing records and creation retries from before word-pair links. */
+export async function deriveLegacyId(key: string, secret: string, words: Wordlists, listed = false): Promise<string> {
+  const digest = await keyedHash(key, `${listed ? 'listed-link' : 'link'}:${secret}`);
+  return `${wordPair(digest, words)}-${listed ? 'L' : ''}${base64Url(digest.slice(4, 16))}`;
 }
 
 export function equalHashes(left: string, right: string): boolean {

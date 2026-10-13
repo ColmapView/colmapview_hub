@@ -16,6 +16,7 @@ for (const width of [1280, 360]) {
     } });
     expect(created.status()).toBe(201);
     const link = await created.json();
+    if (width === 1280) expect(link.id).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+$/);
     let deleted = false;
     try {
       await page.goto('/hub/');

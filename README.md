@@ -1,6 +1,6 @@
 # ColmapView Hub
 
-A small companion to [ColmapView](https://github.com/ColmapView/Colmapview.github.io): save a viewer link, its metadata, and a thumbnail after a public upload. ColmapView automatically shortens public Hugging Face and shared Drive links, and checks bucket uploads without credentials before shortening them. Private uploads keep their original viewer link and send nothing to the Hub. Select **List on Hub** separately to show a public result in the gallery; listing defaults to off. There is no standalone submission or dataset upload form on the Hub.
+A small companion to [ColmapView](https://github.com/ColmapView/Colmapview.github.io): save a viewer link, its metadata, and a thumbnail after a public upload. ColmapView automatically shortens public Hugging Face and shared Drive links, and checks bucket uploads without credentials before shortening them. Private uploads keep their original viewer link and send nothing to the Hub. New viewer uploads create unlisted links; no gallery listing control is exposed yet. There is no standalone submission or dataset upload form on the Hub.
 
 The card page provides an X/Twitter large-image preview and a Play 3D button that loads the existing viewer only on a click. The homepage shows only creators' explicit listings.
 
@@ -18,9 +18,11 @@ Links are **unlisted by default, not authenticated**. Anyone with a link can rea
 
 ## IDs and ownership
 
-IDs combine an adjective and noun with a 96-bit suffix, independently of the source URL or title. Listed links use an extra `L` before the suffix and a separate HMAC domain. They reside in the `listed/` R2 namespace; unlisted links remain in `links/`. The gallery scans only `listed/`, reading bounded titles from object metadata. A listing and its complete record share one conditional R2 write, so there is no separate index to become stale. IDs from the two namespaces cannot be derived from one another.
+New unlisted IDs use only an adjective and noun, such as `HappyTree`, independently of the source URL or title. Sixteen deterministic HMAC candidates handle occupied names using conditional R2 writes, without replacing another owner's record or adding an index. Every candidate is checked for an existing owned record before a vacancy is used, so retries keep the same assigned name even after an earlier collision is deleted. Allocation is bounded and fails without overwriting when all candidates are occupied.
 
-The real 4,096-adjective and 8,192-noun dictionaries are private server configuration in `internal/wordlists-v1.json`, never Git or client assets. Private word lists alone are not an enumeration defense.
+The real 4,096-adjective and 8,192-noun dictionaries provide **33,554,432 combinations**. They are private server configuration in `internal/wordlists-v1.json`, never Git or client assets. Short names have about 25 bits of space; private word lists alone are not an enumeration defense. The lookup cooldown remains essential, and links do not grant authenticated privacy.
+
+Existing links with 96-bit suffixes retain their URLs, creation retries, and management keys. Listed records continue to use their existing separate HMAC domain and `-L` suffix in the `listed/` namespace. The gallery scans only `listed/`; unlisted links remain in `links/`. Each record and its optional listing share a single conditional R2 write. Existing IDs are not renamed or moved.
 
 A browser generates a 256-bit management key before submitting. Its hash is stored; the raw key stays in the browser and in the private management link's URL fragment. Save that link to delete the record later. Creation retries with the same key and content are idempotent; concurrent writes cannot replace an existing record. Keep `HUB_KEY` and the version-1 dictionary configuration stable for deterministic creation retries.
 
