@@ -3,20 +3,55 @@
   "name": "colmapview-hub",
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-10-12",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "workers_dev": false,
   "routes": [
-    { "pattern": "colmapview.opsiclear.com/hub", "zone_name": "opsiclear.com" },
-    { "pattern": "colmapview.opsiclear.com/hub/*", "zone_name": "opsiclear.com" }
+    {
+      "pattern": "colmapview.opsiclear.com/hub",
+      "zone_name": "opsiclear.com"
+    },
+    {
+      "pattern": "colmapview.opsiclear.com/hub/*",
+      "zone_name": "opsiclear.com"
+    }
   ],
-  "assets": { "directory": "public", "binding": "ASSETS", "run_worker_first": true },
-  "r2_buckets": [{ "binding": "LINKS", "bucket_name": "colmapview-hub" }],
-  "durable_objects": { "bindings": [{ "name": "CLIENT_GUARDS", "class_name": "ClientGuard" }] },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ClientGuard"] }],
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "r2_buckets": [
+    {
+      "binding": "LINKS",
+      "bucket_name": "colmapview-hub"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CLIENT_GUARDS",
+        "class_name": "ClientGuard"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "ClientGuard"
+      ]
+    }
+  ],
   "vars": {
     "HUB_ORIGIN": "https://colmapview.opsiclear.com",
     "HUB_PATH": "/hub",
-    "TURNSTILE_SITE_KEY": ""
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFVJBeh9HDszZpRF"
   },
-  "observability": { "enabled": true, "head_sampling_rate": 0.1 }
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1
+  },
+  "account_id": "c9cc8c86e445c959591ac1dd26ee0b17"
 }
