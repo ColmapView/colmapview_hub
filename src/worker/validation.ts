@@ -1,5 +1,5 @@
-import { MAX_PREVIEW_BYTES, MAX_REQUEST_BYTES, PREVIEW_HEIGHT, PREVIEW_WIDTH, ID_PATTERN, isListedId } from '../shared/model';
-import type { AssetSummary, CreateLinkInput, LicenseInfo, LinkMetadata, LinkRecord } from '../shared/model';
+import { MAX_PREVIEW_BYTES, MAX_REQUEST_BYTES, PREVIEW_HEIGHT, PREVIEW_WIDTH } from '../shared/model';
+import type { AssetSummary, CreateLinkInput, LicenseInfo, LinkMetadata } from '../shared/model';
 
 export class InputError extends Error {
   constructor(message: string, readonly status = 400) { super(message); }
@@ -85,13 +85,24 @@ function licenseInfo(value: unknown): LicenseInfo | undefined {
   return id || name || url ? { ...(id ? { id } : {}), ...(name ? { name } : {}), ...(url ? { url } : {}) } : undefined;
 }
 
+/** Bytes of a binary string, in one plain pass. */
+function binaryBytes(binary: string): Uint8Array {
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
+export function base64Bytes(value: string): Uint8Array {
+  return binaryBytes(atob(value));
+}
+
 export function decodePreview(value: unknown): Uint8Array {
   if (typeof value !== 'string' || value.length > Math.ceil(MAX_PREVIEW_BYTES / 3) * 4 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) {
     throw new InputError('Preview must be a JPEG thumbnail under 64 KiB.');
   }
   const binary = atob(value);
   if (binary.length < 20 || binary.length > MAX_PREVIEW_BYTES || btoa(binary) !== value) throw new InputError('Preview is invalid.');
-  const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+  const bytes = binaryBytes(binary);
   if (bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes.at(-2) !== 0xff || bytes.at(-1) !== 0xd9) throw new InputError('Preview must be a JPEG.');
   let offset = 2;
   let dimensionsFound = false;
@@ -145,16 +156,6 @@ export function parseCreateInput(value: unknown): CreateLinkInput {
   const access = value.access === 'private' ? 'private' : 'public';
   if (value.listed === true && access === 'private') throw new InputError('Private links cannot be listed.');
   return { ...parseMetadata(value), managementSecret: value.managementSecret, listed: value.listed === true, access, publicAcknowledged: true };
-}
-
-export function parseStoredRecord(value: unknown, id: string): LinkRecord {
-  if (!isObject(value) || value.schemaVersion !== 1 || value.id !== id || !ID_PATTERN.test(id)
-    || typeof value.ownerHash !== 'string' || !/^[a-f0-9]{64}$/.test(value.ownerHash)
-    || typeof value.fingerprint !== 'string' || !/^[a-f0-9]{64}$/.test(value.fingerprint)
-    || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt))) throw new Error('Invalid stored record');
-  const listed = value.listed === true;
-  if (listed !== isListedId(id)) throw new Error('Stored visibility does not match its namespace');
-  return { ...parseMetadata(value), schemaVersion: 1, id, ownerHash: value.ownerHash, fingerprint: value.fingerprint, createdAt: value.createdAt, listed };
 }
 
 export async function readBoundedJson(request: Request): Promise<unknown> {

@@ -4,7 +4,7 @@ import { expect } from 'vitest';
 import worker from '../src/worker/index';
 import type { AssetSummary, CreateLinkInput, LinkAccess } from '../src/shared/model';
 import { clientIdentity } from '../src/worker/crypto';
-import { WORDLIST_KEY } from '../src/worker/records';
+import { resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { preview } from './fixtures/preview';
 
 export const origin = 'https://colmapview.opsiclear.com';
@@ -70,4 +70,5 @@ export async function resetState(): Promise<void> {
     });
   }
   await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, ...words }));
+  resetWordlistCache();
 }

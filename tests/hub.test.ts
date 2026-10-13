@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN, isListedId, MAX_REQUEST_BYTES } from '../src/shared/model';
 import type { LinkRecord } from '../src/shared/model';
 import { base64Url, deriveLegacyId, deriveShortId } from '../src/worker/crypto';
-import { recordKey, WORDLIST_KEY } from '../src/worker/records';
+import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { preview } from './fixtures/preview';
 import { assets, base, create, guard, input, ip, listings, origin, owner, request, resetState, words } from './helpers';
 
@@ -107,6 +107,7 @@ describe('unlisted records and social cards', () => {
   it('allocates colliding word pairs atomically and replays the assigned name after the first vacancy returns', async () => {
     const small = { adjectives: ['happy', 'funny'], nouns: ['tree', 'ball'] };
     await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, ...small }));
+    resetWordlistCache();
     const firstChoice = await deriveShortId(env.HUB_KEY, owner, small, 0);
     let otherOwner = '';
     for (let index = 1; index < 256; index++) {
@@ -132,6 +133,7 @@ describe('unlisted records and social cards', () => {
 
   it('fails bounded allocation without replacing a link when all candidate names are occupied', async () => {
     await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
+    resetWordlistCache();
     const original = await create();
     const blocked = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input({ managementSecret: 'B'.repeat(43), title: 'Replacement' })) });
@@ -143,6 +145,7 @@ describe('unlisted records and social cards', () => {
 
   it('treats seventeen-letter word-pair names as unlisted across reading, previews and deletion', async () => {
     await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['bright'], nouns: ['watermelons'] }));
+    resetWordlistCache();
     const link = await create();
     expect(link.id).toBe('BrightWatermelons');
     expect(link.id).toHaveLength(17);

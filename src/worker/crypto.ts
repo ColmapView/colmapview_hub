@@ -21,7 +21,7 @@ export async function clientIdentity(key: string, ip: string): Promise<string> {
   return hex(await keyedHash(key, `client:${ip}`));
 }
 
-interface Wordlists { adjectives: string[]; nouns: string[] }
+export interface Wordlists { adjectives: string[]; nouns: string[] }
 
 function wordPair(digest: Uint8Array, words: Wordlists): string {
   const adjective = words.adjectives[((digest[0] << 8) | digest[1]) % words.adjectives.length];

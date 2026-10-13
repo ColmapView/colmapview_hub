@@ -1,16 +1,16 @@
 import { ID_PATTERN } from '../shared/model';
-import type { LinkRecord } from '../shared/model';
+import type { CardRecord, LinkRecord, Ownership } from '../shared/model';
 import { clientIdentity, deriveLegacyId, deriveShortId, equalHashes, hash } from './crypto';
 import { cardPage, galleryPage, errorPage, hubLocation, managementPage } from './pages';
 import type { HubLocation } from './pages';
-import { listPublicRecords, metadataFingerprint, readRecord, readWordlists, recordKey } from './records';
-import { decodePreview, InputError, parseCreateInput, readBoundedJson } from './validation';
+import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
+import { base64Bytes, InputError, parseCreateInput, readBoundedJson } from './validation';
 export { ClientGuard } from './clientGuard';
 
 function response(body: BodyInit | null, status = 200, type = 'text/html; charset=utf-8', extra: HeadersInit = {}): Response {
   const headers = new Headers(extra);
   headers.set('Content-Type', type);
-  headers.set('Cache-Control', 'no-store');
+  if (!headers.has('Cache-Control')) headers.set('Cache-Control', 'no-store');
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   headers.set('Referrer-Policy', 'no-referrer');
@@ -56,22 +56,21 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
     ...(input.license ? { license: input.license } : {}), ...(input.assets ? { assets: input.assets } : {}) };
   const fingerprint = await hash(metadataFingerprint(metadata));
   const result = (id: string) => json({ id, url: `${location.base}/${id}`, managementPath: `${location.path}/manage/${id}` }, 201);
-  const replay = (record: LinkRecord): Response => {
-    if (!equalHashes(record.ownerHash, ownerHash)) throw new Error('Unable to save link');
+  const replay = (id: string, record: Ownership): Response => {
     if (!equalHashes(record.fingerprint, fingerprint)) throw new InputError('This draft changed. Create a new link instead.', 409);
-    return result(record.id);
+    return result(id);
   };
   const legacyId = await deriveLegacyId(env.HUB_KEY, input.managementSecret, words, input.listed);
   if (!input.listed) {
-    const legacy = await readRecord(env.LINKS, legacyId);
-    if (legacy && equalHashes(legacy.ownerHash, ownerHash)) return replay(legacy);
+    const legacy = await readOwnership(env.LINKS, legacyId);
+    if (legacy && equalHashes(legacy.ownerHash, ownerHash)) return replay(legacyId, legacy);
   }
   const ids = input.listed ? [legacyId] : [...new Set(await Promise.all(Array.from({ length: 16 }, (_, attempt) =>
     deriveShortId(env.HUB_KEY, input.managementSecret, words, attempt))))];
   // Check every candidate before using a vacancy: an earlier collision may have been deleted
   // since this owner's first request. Its existing link must still win on a retry.
-  const existing = await Promise.all(ids.map(id => readRecord(env.LINKS, id)));
-  for (const record of existing) if (record && equalHashes(record.ownerHash, ownerHash)) return replay(record);
+  const existing = await Promise.all(ids.map(id => readOwnership(env.LINKS, id)));
+  for (const [index, record] of existing.entries()) if (record && equalHashes(record.ownerHash, ownerHash)) return replay(ids[index], record);
   const finalDelay = await guard.check();
   if (finalDelay) return blocked(finalDelay);
   for (const [index, id] of ids.entries()) {
@@ -84,8 +83,8 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
         ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
     });
     if (stored) return result(id);
-    const current = await readRecord(env.LINKS, id);
-    if (current && equalHashes(current.ownerHash, ownerHash)) return replay(current);
+    const current = await readOwnership(env.LINKS, id);
+    if (current && equalHashes(current.ownerHash, ownerHash)) return replay(id, current);
   }
   throw new Error('Unable to allocate a short name');
 }
@@ -94,14 +93,15 @@ async function lookup(request: Request, env: Env, location: HubLocation, id: str
   const guard = await guardFor(request, env);
   const delay = await guard.check();
   if (delay) return blocked(delay);
-  let record: LinkRecord | null;
-  try { record = supported && ID_PATTERN.test(id) ? await readRecord(env.LINKS, id) : null; }
+  let record: CardRecord | null;
+  try { record = supported && ID_PATTERN.test(id) ? await readCard(env.LINKS, id) : null; }
   catch (error) { const delay = await guard.finishLookup(null); if (delay) return blocked(delay); throw error; }
   const finalDelay = await guard.finishLookup(record ? null : await hash(id));
   if (finalDelay) return blocked(finalDelay);
   if (!record) return notFound(location);
-  const body = image ? decodePreview(record.thumbnailBase64) : cardPage(location, record);
-  return response(request.method === 'HEAD' ? null : body, 200, image ? 'image/jpeg' : 'text/html; charset=utf-8');
+  const body = image ? base64Bytes(record.thumbnailBase64) : cardPage(location, record);
+  return response(request.method === 'HEAD' ? null : body, 200, image ? 'image/jpeg' : 'text/html; charset=utf-8',
+    image ? { 'Cache-Control': 'public, max-age=300' } : {});
 }
 
 async function deleteLink(request: Request, env: Env, location: HubLocation, id: string): Promise<Response> {
@@ -110,7 +110,7 @@ async function deleteLink(request: Request, env: Env, location: HubLocation, id:
   const delay = await guard.check();
   if (delay) return blocked(delay);
   const secret = request.headers.get('Authorization')?.match(/^Bearer ([A-Za-z0-9_-]{43})$/)?.[1];
-  const record = secret && ID_PATTERN.test(id) ? await readRecord(env.LINKS, id) : null;
+  const record = secret && ID_PATTERN.test(id) ? await readOwnership(env.LINKS, id) : null;
   const owned = secret ? equalHashes(record?.ownerHash ?? '0'.repeat(64), await hash(secret)) : false;
   // Treat both unknown IDs and incorrect ownership keys identically, including strikes.
   const finalDelay = await guard.finishLookup(owned ? null : await hash(id));

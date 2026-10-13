@@ -1,5 +1,5 @@
 import { PREVIEW_HEIGHT, PREVIEW_WIDTH } from '../shared/model';
-import type { AssetSummary, ListedLink, LinkRecord } from '../shared/model';
+import type { AssetSummary, CardRecord, ListedLink } from '../shared/model';
 
 export function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
@@ -40,7 +40,7 @@ export function galleryPage(location: HubLocation, page: { links: ListedLink[]; 
   return document(location, 'Shared results', `<h1>Shared results</h1><p>Results listed by their creators. Public uploads receive short links in ColmapView.</p>${cards ? `<div class="gallery">${cards}</div>${next}` : '<p>No results listed yet.</p>'}<p><a href="https://colmapview.opsiclear.com/" class="button" rel="noreferrer">Open ColmapView</a></p>`);
 }
 
-export function cardPage(location: HubLocation, record: LinkRecord): string {
+export function cardPage(location: HubLocation, record: CardRecord): string {
   const pageUrl = `${location.base}/${record.id}`;
   const imageUrl = `${pageUrl}/preview.jpg`;
   const assets = record.assets ? assetSummaryText(record.assets, true) : '';
