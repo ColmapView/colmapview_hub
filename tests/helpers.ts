@@ -57,17 +57,13 @@ export function remove(id: string, secret = owner, clientIp = ip): Promise<Respo
   return request(`/api/links/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${secret}` } }, clientIp);
 }
 
-export async function guard(clientIp = ip) { return env.CLIENT_GUARDS.getByName(await clientIdentity(env.HUB_KEY, clientIp)); }
+export async function guard(clientIp = ip) { return env.LOOKUP_GUARDS.getByName(await clientIdentity(env.HUB_KEY, clientIp)); }
 
 /** Clears this local fixture's bucket and guards. The Workers test plugin keeps storage between tests. Never touches production. */
 export async function resetState(): Promise<void> {
   for (const object of (await env.LINKS.list()).objects) await env.LINKS.delete(object.key);
-  for (const id of await listDurableObjectIds(env.CLIENT_GUARDS)) {
-    await runInDurableObject(env.CLIENT_GUARDS.get(id), async (_, state) => {
-      state.storage.sql.exec('DELETE FROM misses');
-      state.storage.sql.exec('UPDATE guard SET blockedUntil = 0, creationStarted = 0, creationCount = 0');
-      await state.storage.deleteAlarm();
-    });
+  for (const id of await listDurableObjectIds(env.LOOKUP_GUARDS)) {
+    await runInDurableObject(env.LOOKUP_GUARDS.get(id), async (_, state) => { await state.storage.deleteAll(); });
   }
   await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, ...words }));
   resetWordlistCache();

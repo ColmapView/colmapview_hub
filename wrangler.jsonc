@@ -31,8 +31,8 @@
   "durable_objects": {
     "bindings": [
       {
-        "name": "CLIENT_GUARDS",
-        "class_name": "ClientGuard"
+        "name": "LOOKUP_GUARDS",
+        "class_name": "LookupGuard"
       }
     ]
   },
@@ -40,6 +40,15 @@
     {
       "tag": "v1",
       "new_sqlite_classes": [
+        "ClientGuard"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "LookupGuard"
+      ],
+      "deleted_classes": [
         "ClientGuard"
       ]
     }

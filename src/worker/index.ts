@@ -5,7 +5,9 @@ import { cardPage, galleryPage, errorPage, hubLocation, managementPage } from '.
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, parseCreateInput, readBoundedJson } from './validation';
-export { ClientGuard } from './clientGuard';
+import { MAX_MISSES } from './guard';
+import { missKey } from './ids';
+export { LookupGuard } from './guard';
 
 function response(body: BodyInit | null, status = 200, type = 'text/html; charset=utf-8', extra: HeadersInit = {}): Response {
   const headers = new Headers(extra);
@@ -38,16 +40,14 @@ function allowedOrigin(request: Request, location: HubLocation): string | null {
 async function guardFor(request: Request, env: Env) {
   const ip = request.headers.get('CF-Connecting-IP');
   if (!ip) throw new Error('Client identity unavailable');
-  return env.CLIENT_GUARDS.getByName(await clientIdentity(env.HUB_KEY, ip));
+  return env.LOOKUP_GUARDS.getByName(await clientIdentity(env.HUB_KEY, ip));
 }
 
 async function createLink(request: Request, env: Env, location: HubLocation): Promise<Response> {
   if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot create links.' }, 403);
   const guard = await guardFor(request, env);
-  const delay = await guard.check();
-  if (delay) return blocked(delay);
-  const quota = await guard.admitCreation();
-  if (quota) return blocked(quota);
+  const wait = await guard.admitCreation();
+  if (wait) return blocked(wait);
   const input = parseCreateInput(await readBoundedJson(request));
   if (input.listed && env.HUB_LISTINGS_ENABLED !== 'true') return json({ error: 'Listings are turned off.' }, 403);
   const words = await readWordlists(env.LINKS);
@@ -67,8 +67,6 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   // since this owner's first request. Its existing link must still win on a retry.
   const existing = await Promise.all(ids.map(id => readOwnership(env.LINKS, id)));
   for (const [index, record] of existing.entries()) if (record && equalHashes(record.ownerHash, ownerHash)) return replay(ids[index], record);
-  const finalDelay = await guard.check();
-  if (finalDelay) return blocked(finalDelay);
   for (const [index, id] of ids.entries()) {
     if (existing[index]) continue;
     const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(),
@@ -87,13 +85,11 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
 
 async function lookup(request: Request, env: Env, location: HubLocation, id: string, image: boolean, supported: boolean): Promise<Response> {
   const guard = await guardFor(request, env);
-  const delay = await guard.check();
-  if (delay) return blocked(delay);
   let record: CardRecord | null;
   try { record = supported && ID_PATTERN.test(id) ? await readCard(env.LINKS, id) : null; }
-  catch (error) { const delay = await guard.finishLookup(null); if (delay) return blocked(delay); throw error; }
-  const finalDelay = await guard.finishLookup(record ? null : await hash(id));
-  if (finalDelay) return blocked(finalDelay);
+  catch (error) { const wait = await guard.lookup(null, MAX_MISSES); if (wait) return blocked(wait); throw error; }
+  const wait = await guard.lookup(record ? null : await hash(missKey(id)), MAX_MISSES);
+  if (wait) return blocked(wait);
   if (!record) return notFound(location);
   const body = image ? base64Bytes(record.thumbnailBase64) : cardPage(location, record);
   return response(request.method === 'HEAD' ? null : body, 200, image ? 'image/jpeg' : 'text/html; charset=utf-8',
@@ -103,14 +99,15 @@ async function lookup(request: Request, env: Env, location: HubLocation, id: str
 async function deleteLink(request: Request, env: Env, location: HubLocation, id: string): Promise<Response> {
   if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot manage links.' }, 403);
   const guard = await guardFor(request, env);
-  const delay = await guard.check();
-  if (delay) return blocked(delay);
   const secret = request.headers.get('Authorization')?.match(/^Bearer ([A-Za-z0-9_-]{43})$/)?.[1];
-  const record = secret && ID_PATTERN.test(id) ? await readOwnership(env.LINKS, id) : null;
-  const owned = secret ? equalHashes(record?.ownerHash ?? '0'.repeat(64), await hash(secret)) : false;
+  let owned: boolean;
+  try {
+    const record = secret && ID_PATTERN.test(id) ? await readOwnership(env.LINKS, id) : null;
+    owned = secret ? equalHashes(record?.ownerHash ?? '0'.repeat(64), await hash(secret)) : false;
+  } catch (error) { const wait = await guard.lookup(null, MAX_MISSES); if (wait) return blocked(wait); throw error; }
   // Treat both unknown IDs and incorrect ownership keys identically, including strikes.
-  const finalDelay = await guard.finishLookup(owned ? null : await hash(id));
-  if (finalDelay) return blocked(finalDelay);
+  const wait = await guard.lookup(owned ? null : await hash(missKey(id)), MAX_MISSES);
+  if (wait) return blocked(wait);
   if (!owned) return notFound(location);
   await env.LINKS.delete(recordKey(id));
   return response(null, 204);
@@ -133,13 +130,11 @@ async function route(request: Request, env: Env, location: HubLocation): Promise
   if (!['GET', 'HEAD'].includes(request.method)) return notFound(location);
   if (path === '/') {
     const guard = await guardFor(request, env);
-    const delay = await guard.check();
-    if (delay) return blocked(delay);
+    const wait = await guard.lookup(null, MAX_MISSES);
+    if (wait) return blocked(wait);
     const cursor = url.searchParams.get('cursor') ?? undefined;
     if (cursor && cursor.length > 2048) throw new InputError('Invalid page cursor.');
     const page = await listPublicRecords(env.LINKS, cursor);
-    const finalDelay = await guard.finishLookup(null);
-    if (finalDelay) return blocked(finalDelay);
     return response(request.method === 'HEAD' ? null : galleryPage(location, page));
   }
   if (path === '/styles.css' || path === '/assets/client.js') {

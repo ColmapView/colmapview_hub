@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN, isListedId, MAX_REQUEST_BYTES } from '../src/shared/model';
 import type { LinkRecord } from '../src/shared/model';
 import { base64Url, deriveLongId, deriveShortId } from '../src/worker/crypto';
+import type { GuardState } from '../src/worker/guard';
 import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { preview } from './fixtures/preview';
 import { assets, base, create, guard, input, ip, listings, origin, owner, request, resetState, words } from './helpers';
@@ -140,7 +141,7 @@ describe('unlisted records and social cards', () => {
     expect(blocked.status).toBe(409);
     expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
     expect(await (await request(`/${original.id}`)).text()).toContain('Demo reconstruction');
-    expect(await (await guard()).check()).toBe(0);
+    expect(await (await guard()).lookup(null)).toBe(0);
   });
 
   it('treats seventeen-letter word-pair names as unlisted across reading, previews and deletion', async () => {
@@ -222,10 +223,9 @@ describe('three-distinct-miss guard', () => {
     const responses = await Promise.all(Array.from({ length: 12 }, (_, index) => request(`/missing-${index}`)));
     expect(responses.filter(response => response.status === 404).length).toBeLessThanOrEqual(2);
     expect(responses.filter(response => response.status === 429).length).toBeGreaterThanOrEqual(10);
-    expect(await (await guard()).check()).toBeGreaterThan(0);
-    const rows = await runInDurableObject(await guard(), (_, state) => state.storage.sql.exec<{ fingerprint: string; at: number }>('SELECT * FROM misses').toArray());
-    expect(rows).toHaveLength(3);
-    expect(rows.every(row => /^[a-f0-9]{64}$/.test(row.fingerprint))).toBe(true);
+    expect(await (await guard()).lookup(null)).toBeGreaterThan(0);
+    const state = await runInDurableObject(await guard(), (_, storage) => storage.storage.kv.get<GuardState>('state'));
+    expect(state!.blockedUntil).toBeGreaterThan(Date.now());
   });
 
   it('persists strikes across Durable Object eviction', async () => {
@@ -241,12 +241,12 @@ describe('three-distinct-miss guard', () => {
     await request('/first'); await request('/second'); await request('/third');
     const stub = await guard();
     await runInDurableObject(stub, (_, state) => {
-      state.storage.sql.exec('UPDATE guard SET blockedUntil = ?, creationStarted = ?, creationCount = 0', Date.now() - 1, Date.now() - 3600001);
-      state.storage.sql.exec('UPDATE misses SET at = ?', Date.now() - 600001);
+      state.storage.kv.put('state', { misses: {}, blockedUntil: Date.now() - 1,
+        creations: { started: Date.now() - 3_600_001, count: 1 } } satisfies GuardState);
     });
     expect((await request(`/${link.id}`)).status).toBe(200);
     expect(await runDurableObjectAlarm(stub)).toBe(true);
-    expect(await runInDurableObject(stub, (_, state) => state.storage.sql.exec<{ count: number }>('SELECT COUNT(*) AS count FROM misses').one().count)).toBe(0);
+    expect(await runInDurableObject(stub, (_, state) => [...state.storage.kv.list()].length)).toBe(0);
   });
 
   it('counts malformed IDs uniformly, while static misses and storage failures do not become strikes', async () => {
@@ -254,7 +254,7 @@ describe('three-distinct-miss guard', () => {
     for (let index = 0; index < 4; index++) expect((await request(`/assets/absent-${index}.js`)).status).toBe(404);
     await env.LINKS.put(recordKey(link.id), 'not-json');
     for (let index = 0; index < 4; index++) expect((await request(`/${link.id}`)).status).toBe(503);
-    expect(await (await guard()).check()).toBe(0);
+    expect(await (await guard()).lookup(null)).toBe(0);
     expect((await request('/%E0%A4%A')).status).toBe(404);
     expect((await request('/malformed')).status).toBe(404);
     expect((await request('/third')).status).toBe(429);

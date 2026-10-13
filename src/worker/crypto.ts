@@ -17,8 +17,41 @@ export async function keyedHash(key: string, value: string): Promise<Uint8Array>
   return new Uint8Array(await crypto.subtle.sign('HMAC', imported, new TextEncoder().encode(value)));
 }
 
+/** The eight hextets of an IPv6 address, or null when the text is not one. */
+function ipv6Groups(value: string): number[] | null {
+  let text = value.toLowerCase();
+  let tail: number[] = [];
+  const dotted = /^(.*:)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(text);
+  if (dotted) {
+    const octets = dotted.slice(2, 6).map(Number);
+    if (octets.some(octet => octet > 255)) return null;
+    tail = [(octets[0] << 8) | octets[1], (octets[2] << 8) | octets[3]];
+    text = dotted[1].endsWith('::') ? dotted[1] : dotted[1].slice(0, -1);
+  }
+  const halves = text.split('::');
+  if (halves.length > 2) return null;
+  const parse = (part: string) => part ? part.split(':').map(group => /^[0-9a-f]{1,4}$/.test(group) ? Number.parseInt(group, 16) : Number.NaN) : [];
+  const head = parse(halves[0]);
+  const rest = halves.length === 2 ? parse(halves[1]) : [];
+  const count = head.length + rest.length + tail.length;
+  if ([...head, ...rest].some(Number.isNaN) || (halves.length === 1 ? count !== 8 : count > 7)) return null;
+  return [...head, ...new Array<number>(8 - count).fill(0), ...rest, ...tail];
+}
+
+/** The network a guard counts together: an IPv4 address (also when IPv4-mapped) or an IPv6 /64 prefix. */
+export function clientNetwork(ip: string): string {
+  const value = ip.trim();
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(value)) return value;
+  const groups = ipv6Groups(value);
+  if (!groups) return value;
+  if (groups.slice(0, 5).every(group => group === 0) && groups[5] === 0xffff) {
+    return [groups[6] >> 8, groups[6] & 255, groups[7] >> 8, groups[7] & 255].join('.');
+  }
+  return `${groups.slice(0, 4).map(group => group.toString(16)).join(':')}::/64`;
+}
+
 export async function clientIdentity(key: string, ip: string): Promise<string> {
-  return hex(await keyedHash(key, `client:${ip}`));
+  return hex(await keyedHash(key, `client:${clientNetwork(ip)}`));
 }
 
 export interface Wordlists { adjectives: string[]; nouns: string[] }
