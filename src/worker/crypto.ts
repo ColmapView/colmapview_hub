@@ -21,13 +21,13 @@ export async function clientIdentity(key: string, ip: string): Promise<string> {
   return hex(await keyedHash(key, `client:${ip}`));
 }
 
-export async function deriveId(key: string, secret: string, words: { adjectives: string[]; nouns: string[] }): Promise<string> {
-  const digest = await keyedHash(key, `link:${secret}`);
+export async function deriveId(key: string, secret: string, words: { adjectives: string[]; nouns: string[] }, listed = false): Promise<string> {
+  const digest = await keyedHash(key, `${listed ? 'listed-link' : 'link'}:${secret}`);
   const adjective = words.adjectives[((digest[0] << 8) | digest[1]) % words.adjectives.length];
   const noun = words.nouns[((digest[2] << 8) | digest[3]) % words.nouns.length];
   const titleCase = (word: string) => word[0].toUpperCase() + word.slice(1);
   // The suffix has 96 independent bits even if every dictionary word becomes known.
-  return `${titleCase(adjective)}${titleCase(noun)}-${base64Url(digest.slice(4, 16))}`;
+  return `${titleCase(adjective)}${titleCase(noun)}-${listed ? 'L' : ''}${base64Url(digest.slice(4, 16))}`;
 }
 
 export function equalHashes(left: string, right: string): boolean {

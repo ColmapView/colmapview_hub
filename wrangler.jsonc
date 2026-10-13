@@ -46,8 +46,7 @@
   ],
   "vars": {
     "HUB_ORIGIN": "https://colmapview.opsiclear.com",
-    "HUB_PATH": "/hub",
-    "TURNSTILE_SITE_KEY": "0x4AAAAAAFVJBeh9HDszZpRF"
+    "HUB_PATH": "/hub"
   },
   "observability": {
     "enabled": true,

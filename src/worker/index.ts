@@ -1,10 +1,10 @@
 import { ID_PATTERN } from '../shared/model';
 import type { LinkRecord } from '../shared/model';
 import { clientIdentity, deriveId, equalHashes, hash } from './crypto';
-import { cardPage, createPage, errorPage, hubLocation, managementPage } from './pages';
+import { cardPage, galleryPage, errorPage, hubLocation, managementPage } from './pages';
 import type { HubLocation } from './pages';
-import { metadataFingerprint, readRecord, readWordlists, recordKey } from './records';
-import { decodePreview, InputError, isObject, parseCreateInput, readBoundedJson } from './validation';
+import { listPublicRecords, metadataFingerprint, readRecord, readWordlists, recordKey } from './records';
+import { decodePreview, InputError, parseCreateInput, readBoundedJson } from './validation';
 export { ClientGuard } from './clientGuard';
 
 function response(body: BodyInit | null, status = 200, type = 'text/html; charset=utf-8', extra: HeadersInit = {}): Response {
@@ -14,7 +14,7 @@ function response(body: BodyInit | null, status = 200, type = 'text/html; charse
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   headers.set('Referrer-Policy', 'no-referrer');
-  headers.set('Content-Security-Policy', "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: blob:; frame-src https://colmapview.opsiclear.com https://colmapview.github.io https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
+  headers.set('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; frame-src https://colmapview.opsiclear.com https://colmapview.github.io; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
   return new Response(body, { status, headers });
 }
 
@@ -27,31 +27,18 @@ function json(value: unknown, status = 200): Response { return response(JSON.str
 
 function allowedOrigin(request: Request, location: HubLocation): string | null {
   const origin = request.headers.get('Origin');
-  return origin && [location.origin, 'https://colmapview.opsiclear.com', 'https://colmapview.github.io'].includes(origin) ? origin : null;
+  if (!origin) return null;
+  if ([location.origin, 'https://colmapview.opsiclear.com', 'https://colmapview.github.io'].includes(origin)) return origin;
+  try {
+    const url = new URL(origin);
+    return url.origin === origin && ['http:', 'https:'].includes(url.protocol) && ['localhost', '127.0.0.1'].includes(url.hostname) ? origin : null;
+  } catch { return null; }
 }
 
 async function guardFor(request: Request, env: Env) {
   const ip = request.headers.get('CF-Connecting-IP');
   if (!ip) throw new Error('Client identity unavailable');
   return env.CLIENT_GUARDS.getByName(await clientIdentity(env.HUB_KEY, ip));
-}
-
-async function verifyTurnstile(token: string, request: Request, env: Env, location: HubLocation): Promise<boolean> {
-  if (!token || !env.TURNSTILE_SITE_KEY || !env.TURNSTILE_SECRET_KEY) return false;
-  const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    body: new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: token, remoteip: request.headers.get('CF-Connecting-IP')! }),
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!result.ok) throw new Error('Verification unavailable');
-  let data: unknown;
-  try { data = await readBoundedJson(result, 8192); }
-  catch (error) { throw new Error('Verification unavailable', { cause: error }); }
-  if (!isObject(data) || data.success !== true) return false;
-  // Official always-pass keys are usable only by the explicitly configured local origin.
-  if (location.local && env.TURNSTILE_SITE_KEY === '1x00000000000000000000AA' && data.hostname === 'example.com') return true;
-  const origin = allowedOrigin(request, location);
-  return origin !== null && data.hostname === new URL(origin).hostname && data.action === 'create-link';
 }
 
 async function createLink(request: Request, env: Env, location: HubLocation): Promise<Response> {
@@ -63,7 +50,7 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   if (quota) return blocked(quota);
   const input = parseCreateInput(await readBoundedJson(request));
   const words = await readWordlists(env.LINKS);
-  const id = await deriveId(env.HUB_KEY, input.managementSecret, words);
+  const id = await deriveId(env.HUB_KEY, input.managementSecret, words, input.listed);
   const ownerHash = await hash(input.managementSecret);
   const metadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64, ...(input.license ? { license: input.license } : {}) };
   const fingerprint = await hash(metadataFingerprint(metadata));
@@ -75,12 +62,12 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   };
   const existing = await readRecord(env.LINKS, id);
   if (existing) return replay(existing);
-  if (!await verifyTurnstile(input.turnstileToken, request, env, location)) return json({ error: 'Verification failed. Please try again.' }, 403);
   const finalDelay = await guard.check();
   if (finalDelay) return blocked(finalDelay);
-  const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString() };
+  const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(), listed: input.listed };
   const stored = await env.LINKS.put(recordKey(id), JSON.stringify(record), {
     onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType: 'application/json' },
+    ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt } } : {}),
   });
   if (!stored) {
     const current = await readRecord(env.LINKS, id);
@@ -135,7 +122,17 @@ async function route(request: Request, env: Env, location: HubLocation): Promise
   const deletion = path.match(/^\/api\/links\/([^/]+)$/);
   if (deletion && request.method === 'DELETE') return deleteLink(request, env, location, decodeId(deletion[1]));
   if (!['GET', 'HEAD'].includes(request.method)) return notFound(location);
-  if (path === '/') return response(request.method === 'HEAD' ? null : createPage(location, env.TURNSTILE_SITE_KEY));
+  if (path === '/') {
+    const guard = await guardFor(request, env);
+    const delay = await guard.check();
+    if (delay) return blocked(delay);
+    const cursor = url.searchParams.get('cursor') ?? undefined;
+    if (cursor && cursor.length > 2048) throw new InputError('Invalid page cursor.');
+    const page = await listPublicRecords(env.LINKS, cursor);
+    const finalDelay = await guard.finishLookup(null);
+    if (finalDelay) return blocked(finalDelay);
+    return response(request.method === 'HEAD' ? null : galleryPage(location, page));
+  }
   if (path === '/styles.css' || path === '/assets/client.js') {
     const assetUrl = new URL(url);
     assetUrl.pathname = path;

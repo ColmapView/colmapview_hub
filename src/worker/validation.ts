@@ -1,4 +1,4 @@
-import { MAX_PREVIEW_BYTES, MAX_REQUEST_BYTES, PREVIEW_HEIGHT, PREVIEW_WIDTH, ID_PATTERN } from '../shared/model';
+import { MAX_PREVIEW_BYTES, MAX_REQUEST_BYTES, PREVIEW_HEIGHT, PREVIEW_WIDTH, ID_PATTERN, isListedId } from '../shared/model';
 import type { CreateLinkInput, LicenseInfo, LinkMetadata, LinkRecord } from '../shared/model';
 
 export class InputError extends Error {
@@ -109,13 +109,13 @@ export function parseMetadata(value: Record<string, unknown>): LinkMetadata {
 }
 
 export function parseCreateInput(value: unknown): CreateLinkInput {
-  if (!isObject(value) || Object.keys(value).some(key => !['viewerUrl', 'title', 'description', 'thumbnailBase64', 'license', 'managementSecret', 'turnstileToken', 'publicAcknowledged'].includes(key))) {
+  if (!isObject(value) || Object.keys(value).some(key => !['viewerUrl', 'title', 'description', 'thumbnailBase64', 'license', 'managementSecret', 'listed', 'publicAcknowledged'].includes(key))) {
     throw new InputError('Invalid link request.');
   }
   if (value.publicAcknowledged !== true) throw new InputError('Confirm that this link and preview will be accessible to anyone with the link.');
   if (typeof value.managementSecret !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(value.managementSecret)) throw new InputError('Management key is invalid.');
-  if (typeof value.turnstileToken !== 'string' || value.turnstileToken.length > 2048) throw new InputError('Verification is required.');
-  return { ...parseMetadata(value), managementSecret: value.managementSecret, turnstileToken: value.turnstileToken, publicAcknowledged: true };
+  if (value.listed !== undefined && typeof value.listed !== 'boolean') throw new InputError('Listing choice is invalid.');
+  return { ...parseMetadata(value), managementSecret: value.managementSecret, listed: value.listed === true, publicAcknowledged: true };
 }
 
 export function parseStoredRecord(value: unknown, id: string): LinkRecord {
@@ -123,13 +123,15 @@ export function parseStoredRecord(value: unknown, id: string): LinkRecord {
     || typeof value.ownerHash !== 'string' || !/^[a-f0-9]{64}$/.test(value.ownerHash)
     || typeof value.fingerprint !== 'string' || !/^[a-f0-9]{64}$/.test(value.fingerprint)
     || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt))) throw new Error('Invalid stored record');
-  return { ...parseMetadata(value), schemaVersion: 1, id, ownerHash: value.ownerHash, fingerprint: value.fingerprint, createdAt: value.createdAt };
+  const listed = value.listed === true;
+  if (listed !== isListedId(id)) throw new Error('Stored visibility does not match its namespace');
+  return { ...parseMetadata(value), schemaVersion: 1, id, ownerHash: value.ownerHash, fingerprint: value.fingerprint, createdAt: value.createdAt, listed };
 }
 
-export async function readBoundedJson(request: Request | Response, maxBytes = MAX_REQUEST_BYTES): Promise<unknown> {
+export async function readBoundedJson(request: Request): Promise<unknown> {
   if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') throw new InputError('Use JSON for link requests.', 415);
-  if (request instanceof Request && request.headers.get('Content-Encoding')) throw new InputError('Encoded requests are not supported.', 415);
-  if (Number(request.headers.get('Content-Length')) > maxBytes) throw new InputError('Link request is too large.', 413);
+  if (request.headers.get('Content-Encoding')) throw new InputError('Encoded requests are not supported.', 415);
+  if (Number(request.headers.get('Content-Length')) > MAX_REQUEST_BYTES) throw new InputError('Link request is too large.', 413);
   const reader = request.body?.getReader();
   if (!reader) throw new InputError('Link request is empty.');
   const chunks: Uint8Array[] = [];
@@ -139,7 +141,7 @@ export async function readBoundedJson(request: Request | Response, maxBytes = MA
       const { done, value } = await reader.read();
       if (done) break;
       length += value.byteLength;
-      if (length > maxBytes) { await reader.cancel(); throw new InputError('Link request is too large.', 413); }
+      if (length > MAX_REQUEST_BYTES) { await reader.cancel(); throw new InputError('Link request is too large.', 413); }
       chunks.push(value);
     }
   } finally { reader.releaseLock(); }

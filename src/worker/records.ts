@@ -1,9 +1,22 @@
-import { MAX_REQUEST_BYTES } from '../shared/model';
-import type { LinkMetadata, LinkRecord } from '../shared/model';
+import { ID_PATTERN, isListedId, MAX_REQUEST_BYTES } from '../shared/model';
+import type { ListedLink, LinkMetadata, LinkRecord } from '../shared/model';
 import { isObject, parseStoredRecord } from './validation';
 
 export const WORDLIST_KEY = 'internal/wordlists-v1.json';
-export const recordKey = (id: string) => `links/${id}.json`;
+export const recordKey = (id: string) => `${isListedId(id) ? 'listed' : 'links'}/${id}.json`;
+
+/** Listing and content are committed in the same R2 object; unlisted keys are never scanned. */
+export async function listPublicRecords(bucket: R2Bucket, cursor?: string): Promise<{ links: ListedLink[]; cursor?: string }> {
+  const page = await bucket.list({ prefix: 'listed/', limit: 12, include: ['customMetadata'], ...(cursor ? { cursor } : {}) });
+  const links = page.objects.map(object => {
+    const id = object.key.slice('listed/'.length, -'.json'.length);
+    const title = object.customMetadata?.title;
+    const createdAt = object.customMetadata?.createdAt;
+    if (!ID_PATTERN.test(id) || !isListedId(id) || !title || title.length > 120 || !createdAt || !Number.isFinite(Date.parse(createdAt))) throw new Error('Invalid public listing');
+    return { id, title, createdAt };
+  });
+  return { links, ...(page.truncated ? { cursor: page.cursor } : {}) };
+}
 
 export async function readRecord(bucket: R2Bucket, id: string): Promise<LinkRecord | null> {
   const object = await bucket.get(recordKey(id));

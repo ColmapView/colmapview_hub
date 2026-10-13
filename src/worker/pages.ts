@@ -1,5 +1,5 @@
-import { PREVIEW_HEIGHT, PREVIEW_WIDTH, UNLISTED_NOTICE } from '../shared/model';
-import type { LinkRecord } from '../shared/model';
+import { PREVIEW_HEIGHT, PREVIEW_WIDTH } from '../shared/model';
+import type { ListedLink, LinkRecord } from '../shared/model';
 
 export function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
@@ -9,7 +9,6 @@ export interface HubLocation {
   origin: string;
   path: string;
   base: string;
-  local: boolean;
 }
 
 export function hubLocation(env: Env): HubLocation {
@@ -18,25 +17,17 @@ export function hubLocation(env: Env): HubLocation {
   if ((!local && origin.protocol !== 'https:') || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash) throw new Error('Invalid Hub origin');
   const path = env.HUB_PATH;
   if (path !== '' && (!/^\/(?:[a-z0-9-]+\/)*[a-z0-9-]+$/.test(path))) throw new Error('Invalid Hub path');
-  return { origin: origin.origin, path, base: origin.origin + path, local };
+  return { origin: origin.origin, path, base: origin.origin + path };
 }
 
-function document(location: HubLocation, title: string, body: string, metadata = '', verificationKey?: string): string {
-  const key = verificationKey ? ` data-site-key="${escapeHtml(verificationKey)}"` : '';
-  return `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"${key}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} · ColmapView Hub</title><meta name="robots" content="noindex,nofollow,noarchive">${metadata}<link rel="stylesheet" href="${location.path}/styles.css"><script type="module" src="${location.path}/assets/client.js"></script></head><body><header><a href="${location.path}/">ColmapView Hub</a><a href="https://colmapview.opsiclear.com/" rel="noreferrer">Viewer</a></header><main>${body}</main></body></html>`;
+function document(location: HubLocation, title: string, body: string, metadata = ''): string {
+  return `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} · ColmapView Hub</title><meta name="robots" content="noindex,nofollow,noarchive">${metadata}<link rel="stylesheet" href="${location.path}/styles.css"><script type="module" src="${location.path}/assets/client.js"></script></head><body><header><a href="${location.path}/">ColmapView Hub</a><a href="https://colmapview.opsiclear.com/" rel="noreferrer">Viewer</a></header><main>${body}</main></body></html>`;
 }
 
-export function createPage(location: HubLocation, key: string): string {
-  return document(location, 'Create a link', `<h1>Create a link</h1><form id="create-link">
-    <label>Viewer link<input name="viewerUrl" type="url" required maxlength="32768" placeholder="https://colmapview.opsiclear.com/?url=…"></label>
-    <label>Title<input name="title" required maxlength="120" autocomplete="off"></label>
-    <label>Description <span>(optional)</span><textarea name="description" rows="2" maxlength="280"></textarea></label>
-    <label>Preview image<input name="preview" type="file" accept="image/png,image/jpeg,image/webp" required></label>
-    <img id="draft-preview" width="600" height="315" alt="Prepared card preview" hidden>
-    <details><summary>License (optional)</summary><label>Name or ID<input name="licenseName" maxlength="160" autocomplete="off"></label><label>License link<input name="licenseUrl" type="url" maxlength="2048" placeholder="https://…"></label></details>
-    <label class="acknowledgment"><input name="publicAcknowledged" type="checkbox" required><span>${UNLISTED_NOTICE} Dataset storage permissions still apply.</span></label>
-    <div id="verification"></div><button type="submit"${key ? '' : ' disabled'}>Create link</button>
-  </form><section id="result" hidden><h2>Your link</h2><a id="public-link" rel="noreferrer"></a><div class="actions"><button id="copy-link">Copy link</button><a id="open-link" class="button" rel="noreferrer">Open</a></div><p>Save the management link to remove this link later. Keep it private.</p><div class="actions"><button id="copy-management">Copy management link</button><button id="new-link">Create another</button></div></section><p id="status" role="status" aria-live="polite">${key ? '' : 'Link creation is not available yet.'}</p>`, '', key);
+export function galleryPage(location: HubLocation, page: { links: ListedLink[]; cursor?: string }): string {
+  const cards = page.links.map(link => `<a class="gallery-card" href="${location.path}/${link.id}"><img src="${location.path}/${link.id}/preview.jpg" width="600" height="315" loading="lazy" alt="${escapeHtml(link.title)}"><span>${escapeHtml(link.title)}</span></a>`).join('');
+  const next = page.cursor ? `<p><a class="button" href="${location.path}/?cursor=${encodeURIComponent(page.cursor)}">More results</a></p>` : '';
+  return document(location, 'Shared results', `<h1>Shared results</h1><p>Results listed by their creators. Public uploads receive short links in ColmapView.</p>${cards ? `<div class="gallery">${cards}</div>${next}` : '<p>No results listed yet.</p>'}<p><a href="https://colmapview.opsiclear.com/" class="button" rel="noreferrer">Open ColmapView</a></p>`);
 }
 
 export function cardPage(location: HubLocation, record: LinkRecord): string {

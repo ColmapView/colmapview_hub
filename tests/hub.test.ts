@@ -14,7 +14,7 @@ const owner = 'A'.repeat(43);
 interface LinkResult { id: string; url: string; managementPath: string }
 
 function input(overrides: Partial<CreateLinkInput> = {}): CreateLinkInput {
-  return { viewerUrl: `${origin}/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43`, title: 'Demo reconstruction', description: 'A small test scene.', thumbnailBase64: preview, managementSecret: owner, turnstileToken: 'verified-token', publicAcknowledged: true, ...overrides };
+  return { viewerUrl: `${origin}/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43`, title: 'Demo reconstruction', description: 'A small test scene.', thumbnailBase64: preview, managementSecret: owner, listed: false, publicAcknowledged: true, ...overrides };
 }
 
 function request(path: string, init: RequestInit = {}, clientIp = ip): Promise<Response> {
@@ -46,7 +46,7 @@ beforeEach(async () => {
     });
   }
   await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy', 'funny'], nouns: ['tree', 'ball'] }));
-  vi.spyOn(globalThis, 'fetch').mockImplementation(async () => Response.json({ success: true, hostname: 'colmapview.opsiclear.com', action: 'create-link' }));
+  vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
 });
 afterEach(() => { vi.restoreAllMocks(); });
 
@@ -60,7 +60,6 @@ describe('unlisted records and social cards', () => {
     const raw = await stored!.text();
     expect(raw).toContain('thumbnailBase64');
     expect(raw).not.toContain('managementSecret');
-    expect(raw).not.toContain('turnstileToken');
     expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
     const card = await request(`/${link.id}`);
     const html = await card.text();
@@ -76,15 +75,14 @@ describe('unlisted records and social cards', () => {
     const head = await request(`/${link.id}/preview.jpg`, { method: 'HEAD' });
     expect(head.status).toBe(200);
     expect(await head.text()).toBe('');
-    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
-    expect(String(vi.mocked(fetch).mock.calls[0][0])).toBe('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
   });
 
-  it('replays a lost creation response without another record or another captcha, and refuses changed drafts', async () => {
+  it('replays a lost creation response without another record, and refuses changed drafts', async () => {
     const first = await create();
-    const second = await create(input({ turnstileToken: '' }));
+    const second = await create();
     expect(second).toEqual(first);
-    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
     expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
     const changed = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ title: 'Changed' })) });
     expect(changed.status).toBe(409);
@@ -117,7 +115,7 @@ describe('unlisted records and social cards', () => {
     expect((await request(`/${link.id}`)).headers.get('Referrer-Policy')).toBe('no-referrer');
   });
 
-  it('does not provide listing, search, sitemap, or private wordlist endpoints', async () => {
+  it('does not provide unlisted-link search or private wordlist endpoints', async () => {
     const link = await create();
     for (const path of ['/api/links', '/api/search', '/assets/internal.json', '/internal/wordlists-v1.json']) {
       const response = await request(path);
@@ -247,15 +245,15 @@ describe('ownership and request validation', () => {
     expect(unsupported.status).toBe(415);
   });
 
-  it('validates Turnstile hostname/action and requires an allowed browser origin', async () => {
-    vi.mocked(fetch).mockImplementation(async () => Response.json({ success: true, hostname: 'evil.example', action: 'create-link' }));
-    expect((await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input()) })).status).toBe(403);
+  it('requires an allowed browser origin without human verification', async () => {
     const forbidden = await request('/api/links', { method: 'POST', headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: JSON.stringify(input()) });
     expect(forbidden.status).toBe(403);
     expect(forbidden.headers.has('Access-Control-Allow-Origin')).toBe(false);
     const preflight = await request('/api/links', { method: 'OPTIONS', headers: { Origin: 'https://colmapview.github.io' } });
     expect(preflight.status).toBe(204);
     expect(preflight.headers.get('Access-Control-Allow-Origin')).toBe('https://colmapview.github.io');
+    expect((await request('/api/links', { method: 'POST', headers: { Origin: 'https://colmapview.github.io', 'Content-Type': 'application/json' }, body: JSON.stringify(input()) })).status).toBe(201);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
   });
 
   it('limits malformed creation attempts before parsing their bodies', async () => {
@@ -271,13 +269,62 @@ describe('ownership and request validation', () => {
     expect((await create(input(), '192.0.2.2')).id).toMatch(ID_PATTERN);
   });
 
-  it('bounds streamed verification responses and treats upstream failures as unavailable', async () => {
-    vi.mocked(fetch).mockImplementation(async () => new Response(new ReadableStream({
-      start(controller) { controller.enqueue(new TextEncoder().encode(' '.repeat(8193))); controller.close(); },
-    }), { headers: { 'Content-Type': 'application/json' } }));
-    const response = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input()) });
-    expect(response.status).toBe(503);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(0);
-    expect(await (await guard()).check()).toBe(0);
+  it('retains the creation quota for valid uploads without verification', async () => {
+    for (let index = 0; index < 20; index++) await create(input({ managementSecret: 'A'.repeat(42) + String.fromCharCode(65 + index) }));
+    const denied = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ managementSecret: 'Z'.repeat(43) })) });
+    expect(denied.status).toBe(429);
+    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(20);
+  });
+});
+
+describe('opt-in results gallery', () => {
+  it('has no submission form and shows only explicit listings', async () => {
+    const unlisted = await create();
+    const listed = await create(input({ listed: true, title: 'Public result', managementSecret: 'B'.repeat(43) }));
+    const html = await (await request('/')).text();
+    expect(html).toContain(listed.id);
+    expect(html).toContain('Public result');
+    expect(html).not.toContain(unlisted.id);
+    expect(html).not.toContain('type="file"');
+    expect(html).not.toContain('create-link');
+    expect(html).not.toContain('challenges.cloudflare.com');
+    expect(await env.LINKS.get(recordKey(listed.id))).not.toBeNull();
+    const deleted = await request(`/api/links/${listed.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${'B'.repeat(43)}` } });
+    expect(deleted.status).toBe(204);
+    expect(await (await request('/')).text()).not.toContain(listed.id);
+    expect((await request(`/${unlisted.id}`)).status).toBe(200);
+  });
+
+  it('separates public and unlisted IDs even when an owner reuses a management key', async () => {
+    const unlisted = await create();
+    const listed = await create(input({ listed: true }));
+    expect(listed.id).not.toBe(unlisted.id);
+    expect(listed.id.replace('-L', '-')).not.toBe(unlisted.id);
+    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(1);
+    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect(await create(input({ listed: true }))).toEqual(listed);
+  });
+
+  it('paginates only opted-in records without exposing unlisted keys or cursor data', async () => {
+    const privateLink = await create();
+    const listed = [];
+    for (let index = 0; index < 13; index++) listed.push(await create(input({ listed: true, title: `Result ${index}`, managementSecret: 'B'.repeat(42) + String.fromCharCode(65 + index) })));
+    const first = await (await request('/')).text();
+    const next = first.match(/href="\/hub\/\?cursor=([^"]+)"/);
+    expect(next).not.toBeNull();
+    const second = await (await request(`/?cursor=${next![1]}`)).text();
+    expect(listed.filter(link => first.includes(link.id))).toHaveLength(12);
+    expect(listed.filter(link => second.includes(link.id))).toHaveLength(1);
+    expect(first + second).not.toContain(privateLink.id);
+    expect(decodeURIComponent(next![1])).not.toContain(privateLink.id);
+  });
+
+  it('continues to read existing unlisted records that predate the listing field', async () => {
+    const link = await create();
+    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<Record<string, unknown>>();
+    delete record.listed;
+    await env.LINKS.put(recordKey(link.id), JSON.stringify(record));
+    expect((await request(`/${link.id}`)).status).toBe(200);
+    expect(await (await request('/')).text()).not.toContain(link.id);
   });
 });
