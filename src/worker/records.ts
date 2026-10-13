@@ -1,6 +1,6 @@
 import { ID_PATTERN, isListedId, MAX_REQUEST_BYTES } from '../shared/model';
 import type { ListedLink, LinkMetadata, LinkRecord } from '../shared/model';
-import { isObject, parseStoredRecord } from './validation';
+import { isObject, parseAssetSummary, parseStoredRecord } from './validation';
 
 export const WORDLIST_KEY = 'internal/wordlists-v1.json';
 export const recordKey = (id: string) => `${isListedId(id) ? 'listed' : 'links'}/${id}.json`;
@@ -13,7 +13,8 @@ export async function listPublicRecords(bucket: R2Bucket, cursor?: string): Prom
     const title = object.customMetadata?.title;
     const createdAt = object.customMetadata?.createdAt;
     if (!ID_PATTERN.test(id) || !isListedId(id) || !title || title.length > 120 || !createdAt || !Number.isFinite(Date.parse(createdAt))) throw new Error('Invalid public listing');
-    return { id, title, createdAt };
+    const assets = object.customMetadata?.assets;
+    return { id, title, createdAt, ...(assets ? { assets: parseAssetSummary(JSON.parse(assets)) } : {}) };
   });
   return { links, ...(page.truncated ? { cursor: page.cursor } : {}) };
 }
@@ -41,5 +42,6 @@ export async function readWordlists(bucket: R2Bucket): Promise<{ adjectives: str
 }
 
 export function metadataFingerprint(metadata: LinkMetadata): string {
-  return JSON.stringify([metadata.viewerUrl, metadata.title, metadata.description, metadata.thumbnailBase64, metadata.license?.id ?? '', metadata.license?.name ?? '', metadata.license?.url ?? '']);
+  return JSON.stringify([metadata.viewerUrl, metadata.title, metadata.description, metadata.thumbnailBase64, metadata.license?.id ?? '', metadata.license?.name ?? '', metadata.license?.url ?? '',
+    ...(metadata.assets ? [metadata.assets] : [])]);
 }

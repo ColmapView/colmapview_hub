@@ -84,6 +84,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .danger { background: #b95d55; color: white; }
 .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .gallery-card { display: grid; gap: 8px; text-decoration: none; }
+.asset-summary { color: #bcbcbc; line-height: 1.55; }
 .gallery-card img { display: block; width: 100%; height: auto; border-radius: 6px; }
 [hidden] { display: none !important; }
 @media (max-width: 400px) {

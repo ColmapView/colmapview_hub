@@ -11,12 +11,24 @@ export interface LicenseInfo {
   url?: string;
 }
 
+export interface AssetSummary {
+  format: 'folder' | 'zip';
+  imageFormat: 'original' | 'jpeg';
+  colmap: { files: number; cameras: number; points: number };
+  images: number;
+  masks: number;
+  splats: number;
+  viewerSettings: boolean;
+  preview: boolean;
+}
+
 export interface LinkMetadata {
   viewerUrl: string;
   title: string;
   description: string;
   thumbnailBase64: string;
   license?: LicenseInfo;
+  assets?: AssetSummary;
 }
 
 export interface CreateLinkInput extends LinkMetadata {
@@ -34,4 +46,4 @@ export interface LinkRecord extends LinkMetadata {
   listed: boolean;
 }
 
-export interface ListedLink { id: string; title: string; createdAt: string }
+export interface ListedLink { id: string; title: string; createdAt: string; assets?: AssetSummary }

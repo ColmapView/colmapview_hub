@@ -1,5 +1,5 @@
 import { MAX_PREVIEW_BYTES, MAX_REQUEST_BYTES, PREVIEW_HEIGHT, PREVIEW_WIDTH, ID_PATTERN, isListedId } from '../shared/model';
-import type { CreateLinkInput, LicenseInfo, LinkMetadata, LinkRecord } from '../shared/model';
+import type { AssetSummary, CreateLinkInput, LicenseInfo, LinkMetadata, LinkRecord } from '../shared/model';
 
 export class InputError extends Error {
   constructor(message: string, readonly status = 400) { super(message); }
@@ -7,6 +7,22 @@ export class InputError extends Error {
 
 export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function parseAssetSummary(value: unknown): AssetSummary {
+  if (!isObject(value) || Object.keys(value).some(key => !['format', 'imageFormat', 'colmap', 'images', 'masks', 'splats', 'viewerSettings', 'preview'].includes(key))
+    || (value.format !== 'folder' && value.format !== 'zip') || (value.imageFormat !== 'original' && value.imageFormat !== 'jpeg')
+    || (value.format === 'folder' && value.imageFormat !== 'original') || typeof value.viewerSettings !== 'boolean' || typeof value.preview !== 'boolean'
+    || !isObject(value.colmap) || Object.keys(value.colmap).some(key => !['files', 'cameras', 'points'].includes(key))) {
+    throw new InputError('Asset summary is invalid.');
+  }
+  const count = (value: unknown): number => {
+    if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) throw new InputError('Asset counts must be nonnegative whole numbers.');
+    return value;
+  };
+  return { format: value.format, imageFormat: value.imageFormat,
+    colmap: { files: count(value.colmap.files), cameras: count(value.colmap.cameras), points: count(value.colmap.points) },
+    images: count(value.images), masks: count(value.masks), splats: count(value.splats), viewerSettings: value.viewerSettings, preview: value.preview };
 }
 
 const hasControls = (value: string) => [...value].some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127);
@@ -99,17 +115,19 @@ export function parseMetadata(value: Record<string, unknown>): LinkMetadata {
   if (typeof thumbnailBase64 !== 'string') throw new InputError('Preview is required.');
   decodePreview(thumbnailBase64);
   const license = licenseInfo(value.license);
+  const assets = value.assets === undefined ? undefined : parseAssetSummary(value.assets);
   return {
     viewerUrl: viewerUrl(value.viewerUrl),
     title: text(value.title, 'Title', 120),
     description: text(value.description, 'Description', 280, true),
     thumbnailBase64,
     ...(license ? { license } : {}),
+    ...(assets ? { assets } : {}),
   };
 }
 
 export function parseCreateInput(value: unknown): CreateLinkInput {
-  if (!isObject(value) || Object.keys(value).some(key => !['viewerUrl', 'title', 'description', 'thumbnailBase64', 'license', 'managementSecret', 'listed', 'publicAcknowledged'].includes(key))) {
+  if (!isObject(value) || Object.keys(value).some(key => !['viewerUrl', 'title', 'description', 'thumbnailBase64', 'license', 'assets', 'managementSecret', 'listed', 'publicAcknowledged'].includes(key))) {
     throw new InputError('Invalid link request.');
   }
   if (value.publicAcknowledged !== true) throw new InputError('Confirm that this link and preview will be accessible to anyone with the link.');

@@ -2,7 +2,7 @@ import { env, exports } from 'cloudflare:workers';
 import { evictDurableObject, listDurableObjectIds, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN, MAX_REQUEST_BYTES } from '../src/shared/model';
-import type { CreateLinkInput } from '../src/shared/model';
+import type { AssetSummary, CreateLinkInput } from '../src/shared/model';
 import { clientIdentity } from '../src/worker/crypto';
 import { recordKey, WORDLIST_KEY } from '../src/worker/records';
 import { preview } from './fixtures/preview';
@@ -11,6 +11,8 @@ const origin = 'https://colmapview.opsiclear.com';
 const base = `${origin}/hub`;
 const ip = '192.0.2.1';
 const owner = 'A'.repeat(43);
+const assets: AssetSummary = { format: 'zip', imageFormat: 'jpeg', colmap: { files: 5, cameras: 83, points: 83749 },
+  images: 83, masks: 82, splats: 1, viewerSettings: true, preview: false };
 interface LinkResult { id: string; url: string; managementPath: string }
 
 function input(overrides: Partial<CreateLinkInput> = {}): CreateLinkInput {
@@ -51,6 +53,48 @@ beforeEach(async () => {
 afterEach(() => { vi.restoreAllMocks(); });
 
 describe('unlisted records and social cards', () => {
+  it('stores and displays asset types, counts, format and model statistics in the card and social metadata', async () => {
+    const link = await create(input({ assets }));
+    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<Record<string, unknown>>();
+    expect(record.assets).toEqual(assets);
+    const html = await (await request(`/${link.id}`)).text();
+    expect(html).toContain('aria-label="Dataset assets"');
+    expect(html).toContain('5 COLMAP files (83 cameras, 83,749 points)');
+    expect(html).toContain('83 images (JPEG) · 82 masks · 1 Gaussian splat · Viewer settings');
+    expect(html).toMatch(/name="twitter:description" content="[^"]*83 images \(JPEG\)/);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+  });
+
+  it('retries summaries with reordered fields idempotently and refuses changed counts', async () => {
+    const first = await create(input({ assets }));
+    expect(await create(input({ assets: { ...assets, colmap: { points: 83749, cameras: 83, files: 5 } } }))).toEqual(first);
+    const changed = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input({ assets: { ...assets, images: 84 } })) });
+    expect(changed.status).toBe(409);
+    expect(await (await env.LINKS.get(recordKey(first.id)))!.json<Record<string, unknown>>()).toMatchObject({ assets });
+  });
+
+  it.each([
+    null, { ...assets, images: -1 }, { ...assets, masks: 1.5 }, { ...assets, splats: Number.MAX_SAFE_INTEGER + 1 },
+    { ...assets, imageFormat: 'unknown' }, { ...assets, format: 'folder' }, { ...assets, viewerSettings: 'true' },
+    { ...assets, colmap: { ...assets.colmap, files: '5' } }, { ...assets, paths: ['private.jpg'] },
+  ])('rejects malformed asset summaries without saving a record: %j', async summary => {
+    const response = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...input(), assets: summary }) });
+    expect(response.status).toBe(400);
+    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(0);
+  });
+
+  it('preserves legacy fingerprints and cards without inventing asset counts', async () => {
+    const payload = input();
+    const link = await create(payload);
+    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<Record<string, unknown>>();
+    const legacyFingerprint = JSON.stringify([payload.viewerUrl, payload.title, payload.description, payload.thumbnailBase64, '', '', '']);
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(legacyFingerprint));
+    expect(record.fingerprint).toBe([...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join(''));
+    expect(await create(payload)).toEqual(link);
+    expect(await (await request(`/${link.id}`)).text()).not.toContain('aria-label="Dataset assets"');
+  });
   it('saves one base64 record, emits an HTML card and public JPEG, and preserves the viewer fragment and license', async () => {
     const payload = input({ license: { id: 'cc-by-4.0', name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } });
     const link = await create(payload);
@@ -280,10 +324,11 @@ describe('ownership and request validation', () => {
 describe('opt-in results gallery', () => {
   it('has no submission form and shows only explicit listings', async () => {
     const unlisted = await create();
-    const listed = await create(input({ listed: true, title: 'Public result', managementSecret: 'B'.repeat(43) }));
+    const listed = await create(input({ listed: true, title: 'Public result', managementSecret: 'B'.repeat(43), assets }));
     const html = await (await request('/')).text();
     expect(html).toContain(listed.id);
     expect(html).toContain('Public result');
+    expect(html).toContain('5 COLMAP files · 83 images (JPEG) · 82 masks · 1 Gaussian splat');
     expect(html).not.toContain(unlisted.id);
     expect(html).not.toContain('type="file"');
     expect(html).not.toContain('create-link');

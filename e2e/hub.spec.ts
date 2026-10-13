@@ -11,6 +11,8 @@ for (const width of [1280, 360]) {
       viewerUrl: 'https://colmapview.opsiclear.com/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43',
       title: 'Example reconstruction', description: 'Public metadata, private source permissions.',
       thumbnailBase64: preview, managementSecret: owner, publicAcknowledged: true, listed: width === 360,
+      assets: { format: 'zip', imageFormat: 'jpeg', colmap: { files: 5, cameras: 83, points: 83749 },
+        images: 83, masks: 82, splats: 1, viewerSettings: true, preview: false },
     } });
     expect(created.status()).toBe(201);
     const link = await created.json();
@@ -20,11 +22,14 @@ for (const width of [1280, 360]) {
       await expect(page.getByRole('heading', { name: 'Shared results' })).toBeVisible();
       await expect(page.locator('input,textarea,form')).toHaveCount(0);
       await expect(page.locator('a.gallery-card')).toHaveCount(width === 360 ? 1 : 0);
+      if (width === 360) await expect(page.locator('a.gallery-card .asset-summary')).toContainText('83 images (JPEG)');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.screenshot({ path: testInfo.outputPath(`gallery-${width}.png`) });
       await page.goto(link.url);
       await expect(page.getByRole('heading', { name: 'Example reconstruction', exact: true })).toBeVisible();
       await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
+      await expect(page.getByLabel('Dataset assets', { exact: true })).toContainText('5 COLMAP files (83 cameras, 83,749 points)');
+      await expect(page.getByLabel('Dataset assets', { exact: true })).toContainText('83 images (JPEG) · 82 masks · 1 Gaussian splat');
       expect(await page.locator('#player img').evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([600, 315]);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.route('https://colmapview.opsiclear.com/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Interactive viewer fixture</h1>' }));

@@ -52,7 +52,8 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   const words = await readWordlists(env.LINKS);
   const id = await deriveId(env.HUB_KEY, input.managementSecret, words, input.listed);
   const ownerHash = await hash(input.managementSecret);
-  const metadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64, ...(input.license ? { license: input.license } : {}) };
+  const metadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
+    ...(input.license ? { license: input.license } : {}), ...(input.assets ? { assets: input.assets } : {}) };
   const fingerprint = await hash(metadataFingerprint(metadata));
   const result = () => json({ id, url: `${location.base}/${id}`, managementPath: `${location.path}/manage/${id}` }, 201);
   const replay = (record: LinkRecord): Response => {
@@ -67,7 +68,8 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(), listed: input.listed };
   const stored = await env.LINKS.put(recordKey(id), JSON.stringify(record), {
     onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType: 'application/json' },
-    ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt } } : {}),
+    ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt,
+      ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
   });
   if (!stored) {
     const current = await readRecord(env.LINKS, id);
