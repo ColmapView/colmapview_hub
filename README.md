@@ -1,32 +1,79 @@
 # ColmapView Hub
 
-A small companion to [ColmapView](https://github.com/ColmapView/Colmapview.github.io): save a viewer link, its metadata, and a thumbnail after a public upload. ColmapView automatically shortens public Hugging Face and shared Drive links, and checks bucket uploads without credentials before shortening them. Private uploads keep their original viewer link and send nothing to the Hub. New viewer uploads create unlisted links; no gallery listing control is exposed yet. There is no standalone submission or dataset upload form on the Hub.
+A small companion to [ColmapView](https://github.com/ColmapView/Colmapview.github.io). It saves a viewer link, its metadata and a thumbnail for every upload made from ColmapView, and shows them as a card. Data anyone can open without signing in gets a short name such as `HappyTree`; everything else gets an unguessable name such as `HappyTree-q3ZfK0aB7xLmP2Ws`. There is no standalone submission or dataset upload form on the Hub.
 
-The card page provides an X/Twitter large-image preview and a Play 3D button that loads the existing viewer only on a click. The homepage shows only creators' explicit listings.
+Cards provide an X/Twitter large-image preview. Public cards have a Play 3D button that loads the viewer only on a click; private cards link to the viewer instead, because signing in inside an iframe is unreliable. The gallery of listed results is off unless `HUB_LISTINGS_ENABLED` is `true`; while it is off, `/hub/` shows a short landing page.
 
-Target address: `https://colmapview.opsiclear.com/hub/`. A separate Cloudflare Worker owns only `/hub` and `/hub/*`; the existing Pages viewer and its other routes remain separate. The origin and base path are configurable for a future subdomain.
+Target address: `https://colmapview.opsiclear.com/hub/`. A separate Cloudflare Worker owns only `/hub` and `/hub/*`; the Pages viewer and its other routes stay separate. Static files in `public/hub/` are served by Cloudflare without running the Worker, so that folder must match `HUB_PATH`.
 
 ## What is stored
 
-One JSON object in a private R2 bucket per link: the viewer URL (including its camera/settings fragment), title, description, optional supplied license information, a base64 JPEG, creation time, and ownership hashes. The client prepares a 600 × 315 JPEG around 70% quality, preserving aspect ratio against a dark background and reducing quality if needed to fit 64 KiB. Canvas re-encoding removes source image metadata. `og:image` uses an ordinary public HTTPS JPEG endpoint, not a data URL.
+One JSON object per link in a private R2 bucket:
+- the viewer URL, including its camera and settings fragment;
+- the title, description, optional license name and URL, and an asset summary;
+- a base64 JPEG preview;
+- the creation time and ownership hashes;
+- `access: "private"`, on private links only.
 
-New uploads also include a small `assets` summary: folder or ZIP format, original or JPEG image encoding, counts of COLMAP files, cameras, points, images, masks, and Gaussian splats, and whether viewer settings and a dataset cover are present. Counts come from the actual prepared upload inventory and survive ZIP packaging and retries. The result card, gallery, and social-card description show the available asset types. Earlier links without a summary remain valid and show no guessed counts. No per-file list or additional storage index is needed.
+The viewer crops its preview to fill 600 × 315 and keeps it under 64 KiB. The Hub rejects JPEGs that carry EXIF (APP1) or comment segments. `og:image` is an ordinary public HTTPS JPEG endpoint, cached for five minutes.
 
-No dataset files, provider credentials, accounts, database, storage browser, search, or sitemap. The server never fetches submitted dataset URLs. Play 3D embeds the existing viewer; storage access and sign-in remain the viewer's responsibility. X receives a thumbnail card, not an inline WebGL player.
+The asset summary counts images, points, masks and Gaussian splats; cards show the nonzero counts. Records are read tolerantly: a page needs only a title, an http(s) viewer URL and a preview, so records written by older Hubs keep rendering.
 
-Links are **unlisted by default, not authenticated**. Anyone with a link can read its metadata and preview; publicly disclosed links can be collected. Opted-in listings appear in the gallery. Existing dataset storage permissions still apply. Deletion removes the Hub's complete record and its listing together; external social-card caches may retain previously fetched previews.
+The Hub stores no dataset files, provider credentials, accounts, database, storage browser, search or sitemap. The server never fetches submitted dataset URLs. X receives a thumbnail card, not an inline WebGL player.
+
+Anyone with a link can read its card, and publicly disclosed links can be collected. Dataset storage permissions still apply. Deletion removes the record and any listing together; external social-card caches may keep previews they already fetched. With listings on, gallery pages are cached for a minute; a deletion clears the cached first page in the data center that handled it, and a deleted listing can stay for up to a minute in other data centers, on later pages and in browsers.
 
 ## IDs and ownership
 
-New unlisted IDs use only an adjective and noun, such as `HappyTree`, independently of the source URL or title. Sixteen deterministic HMAC candidates handle occupied names using conditional R2 writes, without replacing another owner's record or adding an index. Every candidate is checked for an existing owned record before a vacancy is used, so retries keep the same assigned name even after an earlier collision is deleted. Allocation is bounded and fails without overwriting when all candidates are occupied.
+**Public requests** (no `access`, or `access: "public"`):
+- They try sixteen deterministic HMAC word-pair candidates, with create-only R2 writes, so no write replaces another owner's record.
+- Every candidate is checked for this owner's record before a vacancy is used, so retries keep the same name even after an earlier collision is deleted.
+- When all sixteen are taken, the Hub answers 409.
 
-The real 4,096-adjective and 8,192-noun dictionaries provide **33,554,432 combinations**. They are private server configuration in `internal/wordlists-v1.json`, never Git or client assets. Short names have about 25 bits of space; private word lists alone are not an enumeration defense. The lookup cooldown remains essential, and links do not grant authenticated privacy.
+**Private requests** get one long name from the `link:` HMAC domain. That is the scheme unlisted links used before word pairs, and those legacy links keep resolving.
 
-Existing links with 96-bit suffixes retain their URLs, creation retries, and management keys. Listed records continue to use their existing separate HMAC domain and `-L` suffix in the `listed/` namespace. The gallery scans only `listed/`; unlisted links remain in `links/`. Each record and its optional listing share a single conditional R2 write. Existing IDs are not renamed or moved.
+**Listed links** use the `listed-link:` domain with an `-L` suffix, in the `listed/` namespace. The gallery scans only `listed/`.
 
-A browser generates a 256-bit management key before submitting. Its hash is stored; the raw key stays in the browser and in the private management link's URL fragment. Save that link to delete the record later. Creation retries with the same key and content are idempotent; concurrent writes cannot replace an existing record. Keep `HUB_KEY` and the version-1 dictionary configuration stable for deterministic creation retries.
+**Word lists:**
+- The 4,096-adjective and 8,192-noun dictionaries give 33,554,432 short names (about 25 bits).
+- They are private server configuration in `internal/wordlists-v1.json`, never in Git or client assets. Each isolate keeps them once read.
+- Short names are only for data that is public anyway, and the lookup cooldown remains essential.
 
-Three different missing/malformed IDs in ten minutes produce a ten-minute cooldown for that client IP. Duplicate page/image/HEAD failures count once. All lookup surfaces honor the same guard, including the gallery; known IDs with incorrect deletion keys fail identically to unknown IDs. IPs are HMAC-keyed before actor routing; no raw IP is stored in application state. Shared IPs share the cooldown, and changing IPs bypasses an IP guard. There is no User-Agent exemption or human verification. Creation is limited to 20 attempts per hour per IP. Creation and deletion accept only the configured Hub/viewer origins and loopback development origins.
+**Management key:**
+- The browser generates a 256-bit management key before submitting.
+- Its hash is stored. The raw key stays in the browser and in the private delete link's fragment (`/hub/manage/<id>#<key>`).
+- A retry with the same key and content is idempotent; changed content answers 409.
+- Keep `HUB_KEY` and the version-1 dictionaries stable so retries stay deterministic.
+
+## Lookup guard
+
+**The three-miss rule:**
+- Three different missing or malformed names in ten minutes block a client for ten minutes.
+- Duplicate page, preview and HEAD misses count once, and so do letter-case variants of one name.
+- Names typed in another letter case resolve through the word lists and redirect with 308. Unused and invalid word pairs behave identically.
+- Every lookup surface uses the same guard, including the manage page and deletion. A known name with a wrong key fails exactly like an unknown one.
+- Creation is limited to 20 per hour.
+- Refusals (429) are sent no sooner than half a second after the request arrived, so their timing never shows whether a guessed name exists.
+
+**Keying and storage:**
+- Clients are keyed by an HMAC of their IPv4 address or their IPv6 /64 network. IPv4-mapped addresses count as IPv4, and no raw IP is stored.
+- Shared networks share the cooldown, and changing networks bypasses it.
+- The guard keeps one small value in a SQLite Durable Object's synchronous KV store, and only while something is pending.
+- The guard's alarm deletes that value at most an hour after the client's last miss or creation. A client that only finds links stores nothing.
+
+**Two exceptions to the three-miss rule, neither based on the User-Agent:**
+- Another site embedding a preview or card sends `Sec-Fetch-Site: cross-site` with a `Sec-Fetch-Dest` other than `document`. Cross-site prefetches (`Sec-Purpose: prefetch`) are treated the same way, so another site cannot spend a visitor's misses. Such a request gets a plain 404, with no lookup and no strike. `/api/` is exempt.
+- If the optional secret `VERIFIED_BOT_TOKEN` is set, a request carrying it in `X-Hub-Verified-Bot` may make 30 misses per ten minutes, still per network. A Cloudflare Transform Rule adds that header for verified bots.
+
+Creation and deletion accept the Hub's own origin and the two viewer origins. Loopback origins and loopback viewer URLs are accepted only when the Hub itself runs on loopback.
+
+## Look
+
+Hub pages use ColmapView's public-page design.
+- `public/hub/colmapview.css` is a byte-for-byte copy of the viewer's `public/policy.css`. Its IBM Plex Sans font and license are in `public/hub/fonts/`.
+- `public/hub/styles.css` adds only the Hub's own parts.
+- `npm run check` runs `scripts/check-colmapview-css.mjs`, which compares the copy's SHA-256 with a pinned value. The viewer's `src/theme/policyCssCopy.test.ts` pins the same value.
+- To update the copy, copy the viewer's file, then change the hash in both places.
 
 ## Development
 
@@ -35,7 +82,10 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5201/hub/`. Development uses explicitly local R2/DO state and public fixture word lists. Private dictionaries and production credentials are not needed. The dev launcher copies `.dev.vars.example` only if `.dev.vars` does not already exist. Create links through the API for isolated Hub tests, or use ColmapView's upload dialogs for the complete flow.
+Open `http://localhost:5201/hub/`.
+- Development uses local R2 and Durable Object state and public fixture word lists. Private dictionaries and production credentials are not needed.
+- The dev launcher copies `.dev.vars.example` only when `.dev.vars` doesn't exist yet.
+- To create links from a local viewer, run it with `VITE_HUB_BASE_URL=http://localhost:5201/hub`. A local Hub accepts loopback origins and viewer URLs.
 
 ```sh
 npm run check
@@ -43,14 +93,14 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Workers tests execute against the actual Workers/R2/SQLite Durable Object runtime. Browser checks create records through the API, display cards and opted-in listings, play, and delete local records at desktop and phone sizes. The viewer frame is intercepted in the browser test, so it tests the integration contract rather than rendering a full dataset. No production dataset storage is used.
+Workers tests run against the real Workers, R2 and SQLite Durable Object runtime. Browser checks create records through the API; display, play and delete cards; and check the look in both color schemes. The viewer frame is intercepted, so they test the integration contract rather than rendering a full dataset.
 
 ## Production setup
 
-Authenticate Wrangler with the Cloudflare account that owns the `opsiclear.com` zone. The account ID is set in `wrangler.jsonc`; deployments require access to Workers routes, R2, and Durable Objects.
+Authenticate Wrangler with the Cloudflare account that owns the `opsiclear.com` zone. The account ID is set in `wrangler.jsonc`. Deployments need access to Workers routes, R2 and Durable Objects.
 
-1. Create the private R2 bucket `colmapview-hub`. Do not enable an R2 public URL or custom domain.
-2. Configure `HUB_KEY` as 32 cryptographically random bytes encoded as unpadded base64url through `wrangler secret put`. Never put it in source, public assets, or GitHub output.
+1. Create the private R2 bucket `colmapview-hub`. Don't enable an R2 public URL or custom domain.
+2. Set `HUB_KEY` with `wrangler secret put`: 32 cryptographically random bytes, encoded as unpadded base64url. Never put it in source, public assets or GitHub output.
 3. Prepare and upload the immutable private dictionary configuration from its private folder:
 
 ```sh
@@ -58,6 +108,11 @@ node scripts/prepare-wordlists.mjs /absolute/private/dictionary-folder
 npx wrangler r2 object put colmapview-hub/internal/wordlists-v1.json --remote --file /absolute/private/dictionary-folder/wordlists-v1.json
 ```
 
-4. Run the checks, then `npm run deploy`. The two exact Worker routes in `wrangler.jsonc` mount only the Hub path. Verify the existing viewer root and `/hub/` independently.
+4. Optional: add a Transform Rule that sets `X-Hub-Verified-Bot` for Cloudflare's verified bots on `/hub/*`, then run `npx wrangler secret put VERIFIED_BOT_TOKEN` with the same value. Also optional: a WAF rate-limiting rule for `/hub/*`.
+5. Run the checks, then `npm run deploy`.
+   - Migration `v2` replaces the `ClientGuard` class with `LookupGuard` and deletes the old per-client storage, so active cooldowns reset once.
+   - After deploying, check that `/hub/styles.css` returns 200 with an `ETag` and `X-Content-Type-Options: nosniff`, and that `/hub/<id>`, `/hub/manage/<id>` and `/hub/api/links` still reach the Worker.
+   - Check the viewer root and `/hub/` separately.
+   - Deploy the Hub before releasing a viewer that sends `access`.
 
-WordNet's source license is preserved inside the private configuration. License information attached to a dataset link is supplied by its creator; the Hub does not infer or grant dataset rights.
+WordNet's source license is preserved inside the private configuration. License information attached to a dataset link comes from its creator; the Hub neither infers nor grants dataset rights.
