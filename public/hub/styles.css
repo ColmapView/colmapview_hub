@@ -19,7 +19,10 @@
 .status { margin-top: var(--sp-4); }
 .status:empty { display: none; }
 .status:focus-visible, .button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
-button.button { font: inherit; cursor: pointer; }
+/* A flex button drops the space before a trailing ↗; the gap puts it back. */
+.button { gap: var(--sp-1); }
+/* The family only: the font shorthand would outrank .button's size and weight. */
+button.button { font-family: inherit; cursor: pointer; }
 .button:disabled { opacity: 0.5; cursor: default; }
 /* The viewer's primary and danger pairings. Danger text uses --bg-void, not white, to reach 4.5:1 in both schemes. */
 .button-primary, .button-primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg-void); }
@@ -31,7 +34,8 @@ button.button { font: inherit; cursor: pointer; }
 .player.playing { aspect-ratio: auto; height: 70vh; }
 .player iframe { display: block; width: 100%; height: 100%; border: 0; }
 .thumbnail { display: block; width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: var(--radius-lg); }
-.gallery-card { display: grid; gap: var(--sp-2); padding: 0; overflow: hidden; text-decoration: none; }
+/* Cards stretch to their row; align-content keeps a card without an asset line tight under its image. */
+.gallery-card { display: grid; align-content: start; gap: var(--sp-2); padding: 0; overflow: hidden; text-decoration: none; }
 .gallery-card img { display: block; width: 100%; height: auto; aspect-ratio: 600 / 315; object-fit: cover; }
 .gallery-card > span { padding-inline: var(--sp-4); }
 .gallery-card > span:last-child { padding-bottom: var(--sp-4); }

@@ -43,7 +43,9 @@ if (deletion) {
         return;
       }
       const minutes = Math.ceil(Number(response.headers.get('Retry-After') ?? 600) / 60);
-      say(response.status === 429 ? `Too many missing links from your network. Try again in ${minutes} minutes.`
+      const wait = `Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`;
+      say(response.status === 429 ? `Too many missing links from your network. ${wait}`
+        : response.status >= 500 ? 'ColmapView Hub is unavailable. Try again in a few minutes.'
         : "This delete link doesn't match the Hub link.", true);
     } catch { say("Couldn't reach ColmapView Hub.", true); }
     button.disabled = false;

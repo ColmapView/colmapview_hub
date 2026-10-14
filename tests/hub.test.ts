@@ -259,6 +259,17 @@ describe('three-distinct-miss guard', () => {
     expect((await request('/third')).status).toBe(429);
   });
 
+  it('does not count missing fonts or dotted file names as strikes', async () => {
+    const link = await create();
+    for (let index = 0; index < 4; index++) expect((await request(`/fonts/absent-${index}.woff2`)).status).toBe(404);
+    for (let index = 0; index < 4; index++) expect((await request(`/absent-${index}.txt`)).status).toBe(404);
+    expect((await request(`/${link.id}`)).status).toBe(200);
+    // Strikes are keyed by the first path segment, so the font paths could add only one: two more misses must still pass.
+    expect((await request('/first')).status).toBe(404);
+    expect((await request('/second')).status).toBe(404);
+    expect((await request('/third')).status).toBe(429);
+  });
+
   it('does not exempt fake crawler User-Agents, and valid social-card fetches add no strikes', async () => {
     const link = await create();
     for (let index = 0; index < 6; index++) {

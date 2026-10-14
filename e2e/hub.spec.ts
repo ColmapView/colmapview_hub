@@ -90,6 +90,26 @@ test('disables deletion when the delete link lost its key', async ({ page }) => 
   } finally { await removeLink(page, link); }
 });
 
+test('explains a failed deletion and lets the owner try again', async ({ page }) => {
+  const link = await createLink(page);
+  try {
+    await page.goto(`/hub/manage/${link.id}#${link.owner}`);
+    const button = page.getByRole('button', { name: 'Delete permanently', exact: true });
+    const status = page.getByRole('status');
+    for (const [reply, text] of [
+      [{ status: 503 }, 'ColmapView Hub is unavailable. Try again in a few minutes.'],
+      [{ status: 429, headers: { 'Retry-After': '30' } }, 'Too many missing links from your network. Try again in 1 minute.'],
+      [{ status: 404 }, "This delete link doesn't match the Hub link."],
+    ] as const) {
+      await page.route('**/hub/api/links/*', route => route.fulfill(reply), { times: 1 });
+      await button.click();
+      await expect(status).toHaveText(text);
+      await expect(status).toBeFocused();
+      await expect(button).toBeEnabled();
+    }
+  } finally { await removeLink(page, link); }
+});
+
 test('shows a private card with a viewer link and no Play 3D', async ({ page }) => {
   const link = await createLink(page, { access: 'private' });
   try {
@@ -98,6 +118,14 @@ test('shows a private card with a viewer link and no Play 3D', async ({ page }) 
     await expect(page.getByText('Viewers need access to open this dataset.')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Open in ColmapView' })).toHaveAttribute('target', '_blank');
   } finally { await removeLink(page, link); }
+});
+
+// Whether listings are on decides what /hub/ shows, so this checks only what holds either way.
+test('shows the Hub home without a submission form or horizontal scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  expect((await page.goto('/hub/'))!.status()).toBe(200);
+  await expect(page.locator('input, textarea, form')).toHaveCount(0);
+  expect(await noHorizontalScroll(page)).toBe(true);
 });
 
 for (const colorScheme of ['dark', 'light'] as const) {
@@ -127,6 +155,19 @@ for (const colorScheme of ['dark', 'light'] as const) {
     } finally { await removeLink(page, link); }
   });
 }
+
+test('gives the primary and danger buttons the type of link buttons', async ({ page }) => {
+  const link = await createLink(page);
+  const type = (selector: string) => page.locator(selector).evaluate(element =>
+    [getComputedStyle(element).fontFamily, getComputedStyle(element).fontSize, getComputedStyle(element).fontWeight]);
+  try {
+    await page.goto(link.url);
+    const linkType = await type('a.button');
+    expect(await type('.button-primary')).toEqual(linkType);
+    await page.goto(`/hub/manage/${link.id}#${link.owner}`);
+    expect(await type('.button-danger')).toEqual(linkType);
+  } finally { await removeLink(page, link); }
+});
 
 test('serves static files without the Worker, with nosniff and revalidation', async ({ page }) => {
   for (const path of ['/hub/styles.css', '/hub/colmapview.css', '/hub/assets/client.js', '/hub/fonts/ibm-plex-sans-latin-wght-normal.woff2', '/hub/favicon.ico']) {
