@@ -90,6 +90,17 @@ test('disables deletion when the delete link lost its key', async ({ page }) => 
   } finally { await removeLink(page, link); }
 });
 
+test('keeps the delete key across the letter-case redirect', async ({ page }) => {
+  const link = await createLink(page);
+  try {
+    // The 308 Location has no fragment, so the browser carries the key over.
+    await page.goto(`/hub/manage/${link.id.toLowerCase()}#${link.owner}`);
+    expect(new URL(page.url()).pathname).toBe(`/hub/manage/${link.id}`);
+    expect(new URL(page.url()).hash).toBe(`#${link.owner}`);
+    await expect(page.getByRole('button', { name: 'Delete permanently', exact: true })).toBeEnabled();
+  } finally { await removeLink(page, link); }
+});
+
 test('explains a failed deletion and lets the owner try again', async ({ page }) => {
   const link = await createLink(page);
   try {

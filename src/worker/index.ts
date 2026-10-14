@@ -52,21 +52,27 @@ function allowedOrigin(request: Request, location: HubLocation): string | null {
   } catch { return null; }
 }
 
-/** Shared headers, CORS for allowed API callers, and HEAD bodies removed, all in one place. */
-function finalize(request: Request, location: HubLocation, result: Response): Response {
+/** The headers every response carries and no body for HEAD, also for the 503 sent when the Hub location is misconfigured. */
+function withSharedHeaders(request: Request, result: Response): Response {
   const headers = new Headers(result.headers);
   if (!headers.has('Cache-Control')) headers.set('Cache-Control', 'no-store');
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   headers.set('Referrer-Policy', 'no-referrer');
   headers.set('Content-Security-Policy', contentSecurityPolicy());
+  return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });
+}
+
+/** Shared headers, CORS for allowed API callers, and HEAD bodies removed, all in one place. */
+function finalize(request: Request, location: HubLocation, result: Response): Response {
+  const response = withSharedHeaders(request, result);
   const origin = allowedOrigin(request, location);
   if (origin && new URL(request.url).pathname.startsWith(`${location.path}/api/`)) {
-    headers.set('Access-Control-Allow-Origin', origin);
-    headers.set('Access-Control-Expose-Headers', 'Retry-After');
-    headers.set('Vary', 'Origin');
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Expose-Headers', 'Retry-After');
+    response.headers.set('Vary', 'Origin');
   }
-  return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });
+  return response;
 }
 
 async function guardFor(request: Request, env: Env) {
@@ -195,8 +201,8 @@ async function route(request: Request, env: Env, location: HubLocation): Promise
   const parts = path.slice(1).split('/').map(decodeId);
   // Static files are served before the Worker runs; a request that still arrives here is a plain miss, not a strike.
   if (parts[0] === 'assets' || parts[0] === 'fonts' || parts[0].includes('.')) return failure(location, false, 404);
-  if (parts[0] === 'manage') return parts.length === 2 && parts[1] ? lookup(request, env, location, parts[1], 'manage') : miss(request, env, location, path);
-  if (parts.length === 2 && parts[1] === '') return redirect(`${location.base}/${encodeURIComponent(parts[0])}`, 308);
+  if (parts[0] === 'manage') return parts.length === 2 && parts[1] ? lookup(request, env, location, parts[1], 'manage') : miss(request, env, location, parts[1] || path);
+  if (parts.length === 2 && parts[1] === '') return redirect(`${location.origin}${url.pathname.slice(0, -1)}${url.search}`, 308);
   if (parts.length === 1) return lookup(request, env, location, parts[0], 'card');
   if (parts.length === 2 && parts[1] === 'preview.jpg') return lookup(request, env, location, parts[0], 'preview');
   return miss(request, env, location, parts[0]);
@@ -207,7 +213,7 @@ export default {
     const arrived = Date.now();
     let location: HubLocation;
     try { location = hubLocation(env); }
-    catch { return json({ error: UNAVAILABLE }, 503, { 'Cache-Control': 'no-store' }); }
+    catch { return withSharedHeaders(request, json({ error: UNAVAILABLE }, 503)); }
     const api = new URL(request.url).pathname.startsWith(`${location.path}/api/`);
     let result: Response;
     try { result = await route(request, env, location); }

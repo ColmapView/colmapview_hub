@@ -56,11 +56,16 @@ export async function clientIdentity(key: string, ip: string): Promise<string> {
 
 export interface Wordlists { adjectives: string[]; nouns: string[] }
 
+/** The name of a word pair, each word in title case. Creation writes it and letter-case lookups resolve to it. */
+export function canonicalName(adjective: string, noun: string): string {
+  const titleCase = (word: string) => word[0].toUpperCase() + word.slice(1);
+  return `${titleCase(adjective)}${titleCase(noun)}`;
+}
+
 function wordPair(digest: Uint8Array, words: Wordlists): string {
   const adjective = words.adjectives[((digest[0] << 8) | digest[1]) % words.adjectives.length];
   const noun = words.nouns[((digest[2] << 8) | digest[3]) % words.nouns.length];
-  const titleCase = (word: string) => word[0].toUpperCase() + word.slice(1);
-  return `${titleCase(adjective)}${titleCase(noun)}`;
+  return canonicalName(adjective, noun);
 }
 
 export async function deriveShortId(key: string, secret: string, words: Wordlists, attempt: number): Promise<string> {

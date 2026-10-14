@@ -1,4 +1,5 @@
 import { ID_PATTERN } from '../shared/model';
+import { canonicalName } from './crypto';
 import type { Wordlists } from './crypto';
 
 /** A requested name: a word pair in any letter case, with an optional long-name suffix kept as typed. */
@@ -10,7 +11,6 @@ export function missKey(id: string): string {
   return match ? match[1].toLowerCase() + match[2] : id;
 }
 
-const titleCase = (word: string) => word[0].toUpperCase() + word.slice(1);
 const wordSets = new WeakMap<Wordlists, { adjectives: Set<string>; nouns: Set<string> }>();
 
 function setsFor(words: Wordlists) {
@@ -23,19 +23,30 @@ function setsFor(words: Wordlists) {
 }
 
 /**
- * The record key to read for a requested name, and whether a hit redirects to the canonical name.
- * A name in another letter case resolves through the private word lists. Unused and invalid word
- * pairs both still read R2 and both miss, so neither the answer nor its timing reveals the lists.
+ * The one record key to read for a requested name, and whether a hit redirects to the canonical name.
+ * - A name with the canonical shape is read as typed when its own split (the letters before its second
+ *   capital, and the rest) is a valid adjective and noun, or when no split is valid.
+ * - Otherwise a word pair in any letter case resolves to the canonical name of its first valid split, and
+ *   a hit redirects there. A long-name suffix is kept as typed.
+ * - Any other word pair with no valid split reads its lowercase form.
+ * - When the word lists fail to load, a name with the canonical shape is read as typed, which depends only
+ *   on the lists' health, never on the name; for any other name the error propagates.
+ * Unused and invalid word pairs both still read R2 and both miss, so neither the answer nor its timing
+ * reveals the lists. A name that is not a word pair reads nothing.
  */
 export async function lookupTarget(id: string, words: () => Promise<Wordlists>): Promise<{ key: string; redirect: boolean } | null> {
-  if (ID_PATTERN.test(id)) return { key: id, redirect: false };
   const match = LOOSE_ID.exec(id);
   if (!match) return null;
-  const { adjectives, nouns } = setsFor(await words());
+  const asTyped = ID_PATTERN.test(id) ? { key: id, redirect: false } : null;
+  let lists: Wordlists;
+  try { lists = await words(); }
+  catch (error) { if (asTyped) return asTyped; throw error; }
+  const { adjectives, nouns } = setsFor(lists);
   const pair = match[1].toLowerCase();
+  const valid = (split: number) => adjectives.has(pair.slice(0, split)) && nouns.has(pair.slice(split));
+  if (asTyped && valid(match[1].slice(1).search(/[A-Z]/) + 1)) return asTyped;
   for (let split = 3; split <= pair.length - 3; split++) {
-    const [adjective, noun] = [pair.slice(0, split), pair.slice(split)];
-    if (adjectives.has(adjective) && nouns.has(noun)) return { key: titleCase(adjective) + titleCase(noun) + match[2], redirect: true };
+    if (valid(split)) return { key: canonicalName(pair.slice(0, split), pair.slice(split)) + match[2], redirect: true };
   }
-  return { key: pair + match[2], redirect: false };
+  return asTyped ?? { key: pair + match[2], redirect: false };
 }
