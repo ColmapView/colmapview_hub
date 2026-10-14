@@ -145,6 +145,11 @@ export function galleryPage(location: HubLocation, { links, cursor }: { links: L
     + (cards ? `<div class="cards">${cards}</div>` : cursor ? '' : '<p>No results listed yet.</p>') + more);
 }
 
+/** The Cache API key of a gallery page. Only the cursor picks a page, so any other query shares the first page's entry, which purges clear. */
+export function galleryKey(location: HubLocation, cursor?: string): string {
+  return `${location.base}/${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`;
+}
+
 export function landingPage(location: HubLocation): string {
   return page(location, 'Share links', intro('Share links for ColmapView results.', 'Links are created when you publish from ColmapView.',
     `<div class="actions"><a class="button" href="${VIEWER}/">Open ColmapView</a></div>`));

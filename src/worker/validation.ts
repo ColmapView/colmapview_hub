@@ -38,7 +38,8 @@ function text(value: unknown, name: string, max: number, optional = false): stri
 }
 
 const VIEWER_ORIGINS = new Set(['https://colmapview.opsiclear.com', 'https://colmapview.github.io']);
-const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+/** The loopback hosts a CSP frame source can also name; an IPv6 literal such as [::1] can't be framed, so it is refused. */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1']);
 
 /** An http(s) origin on this machine, accepted only when the Hub itself runs locally. */
 export function isLoopbackOrigin(origin: string): boolean {

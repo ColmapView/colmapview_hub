@@ -32,6 +32,18 @@ describe('cross-site subresources', () => {
     expect(await storedKeys('192.0.2.7')).toBe(0);
   });
 
+  it('answer a cross-site prefetch, which arrives as a document request, the same way', async () => {
+    const link = await create(input());
+    const reads = vi.spyOn(env.LINKS, 'get');
+    const prefetch = (purpose: string) => ({ headers: { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'document', 'Sec-Purpose': purpose } });
+    for (const path of [`/${link.id}`, '/MissingOne', '/MissingTwo', '/MissingThree']) {
+      expect((await request(path, prefetch('prefetch'), '192.0.2.7')).status, path).toBe(404);
+    }
+    expect((await request('/MissingFour', prefetch('prefetch;prerender'), '192.0.2.7')).status).toBe(404);
+    expect(reads).not.toHaveBeenCalled();
+    expect(await storedKeys('192.0.2.7')).toBe(0);
+  });
+
   it('leave the API alone, because the GitHub Pages viewer calls it cross-site', async () => {
     const response = await request('/api/links', { method: 'POST', headers: { Origin: 'https://colmapview.github.io', 'Sec-Fetch-Site': 'cross-site',
       'Sec-Fetch-Dest': 'empty', 'Content-Type': 'application/json' }, body: JSON.stringify(input()) });
@@ -51,14 +63,15 @@ describe('verified bots', () => {
     expect((await request('/miss-1', bot(token), '192.0.2.8', { VERIFIED_BOT_TOKEN: token })).status).toBe(404);
   });
 
+  // Four refusals, each held for REFUSAL_FLOOR_MS, use two of the default five seconds.
   it('get nothing extra without the secret or with a wrong token', async () => {
-    for (const [overrides, value] of [[{}, token], [{ VERIFIED_BOT_TOKEN: token }, 'guessed-token']] as const) {
+    for (const [overrides, value] of [[{}, token], [{ VERIFIED_BOT_TOKEN: token }, 'guessed-token'], [{}, ''], [{ VERIFIED_BOT_TOKEN: '' }, '']] as const) {
       await resetState();
       await request('/one', bot(value), ip, overrides);
       await request('/two', bot(value), ip, overrides);
       expect((await request('/three', bot(value), ip, overrides)).status).toBe(429);
     }
-  });
+  }, 10_000);
 });
 
 describe('listings flag', () => {
@@ -89,6 +102,38 @@ describe('listings flag', () => {
     const another = await create(input({ listed: true, title: 'Another result', managementSecret: 'B'.repeat(43) }), ip, listings);
     expect(await (await request('/', {}, ip, listings)).text()).toContain(another.id);
   });
+
+  it('lists the bucket once for two gallery requests within the minute', async () => {
+    await create(input({ listed: true }), ip, listings);
+    const list = vi.spyOn(env.LINKS, 'list');
+    for (let index = 0; index < 2; index++) expect((await request('/', {}, ip, listings)).status).toBe(200);
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+
+  it('keys gallery pages by cursor alone, so other query parameters share the first page that purges clear', async () => {
+    const listed = await create(input({ listed: true }), ip, listings);
+    const list = vi.spyOn(env.LINKS, 'list');
+    expect(await (await request('/?utm_source=share', {}, ip, listings)).text()).toContain(listed.id);
+    expect(await (await request('/?cursor=', {}, ip, listings)).text()).toContain(listed.id);
+    expect(list).toHaveBeenCalledTimes(1);
+    expect((await remove(listed.id)).status).toBe(204);
+    expect(await (await request('/?utm_source=share', {}, ip, listings)).text()).not.toContain(listed.id);
+  });
+
+  it('refuses a blocked client even while the gallery page is cached', async () => {
+    expect((await request('/', {}, '192.0.2.2', listings)).status).toBe(200);
+    expect(await caches.default.match(`${origin}/hub/`)).toBeDefined();
+    await request('/one'); await request('/two');
+    expect((await request('/three')).status).toBe(429);
+    expect((await request('/', {}, ip, listings)).status).toBe(429);
+  });
+
+  it('still answers a listed creation and deletion when the cache purge fails, since the page expires within a minute', async () => {
+    const purge = vi.spyOn(caches.default, 'delete').mockRejectedValue(new Error('Cache unavailable'));
+    const listed = await create(input({ listed: true }), ip, listings);
+    expect((await remove(listed.id)).status).toBe(204);
+    expect(purge).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('loopback origins', () => {
@@ -108,7 +153,16 @@ describe('loopback origins', () => {
       body: JSON.stringify(input({ viewerUrl: localViewer })) }, ip, local);
     expect(response.status).toBe(201);
     const { id } = await response.json<{ id: string }>();
-    expect((await request(`/${id}`, {}, ip, local)).headers.get('Content-Security-Policy'))
+    const card = await request(`/${id}`, {}, ip, local);
+    expect(card.status).toBe(200);
+    expect(card.headers.get('Content-Security-Policy'))
       .toContain('frame-src https://colmapview.opsiclear.com https://colmapview.github.io http://localhost:* http://127.0.0.1:*');
+    expect(await card.text()).toContain(`data-viewer-url="${localViewer}"`);
+  });
+
+  it('mean only localhost and 127.0.0.1, the hosts a frame source can name', async () => {
+    expect((await request('/api/links', { method: 'OPTIONS', headers: { Origin: 'http://127.0.0.1:5173' } }, ip, local)).status).toBe(204);
+    expect((await request('/api/links', { method: 'OPTIONS', headers: { Origin: 'http://[::1]:5173' } }, ip, local)).status).toBe(403);
+    expect((await post(input({ viewerUrl: 'http://[::1]:5173/' }), ip, local)).status).toBe(400);
   });
 });

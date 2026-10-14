@@ -3,7 +3,7 @@ import type { CardRecord, LinkMetadata, LinkRecord, Ownership } from '../shared/
 import { clientIdentity, deriveLongId, deriveShortId, equalHashes, equalSecrets, hash } from './crypto';
 import { MAX_MISSES, REFUSAL_FLOOR_MS, VERIFIED_BOT_MAX_MISSES } from './guard';
 import { lookupTarget, missKey } from './ids';
-import { blockedPage, cardPage, errorPage, galleryPage, hubLocation, landingPage, managementPage, notFoundPage, unavailablePage } from './pages';
+import { blockedPage, cardPage, errorPage, galleryKey, galleryPage, hubLocation, landingPage, managementPage, notFoundPage, unavailablePage } from './pages';
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
@@ -23,9 +23,13 @@ function json(value: unknown, status = 200, headers: Record<string, string> = {}
 
 const redirect = (target: string, status: 307 | 308) => new Response(null, { status, headers: { Location: target } });
 
-/** Another site embedding a card or preview gets a plain 404: no record read, no strike. Navigations still work. */
+/**
+ * Another site embedding or prefetching a card or preview gets a plain 404: no record read, no strike. A cross-site
+ * prefetch arrives as a document request, so its Sec-Purpose marks it; otherwise a hostile page could spend a
+ * visitor's misses. Navigations still work.
+ */
 const crossSiteSubresource = (request: Request) => request.headers.get('Sec-Fetch-Site') === 'cross-site'
-  && request.headers.get('Sec-Fetch-Dest') !== 'document';
+  && (request.headers.get('Sec-Fetch-Dest') !== 'document' || (request.headers.get('Sec-Purpose') ?? '').includes('prefetch'));
 
 /** Cloudflare's verified bots carry the secret token from a Transform Rule; a missing or guessed token gets the normal limit. */
 function missLimit(request: Request, env: Env): number {
@@ -34,6 +38,11 @@ function missLimit(request: Request, env: Env): number {
 }
 
 const listingsEnabled = (env: Env) => env.HUB_LISTINGS_ENABLED === 'true';
+
+/** Purges this data center's cached first gallery page; elsewhere it expires within a minute, so a failed purge is ignored too. */
+async function purgeGallery(location: HubLocation): Promise<void> {
+  try { await caches.default.delete(galleryKey(location)); } catch { /* The page expires within a minute anyway. */ }
+}
 
 /** Page routes answer with HTML pages; API routes answer with JSON. */
 function failure(location: HubLocation, api: boolean, status: number, message?: string): Response {
@@ -128,7 +137,7 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
         ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
     });
     if (stored) {
-      if (record.listed) await caches.default.delete(new Request(`${location.base}/`));
+      if (record.listed) await purgeGallery(location);
       return created(id);
     }
     const current = await readOwnership(env.LINKS, id);
@@ -184,8 +193,7 @@ async function deleteLink(request: Request, env: Env, location: HubLocation, id:
   if (wait) return blocked(location, true, wait);
   if (!owned) return failure(location, true, 404);
   await env.LINKS.delete(recordKey(id));
-  // A deleted listing leaves the first gallery page at once; later pages expire within a minute.
-  if (isListedId(id)) await caches.default.delete(new Request(`${location.base}/`));
+  if (isListedId(id)) await purgeGallery(location);
   return new Response(null, { status: 204 });
 }
 
@@ -197,7 +205,7 @@ async function home(request: Request, env: Env, location: HubLocation, url: URL)
   const cursor = url.searchParams.get('cursor') ?? undefined;
   if (cursor && cursor.length > 2048) throw new InputError('Invalid page cursor.');
   // Listed pages change rarely; a minute of caching spares the R2 listing.
-  const key = new Request(url.href);
+  const key = galleryKey(location, cursor);
   const cached = await caches.default.match(key);
   if (cached) return cached;
   const page = html(galleryPage(location, await listPublicRecords(env.LINKS, cursor)), 200, { 'Cache-Control': 'public, max-age=60' });
