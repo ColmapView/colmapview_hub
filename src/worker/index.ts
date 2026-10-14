@@ -1,7 +1,7 @@
 import { ID_PATTERN } from '../shared/model';
 import type { CardRecord, LinkMetadata, LinkRecord, Ownership } from '../shared/model';
 import { clientIdentity, deriveLongId, deriveShortId, equalHashes, hash } from './crypto';
-import { cardPage, galleryPage, errorPage, hubLocation, managementPage } from './pages';
+import { cardPage, galleryPage, hubLocation, managementPage, notFoundPage } from './pages';
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, parseCreateInput, readBoundedJson } from './validation';
@@ -16,7 +16,7 @@ function response(body: BodyInit | null, status = 200, type = 'text/html; charse
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   headers.set('Referrer-Policy', 'no-referrer');
-  headers.set('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; frame-src https://colmapview.opsiclear.com https://colmapview.github.io; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
+  headers.set('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; frame-src https://colmapview.opsiclear.com https://colmapview.github.io; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
   return new Response(body, { status, headers });
 }
 
@@ -24,7 +24,7 @@ function blocked(seconds: number): Response {
   return response(JSON.stringify({ error: 'Too many attempts. Try again later.' }), 429, 'application/json; charset=utf-8', { 'Retry-After': String(seconds) });
 }
 
-function notFound(location: HubLocation): Response { return response(errorPage(location, 'Link not found'), 404); }
+function notFound(location: HubLocation): Response { return response(notFoundPage(location), 404); }
 function json(value: unknown, status = 200): Response { return response(JSON.stringify(value), status, 'application/json; charset=utf-8'); }
 
 function allowedOrigin(request: Request, location: HubLocation): string | null {
@@ -83,17 +83,20 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   return json({ error: long ? 'This link name is taken. Create a new link.' : 'No free link name. Create a new link.' }, 409);
 }
 
-async function lookup(request: Request, env: Env, location: HubLocation, id: string, image: boolean, supported: boolean): Promise<Response> {
+type View = 'card' | 'preview' | 'manage';
+
+async function lookup(request: Request, env: Env, location: HubLocation, id: string, view: View | null): Promise<Response> {
   const guard = await guardFor(request, env);
   let record: CardRecord | null;
-  try { record = supported && ID_PATTERN.test(id) ? await readCard(env.LINKS, id) : null; }
+  try { record = view && ID_PATTERN.test(id) ? await readCard(env.LINKS, id) : null; }
   catch (error) { const wait = await guard.lookup(null, MAX_MISSES); if (wait) return blocked(wait); throw error; }
   const wait = await guard.lookup(record ? null : await hash(missKey(id)), MAX_MISSES);
   if (wait) return blocked(wait);
   if (!record) return notFound(location);
-  const body = image ? base64Bytes(record.thumbnailBase64) : cardPage(location, record);
-  return response(request.method === 'HEAD' ? null : body, 200, image ? 'image/jpeg' : 'text/html; charset=utf-8',
-    image ? { 'Cache-Control': 'public, max-age=300' } : {});
+  if (view === 'preview') {
+    return response(request.method === 'HEAD' ? null : base64Bytes(record.thumbnailBase64), 200, 'image/jpeg', { 'Cache-Control': 'public, max-age=300' });
+  }
+  return response(request.method === 'HEAD' ? null : view === 'manage' ? managementPage(location, record) : cardPage(location, record));
 }
 
 async function deleteLink(request: Request, env: Env, location: HubLocation, id: string): Promise<Response> {
@@ -137,17 +140,13 @@ async function route(request: Request, env: Env, location: HubLocation): Promise
     const page = await listPublicRecords(env.LINKS, cursor);
     return response(request.method === 'HEAD' ? null : galleryPage(location, page));
   }
-  if (path === '/styles.css' || path === '/assets/client.js') {
-    const assetUrl = new URL(url);
-    assetUrl.pathname = path;
-    const asset = await env.ASSETS.fetch(new Request(assetUrl, request));
-    return response(request.method === 'HEAD' ? null : asset.body, asset.status, asset.headers.get('Content-Type') ?? 'application/octet-stream');
-  }
-  if (/^\/manage\/[^/]+$/.test(path)) return response(request.method === 'HEAD' ? null : managementPage(location));
-  if (path.startsWith('/api/') || path.startsWith('/assets/')) return notFound(location);
+  if (path.startsWith('/api/')) return notFound(location);
   const parts = path.slice(1).split('/');
-  const id = decodeId(parts[0]);
-  return lookup(request, env, location, id, parts.length === 2 && parts[1] === 'preview.jpg', parts.length === 1 || (parts.length === 2 && parts[1] === 'preview.jpg'));
+  // Static files are served before the Worker runs; a request that still arrives here is a plain miss, not a strike.
+  if (parts[0] === 'assets' || parts[0] === 'fonts' || parts[0].includes('.')) return notFound(location);
+  if (parts[0] === 'manage') return lookup(request, env, location, decodeId(parts[1] ?? ''), parts.length === 2 ? 'manage' : null);
+  const view: View | null = parts.length === 1 ? 'card' : parts.length === 2 && parts[1] === 'preview.jpg' ? 'preview' : null;
+  return lookup(request, env, location, decodeId(parts[0]), view);
 }
 
 export default {

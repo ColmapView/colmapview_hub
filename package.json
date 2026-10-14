@@ -9,10 +9,11 @@
     "types": "wrangler types --strict-vars=false",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "lint": "eslint .",
+    "check:css": "node scripts/check-colmapview-css.mjs",
     "test": "vitest run",
     "test:browser": "playwright test --workers=1",
     "build": "npm run build:client && wrangler deploy --dry-run --outdir .tmp/build",
-    "check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "check": "npm run typecheck && npm run lint && npm run check:css && npm test && npm run build",
     "deploy": "npm run build:client && wrangler deploy"
   },
   "devDependencies": {

@@ -19,8 +19,7 @@
   ],
   "assets": {
     "directory": "public",
-    "binding": "ASSETS",
-    "run_worker_first": true
+    "run_worker_first": ["/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico"]
   },
   "r2_buckets": [
     {

@@ -16,15 +16,13 @@ beforeEach(async () => {
 afterEach(() => { vi.restoreAllMocks(); });
 
 describe('unlisted records and social cards', () => {
-  it('stores and displays asset types, counts, format and model statistics in the card and social metadata', async () => {
+  it('stores the asset summary and shows its nonzero counts', async () => {
     const link = await create(input({ assets }));
     const record = await (await env.LINKS.get(recordKey(link.id)))!.json<Record<string, unknown>>();
     expect(record.assets).toEqual(assets);
     const html = await (await request(`/${link.id}`)).text();
-    expect(html).toContain('aria-label="Dataset assets"');
-    expect(html).toContain('5 COLMAP files (83 cameras, 83,749 points)');
-    expect(html).toContain('83 images (JPEG) · 82 masks · 1 Gaussian splat · Viewer settings');
-    expect(html).toMatch(/name="twitter:description" content="[^"]*83 images \(JPEG\)/);
+    expect(html).toContain('83 images · 83,749 points · 82 masks · 1 splat');
+    expect(html).toContain('<meta name="twitter:description" content="A small test scene.">');
     expect(vi.mocked(fetch)).not.toHaveBeenCalled();
   });
 
@@ -56,7 +54,7 @@ describe('unlisted records and social cards', () => {
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(legacyFingerprint));
     expect(record.fingerprint).toBe([...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join(''));
     expect(await create(payload)).toEqual(link);
-    expect(await (await request(`/${link.id}`)).text()).not.toContain('aria-label="Dataset assets"');
+    expect(await (await request(`/${link.id}`)).text()).not.toContain('class="meta"');
   });
   it('saves one base64 record, emits an HTML card and public JPEG, and preserves the viewer fragment and license', async () => {
     const payload = input({ license: { id: 'cc-by-4.0', name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } });
@@ -356,7 +354,7 @@ describe('opt-in results gallery', () => {
     const html = await (await request('/', {}, ip, listings)).text();
     expect(html).toContain(listed.id);
     expect(html).toContain('Public result');
-    expect(html).toContain('5 COLMAP files · 83 images (JPEG) · 82 masks · 1 Gaussian splat');
+    expect(html).toContain('83 images · 83,749 points · 82 masks · 1 splat');
     expect(html).not.toContain(unlisted.id);
     expect(html).not.toContain('type="file"');
     expect(html).not.toContain('create-link');

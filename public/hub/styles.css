@@ -1,0 +1,38 @@
+/* Hub additions. colmapview.css, loaded first, is a copy of ColmapView's public-page stylesheet
+   (colmap-webview/public/policy.css): fonts, tokens, light scheme, header, footer, buttons and cards. */
+:root {
+  --bg-void: #0a0a0a;
+  --error: #b86b6b;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-void: #ffffff;
+    --error: #a23c3c;
+  }
+}
+
+[hidden] { display: none !important; }
+.hub-content { max-width: 752px; padding-bottom: var(--sp-12); }
+.meta, .note, .status { margin: 0; color: var(--text-secondary); font-size: 14px; }
+.note { align-self: center; }
+.status { margin-top: var(--sp-4); }
+.status:empty { display: none; }
+.status:focus-visible, .button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+button.button { font: inherit; cursor: pointer; }
+.button:disabled { opacity: 0.5; cursor: default; }
+/* The viewer's primary and danger pairings. Danger text uses --bg-void, not white, to reach 4.5:1 in both schemes. */
+.button-primary, .button-primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg-void); }
+.button-danger, .button-danger:hover { background: var(--error); border-color: var(--error); color: var(--bg-void); }
+.button-primary:hover:not(:disabled), .button-danger:hover:not(:disabled) { filter: brightness(1.1); }
+.player { position: relative; overflow: hidden; aspect-ratio: 600 / 315; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); }
+.player img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.player .button-primary { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.player.playing { aspect-ratio: auto; height: 70vh; }
+.player iframe { display: block; width: 100%; height: 100%; border: 0; }
+.thumbnail { display: block; width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: var(--radius-lg); }
+.gallery-card { display: grid; gap: var(--sp-2); padding: 0; overflow: hidden; text-decoration: none; }
+.gallery-card img { display: block; width: 100%; height: auto; aspect-ratio: 600 / 315; object-fit: cover; }
+.gallery-card > span { padding-inline: var(--sp-4); }
+.gallery-card > span:last-child { padding-bottom: var(--sp-4); }
+.gallery-title { font-weight: 600; }

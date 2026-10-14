@@ -2,7 +2,7 @@ node_modules/
 .wrangler/
 .tmp/
 dist/
-public/assets/
+public/hub/assets/
 .dev.vars
 .dev.vars.*
 !.dev.vars.example

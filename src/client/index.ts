@@ -1,7 +1,10 @@
 const path = document.documentElement.dataset.hubPath ?? '';
-const message = (value: string) => {
-  const status = document.querySelector<HTMLElement>('#status');
-  if (status) status.textContent = value;
+// Not named `status`: this file is a script, and the DOM library already declares a global `status`.
+const statusLine = document.querySelector<HTMLElement>('#status');
+const say = (text: string, focus = false) => {
+  if (!statusLine) return;
+  statusLine.textContent = text;
+  if (focus) statusLine.focus();
 };
 
 const play = document.querySelector<HTMLButtonElement>('#play');
@@ -14,22 +17,35 @@ if (play) play.onclick = () => {
   frame.allowFullscreen = true;
   frame.setAttribute('allow', 'fullscreen');
   frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads');
-  document.querySelector('#player')!.replaceChildren(frame);
+  const player = document.querySelector<HTMLElement>('#player')!;
+  player.classList.add('playing');
+  player.replaceChildren(frame);
+  frame.focus();
 };
 
 const deletion = document.querySelector<HTMLFormElement>('#delete-link');
-if (deletion) deletion.addEventListener('submit', async event => {
-  event.preventDefault();
-  if (!deletion.reportValidity()) return;
-  const owner = location.hash.slice(1);
-  if (!/^[A-Za-z0-9_-]{43}$/.test(owner)) { message('Open the private management link saved when this link was created.'); return; }
-  const id = location.pathname.split('/').at(-1)!;
+if (deletion) {
   const button = deletion.querySelector<HTMLButtonElement>('button')!;
-  button.disabled = true;
-  try {
-    const response = await fetch(`${path}/api/links/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } });
-    if (!response.ok) throw new Error(response.status === 429 ? 'Too many failed lookups. Try again later.' : 'Unable to delete this link. Check the management link.');
-    history.replaceState(null, '', location.pathname);
-    message('Link deleted.');
-  } catch (error) { message(error instanceof Error ? error.message : 'Unable to delete this link.'); button.disabled = false; }
-});
+  const owner = location.hash.slice(1);
+  if (!/^[A-Za-z0-9_-]{43}$/.test(owner)) {
+    button.disabled = true;
+    say('This delete link is incomplete. Open the full link saved when the Hub link was created.');
+  }
+  deletion.addEventListener('submit', async event => {
+    event.preventDefault();
+    button.disabled = true;
+    const id = location.pathname.split('/').at(-1)!;
+    try {
+      const response = await fetch(`${path}/api/links/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } });
+      if (response.status === 204) {
+        history.replaceState(null, '', location.pathname);
+        say('Hub link deleted.', true);
+        return;
+      }
+      const minutes = Math.ceil(Number(response.headers.get('Retry-After') ?? 600) / 60);
+      say(response.status === 429 ? `Too many missing links from your network. Try again in ${minutes} minutes.`
+        : "This delete link doesn't match the Hub link.", true);
+    } catch { say("Couldn't reach ColmapView Hub.", true); }
+    button.disabled = false;
+  });
+}
