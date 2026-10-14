@@ -4,7 +4,7 @@ This project stores ColmapView share links and small JPEG previews. Keep the Wor
 
 - `src/worker/` contains routing, validation, private R2 record access, and the `LookupGuard` Durable Object.
 - `src/client/` contains browser-only play and delete controls. Thumbnail preparation belongs to the viewer.
-- `public/hub/` contains static files served without the Worker. `colmapview.css` is a copy of the viewer's `public/policy.css`; change it only by copying the viewer's file and updating both pinned hashes (see README).
+- `public/hub/` contains static files served without the Worker. A new file outside `assets/` and `fonts/` also needs a `!/hub/…` entry in wrangler.jsonc's `run_worker_first`; otherwise the Worker answers it with a 404 or counts it as a miss. `colmapview.css` is a copy of the viewer's `public/policy.css`; change it only by copying the viewer's file and updating both pinned hashes (see README).
 - `tests/` contains Workers runtime tests; `e2e/` contains browser checks.
 - Use `.tmp/` for local reports and scratch files. Never commit private dictionaries, `.dev.vars`, credentials, or generated runtime state.
 - Use Web Crypto for IDs and management secrets. Never fetch submitted dataset or image URLs on the server.
