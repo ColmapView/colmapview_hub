@@ -38,6 +38,16 @@ function text(value: unknown, name: string, max: number, optional = false): stri
 }
 
 const VIEWER_ORIGINS = new Set(['https://colmapview.opsiclear.com', 'https://colmapview.github.io']);
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/** An http(s) origin on this machine, accepted only when the Hub itself runs locally. */
+export function isLoopbackOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return url.origin === origin && ['http:', 'https:'].includes(url.protocol) && LOOPBACK_HOSTS.has(url.hostname);
+  } catch { return false; }
+}
+
 const CREDENTIAL_PARAMS = new Set(['access_token', 'refresh_token', 'secret_access_key', 'aws_secret_access_key', 'secretkey',
   'x-amz-signature', 'x-amz-credential', 'x-amz-security-token', 'x-goog-signature', 'x-goog-credential',
   'sig', 'signature', 'token', 'awsaccesskeyid']);
@@ -53,13 +63,13 @@ function rejectCredentials(url: URL): void {
   }
 }
 
-function viewerUrl(value: unknown): string {
+function viewerUrl(value: unknown, allowLoopback: boolean): string {
   if (typeof value !== 'string' || value.length > 32768 || /\s/.test(value) || hasControls(value)) throw new InputError('Enter a valid ColmapView link.');
   let url: URL;
   try { url = new URL(value); } catch { throw new InputError('Enter a valid ColmapView link.'); }
   // Normalizing percent-encodes characters such as '€' (one becomes nine); bounding the stored form keeps records under MAX_RECORD_BYTES.
   if (url.href.length > 32768) throw new InputError('Enter a valid ColmapView link.');
-  if (!VIEWER_ORIGINS.has(url.origin) || !/^\/(?:latest\/|dev\/|v\d+\.\d+\.\d+\/)?$/.test(url.pathname)) {
+  if (!(VIEWER_ORIGINS.has(url.origin) || (allowLoopback && isLoopbackOrigin(url.origin))) || !/^\/(?:latest\/|dev\/|v\d+\.\d+\.\d+\/)?$/.test(url.pathname)) {
     throw new InputError('Use the OpsiClear or GitHub Pages ColmapView viewer.');
   }
   rejectCredentials(url);
@@ -132,14 +142,14 @@ export function decodePreview(value: unknown): Uint8Array {
   return bytes;
 }
 
-export function parseMetadata(value: Record<string, unknown>): LinkMetadata {
+export function parseMetadata(value: Record<string, unknown>, allowLoopback = false): LinkMetadata {
   const thumbnailBase64 = value.thumbnailBase64;
   if (typeof thumbnailBase64 !== 'string') throw new InputError('Preview is required.');
   decodePreview(thumbnailBase64);
   const license = licenseInfo(value.license);
   const assets = value.assets === undefined ? undefined : parseAssetSummary(value.assets);
   return {
-    viewerUrl: viewerUrl(value.viewerUrl),
+    viewerUrl: viewerUrl(value.viewerUrl, allowLoopback),
     title: text(value.title, 'Title', 120),
     description: text(value.description, 'Description', 280, true),
     thumbnailBase64,
@@ -151,7 +161,7 @@ export function parseMetadata(value: Record<string, unknown>): LinkMetadata {
 const CREATE_KEYS = new Set(['viewerUrl', 'title', 'description', 'thumbnailBase64', 'license', 'assets', 'managementSecret', 'listed',
   'access', 'publicAcknowledged']);
 
-export function parseCreateInput(value: unknown): CreateLinkInput {
+export function parseCreateInput(value: unknown, options: { allowLoopback?: boolean } = {}): CreateLinkInput {
   if (!isObject(value) || Object.keys(value).some(key => !CREATE_KEYS.has(key))) throw new InputError('Invalid link request.');
   if (value.publicAcknowledged !== true) throw new InputError('Confirm that this link and preview will be accessible to anyone with the link.');
   if (typeof value.managementSecret !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(value.managementSecret)) throw new InputError('Management key is invalid.');
@@ -159,7 +169,7 @@ export function parseCreateInput(value: unknown): CreateLinkInput {
   if (value.listed !== undefined && typeof value.listed !== 'boolean') throw new InputError('Listing choice is invalid.');
   const access = value.access === 'private' ? 'private' : 'public';
   if (value.listed === true && access === 'private') throw new InputError('Private links cannot be listed.');
-  return { ...parseMetadata(value), managementSecret: value.managementSecret, listed: value.listed === true, access, publicAcknowledged: true };
+  return { ...parseMetadata(value, options.allowLoopback === true), managementSecret: value.managementSecret, listed: value.listed === true, access, publicAcknowledged: true };
 }
 
 export async function readBoundedJson(request: Request): Promise<unknown> {

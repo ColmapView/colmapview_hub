@@ -59,8 +59,9 @@ export function remove(id: string, secret = owner, clientIp = ip): Promise<Respo
 
 export async function guard(clientIp = ip) { return env.LOOKUP_GUARDS.getByName(await clientIdentity(env.HUB_KEY, clientIp)); }
 
-/** Clears this local fixture's bucket and guards. The Workers test plugin keeps storage between tests. Never touches production. */
+/** Clears this local fixture's cached gallery page, bucket and guards. The Workers test plugin keeps storage and the Cache API between tests. Never touches production. */
 export async function resetState(): Promise<void> {
+  await caches.default.delete(new Request(`${env.HUB_ORIGIN}${env.HUB_PATH}/`));
   for (const object of (await env.LINKS.list()).objects) await env.LINKS.delete(object.key);
   for (const id of await listDurableObjectIds(env.LOOKUP_GUARDS)) {
     await runInDurableObject(env.LOOKUP_GUARDS.get(id), async (_, state) => { await state.storage.deleteAll(); });

@@ -198,3 +198,13 @@ test('long titles stay within a narrow card and delete keys never enter public U
     expect(await noHorizontalScroll(page)).toBe(true);
   } finally { expect((await removeLink(page, link)).status()).toBe(204); }
 });
+
+test('shows the landing page in the ColmapView frame', async ({ page }) => {
+  await page.goto('/hub/');
+  await expect(page.getByRole('heading', { name: 'Share links for ColmapView results.' })).toBeVisible();
+  await expect(page.getByText('Links are created when you publish from ColmapView.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open ColmapView' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link')).toHaveText(['Open viewer', 'About', 'Privacy', 'Terms']);
+  await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Contact']);
+  await expect(page.locator('input,textarea,form')).toHaveCount(0);
+});

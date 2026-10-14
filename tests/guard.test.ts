@@ -2,7 +2,7 @@ import { runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clientNetwork, hash } from '../src/worker/crypto';
 import { BLOCK_MS, MISS_WINDOW_MS, REFUSAL_FLOOR_MS, type GuardState } from '../src/worker/guard';
-import { create, guard, input, ip, request, resetState } from './helpers';
+import { create, guard, input, ip, listings, request, resetState } from './helpers';
 
 beforeEach(async () => {
   await resetState();
@@ -102,11 +102,16 @@ describe('lookup guard', () => {
       [`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${'B'.repeat(43)}` } }, ['lookup-miss']],
       ['/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ managementSecret: 'C'.repeat(43) })) }, ['admitCreation']],
     ];
+    // With listings on, '/' is the gallery.
     for (const [path, init, expected] of cases) {
       guards.calls.length = 0;
-      await request(path, init, ip, guards.overrides);
+      await request(path, init, ip, { ...guards.overrides, ...listings });
       expect(guards.calls, path).toEqual(expected);
     }
+    // While listings are off, '/' is the landing page, which calls no guard.
+    guards.calls.length = 0;
+    await request('/', {}, ip, guards.overrides);
+    expect(guards.calls, 'landing page').toEqual([]);
   });
 
   it('groups IPv6 clients by their /64 network and IPv4-mapped clients with IPv4', async () => {

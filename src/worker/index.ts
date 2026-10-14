@@ -1,12 +1,12 @@
-import { ID_PATTERN } from '../shared/model';
+import { ID_PATTERN, isListedId } from '../shared/model';
 import type { CardRecord, LinkMetadata, LinkRecord, Ownership } from '../shared/model';
-import { clientIdentity, deriveLongId, deriveShortId, equalHashes, hash } from './crypto';
-import { MAX_MISSES, REFUSAL_FLOOR_MS } from './guard';
+import { clientIdentity, deriveLongId, deriveShortId, equalHashes, equalSecrets, hash } from './crypto';
+import { MAX_MISSES, REFUSAL_FLOOR_MS, VERIFIED_BOT_MAX_MISSES } from './guard';
 import { lookupTarget, missKey } from './ids';
-import { blockedPage, cardPage, errorPage, galleryPage, hubLocation, managementPage, notFoundPage, unavailablePage } from './pages';
+import { blockedPage, cardPage, errorPage, galleryPage, hubLocation, landingPage, managementPage, notFoundPage, unavailablePage } from './pages';
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
-import { base64Bytes, InputError, parseCreateInput, readBoundedJson } from './validation';
+import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
 export { LookupGuard } from './guard';
 
 const VIEWER_ORIGINS = ['https://colmapview.opsiclear.com', 'https://colmapview.github.io'];
@@ -23,6 +23,18 @@ function json(value: unknown, status = 200, headers: Record<string, string> = {}
 
 const redirect = (target: string, status: 307 | 308) => new Response(null, { status, headers: { Location: target } });
 
+/** Another site embedding a card or preview gets a plain 404: no record read, no strike. Navigations still work. */
+const crossSiteSubresource = (request: Request) => request.headers.get('Sec-Fetch-Site') === 'cross-site'
+  && request.headers.get('Sec-Fetch-Dest') !== 'document';
+
+/** Cloudflare's verified bots carry the secret token from a Transform Rule; a missing or guessed token gets the normal limit. */
+function missLimit(request: Request, env: Env): number {
+  const presented = request.headers.get('X-Hub-Verified-Bot');
+  return env.VERIFIED_BOT_TOKEN && presented && equalSecrets(presented, env.VERIFIED_BOT_TOKEN) ? VERIFIED_BOT_MAX_MISSES : MAX_MISSES;
+}
+
+const listingsEnabled = (env: Env) => env.HUB_LISTINGS_ENABLED === 'true';
+
 /** Page routes answer with HTML pages; API routes answer with JSON. */
 function failure(location: HubLocation, api: boolean, status: number, message?: string): Response {
   if (api) return json({ error: message ?? (status === 404 ? 'Link not found.' : UNAVAILABLE) }, status);
@@ -37,35 +49,36 @@ function blocked(location: HubLocation, api: boolean, seconds: number): Response
     : html(blockedPage(location, Math.ceil(seconds / 60)), 429, headers);
 }
 
-function contentSecurityPolicy(): string {
+function contentSecurityPolicy(location?: HubLocation): string {
+  const frames = [...VIEWER_ORIGINS, ...(location?.local ? ['http://localhost:*', 'http://127.0.0.1:*'] : [])];
   return ["default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self'", "font-src 'self'",
-    `frame-src ${VIEWER_ORIGINS.join(' ')}`, "connect-src 'self'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
+    `frame-src ${frames.join(' ')}`, "connect-src 'self'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
 }
 
 function allowedOrigin(request: Request, location: HubLocation): string | null {
   const origin = request.headers.get('Origin');
   if (!origin) return null;
   if (origin === location.origin || VIEWER_ORIGINS.includes(origin)) return origin;
-  try {
-    const url = new URL(origin);
-    return url.origin === origin && ['http:', 'https:'].includes(url.protocol) && ['localhost', '127.0.0.1'].includes(url.hostname) ? origin : null;
-  } catch { return null; }
+  return location.local && isLoopbackOrigin(origin) ? origin : null;
 }
 
-/** The headers every response carries and no body for HEAD, also for the 503 sent when the Hub location is misconfigured. */
-function withSharedHeaders(request: Request, result: Response): Response {
+/**
+ * The headers every response carries and no body for HEAD, also for the 503 sent when the Hub location is misconfigured.
+ * Without a location, as for that 503, the policy frames only the viewer origins.
+ */
+function withSharedHeaders(request: Request, result: Response, location?: HubLocation): Response {
   const headers = new Headers(result.headers);
   if (!headers.has('Cache-Control')) headers.set('Cache-Control', 'no-store');
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   headers.set('Referrer-Policy', 'no-referrer');
-  headers.set('Content-Security-Policy', contentSecurityPolicy());
+  headers.set('Content-Security-Policy', contentSecurityPolicy(location));
   return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });
 }
 
 /** Shared headers, CORS for allowed API callers, and HEAD bodies removed, all in one place. */
 function finalize(request: Request, location: HubLocation, result: Response): Response {
-  const response = withSharedHeaders(request, result);
+  const response = withSharedHeaders(request, result, location);
   const origin = allowedOrigin(request, location);
   if (origin && new URL(request.url).pathname.startsWith(`${location.path}/api/`)) {
     response.headers.set('Access-Control-Allow-Origin', origin);
@@ -86,8 +99,8 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   const guard = await guardFor(request, env);
   const wait = await guard.admitCreation();
   if (wait) return blocked(location, true, wait);
-  const input = parseCreateInput(await readBoundedJson(request));
-  if (input.listed && env.HUB_LISTINGS_ENABLED !== 'true') return json({ error: 'Listings are turned off.' }, 403);
+  const input = parseCreateInput(await readBoundedJson(request), { allowLoopback: location.local });
+  if (input.listed && !listingsEnabled(env)) return json({ error: 'Listings are turned off.' }, 403);
   const words = await readWordlists(env.LINKS);
   const ownerHash = await hash(input.managementSecret);
   const metadata: LinkMetadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
@@ -114,7 +127,10 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
       ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt,
         ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
     });
-    if (stored) return created(id);
+    if (stored) {
+      if (record.listed) await caches.default.delete(new Request(`${location.base}/`));
+      return created(id);
+    }
     const current = await readOwnership(env.LINKS, id);
     if (current && equalHashes(current.ownerHash, ownerHash)) return replay(id, current);
   }
@@ -122,6 +138,7 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
 }
 
 async function lookup(request: Request, env: Env, location: HubLocation, id: string, view: View): Promise<Response> {
+  if (crossSiteSubresource(request)) return failure(location, false, 404);
   const guard = await guardFor(request, env);
   let target: { key: string; redirect: boolean } | null;
   let record: CardRecord | null;
@@ -129,11 +146,11 @@ async function lookup(request: Request, env: Env, location: HubLocation, id: str
     target = await lookupTarget(id, () => readWordlists(env.LINKS));
     record = target ? await readCard(env.LINKS, target.key) : null;
   } catch (error) {
-    const wait = await guard.lookup(null, MAX_MISSES);
+    const wait = await guard.lookup(null, missLimit(request, env));
     if (wait) return blocked(location, false, wait);
     throw error;
   }
-  const wait = await guard.lookup(record ? null : await hash(missKey(id)), MAX_MISSES);
+  const wait = await guard.lookup(record ? null : await hash(missKey(id)), missLimit(request, env));
   if (wait) return blocked(location, false, wait);
   if (!record) return failure(location, false, 404);
   if (target?.redirect) return redirect(`${location.base}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}`, 308);
@@ -143,8 +160,9 @@ async function lookup(request: Request, env: Env, location: HubLocation, id: str
 
 /** A path no record can answer still counts as a miss, so probing sub-paths gains nothing. */
 async function miss(request: Request, env: Env, location: HubLocation, id: string): Promise<Response> {
+  if (crossSiteSubresource(request)) return failure(location, false, 404);
   const guard = await guardFor(request, env);
-  const wait = await guard.lookup(await hash(missKey(id)), MAX_MISSES);
+  const wait = await guard.lookup(await hash(missKey(id)), missLimit(request, env));
   return wait ? blocked(location, false, wait) : failure(location, false, 404);
 }
 
@@ -166,16 +184,25 @@ async function deleteLink(request: Request, env: Env, location: HubLocation, id:
   if (wait) return blocked(location, true, wait);
   if (!owned) return failure(location, true, 404);
   await env.LINKS.delete(recordKey(id));
+  // A deleted listing leaves the first gallery page at once; later pages expire within a minute.
+  if (isListedId(id)) await caches.default.delete(new Request(`${location.base}/`));
   return new Response(null, { status: 204 });
 }
 
 async function home(request: Request, env: Env, location: HubLocation, url: URL): Promise<Response> {
+  if (!listingsEnabled(env)) return html(landingPage(location));
   const guard = await guardFor(request, env);
   const wait = await guard.lookup(null, MAX_MISSES);
   if (wait) return blocked(location, false, wait);
   const cursor = url.searchParams.get('cursor') ?? undefined;
   if (cursor && cursor.length > 2048) throw new InputError('Invalid page cursor.');
-  return html(galleryPage(location, await listPublicRecords(env.LINKS, cursor)));
+  // Listed pages change rarely; a minute of caching spares the R2 listing.
+  const key = new Request(url.href);
+  const cached = await caches.default.match(key);
+  if (cached) return cached;
+  const page = html(galleryPage(location, await listPublicRecords(env.LINKS, cursor)), 200, { 'Cache-Control': 'public, max-age=60' });
+  await caches.default.put(key, page.clone());
+  return page;
 }
 
 function decodeId(value: string): string {

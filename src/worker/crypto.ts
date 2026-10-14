@@ -83,3 +83,9 @@ export function equalHashes(left: string, right: string): boolean {
   const bytes = (value: string) => Uint8Array.from(value.match(/../g)!, pair => Number.parseInt(pair, 16));
   return crypto.subtle.timingSafeEqual(bytes(left), bytes(right));
 }
+
+/** Constant-time comparison of two secret strings. */
+export function equalSecrets(left: string, right: string): boolean {
+  const [a, b] = [new TextEncoder().encode(left), new TextEncoder().encode(right)];
+  return a.length === b.length && crypto.subtle.timingSafeEqual(a, b);
+}
