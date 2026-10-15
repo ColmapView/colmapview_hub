@@ -1,13 +1,9 @@
 import { env } from 'cloudflare:workers';
 import { runInDurableObject } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { create, guard, input, ip, listings, origin, post, remove, request, resetState } from './helpers';
 
-beforeEach(async () => {
-  await resetState();
-  vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
-});
-afterEach(() => { vi.restoreAllMocks(); });
+beforeEach(resetState);
 
 const crossSite = (dest: string) => ({ headers: { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': dest } });
 const storedKeys = async (clientIp: string) => runInDurableObject(await guard(clientIp), (_, state) => [...state.storage.kv.list()].length);

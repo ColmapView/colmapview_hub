@@ -1,15 +1,11 @@
 import { env } from 'cloudflare:workers';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { base64Bytes } from '../src/worker/validation';
 import { preview } from './fixtures/preview';
 import { create, input, ip, listings, post, remove, request, resetState } from './helpers';
 
-beforeEach(async () => {
-  await resetState();
-  vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
-});
-afterEach(() => { vi.restoreAllMocks(); });
+beforeEach(resetState);
 
 async function rewrite(id: string, change: (record: Record<string, unknown>) => Record<string, unknown>) {
   const record = await (await env.LINKS.get(recordKey(id)))!.json<Record<string, unknown>>();

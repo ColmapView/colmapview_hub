@@ -1,12 +1,8 @@
 import { env } from 'cloudflare:workers';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { assets, base, create, input, ip, listings, request, resetState } from './helpers';
 
-beforeEach(async () => {
-  await resetState();
-  vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
-});
-afterEach(() => { vi.restoreAllMocks(); });
+beforeEach(resetState);
 
 describe('Hub pages', () => {
   it('shows the description, nonzero asset counts and the linked license, and uses the description for social cards', async () => {

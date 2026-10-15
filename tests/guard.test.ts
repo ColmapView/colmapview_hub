@@ -1,14 +1,10 @@
 import { runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { clientNetwork, hash } from '../src/worker/crypto';
 import { BLOCK_MS, MISS_WINDOW_MS, REFUSAL_FLOOR_MS, type GuardState } from '../src/worker/guard';
 import { create, guard, input, ip, listings, request, resetState } from './helpers';
 
-beforeEach(async () => {
-  await resetState();
-  vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
-});
-afterEach(() => { vi.restoreAllMocks(); });
+beforeEach(resetState);
 
 const storage = async (clientIp = ip) => runInDurableObject(await guard(clientIp), async (_, state) => ({
   keys: [...state.storage.kv.list()].map(([key]) => key),

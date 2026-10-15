@@ -1,14 +1,10 @@
 import { env } from 'cloudflare:workers';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN } from '../src/shared/model';
 import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { base, create, input, ip, listings, request, resetState } from './helpers';
 
-beforeEach(async () => {
-  await resetState();
-  vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
-});
-afterEach(() => { vi.restoreAllMocks(); });
+beforeEach(resetState);
 
 /** Counts R2 record reads: each call returns the keys read since the previous call. Word-list reads don't count. */
 function recordReads(): () => string[] {

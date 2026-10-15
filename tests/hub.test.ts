@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN, isListedId, MAX_REQUEST_BYTES } from '../src/shared/model';
 import type { LinkRecord } from '../src/shared/model';
 import { base64Url, deriveLongId, deriveShortId } from '../src/worker/crypto';
@@ -9,11 +9,7 @@ import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/recor
 import { preview } from './fixtures/preview';
 import { assets, base, create, guard, input, ip, listings, origin, owner, request, resetState, words } from './helpers';
 
-beforeEach(async () => {
-  await resetState();
-  vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request'));
-});
-afterEach(() => { vi.restoreAllMocks(); });
+beforeEach(resetState);
 
 describe('unlisted records and social cards', () => {
   it('stores the asset summary and shows its nonzero counts', async () => {
