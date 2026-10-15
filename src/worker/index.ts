@@ -162,7 +162,7 @@ async function lookup(request: Request, env: Env, location: HubLocation, id: str
   const wait = await guard.lookup(record ? null : await hash(missKey(id)), missLimit(request, env));
   if (wait) return blocked(location, false, wait);
   if (!record) return failure(location, false, 404);
-  if (target?.redirect) return redirect(`${location.base}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}`, 308);
+  if (target?.redirect) return redirect(`${location.base}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${new URL(request.url).search}`, 308);
   if (view === 'preview') return new Response(base64Bytes(record.thumbnailBase64), { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=300' } });
   return html(view === 'manage' ? managementPage(location, record) : cardPage(location, record));
 }
@@ -253,7 +253,12 @@ export default {
     let result: Response;
     try { result = await route(request, env, location); }
     catch (error) {
-      result = error instanceof InputError ? failure(location, api, error.status, error.message) : failure(location, api, 503);
+      if (error instanceof InputError) result = failure(location, api, error.status, error.message);
+      else {
+        // Log only the error, never the request or its IP.
+        console.error('Unexpected Hub error', error);
+        result = failure(location, api, 503);
+      }
     }
     if (result.status === 429) await scheduler.wait(Math.max(0, arrived + REFUSAL_FLOOR_MS - Date.now()));
     return finalize(request, location, result);

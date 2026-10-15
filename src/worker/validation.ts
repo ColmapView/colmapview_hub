@@ -76,7 +76,7 @@ function viewerUrl(value: unknown, allowLoopback: boolean): string {
   rejectCredentials(url);
   const source = url.searchParams.get('url');
   if (source) {
-    try { rejectCredentials(new URL(source)); } catch (error) { if (error instanceof InputError) throw error; }
+    try { rejectCredentials(new URL(source, url)); } catch (error) { if (error instanceof InputError) throw error; }
   }
   return url.href;
 }

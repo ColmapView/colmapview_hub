@@ -35,10 +35,16 @@ describe('tolerant reads', () => {
     expect((await remove(link.id)).status).toBe(204);
   });
 
-  it('answers 503 for a record it cannot render, without counting strikes', async () => {
+  it('answers 503 for a record it cannot render, without counting strikes, and logs only the error', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const link = await create(input());
     await rewrite(link.id, record => { delete record.title; return record; });
     for (let index = 0; index < 4; index++) expect((await request(`/${link.id}`)).status).toBe(503);
+    expect(error).toHaveBeenCalledTimes(4);
+    for (const call of error.mock.calls) {
+      expect(call).toEqual(['Unexpected Hub error', expect.any(Error)]);
+      expect(JSON.stringify(call.map(String))).not.toContain(ip);
+    }
     expect((await request('/missing-one')).status).toBe(404);
     expect((await request('/missing-two')).status).toBe(404);
   });

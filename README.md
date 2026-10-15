@@ -1,6 +1,6 @@
 # ColmapView Hub
 
-A small companion to [ColmapView](https://github.com/ColmapView/Colmapview.github.io). It saves a viewer link, its metadata and a thumbnail for every upload made from ColmapView, and shows them as a card. Data anyone can open without signing in gets a short name such as `HappyTree`; everything else gets an unguessable name such as `HappyTree-q3ZfK0aB7xLmP2Ws`. There is no standalone submission or dataset upload form on the Hub.
+A small companion to [ColmapView](https://github.com/ColmapView/Colmapview.github.io). It saves a viewer link, its metadata and a thumbnail for every upload made from ColmapView, and shows them as a card. Data anyone can open without signing in gets a short name such as `HappyTree`, unless it is listed in the gallery; a listed link gets a long `-L` name such as `HappyTree-Lq3ZfK0aB7xLmP2Ws`. Everything else gets an unguessable name such as `HappyTree-q3ZfK0aB7xLmP2Ws`. There is no standalone submission or dataset upload form on the Hub.
 
 Cards provide an X/Twitter large-image preview. Public cards have a Play 3D button that loads the viewer only on a click; private cards link to the viewer instead, because signing in inside an iframe is unreliable. The gallery of listed results is off unless `HUB_LISTINGS_ENABLED` is `true`; while it is off, `/hub/` shows a short landing page.
 
@@ -21,7 +21,7 @@ The asset summary counts images, points, masks and Gaussian splats; cards show t
 
 The Hub has no dataset files, provider credentials, accounts, database, storage browser, search or sitemap. The server never fetches submitted dataset URLs. X receives a thumbnail card, not an inline WebGL player.
 
-Anyone with a link can read its card, and publicly disclosed links can be collected. Dataset storage permissions still apply. Deletion removes the record and any listing together; external social-card caches may keep previews they already fetched. With listings on, gallery pages are cached for a minute. A deletion clears the cached first page in the data center that handled it; a deleted listing can stay for up to a minute in other data centers and on later pages, and a browser may keep a page it already fetched for another minute.
+Anyone with a link can read its card, and publicly disclosed links can be collected. Dataset storage permissions still apply. Deletion removes the record and any listing together; external social-card caches may keep previews they already fetched, and `preview.jpg` is served with `max-age=300`, so browsers and shared caches may keep a fetched preview for up to five minutes. With listings on, gallery pages are cached for a minute. A deletion clears the cached first page in the data center that handled it; a deleted listing can stay for up to a minute in other data centers and on later pages, and a browser may keep a page it already fetched for another minute.
 
 ## IDs and ownership
 
@@ -51,9 +51,9 @@ Anyone with a link can read its card, and publicly disclosed links can be collec
 - Three different missing or malformed names in ten minutes block a client for ten minutes.
 - Duplicate page, preview and HEAD misses count once, and so do letter-case variants of one name.
 - Names typed in another letter case resolve through the word lists and redirect with 308. Unused and invalid word pairs behave identically.
-- Every lookup surface uses the same guard, including the manage page and deletion. A known name with a wrong key fails exactly like an unknown one.
+- Every lookup surface uses the same guard, including the manage page and deletion. A known name with a wrong key fails with the same status, body and strike as an unknown one.
 - Each client gets 20 creation attempts per hour; an attempt from an allowed origin counts even if the Hub then rejects it.
-- Refusals (429) are sent no sooner than half a second after the request arrived, so their timing doesn't show whether a guessed name exists.
+- Refusals (429) are sent no sooner than half a second after the request arrived, so their timing normally doesn't show whether a guessed name exists (a record read slower than half a second can).
 
 **Keying and storage:**
 - Clients are keyed by an HMAC of their IPv4 address or their IPv6 /64 network. IPv4-mapped addresses count as IPv4, and no raw IP is stored.

@@ -117,6 +117,11 @@ describe('routes', () => {
     expect(hit.status).toBe(308);
     expect(hit.headers.get('Location')).toBe(`${base}/${link.id}`);
     expect(reads()).toEqual([recordKey(link.id)]);
+    // Like the trailing-slash redirect, it keeps the query string.
+    const query = await request(`/${misplaced}?utm_source=chat&x=1`);
+    expect(query.status).toBe(308);
+    expect(query.headers.get('Location')).toBe(`${base}/${link.id}?utm_source=chat&x=1`);
+    expect(reads()).toEqual([recordKey(link.id)]);
     expect((await request('/FunnYball')).status).toBe(404);
     expect(reads()).toEqual([recordKey('FunnyBall')]);
     expect((await request('/second-miss')).status).toBe(404);

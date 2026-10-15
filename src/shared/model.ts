@@ -65,7 +65,6 @@ export interface CardRecord {
   license?: LicenseInfo;
   assets?: AssetSummary;
   access: LinkAccess;
-  listed: boolean;
 }
 
 export interface Ownership { ownerHash: string; fingerprint: string }

@@ -62,7 +62,7 @@ export function toCardRecord(value: unknown, id: string): CardRecord {
   return { id, title: value.title, description: typeof value.description === 'string' ? value.description : '',
     viewerUrl: value.viewerUrl, thumbnailBase64: value.thumbnailBase64,
     ...(license ? { license } : {}), ...(assets ? { assets } : {}),
-    access: value.access === 'private' ? 'private' : 'public', listed: isListedId(id) };
+    access: value.access === 'private' ? 'private' : 'public' };
 }
 
 export async function readCard(bucket: R2Bucket, id: string): Promise<CardRecord | null> {

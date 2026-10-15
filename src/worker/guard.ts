@@ -6,7 +6,7 @@ export const CREATE_WINDOW_MS = 60 * 60 * 1000;
 export const MAX_MISSES = 3;
 export const VERIFIED_BOT_MAX_MISSES = 30;
 export const MAX_CREATES = 20;
-/** A refusal leaves no sooner than this after the request arrived, so its timing never shows whether a guess read a record. */
+/** A refusal leaves no sooner than this after the request arrived, so its timing normally doesn't show whether a guess read a record (a read slower than 500 ms can). */
 export const REFUSAL_FLOOR_MS = 500;
 const STATE_KEY = 'state';
 

@@ -51,6 +51,15 @@ describe('creation contract', () => {
     expect(await recordCount()).toBe(0);
   });
 
+  it('rejects credentials in a relative or protocol-relative source, resolved against the viewer link', async () => {
+    for (const source of ['//host/x?X-Amz-Signature=abc', '/x?X-Amz-Signature=abc', 'x#token=abc']) {
+      const response = await post(input({ viewerUrl: `${origin}/?url=${encodeURIComponent(source)}` }));
+      expect(response.status, source).toBe(400);
+      expect(await response.json()).toEqual({ error: 'Use a viewer link without access credentials.' });
+    }
+    expect(await recordCount()).toBe(0);
+  });
+
   it('keeps camera fragments and ordinary source parameters', async () => {
     const link = await create(input({ viewerUrl: `${origin}/?url=${encodeURIComponent('https://data.example/scene.zip?download=1')}#camera=43` }));
     expect((await stored(link.id)).viewerUrl).toContain('#camera=43');
@@ -89,7 +98,9 @@ describe('names follow access', () => {
     expect(link.id).toBe(await deriveLongId(env.HUB_KEY, owner, words, false));
     expect(link.id).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+-[A-Za-z0-9_-]{16}$/);
     expect(await create(input({ access: 'private' }))).toEqual(link);
-    expect((await post(input({ access: 'private', title: 'Changed' }))).status).toBe(409);
+    const changed = await post(input({ access: 'private', title: 'Changed' }));
+    expect(changed.status).toBe(409);
+    expect(await changed.json()).toEqual({ error: 'This draft changed. Create a new link instead.' });
   });
 
   it('no longer probes the legacy long name for public requests, which keeps resolving', async () => {

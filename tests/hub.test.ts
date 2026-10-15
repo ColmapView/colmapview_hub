@@ -377,8 +377,8 @@ describe('opt-in results gallery', () => {
     expect((await request(`/${unlisted.id}`)).status).toBe(200);
   });
 
-  it('separates public and unlisted IDs even when an owner reuses a management key', async () => {
-    const unlisted = await create();
+  it('separates the link: and listed-link: names even when an owner reuses a management key', async () => {
+    const unlisted = await create(input({ access: 'private' }));
     const listed = await create(input({ listed: true }), ip, listings);
     expect(listed.id).not.toBe(unlisted.id);
     expect(listed.id.replace('-L', '-')).not.toBe(unlisted.id);
