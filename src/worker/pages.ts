@@ -1,8 +1,8 @@
-import { PREVIEW_HEIGHT, PREVIEW_WIDTH } from '../shared/model';
+import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, VIEWER_ORIGINS, waitText } from '../shared/model';
 import type { AssetSummary, CardRecord, ListedLink } from '../shared/model';
 
 /** ColmapView's own pages; the Hub shares their header and footer. */
-const VIEWER = 'https://colmapview.opsiclear.com';
+const VIEWER = VIEWER_ORIGINS[0];
 
 export function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
@@ -26,21 +26,23 @@ export interface HubLocation {
 
 export function hubLocation(env: Env): HubLocation {
   const origin = new URL(env.HUB_ORIGIN);
-  const local = origin.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(origin.hostname);
+  const local = origin.protocol === 'http:' && LOOPBACK_HOSTS.includes(origin.hostname);
   if ((!local && origin.protocol !== 'https:') || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash) throw new Error('Invalid Hub origin');
   const path = env.HUB_PATH;
   if (path !== '' && (!/^\/(?:[a-z0-9-]+\/)*[a-z0-9-]+$/.test(path))) throw new Error('Invalid Hub path');
   return { origin: origin.origin, path, base: origin.origin + path, local };
 }
 
+/** The policy pages both the header and the footer link to. */
+const policyLinks = ([['About', 'about.html'], ['Privacy', 'privacy.html'], ['Terms', 'terms.html']] as const)
+  .map(([label, path]) => `<a href="${VIEWER}/${path}">${label}</a>`).join('');
+
 const header = [
   '<header class="site-header">',
   `<a class="brand" href="${VIEWER}/about.html">ColmapView</a>`,
   '<nav class="site-nav" aria-label="Main navigation">',
   `<a href="${VIEWER}/">Open viewer</a>`,
-  `<a href="${VIEWER}/about.html">About</a>`,
-  `<a href="${VIEWER}/privacy.html">Privacy</a>`,
-  `<a href="${VIEWER}/terms.html">Terms</a>`,
+  policyLinks,
   '</nav></header>',
 ].join('');
 
@@ -48,9 +50,7 @@ const footer = [
   '<footer class="site-footer">',
   '<p>ColmapView · Maintained by OpsiClear LLC</p>',
   '<nav class="footer-links" aria-label="Footer navigation">',
-  `<a href="${VIEWER}/about.html">About</a>`,
-  `<a href="${VIEWER}/privacy.html">Privacy</a>`,
-  `<a href="${VIEWER}/terms.html">Terms</a>`,
+  policyLinks,
   '<a href="mailto:info@opsiclear.com">Contact</a>',
   '</nav></footer>',
 ].join('');
@@ -160,7 +160,7 @@ export function notFoundPage(location: HubLocation): string {
 }
 
 export function blockedPage(location: HubLocation, minutes: number): string {
-  const wait = `Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+  const wait = waitText(minutes);
   return page(location, wait, intro(wait, 'Too many missing links from your network.'));
 }
 

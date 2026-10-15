@@ -1,5 +1,7 @@
+import { SECRET_PATTERN, waitText } from '../shared/model';
+
 const path = document.documentElement.dataset.hubPath ?? '';
-// Not named `status`: this file is a script, and the DOM library already declares a global `status`.
+// Not named `status`, which would shadow the DOM library's global `status`.
 const statusLine = document.querySelector<HTMLElement>('#status');
 const say = (text: string, focus = false) => {
   if (!statusLine) return;
@@ -29,13 +31,16 @@ if (deletion) {
   const incomplete = 'This delete link is incomplete. Open the full link saved when the Hub link was created.';
   // Read the fragment every time: fragment-only navigation (opening the full link, or a corrected one, in the same tab) doesn't reload this script.
   const currentKey = () => location.hash.slice(1);
-  const validKey = (key: string) => /^[A-Za-z0-9_-]{43}$/.test(key);
-  let busy = false;
-  let done = false;
+  const validKey = (key: string) => SECRET_PATTERN.test(key);
+  let phase: 'idle' | 'busy' | 'done' = 'idle';
+  /** Enables the button only for a complete key; returns whether it is complete. */
+  const enableForKey = () => {
+    button.disabled = !validKey(currentKey());
+    return !button.disabled;
+  };
   const syncKey = (changed: boolean) => {
-    if (busy || done) return;
-    const valid = validKey(currentKey());
-    button.disabled = !valid;
+    if (phase !== 'idle') return;
+    const valid = enableForKey();
     // A status about an earlier key no longer applies once the key changes.
     if (!valid) say(incomplete);
     else if (changed) say('');
@@ -45,25 +50,26 @@ if (deletion) {
   deletion.addEventListener('submit', async event => {
     event.preventDefault();
     const owner = currentKey();
-    if (busy || done || !validKey(owner)) return;
-    busy = true;
+    if (phase !== 'idle' || !validKey(owner)) return;
+    phase = 'busy';
     button.disabled = true;
     const id = location.pathname.split('/').at(-1)!;
     try {
       const response = await fetch(`${path}/api/links/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } });
       if (response.status === 204) {
-        done = true;
+        phase = 'done';
         history.replaceState(null, '', location.pathname);
         say('Hub link deleted.', true);
         return;
       }
       const minutes = Math.ceil(Number(response.headers.get('Retry-After') ?? 600) / 60);
-      const wait = `Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`;
+      const wait = `${waitText(minutes)}.`;
       say(response.status === 429 ? `Too many missing links from your network. ${wait}`
         : response.status >= 500 ? 'ColmapView Hub is unavailable. Try again in a few minutes.'
         : "This delete link doesn't match the Hub link.", true);
     } catch { say("Couldn't reach ColmapView Hub.", true); }
-    finally { busy = false; }
-    if (!done) button.disabled = !validKey(currentKey());
+    if (phase !== 'busy') return;
+    phase = 'idle';
+    enableForKey();
   });
 }

@@ -1,4 +1,4 @@
-import { ID_PATTERN, isListedId } from '../shared/model';
+import { ID_PATTERN, isListedId, LOOPBACK_HOSTS, SECRET_PATTERN, VIEWER_ORIGINS } from '../shared/model';
 import type { CardRecord, LinkMetadata, LinkRecord, Ownership } from '../shared/model';
 import { clientIdentity, deriveLongId, deriveShortId, equalHashes, equalSecrets, hash } from './crypto';
 import { MAX_MISSES, REFUSAL_FLOOR_MS, VERIFIED_BOT_MAX_MISSES } from './guard';
@@ -9,7 +9,6 @@ import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWo
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
 export { LookupGuard } from './guard';
 
-const VIEWER_ORIGINS = ['https://colmapview.opsiclear.com', 'https://colmapview.github.io'];
 const UNAVAILABLE = 'The Hub is temporarily unavailable. Please try again.';
 type View = 'card' | 'preview' | 'manage';
 
@@ -59,7 +58,7 @@ function blocked(location: HubLocation, api: boolean, seconds: number): Response
 }
 
 function contentSecurityPolicy(location?: HubLocation): string {
-  const frames = [...VIEWER_ORIGINS, ...(location?.local ? ['http://localhost:*', 'http://127.0.0.1:*'] : [])];
+  const frames = [...VIEWER_ORIGINS, ...(location?.local ? LOOPBACK_HOSTS.map(host => `http://${host}:*`) : [])];
   return ["default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self'", "font-src 'self'",
     `frame-src ${frames.join(' ')}`, "connect-src 'self'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
 }
@@ -108,7 +107,7 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   const guard = await guardFor(request, env);
   const wait = await guard.admitCreation();
   if (wait) return blocked(location, true, wait);
-  const input = parseCreateInput(await readBoundedJson(request), { allowLoopback: location.local });
+  const input = parseCreateInput(await readBoundedJson(request), location.local);
   if (input.listed && !listingsEnabled(env)) return json({ error: 'Listings are turned off.' }, 403);
   const words = await readWordlists(env.LINKS);
   const ownerHash = await hash(input.managementSecret);
@@ -178,7 +177,8 @@ async function miss(request: Request, env: Env, location: HubLocation, id: strin
 async function deleteLink(request: Request, env: Env, location: HubLocation, id: string): Promise<Response> {
   if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot manage links.' }, 403);
   const guard = await guardFor(request, env);
-  const secret = request.headers.get('Authorization')?.match(/^Bearer ([A-Za-z0-9_-]{43})$/)?.[1];
+  const presented = request.headers.get('Authorization')?.match(/^Bearer (.*)$/)?.[1];
+  const secret = presented && SECRET_PATTERN.test(presented) ? presented : undefined;
   let owned: boolean;
   try {
     const record = secret && ID_PATTERN.test(id) ? await readOwnership(env.LINKS, id) : null;

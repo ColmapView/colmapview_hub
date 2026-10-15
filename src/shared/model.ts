@@ -8,6 +8,14 @@ export const MAX_WORDLIST_BYTES = 1024 * 1024;
 export const ID_PATTERN = /^[A-Z][a-z]{2,13}[A-Z][a-z]{2,13}(?:-(?:L)?[A-Za-z0-9_-]{16})?$/;
 export const isListedId = (id: string) => /-L[A-Za-z0-9_-]{16}$/.test(id);
 export type LinkAccess = 'public' | 'private';
+/** ColmapView's production viewers; the first is the one whose pages the Hub links to. */
+export const VIEWER_ORIGINS: readonly string[] = ['https://colmapview.opsiclear.com', 'https://colmapview.github.io'];
+/** The loopback hosts a CSP frame source can also name; an IPv6 literal such as [::1] can't be framed, so it is refused. */
+export const LOOPBACK_HOSTS: readonly string[] = ['localhost', '127.0.0.1'];
+/** A management secret: 32 random bytes in base64url. */
+export const SECRET_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+/** The cooldown text a refused client sees, for example "Try again in 1 minute". */
+export const waitText = (minutes: number) => `Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
 
 export interface LicenseInfo {
   id?: string;

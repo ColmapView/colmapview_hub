@@ -1,7 +1,7 @@
 import { ID_PATTERN, isListedId, MAX_RECORD_BYTES, MAX_WORDLIST_BYTES } from '../shared/model';
 import type { AssetSummary, CardRecord, LicenseInfo, ListedLink, LinkMetadata, Ownership } from '../shared/model';
 import type { Wordlists } from './crypto';
-import { isObject, parseAssetSummary } from './validation';
+import { isHttpUrl, isObject, parseAssetSummary } from './validation';
 
 export const WORDLIST_KEY = 'internal/wordlists-v1.json';
 export const recordKey = (id: string) => `${isListedId(id) ? 'listed' : 'links'}/${id}.json`;
@@ -33,10 +33,6 @@ async function readStoredJson(bucket: R2Bucket, id: string): Promise<unknown> {
   if (object.size > MAX_RECORD_BYTES) throw new Error('Stored record is too large');
   try { return await object.json(); }
   catch (error) { throw new Error('Invalid stored record', { cause: error }); }
-}
-
-function isHttpUrl(value: string, protocols = ['http:', 'https:']): boolean {
-  try { return protocols.includes(new URL(value).protocol); } catch { return false; }
 }
 
 function storedLicense(value: unknown): LicenseInfo | undefined {
