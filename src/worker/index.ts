@@ -57,11 +57,14 @@ function blocked(location: HubLocation, api: boolean, seconds: number): Response
     : html(blockedPage(location, Math.ceil(seconds / 60)), 429, headers);
 }
 
-function contentSecurityPolicy(location?: HubLocation): string {
-  const frames = [...VIEWER_ORIGINS, ...(location?.local ? LOOPBACK_HOSTS.map(host => `http://${host}:*`) : [])];
+function contentSecurityPolicy(local: boolean): string {
+  const frames = [...VIEWER_ORIGINS, ...(local ? LOOPBACK_HOSTS.map(host => `http://${host}:*`) : [])];
   return ["default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self'", "font-src 'self'",
     `frame-src ${frames.join(' ')}`, "connect-src 'self'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
 }
+
+const CSP = contentSecurityPolicy(false);
+const LOCAL_CSP = contentSecurityPolicy(true);
 
 function allowedOrigin(request: Request, location: HubLocation): string | null {
   const origin = request.headers.get('Origin');
@@ -80,15 +83,15 @@ function withSharedHeaders(request: Request, result: Response, location?: HubLoc
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   headers.set('Referrer-Policy', 'no-referrer');
-  headers.set('Content-Security-Policy', contentSecurityPolicy(location));
+  headers.set('Content-Security-Policy', location?.local ? LOCAL_CSP : CSP);
   return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });
 }
 
 /** Shared headers, CORS for allowed API callers, and HEAD bodies removed, all in one place. */
-function finalize(request: Request, location: HubLocation, result: Response): Response {
+function finalize(request: Request, location: HubLocation, api: boolean, result: Response): Response {
   const response = withSharedHeaders(request, result, location);
-  const origin = allowedOrigin(request, location);
-  if (origin && new URL(request.url).pathname.startsWith(`${location.path}/api/`)) {
+  const origin = api ? allowedOrigin(request, location) : null;
+  if (origin) {
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Expose-Headers', 'Retry-After');
     response.headers.set('Vary', 'Origin');
@@ -102,7 +105,18 @@ async function guardFor(request: Request, env: Env) {
   return env.LOOKUP_GUARDS.getByName(await clientIdentity(env.HUB_KEY, ip));
 }
 
-async function createLink(request: Request, env: Env, location: HubLocation): Promise<Response> {
+/** A lookup's single guard call, made after its record read: a 429 while the client must wait, otherwise null. */
+type GuardCheck = (missFingerprint: string | null) => Promise<Response | null>;
+
+async function lookupGuard(request: Request, env: Env, location: HubLocation, api: boolean, limit: number): Promise<GuardCheck> {
+  const guard = await guardFor(request, env);
+  return async missFingerprint => {
+    const wait = await guard.lookup(missFingerprint, limit);
+    return wait ? blocked(location, api, wait) : null;
+  };
+}
+
+async function createLink(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation): Promise<Response> {
   if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot create links.' }, 403);
   const guard = await guardFor(request, env);
   const wait = await guard.admitCreation();
@@ -136,7 +150,7 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
         ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
     });
     if (stored) {
-      if (record.listed) await purgeGallery(location);
+      if (record.listed) ctx.waitUntil(purgeGallery(location));
       return created(id);
     }
     const current = await readOwnership(env.LINKS, id);
@@ -145,23 +159,23 @@ async function createLink(request: Request, env: Env, location: HubLocation): Pr
   return json({ error: long ? 'This link name is taken. Create a new link.' : 'No free link name. Create a new link.' }, 409);
 }
 
-async function lookup(request: Request, env: Env, location: HubLocation, id: string, view: View): Promise<Response> {
+async function lookup(request: Request, env: Env, location: HubLocation, url: URL, id: string, view: View): Promise<Response> {
   if (crossSiteSubresource(request)) return failure(location, false, 404);
-  const guard = await guardFor(request, env);
+  const check = await lookupGuard(request, env, location, false, missLimit(request, env));
   let target: { key: string; redirect: boolean } | null;
   let record: CardRecord | null;
   try {
     target = await lookupTarget(id, () => readWordlists(env.LINKS));
     record = target ? await readCard(env.LINKS, target.key) : null;
   } catch (error) {
-    const wait = await guard.lookup(null, missLimit(request, env));
-    if (wait) return blocked(location, false, wait);
+    const refusal = await check(null);
+    if (refusal) return refusal;
     throw error;
   }
-  const wait = await guard.lookup(record ? null : await hash(missKey(id)), missLimit(request, env));
-  if (wait) return blocked(location, false, wait);
+  const refusal = await check(record ? null : await hash(missKey(id)));
+  if (refusal) return refusal;
   if (!record) return failure(location, false, 404);
-  if (target?.redirect) return redirect(`${location.base}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${new URL(request.url).search}`, 308);
+  if (target?.redirect) return redirect(`${location.base}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${url.search}`, 308);
   if (view === 'preview') return new Response(base64Bytes(record.thumbnailBase64), { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=300' } });
   return html(view === 'manage' ? managementPage(location, record) : cardPage(location, record));
 }
@@ -169,14 +183,13 @@ async function lookup(request: Request, env: Env, location: HubLocation, id: str
 /** A path no record can answer still counts as a miss, so probing sub-paths gains nothing. */
 async function miss(request: Request, env: Env, location: HubLocation, id: string): Promise<Response> {
   if (crossSiteSubresource(request)) return failure(location, false, 404);
-  const guard = await guardFor(request, env);
-  const wait = await guard.lookup(await hash(missKey(id)), missLimit(request, env));
-  return wait ? blocked(location, false, wait) : failure(location, false, 404);
+  const check = await lookupGuard(request, env, location, false, missLimit(request, env));
+  return (await check(await hash(missKey(id)))) ?? failure(location, false, 404);
 }
 
-async function deleteLink(request: Request, env: Env, location: HubLocation, id: string): Promise<Response> {
+async function deleteLink(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, id: string): Promise<Response> {
   if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot manage links.' }, 403);
-  const guard = await guardFor(request, env);
+  const check = await lookupGuard(request, env, location, true, MAX_MISSES);
   const presented = request.headers.get('Authorization')?.match(/^Bearer (.*)$/)?.[1];
   const secret = presented && SECRET_PATTERN.test(presented) ? presented : undefined;
   let owned: boolean;
@@ -184,24 +197,24 @@ async function deleteLink(request: Request, env: Env, location: HubLocation, id:
     const record = secret && ID_PATTERN.test(id) ? await readOwnership(env.LINKS, id) : null;
     owned = secret ? equalHashes(record?.ownerHash ?? '0'.repeat(64), await hash(secret)) : false;
   } catch (error) {
-    const wait = await guard.lookup(null, MAX_MISSES);
-    if (wait) return blocked(location, true, wait);
+    const refusal = await check(null);
+    if (refusal) return refusal;
     throw error;
   }
   // Treat both unknown IDs and incorrect ownership keys identically, including strikes.
-  const wait = await guard.lookup(owned ? null : await hash(missKey(id)), MAX_MISSES);
-  if (wait) return blocked(location, true, wait);
+  const refusal = await check(owned ? null : await hash(missKey(id)));
+  if (refusal) return refusal;
   if (!owned) return failure(location, true, 404);
   await env.LINKS.delete(recordKey(id));
-  if (isListedId(id)) await purgeGallery(location);
+  if (isListedId(id)) ctx.waitUntil(purgeGallery(location));
   return new Response(null, { status: 204 });
 }
 
-async function home(request: Request, env: Env, location: HubLocation, url: URL): Promise<Response> {
+async function home(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
   if (!listingsEnabled(env)) return html(landingPage(location));
-  const guard = await guardFor(request, env);
-  const wait = await guard.lookup(null, MAX_MISSES);
-  if (wait) return blocked(location, false, wait);
+  const check = await lookupGuard(request, env, location, false, MAX_MISSES);
+  const refusal = await check(null);
+  if (refusal) return refusal;
   const cursor = url.searchParams.get('cursor') ?? undefined;
   if (cursor && cursor.length > 2048) throw new InputError('Invalid page cursor.');
   // Listed pages change rarely; a minute of caching spares the R2 listing.
@@ -209,7 +222,7 @@ async function home(request: Request, env: Env, location: HubLocation, url: URL)
   const cached = await caches.default.match(key);
   if (cached) return cached;
   const page = html(galleryPage(location, await listPublicRecords(env.LINKS, cursor)), 200, { 'Cache-Control': 'public, max-age=60' });
-  await caches.default.put(key, page.clone());
+  ctx.waitUntil(caches.default.put(key, page.clone()));
   return page;
 }
 
@@ -217,8 +230,7 @@ function decodeId(value: string): string {
   try { return decodeURIComponent(value); } catch { return value; }
 }
 
-async function route(request: Request, env: Env, location: HubLocation): Promise<Response> {
-  const url = new URL(request.url);
+async function route(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
   if (url.origin !== location.origin || (url.pathname !== location.path && !url.pathname.startsWith(`${location.path}/`))) return failure(location, false, 404);
   const path = url.pathname.slice(location.path.length);
   if (path === '') return redirect(`${location.base}/`, 307);
@@ -226,32 +238,33 @@ async function route(request: Request, env: Env, location: HubLocation): Promise
     if (request.method === 'OPTIONS') return allowedOrigin(request, location)
       ? new Response(null, { status: 204, headers: { 'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' } })
       : new Response(null, { status: 403 });
-    if (path === '/api/links' && request.method === 'POST') return createLink(request, env, location);
+    if (path === '/api/links' && request.method === 'POST') return createLink(request, env, ctx, location);
     const deletion = /^\/api\/links\/([^/]+)$/.exec(path);
-    if (deletion && request.method === 'DELETE') return deleteLink(request, env, location, decodeId(deletion[1]));
+    if (deletion && request.method === 'DELETE') return deleteLink(request, env, ctx, location, decodeId(deletion[1]));
     return failure(location, true, 404);
   }
   if (!['GET', 'HEAD'].includes(request.method)) return failure(location, false, 404);
-  if (path === '/') return home(request, env, location, url);
+  if (path === '/') return home(request, env, ctx, location, url);
   const parts = path.slice(1).split('/').map(decodeId);
   // Static files are served before the Worker runs; a request that still arrives here is a plain miss, not a strike.
   if (parts[0] === 'assets' || parts[0] === 'fonts' || parts[0].includes('.')) return failure(location, false, 404);
-  if (parts[0] === 'manage') return parts.length === 2 && parts[1] ? lookup(request, env, location, parts[1], 'manage') : miss(request, env, location, parts[1] || path);
+  if (parts[0] === 'manage') return parts.length === 2 && parts[1] ? lookup(request, env, location, url, parts[1], 'manage') : miss(request, env, location, parts[1] || path);
   if (parts.length === 2 && parts[1] === '') return redirect(`${location.origin}${url.pathname.slice(0, -1)}${url.search}`, 308);
-  if (parts.length === 1) return lookup(request, env, location, parts[0], 'card');
-  if (parts.length === 2 && parts[1] === 'preview.jpg') return lookup(request, env, location, parts[0], 'preview');
+  if (parts.length === 1) return lookup(request, env, location, url, parts[0], 'card');
+  if (parts.length === 2 && parts[1] === 'preview.jpg') return lookup(request, env, location, url, parts[0], 'preview');
   return miss(request, env, location, parts[0]);
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const arrived = Date.now();
     let location: HubLocation;
     try { location = hubLocation(env); }
     catch { return withSharedHeaders(request, json({ error: UNAVAILABLE }, 503)); }
-    const api = new URL(request.url).pathname.startsWith(`${location.path}/api/`);
+    const url = new URL(request.url);
+    const api = url.pathname.startsWith(`${location.path}/api/`);
     let result: Response;
-    try { result = await route(request, env, location); }
+    try { result = await route(request, env, ctx, location, url); }
     catch (error) {
       if (error instanceof InputError) result = failure(location, api, error.status, error.message);
       else {
@@ -261,6 +274,6 @@ export default {
       }
     }
     if (result.status === 429) await scheduler.wait(Math.max(0, arrived + REFUSAL_FLOOR_MS - Date.now()));
-    return finalize(request, location, result);
+    return finalize(request, location, api, result);
   },
 } satisfies ExportedHandler<Env>;

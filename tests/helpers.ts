@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { listDurableObjectIds, runInDurableObject } from 'cloudflare:test';
+import { createExecutionContext, listDurableObjectIds, runInDurableObject, waitOnExecutionContext } from 'cloudflare:test';
 import { expect } from 'vitest';
 import worker from '../src/worker/index';
 import type { AssetSummary, CreateLinkInput, LinkAccess } from '../src/shared/model';
@@ -35,13 +35,19 @@ function withOverrides(overrides: Partial<Env>): Env {
   return new Proxy(env, { get: (target, key) => (key in overrides ? overrides[key as keyof Env] : Reflect.get(target, key)) }) as Env;
 }
 
-/** Calls the Worker module directly, so a test can override bindings such as the listings flag. */
-export function request(path: string, init: RequestInit = {}, clientIp = ip, overrides: Partial<Env> = {}): Promise<Response> {
+/**
+ * Calls the Worker module directly, so a test can override bindings such as the listings flag. Work the Worker leaves
+ * for after the response, such as gallery cache writes and purges, finishes before this resolves.
+ */
+export async function request(path: string, init: RequestInit = {}, clientIp = ip, overrides: Partial<Env> = {}): Promise<Response> {
   const hubOrigin = overrides.HUB_ORIGIN ?? env.HUB_ORIGIN;
   const headers = new Headers(init.headers);
   headers.set('CF-Connecting-IP', clientIp);
   if (['POST', 'DELETE', 'OPTIONS'].includes(init.method ?? 'GET') && !headers.has('Origin')) headers.set('Origin', hubOrigin);
-  return worker.fetch(new Request(`${hubOrigin}${env.HUB_PATH}${path}`, { ...init, headers }), withOverrides(overrides));
+  const ctx = createExecutionContext();
+  const response = await worker.fetch(new Request(`${hubOrigin}${env.HUB_PATH}${path}`, { ...init, headers }), withOverrides(overrides), ctx);
+  await waitOnExecutionContext(ctx);
+  return response;
 }
 
 export function post(payload: object, clientIp = ip, overrides: Partial<Env> = {}): Promise<Response> {
