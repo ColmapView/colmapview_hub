@@ -10,11 +10,20 @@ export async function hash(value: string): Promise<string> {
   return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))));
 }
 
-export async function keyedHash(key: string, value: string): Promise<Uint8Array> {
+/** The imported HMAC key, kept per isolate for the key string it came from. A key that fails to import is never kept. */
+let hmacKey: { source: string; key: CryptoKey } | null = null;
+
+async function importHmacKey(key: string): Promise<CryptoKey> {
+  if (hmacKey?.source === key) return hmacKey.key;
   const bytes = Uint8Array.from(atob(key.replaceAll('-', '+').replaceAll('_', '/')), character => character.charCodeAt(0));
   if (bytes.length !== 32) throw new Error('Hub key must contain 32 random bytes');
   const imported = await crypto.subtle.importKey('raw', bytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  return new Uint8Array(await crypto.subtle.sign('HMAC', imported, new TextEncoder().encode(value)));
+  hmacKey = { source: key, key: imported };
+  return imported;
+}
+
+export async function keyedHash(key: string, value: string): Promise<Uint8Array> {
+  return new Uint8Array(await crypto.subtle.sign('HMAC', await importHmacKey(key), new TextEncoder().encode(value)));
 }
 
 /** The eight hextets of an IPv6 address, or null when the text is not one. */
@@ -79,9 +88,7 @@ export async function deriveLongId(key: string, secret: string, words: Wordlists
 }
 
 export function equalHashes(left: string, right: string): boolean {
-  if (!/^[a-f0-9]{64}$/.test(left) || !/^[a-f0-9]{64}$/.test(right)) return false;
-  const bytes = (value: string) => Uint8Array.from(value.match(/../g)!, pair => Number.parseInt(pair, 16));
-  return crypto.subtle.timingSafeEqual(bytes(left), bytes(right));
+  return /^[a-f0-9]{64}$/.test(left) && /^[a-f0-9]{64}$/.test(right) && equalSecrets(left, right);
 }
 
 /** Constant-time comparison of two secret strings. */

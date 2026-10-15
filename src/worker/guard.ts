@@ -33,17 +33,22 @@ function nextExpiry(state: GuardState | undefined): number | null {
   return times.length ? Math.min(...times) : null;
 }
 
-const isEmpty = (state: GuardState) => !Object.keys(state.misses).length && !state.blockedUntil && !state.creations;
 const secondsUntil = (time: number, now: number) => Math.max(1, Math.ceil((time - now) / 1000));
+
+/** The shared start of every check: the stored and live state, and the wait in seconds while a block lasts, otherwise 0. */
+function current(storage: DurableObjectStorage) {
+  const now = Date.now();
+  const stored = storage.kv.get<GuardState>(STATE_KEY);
+  const state = liveState(stored, now);
+  return { now, stored, state, wait: state.blockedUntil ? secondsUntil(state.blockedUntil, now) : 0 };
+}
 
 /** Per-client lookup and creation limits. A client with nothing pending keeps no storage. */
 export class LookupGuard extends DurableObject<Env> {
   /** One call per lookup, made after the record read: the wait in seconds, or 0. A hit writes nothing. */
   async lookup(missFingerprint: string | null, maxMisses: number = MAX_MISSES): Promise<number> {
-    const now = Date.now();
-    const stored = this.ctx.storage.kv.get<GuardState>(STATE_KEY);
-    const state = liveState(stored, now);
-    if (state.blockedUntil) return secondsUntil(state.blockedUntil, now);
+    const { now, stored, state, wait } = current(this.ctx.storage);
+    if (wait) return wait;
     if (missFingerprint === null || Object.hasOwn(state.misses, missFingerprint)) return 0;
     const misses = { ...state.misses, [missFingerprint]: now };
     const next: GuardState = Object.keys(misses).length >= maxMisses
@@ -55,10 +60,8 @@ export class LookupGuard extends DurableObject<Env> {
 
   /** The creation quota; also refuses blocked clients. */
   async admitCreation(): Promise<number> {
-    const now = Date.now();
-    const stored = this.ctx.storage.kv.get<GuardState>(STATE_KEY);
-    const state = liveState(stored, now);
-    if (state.blockedUntil) return secondsUntil(state.blockedUntil, now);
+    const { now, stored, state, wait } = current(this.ctx.storage);
+    if (wait) return wait;
     if (state.creations && state.creations.count >= MAX_CREATES) return secondsUntil(state.creations.started + CREATE_WINDOW_MS, now);
     await this.save(stored, { ...state, creations: { started: state.creations?.started ?? now, count: (state.creations?.count ?? 0) + 1 } });
     return 0;
@@ -67,9 +70,10 @@ export class LookupGuard extends DurableObject<Env> {
   async alarm(): Promise<void> {
     const state = liveState(this.ctx.storage.kv.get<GuardState>(STATE_KEY), Date.now());
     // At compatibility date 2026-02-24 and later, deleteAll() also removes the alarm.
-    if (isEmpty(state)) { await this.ctx.storage.deleteAll(); return; }
+    const expiry = nextExpiry(state);
+    if (expiry === null) { await this.ctx.storage.deleteAll(); return; }
     this.ctx.storage.kv.put(STATE_KEY, state);
-    await this.ctx.storage.setAlarm(nextExpiry(state)!);
+    await this.ctx.storage.setAlarm(expiry);
   }
 
   /** Callers save only changed state; the alarm moves only when the earliest expiry moves. */
