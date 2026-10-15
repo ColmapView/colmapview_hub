@@ -90,6 +90,35 @@ test('disables deletion when the delete link lost its key', async ({ page }) => 
   } finally { await removeLink(page, link); }
 });
 
+test('picks up a delete key that arrives or changes after the page loaded', async ({ page }) => {
+  const link = await createLink(page);
+  let deleted = false;
+  try {
+    await page.goto(`/hub/manage/${link.id}`);
+    const button = page.getByRole('button', { name: 'Delete permanently', exact: true });
+    const status = page.getByRole('status');
+    await expect(button).toBeDisabled();
+    await page.evaluate(() => { location.hash = 'too-short'; });
+    await expect(button).toBeDisabled();
+    await expect(status).toHaveText('This delete link is incomplete. Open the full link saved when the Hub link was created.');
+    // A well-formed but wrong key enables the button; correcting it in the same tab must send the new key.
+    const wrong = 'B'.repeat(43);
+    await page.evaluate(key => { location.hash = key; }, wrong);
+    await expect(button).toBeEnabled();
+    await expect(page.locator('#status')).toHaveText('');
+    await page.evaluate(key => { location.hash = key; }, link.owner);
+    await expect(button).toBeEnabled();
+    const sent = page.waitForRequest(request => request.method() === 'DELETE');
+    await button.click();
+    expect((await sent).headers().authorization).toBe(`Bearer ${link.owner}`);
+    await expect(status).toHaveText('Hub link deleted.');
+    deleted = true;
+    expect(new URL(page.url()).hash).toBe('');
+    await expect(button).toBeDisabled();
+    expect((await page.request.get(link.url)).status()).toBe(404);
+  } finally { if (!deleted) await removeLink(page, link); }
+});
+
 test('keeps the delete key across the letter-case redirect', async ({ page }) => {
   const link = await createLink(page);
   try {

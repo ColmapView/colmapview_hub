@@ -26,18 +26,33 @@ if (play) play.onclick = () => {
 const deletion = document.querySelector<HTMLFormElement>('#delete-link');
 if (deletion) {
   const button = deletion.querySelector<HTMLButtonElement>('button')!;
-  const owner = location.hash.slice(1);
-  if (!/^[A-Za-z0-9_-]{43}$/.test(owner)) {
-    button.disabled = true;
-    say('This delete link is incomplete. Open the full link saved when the Hub link was created.');
-  }
+  const incomplete = 'This delete link is incomplete. Open the full link saved when the Hub link was created.';
+  // Read the fragment every time: fragment-only navigation (opening the full link, or a corrected one, in the same tab) doesn't reload this script.
+  const currentKey = () => location.hash.slice(1);
+  const validKey = (key: string) => /^[A-Za-z0-9_-]{43}$/.test(key);
+  let busy = false;
+  let done = false;
+  const syncKey = (changed: boolean) => {
+    if (busy || done) return;
+    const valid = validKey(currentKey());
+    button.disabled = !valid;
+    // A status about an earlier key no longer applies once the key changes.
+    if (!valid) say(incomplete);
+    else if (changed) say('');
+  };
+  syncKey(false);
+  addEventListener('hashchange', () => syncKey(true));
   deletion.addEventListener('submit', async event => {
     event.preventDefault();
+    const owner = currentKey();
+    if (busy || done || !validKey(owner)) return;
+    busy = true;
     button.disabled = true;
     const id = location.pathname.split('/').at(-1)!;
     try {
       const response = await fetch(`${path}/api/links/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } });
       if (response.status === 204) {
+        done = true;
         history.replaceState(null, '', location.pathname);
         say('Hub link deleted.', true);
         return;
@@ -48,6 +63,7 @@ if (deletion) {
         : response.status >= 500 ? 'ColmapView Hub is unavailable. Try again in a few minutes.'
         : "This delete link doesn't match the Hub link.", true);
     } catch { say("Couldn't reach ColmapView Hub.", true); }
-    button.disabled = false;
+    finally { busy = false; }
+    if (!done) button.disabled = !validKey(currentKey());
   });
 }
