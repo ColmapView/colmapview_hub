@@ -129,4 +129,6 @@ test('the committed snapshot preserves every supplied public row and every audit
   assert.match(first, /\/hub\/assets\/catalog.js/);
   assert.match(first, /\/hub\/datasets\/page-2/);
   assert.doesNotMatch(first, /<img|og:image/);
+  const headers = await readFile('public/_headers', 'utf8');
+  assert.match(headers, /\/hub\/datasets\/\*[\s\S]*Cache-Control: public, max-age=300, no-transform/);
 });
