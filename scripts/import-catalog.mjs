@@ -3,6 +3,8 @@ import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { applyCatalogReviews, buildCatalog, parseCsv, sha256 } from './catalog-import.mjs';
 import { applyDatasetAudit } from './dataset-audit-import.mjs';
+import { applyIndividualListings } from './individual-listings.mjs';
+import { applyDatasetLabels } from './dataset-labels.mjs';
 
 const { values } = parseArgs({ options: { 'viewer-root': { type: 'string' }, out: { type: 'string', default: 'data/catalog.json' }, help: { type: 'boolean' } } });
 if (values.help || !values['viewer-root']) {
@@ -35,6 +37,18 @@ applyCatalogReviews(snapshot, reviews.entries);
 snapshot.sources.push({ kind: 'review', name: 'catalog-reviews.json',
   checkedAt: reviews.entries.map(review => review.checkedAt).sort().at(-1) || '2026-10-16',
   sha256: sha256(reviewBytes), rowCount: reviews.entries.length });
+const labelBytes = await readFile(new URL('../data/dataset-labels.json', import.meta.url));
+const labels = JSON.parse(labelBytes.toString('utf8'));
+applyDatasetLabels(snapshot, labels);
+snapshot.sources.push({ kind: 'dataset-labels', name: 'dataset-labels.json', checkedAt: '2026-10-16',
+  sha256: sha256(labelBytes), rowCount: Object.keys(labels.labels).length });
+try {
+  const bytes = await readFile(new URL('../data/individual-datasets.json', import.meta.url));
+  const inventory = JSON.parse(bytes.toString('utf8'));
+  applyIndividualListings(snapshot, inventory);
+  snapshot.sources.push({ kind: 'individual-listings', name: 'individual-datasets.json', checkedAt: inventory.checkedAt,
+    sha256: sha256(bytes), rowCount: inventory.individualEntries });
+} catch (error) { if (error.code !== 'ENOENT') throw error; }
 const output = resolve(values.out);
 await mkdir(dirname(output), { recursive: true });
 await writeFile(`${output}.tmp`, `${JSON.stringify(snapshot, null, 2)}\n`);

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "labels": {
+    "audit:public:neuman-10-inventory": "NeuMan",
+    "audit:public:tandt-db-inventory": "Tanks and Temples / Deep Blending",
+    "audit:public:immersive-light-field-video-127-inventory": "Immersive Light Field Video",
+    "audit:public:middlebury-5-inventory": "Middlebury",
+    "audit:public:middlebury-2-inventory": "Middlebury",
+    "audit:public:volsdf-download-1-inventory": "DTU",
+    "audit:public:onthego-script-0-inventory": "On-the-go"
+  }
+}

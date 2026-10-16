@@ -19,10 +19,11 @@
   ],
   "assets": {
     "directory": "public",
+    "binding": "CATALOG_ASSETS",
     // Static files in public/hub/ are served at /hub/… without the Worker. Wrangler's warning that the routes "will attempt
     // to serve Assets on a configured path" is expected for this /hub/* → public/hub/* mapping. Setting run_worker_first
     // back to true would route static files through the Worker again.
-    "run_worker_first": ["/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/datasets", "!/hub/datasets/*"]
+    "run_worker_first": ["/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/datasets/individual/*", "!/hub/datasets/collections*", "!/hub/datasets/collection-page-*", "!/hub/datasets/page-*", "!/hub/datasets/hf-*", "!/hub/datasets/public-*", "!/hub/datasets/audit*", "!/hub/datasets/catalog*", "!/hub/datasets/dataset-audit.json"]
   },
   "r2_buckets": [
     {

@@ -2,6 +2,7 @@ import { readFile, readdir, mkdir, writeFile, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { catalogRenderer } from './catalog-renderer.mjs';
 import { publicUrl } from './catalog-import.mjs';
+import './build-individual-catalog.mjs';
 
 const snapshot = JSON.parse(await readFile('data/catalog.json', 'utf8'));
 if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.entries) || !snapshot.sources?.length || !snapshot.importSummary) throw new Error('Invalid catalog snapshot');
@@ -23,10 +24,14 @@ const output = resolve('public/hub/datasets');
 await mkdir(output, { recursive: true });
 // Only generated files immediately inside this fixed directory are cleaned, never source data or child directories.
 for (const file of await readdir(output, { withFileTypes: true })) {
-  if (file.isFile() && /^(?:index\.html|audit\.html|dataset-audit\.json|page-\d+\.html|[a-z0-9-]+-[a-f0-9]{12}(?:\.html|\.manifest\.json)|catalog(?:-index)?\.json)$/.test(file.name)) await unlink(resolve(output, file.name));
+  if (file.isFile() && /^(?:index\.html|collections\.html|audit\.html|dataset-audit\.json|(?:collection-)?page-\d+\.html|[a-z0-9-]+-[a-f0-9]{12}(?:\.html|\.manifest\.json)|catalog(?:-index)?\.json)$/.test(file.name)) await unlink(resolve(output, file.name));
 }
 const pages = Math.max(1, Math.ceil(snapshot.entries.length / CATALOG_PAGE_SIZE));
-for (let page = 1; page <= pages; page++) await writeFile(resolve(output, page === 1 ? 'index.html' : `page-${page}.html`), catalogIndexPage(snapshot, page));
+for (let page = 1; page <= pages; page++) {
+  const html = catalogIndexPage(snapshot, page, true);
+  await writeFile(resolve(output, page === 1 ? 'collections.html' : `collection-page-${page}.html`), html);
+  if (page > 1) await writeFile(resolve(output, `page-${page}.html`), html);
+}
 for (const entry of snapshot.entries) await writeFile(resolve(output, `${entry.id}.html`), catalogEntryPage(entry));
 for (const entry of snapshot.entries) if (entry.modelManifest) await writeFile(resolve(output, `${entry.id}.manifest.json`), JSON.stringify(entry.modelManifest));
 await writeFile(resolve(output, 'catalog-index.json'), JSON.stringify(snapshot.entries.map(catalogSummary)));

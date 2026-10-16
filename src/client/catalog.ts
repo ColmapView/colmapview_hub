@@ -36,6 +36,11 @@ if (form) {
     link.href = datasetPath(entry);
     heading.append(link);
     const badges = element('p', '', 'dataset-tags');
+    if (entry.dataset) {
+      const dataset = element('a', `Dataset: ${entry.dataset.label}`, 'dataset-tag');
+      dataset.href = `/hub/datasets/?dataset=${encodeURIComponent(entry.dataset.id)}`;
+      badges.append(dataset);
+    }
     for (const label of [providerLabel(entry.provider), entry.statusLabel, ...(entry.testOrFixture ? ['Test / demo'] : [])]) badges.append(element('span', label, 'dataset-tag'));
     if (entry.delivery) badges.append(element('span', deliveryLabel(entry.delivery), 'dataset-tag'));
     const license = element('p', '', 'meta');
@@ -46,7 +51,7 @@ if (form) {
   const urlFor = (page: number) => {
     const query = new URLSearchParams();
     for (const [key, field] of Object.entries(fields)) if (field.value) query.set(key === 'query' ? 'q' : key, field.value);
-    const path = page === 1 ? '/hub/datasets/' : `/hub/datasets/page-${page}`;
+    const path = page === 1 ? (form.dataset.collections ? '/hub/datasets/collections' : '/hub/datasets/') : `/hub/datasets/${form.dataset.collections ? 'collection-' : ''}page-${page}`;
     return path + (query.size ? `?${query}` : '');
   };
   const render = (focusCount = false) => {

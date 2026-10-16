@@ -7,7 +7,8 @@ const location: HubLocation = { origin: 'https://colmapview.opsiclear.com', path
 const number = (value: number) => value.toLocaleString('en-US');
 const factList = (facts: CatalogFact[]) => `<dl class="dataset-facts">${facts.map(fact => `<div><dt>${escape(fact.label)}</dt><dd>${fact.url
   ? `<a href="${escape(fact.url)}" rel="noreferrer">${escape(fact.value)}</a>` : escape(fact.value)}</dd></div>`).join('')}</dl>`;
-const tags = (entry: CatalogSummary) => `<p class="dataset-tags"><span class="dataset-tag">${escape(providerLabel(entry.provider))}</span>`
+const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/datasets/?dataset=${encodeURIComponent(entry.dataset.id)}">Dataset: ${escape(entry.dataset.label)}</a>` : ''}`
+  + `${entry.itemKind ? `<span class="dataset-tag">${escape(entry.itemKind)}</span>` : ''}<span class="dataset-tag">${escape(providerLabel(entry.provider))}</span>`
   + `<span class="dataset-tag">${escape(entry.statusLabel)}</span>${entry.delivery ? `<span class="dataset-tag">${escape(deliveryLabel(entry.delivery))}</span>` : ''}${entry.testOrFixture ? '<span class="dataset-tag">Test / demo</span>' : ''}</p>`;
 
 export function catalogCard(entry: CatalogSummary): string {
@@ -26,6 +27,7 @@ export function catalogEntryPage(entry: CatalogEntry): string {
   const actions = action(entry.sourceUrl === entry.dataUrl ? 'Dataset URL' : 'Source', entry.sourceUrl)
     + (entry.dataUrl && entry.dataUrl !== entry.sourceUrl ? action('Dataset URL', entry.dataUrl) : '')
     + (entry.viewerUrl ? action('Try in ColmapView', entry.viewerUrl, true) : '');
+  const individualAction = entry.candidateViewerUrl ? action('Try listed model (unchecked)', entry.candidateViewerUrl) : '';
   const audits = entry.audits.map(audit => {
     const name = audit.sourceUrl ? decodeURIComponent(new URL(audit.sourceUrl).pathname.split('/').filter(part => part && part !== 'content').at(-1) || audit.sourceId) : audit.sourceId;
     return `<details class="dataset-audit"><summary>${escape(name)} · checked ${escape(audit.checkedAt)}</summary>`
@@ -35,12 +37,16 @@ export function catalogEntryPage(entry: CatalogEntry): string {
   }).join('');
   return page(location, entry.title,
     '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
-    + intro(entry.title, entry.description, tags({ ...entry, delivery: entry.verification?.delivery }))
-    + `<div class="actions">${actions}</div>`
+    + intro(entry.title, entry.description, tags(catalogSummary(entry)))
+    + `<div class="actions">${actions}${individualAction}</div>`
+    + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(entry.dataset.id)}">${escape(entry.dataset.title)}</a>. <a href="/hub/datasets/${entry.dataset.id}">Collection information</a>.</p>`
+      : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s individual models and scenes</a>.</p>`)
     + (entry.verification ? '<section class="dataset-section"><h2>Loading status</h2>'
       + factList([{ label: 'Format evidence', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },
         { label: 'Check scope', value: entry.verification.scope }, { label: 'Released viewer', value: entry.verification.viewerVersion }])
-      + (!entry.viewerUrl ? `<p class="note">${escape(entry.provider === 'public' && entry.verification.level === 'header_checked'
+      + (!entry.viewerUrl ? `<p class="note">${escape(entry.candidateViewerUrl
+        ? 'The model link is based on the source file listing. Its format, browser access and complete loading need individual checks.'
+        : entry.provider === 'public' && entry.verification.level === 'header_checked'
         ? 'Download and extract the source archive, then open this entry’s model or scene folder in ColmapView. The loading evidence identifies the inspected files.'
         : entry.verification.delivery === 'gated' ? 'Obtain access from the source and sign in to Hugging Face in ColmapView. The source’s file format still needs the checks recorded below.'
           : 'Use the source link for the original files. The evidence below records the conversion, missing assets or checks needed before opening this source in ColmapView.')}</p>` : '')
@@ -54,19 +60,20 @@ export function catalogEntryPage(entry: CatalogEntry): string {
     social(`${location.origin}${datasetPath(entry)}`, entry.title, entry.description));
 }
 
-export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1): string {
+export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, collections = false): string {
   const total = snapshot.entries.length;
   const pages = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
   if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pages) throw new Error('Invalid catalog page');
   const selected = snapshot.entries.slice((pageNumber - 1) * CATALOG_PAGE_SIZE, pageNumber * CATALOG_PAGE_SIZE);
   const options = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b, 'en')).map(value => `<option value="${escape(value)}">${escape(value)}</option>`).join('');
-  const pagePath = (value: number) => value <= 1 ? '/hub/datasets/' : `/hub/datasets/page-${value}`;
+  const pagePath = (value: number) => value <= 1 ? (collections ? '/hub/datasets/collections' : '/hub/datasets/') : `/hub/datasets/${collections ? 'collection-' : ''}page-${value}`;
   const description = `${number(snapshot.importSummary.hfEntries)} Hugging Face repositories and ${number(snapshot.importSummary.publicEntries)} public scene or subset entries.`
     + (snapshot.importSummary.additionalAuditEntries ? ` Includes ${number(snapshot.importSummary.additionalAuditEntries)} additional audited sources.` : '');
-  return page(location, 'Public datasets', '<div class="catalog-index">' + intro('Public datasets', description)
+  return page(location, collections ? 'Dataset collections' : 'Public datasets', '<div class="catalog-index">' + intro(collections ? 'Dataset collections' : 'Public datasets', description)
+    + (collections ? '<p class="note"><a href="/hub/datasets/">Browse individual models and scenes</a>. Collection pages retain source-wide metadata and audit history.</p>' : '')
     + '<p class="note">Browse source links, reported licenses, formats and sampled loading checks. The surveys were recorded in October 2026.</p>'
     + (snapshot.auditSummary ? `<p class="note">Rechecked ${number(snapshot.auditSummary.sourcesAudited)} sources on ${escape(snapshot.auditSummary.checkedAt)}, including previously rejected candidates. Format checks and browser reads are recorded separately. <a href="/hub/datasets/audit">Read the audit</a>.</p>` : '')
-    + `<form id="catalog-search" class="catalog-filters" role="search" data-page="${pageNumber}">`
+    + `<form id="catalog-search" class="catalog-filters" role="search" data-page="${pageNumber}"${collections ? ' data-collections="true"' : ''}>`
     + '<label class="catalog-query">Search datasets<input type="search" name="q" placeholder="Dataset, format, license…" disabled></label>'
     + '<label>Source<select name="provider" aria-label="Source" disabled><option value="">All sources</option><option value="huggingface">Hugging Face</option><option value="public">Public sources</option></select></label>'
     + `<label>License<select name="license" aria-label="License" disabled><option value="">All licenses</option>${options(snapshot.entries.map(entry => entry.license))}</select></label>`

@@ -7,6 +7,7 @@ import { blockedPage, cardPage, errorPage, galleryKey, galleryPage, hubLocation,
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
+import { individualRoute } from './individual-routes';
 export { LookupGuard } from './guard';
 
 const UNAVAILABLE = 'The Hub is temporarily unavailable. Please try again.';
@@ -234,6 +235,11 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, location
   if (url.origin !== location.origin || (url.pathname !== location.path && !url.pathname.startsWith(`${location.path}/`))) return failure(location, false, 404);
   const path = url.pathname.slice(location.path.length);
   if (path === '') return redirect(`${location.base}/`, 307);
+  if (path === '/datasets/index.html') return redirect(`${location.base}/datasets/${url.search}`, 308);
+  if (path === '/datasets' || path === '/datasets/' || path.startsWith('/datasets/entry/') || path.startsWith('/datasets/api/')) {
+    return individualRoute(request, env, ctx, location, url);
+  }
+  if (path.startsWith('/datasets/')) return failure(location, false, 404);
   if (path.startsWith('/api/')) {
     if (request.method === 'OPTIONS') return allowedOrigin(request, location)
       ? new Response(null, { status: 204, headers: { 'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' } })
@@ -262,7 +268,7 @@ export default {
     try { location = hubLocation(env); }
     catch { return withSharedHeaders(request, json({ error: UNAVAILABLE }, 503)); }
     const url = new URL(request.url);
-    const api = url.pathname.startsWith(`${location.path}/api/`);
+    const api = url.pathname.startsWith(`${location.path}/api/`) || url.pathname.startsWith(`${location.path}/datasets/api/`);
     let result: Response;
     try { result = await route(request, env, ctx, location, url); }
     catch (error) {

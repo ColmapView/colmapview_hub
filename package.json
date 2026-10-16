@@ -1,6 +1,6 @@
 {
   "name": "colmapview_hub",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "build:catalog": "node scripts/build-catalog.mjs",
     "build:assets": "npm run build:client && npm run build:catalog",
     "catalog:import": "node scripts/import-catalog.mjs",
-    "test:catalog": "node --test tests/catalog.test.mjs",
+    "test:catalog": "node --test tests/catalog.test.mjs tests/individual-catalog.test.mjs",
     "types": "wrangler types --strict-vars=false",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "lint": "eslint .",
