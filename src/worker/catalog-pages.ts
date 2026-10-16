@@ -1,4 +1,4 @@
-import { CATALOG_PAGE_SIZE, accessLabel, catalogSummary, datasetPath, deliveryLabel, providerLabel } from '../shared/catalog';
+import { CATALOG_PAGE_SIZE, accessLabel, catalogSummary, datasetPath, datasetFilterValue, deliveryLabel, providerLabel } from '../shared/catalog';
 import type { CatalogEntry, CatalogFact, CatalogSnapshot, CatalogSummary } from '../shared/catalog';
 import { escapeHtml as escape, intro, page } from './pages';
 import type { HubLocation } from './pages';
@@ -7,7 +7,7 @@ const location: HubLocation = { origin: 'https://colmapview.opsiclear.com', path
 const number = (value: number) => value.toLocaleString('en-US');
 const factList = (facts: CatalogFact[]) => `<dl class="dataset-facts">${facts.map(fact => `<div><dt>${escape(fact.label)}</dt><dd>${fact.url
   ? `<a href="${escape(fact.url)}" rel="noreferrer">${escape(fact.value)}</a>` : escape(fact.value)}</dd></div>`).join('')}</dl>`;
-const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/datasets/?dataset=${encodeURIComponent(entry.dataset.id)}">Dataset: ${escape(entry.dataset.label)}</a>` : ''}`
+const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Dataset: ${escape(entry.dataset.label)}</a>` : ''}`
   + `${entry.itemKind ? `<span class="dataset-tag">${escape(entry.itemKind)}</span>` : ''}<span class="dataset-tag">${escape(providerLabel(entry.provider))}</span>`
   + `<span class="dataset-tag">${escape(entry.statusLabel)}</span>${entry.delivery ? `<span class="dataset-tag">${escape(deliveryLabel(entry.delivery))}</span>` : ''}${entry.testOrFixture ? '<span class="dataset-tag">Test / demo</span>' : ''}</p>`;
 
@@ -39,7 +39,7 @@ export function catalogEntryPage(entry: CatalogEntry): string {
     '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
     + `<div class="actions">${actions}${individualAction}</div>`
-    + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(entry.dataset.id)}">${escape(entry.dataset.title)}</a>. <a href="/hub/datasets/${entry.dataset.id}">Collection information</a>.</p>`
+    + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(catalogSummary(entry)))}">${escape(entry.dataset.label)}</a>. <a href="/hub/datasets/${entry.dataset.id}">Collection information</a>.</p>`
       : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s individual models and scenes</a>.</p>`)
     + (entry.verification ? '<section class="dataset-section"><h2>Loading status</h2>'
       + factList([{ label: 'Format evidence', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },

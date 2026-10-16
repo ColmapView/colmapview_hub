@@ -100,6 +100,23 @@ test('dataset and provider filters count individual records, not collection card
   await assert.rejects(render.searchIndividuals(binding, 'https://colmapview.opsiclear.com', index, new URLSearchParams('page=2')), /does not exist/);
 });
 
+test('a public dataset label groups scenes from separate source records while retaining each source identity', async () => {
+  const { index, binding, rows } = fixture();
+  index.sources[1].label = 'DTU';
+  index.sources.push({ ...index.sources[1], id: 'public-second-123456abcdef', sourceId: 'public:second', title: 'Second scene', start: 4 });
+  index.total = 5;
+  rows.push(row(4, { 1: 2, 2: 'scene', 3: 'Second scene' }));
+  const selected = await render.searchIndividuals(binding, 'https://colmapview.opsiclear.com', index, new URLSearchParams('dataset=public:DTU'));
+  assert.equal(selected.total, 2);
+  assert.notEqual(selected.entries[0].dataset.id, selected.entries[1].dataset.id);
+  assert.equal(render.datasetFilterValue(selected.entries[0]), 'public:DTU');
+  const selection = render.individualSelection(index.sources, 'public:DTU');
+  assert.equal(selection.count, 2);
+  assert.ok(selection.metadataUrl.includes('/collections?'));
+  assert.equal(render.individualDatasetOptions(index.sources, '').filter(option => option.value === 'public:DTU').length, 1);
+  assert.match(render.catalogCard(selected.entries[0]), /dataset=public%3ADTU/);
+});
+
 test('stable entry lookup returns only its source metadata and invalid IDs cannot become asset paths', async () => {
   const { index, binding, keys } = fixture();
   const model = await render.readIndividual(binding, 'https://colmapview.opsiclear.com', index, row()[0]);

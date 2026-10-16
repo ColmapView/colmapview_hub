@@ -1,4 +1,4 @@
-import { INDIVIDUAL_PAGE_SIZE, individualEntry, individualSummary, individualTokens } from '../shared/individual-catalog';
+import { INDIVIDUAL_PAGE_SIZE, individualEntry, individualSummary, individualTokens, matchesIndividualDataset } from '../shared/individual-catalog';
 import type { IndividualIndex, IndividualPage, IndividualRecord, IndividualSource } from '../shared/individual-catalog';
 import type { CatalogEntry } from '../shared/catalog';
 import { InputError } from './validation';
@@ -125,7 +125,7 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
   postings.sort((a, b) => a.length - b.length);
   let candidates = postings[0];
   for (let position = 1; position < postings.length && candidates.length; position++) candidates = intersectPostings(candidates, postings[position]);
-  const sources = index.sources.filter(source => (!filters.get('dataset') || source.id === filters.get('dataset'))
+  const sources = index.sources.filter(source => matchesIndividualDataset(source, filters.get('dataset') || '')
     && (!filters.get('provider') || source.provider === filters.get('provider')) && (!filters.get('license') || source.license === filters.get('license')) && source.count);
   const requested = Number(filters.get('page') || 1);
   let total = 0;

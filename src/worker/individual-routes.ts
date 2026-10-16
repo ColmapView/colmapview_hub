@@ -3,6 +3,7 @@ import { individualFilters, individualIndex, readIndividual, searchIndividuals }
 import { individualIndexPage } from './individual-pages';
 import { errorPage } from './pages';
 import type { HubLocation } from './pages';
+import { individualSelection } from '../shared/individual-catalog';
 
 /** A public, operator-built metadata namespace. No user-created share record,
  * management secret, R2 listing, or private lookup path is reachable here. */
@@ -34,7 +35,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
     body = catalogEntryPage(model);
   } else {
     const result = await searchIndividuals(env.CATALOG_ASSETS, location.origin, index, filters);
-    body = api ? JSON.stringify({ ...result, dataset: index.sources.find(source => source.id === filters.get('dataset')) || null })
+    body = api ? JSON.stringify({ ...result, dataset: individualSelection(index.sources, filters.get('dataset') || '') })
       : individualIndexPage(location, index, result, filters);
   }
   // Hash the response content so template-only releases also invalidate a

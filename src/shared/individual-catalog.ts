@@ -16,6 +16,33 @@ export type IndividualProof = CatalogVerification & { statusLabel: string; viewe
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
   files: Record<string, string> | null, proof: IndividualProof | null];
 export interface IndividualPage { entries: CatalogSummary[]; total: number; page: number; pages: number; generation: string }
+export interface IndividualSelection { id: string; label: string; title: string; count: number; listingComplete: boolean; metadataUrl: string }
+export const matchesIndividualDataset = (source: IndividualSource, value: string) => !value || source.id === value
+  || (source.provider === 'public' && value === `public:${source.label}`);
+
+export function individualSelection(sources: IndividualSource[], value: string): IndividualSelection | null {
+  if (!value) return null;
+  const selected = sources.filter(source => matchesIndividualDataset(source, value));
+  if (!selected.length) return null;
+  const first = selected[0];
+  return { id: first.id, label: first.label, title: selected.length === 1 ? first.title : `${selected.length} public source entries`,
+    count: selected.reduce((sum, source) => sum + source.count, 0), listingComplete: selected.every(source => source.listingComplete),
+    metadataUrl: selected.length === 1 ? `/hub/datasets/${first.id}` : `/hub/datasets/collections?provider=public&q=${encodeURIComponent(first.label)}` };
+}
+
+export function individualDatasetOptions(sources: IndividualSource[], selected: string): { value: string; label: string }[] {
+  const options = new Map<string, { label: string; count: number }>();
+  for (const source of sources) {
+    if (!source.count && source.id !== selected) continue;
+    const value = source.provider === 'public' ? `public:${source.label}` : source.id;
+    const option = options.get(value) || { label: source.provider === 'public' ? source.label : `${source.label} · ${source.title}`, count: 0 };
+    option.count += source.count;
+    options.set(value, option);
+    // Original source-specific URLs remain selectable as well as the grouped label.
+    if (source.provider === 'public' && source.id === selected) options.set(source.id, { label: `${source.label} · ${source.title}`, count: source.count });
+  }
+  return [...options].sort(([, a], [, b]) => a.label.localeCompare(b.label, 'en')).map(([value, option]) => ({ value, label: `${option.label} (${option.count.toLocaleString('en-US')})` }));
+}
 export const INDIVIDUAL_PAGE_SIZE = 24;
 export const individualKind = (kind: string, format = '') => kind === 'ply' && format === 'Gaussian PLY' ? 'Gaussian splat' : ({ colmap: 'COLMAP reconstruction', cameras: 'Cameras and poses', ply: 'PLY model',
   spz: 'Gaussian splat', sog: 'Gaussian splat', splat: 'Gaussian splat', ksplat: 'Gaussian splat', 'splat-scene': 'Gaussian splat',

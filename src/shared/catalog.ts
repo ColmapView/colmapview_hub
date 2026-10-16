@@ -45,6 +45,8 @@ export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'l
 export const CATALOG_PAGE_SIZE = 24;
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
 export const datasetLabel = (entry: CatalogEntry) => entry.dataset?.label || entry.datasetLabel || entry.facts.find(fact => fact.label === 'Collection')?.value || entry.title.split('/').at(-1) || entry.title;
+export const datasetFilterValue = (entry: Pick<CatalogSummary, 'dataset' | 'provider'>) => entry.dataset
+  ? entry.provider === 'public' ? `public:${entry.dataset.label}` : entry.dataset.id : '';
 export const providerLabel = (provider: CatalogEntry['provider']) => provider === 'huggingface' ? 'Hugging Face' : 'Public source';
 export const accessLabel = (access: CatalogEntry['access']) => ({ public: 'Public source', gated: 'Access approval or sign-in required', terms: 'Source agreement applies', unknown: 'Access not established' })[access];
 const deliveryLabels: Record<string, string> = { browser_readable: 'Browser read checked', server_readable: 'Server read checked',

@@ -1,4 +1,4 @@
-import { accessLabel, CATALOG_PAGE_SIZE, datasetPath, deliveryLabel, filterCatalog, isCatalogSummary, providerLabel } from '../shared/catalog';
+import { accessLabel, CATALOG_PAGE_SIZE, datasetPath, datasetFilterValue, deliveryLabel, filterCatalog, isCatalogSummary, providerLabel } from '../shared/catalog';
 import type { CatalogSummary } from '../shared/catalog';
 
 const form = document.querySelector<HTMLFormElement>('#catalog-search');
@@ -38,7 +38,7 @@ if (form) {
     const badges = element('p', '', 'dataset-tags');
     if (entry.dataset) {
       const dataset = element('a', `Dataset: ${entry.dataset.label}`, 'dataset-tag');
-      dataset.href = `/hub/datasets/?dataset=${encodeURIComponent(entry.dataset.id)}`;
+      dataset.href = `/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}`;
       badges.append(dataset);
     }
     for (const label of [providerLabel(entry.provider), entry.statusLabel, ...(entry.testOrFixture ? ['Test / demo'] : [])]) badges.append(element('span', label, 'dataset-tag'));

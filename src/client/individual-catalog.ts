@@ -1,7 +1,7 @@
-import { accessLabel, datasetPath, deliveryLabel, isCatalogSummary, providerLabel } from '../shared/catalog';
+import { accessLabel, datasetPath, datasetFilterValue, deliveryLabel, isCatalogSummary, providerLabel } from '../shared/catalog';
 import type { CatalogSummary } from '../shared/catalog';
 import { INDIVIDUAL_PAGE_SIZE } from '../shared/individual-catalog';
-import type { IndividualPage, IndividualSource } from '../shared/individual-catalog';
+import type { IndividualPage, IndividualSelection } from '../shared/individual-catalog';
 
 const form = document.querySelector<HTMLFormElement>('#individual-search');
 if (form) {
@@ -31,7 +31,7 @@ if (form) {
     const badges = element('p', '', 'dataset-tags');
     if (entry.dataset) {
       const dataset = element('a', `Dataset: ${entry.dataset.label}`, 'dataset-tag');
-      dataset.href = `/hub/datasets/?dataset=${encodeURIComponent(entry.dataset.id)}`;
+      dataset.href = `/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}`;
       badges.append(dataset);
     }
     for (const value of [entry.itemKind, providerLabel(entry.provider), entry.statusLabel,
@@ -50,11 +50,11 @@ if (form) {
     return values;
   };
   const urlFor = (values: URLSearchParams) => '/hub/datasets/' + (values.size ? `?${values}` : '');
-  const updateSelection = (source: IndividualSource | null) => {
+  const updateSelection = (source: IndividualSelection | null) => {
     selection.hidden = !source;
     if (!source) { selection.replaceChildren(); return; }
     const metadata = element('a', 'Collection metadata');
-    metadata.href = `/hub/datasets/${source.id}`;
+    metadata.href = source.metadataUrl || `/hub/datasets/${source.id}`;
     selection.replaceChildren(document.createTextNode(`Dataset: ${source.label} · ${source.title} · ${source.count.toLocaleString()} entries${source.listingComplete ? '' : ' · source listing incomplete'}. `), metadata);
   };
   const load = async (values: URLSearchParams, focus = false, push = false) => {
@@ -65,7 +65,7 @@ if (form) {
     results.setAttribute('aria-busy', 'true');
     try {
       const response = await fetch(`/hub/datasets/api/entries${values.size ? `?${values}` : ''}`, { signal: controller.signal });
-      const data: IndividualPage & { dataset: IndividualSource | null; error?: string } = await response.json();
+      const data: IndividualPage & { dataset: IndividualSelection | null; error?: string } = await response.json();
       if (!response.ok) throw new Error(data.error || 'Dataset search is unavailable.');
       if (!Array.isArray(data.entries) || data.entries.length > INDIVIDUAL_PAGE_SIZE || !data.entries.every(isCatalogSummary)
         || ![data.page, data.pages, data.total].every(Number.isSafeInteger) || data.page < 1 || data.pages < data.page || data.total < 0) throw new Error('Dataset search returned invalid metadata.');
