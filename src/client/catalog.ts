@@ -1,4 +1,4 @@
-import { accessLabel, CATALOG_PAGE_SIZE, datasetPath, filterCatalog, isCatalogSummary, providerLabel } from '../shared/catalog';
+import { accessLabel, CATALOG_PAGE_SIZE, datasetPath, deliveryLabel, filterCatalog, isCatalogSummary, providerLabel } from '../shared/catalog';
 import type { CatalogSummary } from '../shared/catalog';
 
 const form = document.querySelector<HTMLFormElement>('#catalog-search');
@@ -13,6 +13,8 @@ if (form) {
     provider: form.querySelector<HTMLSelectElement>('[name=provider]')!,
     license: form.querySelector<HTMLSelectElement>('[name=license]')!,
     status: form.querySelector<HTMLSelectElement>('[name=status]')!,
+    delivery: form.querySelector<HTMLSelectElement>('[name=delivery]')!,
+    viewer: form.querySelector<HTMLSelectElement>('[name=viewer]')!,
   };
   let entries: CatalogSummary[] | null = null;
   let currentPage = Number(form.dataset.page) || 1;
@@ -35,6 +37,7 @@ if (form) {
     heading.append(link);
     const badges = element('p', '', 'dataset-tags');
     for (const label of [providerLabel(entry.provider), entry.statusLabel, ...(entry.testOrFixture ? ['Test / demo'] : [])]) badges.append(element('span', label, 'dataset-tag'));
+    if (entry.delivery) badges.append(element('span', deliveryLabel(entry.delivery), 'dataset-tag'));
     const license = element('p', '', 'meta');
     license.append(element('strong', 'License: '), document.createTextNode(entry.license));
     article.append(heading, badges, element('p', entry.description), element('p', accessLabel(entry.access), 'meta'), license);
@@ -48,7 +51,8 @@ if (form) {
   };
   const render = (focusCount = false) => {
     if (!entries) return;
-    const filtered = filterCatalog(entries, { query: fields.query.value, provider: fields.provider.value, license: fields.license.value, status: fields.status.value });
+    const filtered = filterCatalog(entries, { query: fields.query.value, provider: fields.provider.value, license: fields.license.value,
+      status: fields.status.value, delivery: fields.delivery.value, viewer: fields.viewer.value });
     const pages = Math.max(1, Math.ceil(filtered.length / CATALOG_PAGE_SIZE));
     currentPage = Math.min(currentPage, pages);
     const offset = (currentPage - 1) * CATALOG_PAGE_SIZE;

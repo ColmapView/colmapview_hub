@@ -74,6 +74,7 @@ export function applyCatalogReviews(snapshot, reviews) {
     entry.description = review.description;
     entry.formats = review.formats;
     entry.checkedAt = review.checkedAt;
+    if (entry.verification) entry.verification.summary = review.description;
     delete entry.viewerUrl;
     entry.audits.push({ sourceId: `review:${review.sourceId}:${review.revision}`, sourceUrl,
       checkedAt: review.checkedAt, scope: 'source', facts: reviewedFacts });

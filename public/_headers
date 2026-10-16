@@ -6,3 +6,6 @@
   Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
   Referrer-Policy: no-referrer
   Cache-Control: public, max-age=300, no-transform
+
+/hub/datasets/*.manifest.json
+  Access-Control-Allow-Origin: *

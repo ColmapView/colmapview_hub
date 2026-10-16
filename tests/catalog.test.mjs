@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { applyCatalogReviews, buildCatalog, parseCsv, publicUrl } from '../scripts/catalog-import.mjs';
 import { catalogRenderer } from '../scripts/catalog-renderer.mjs';
+import { applyDatasetAudit, makeDatasetAudit, requiredProbeUrls } from '../scripts/dataset-audit-import.mjs';
 
 const render = await catalogRenderer();
 const sources = [{ kind: 'hf', name: 'test.csv', checkedAt: '2026-10-13', sha256: '0'.repeat(64), rowCount: 1 }];
@@ -125,6 +126,77 @@ test('filters by all query words, source, exact license and evidence level', () 
   assert.equal(render.filterCatalog(entries, filters).length, 1);
   assert.equal(render.filterCatalog(entries, { ...filters, provider: 'public' }).length, 0);
   assert.equal(render.filterCatalog(entries, { ...filters, query: 'absent' }).length, 0);
+});
+
+test('format evidence alone cannot restore a viewer link; every required native file needs a browser read', () => {
+  const paths = ['cameras.bin', 'images.bin', 'points3D.bin'];
+  const probes = paths.map(path => ({ path, url: `https://example.org/${path}`, httpStatus: 206 }));
+  const result = { sourceId: 'hf:owner/dataset', level: 'header_checked', revision: 'abc', checkedAt: '2026-10-16T00:00:00Z',
+    formats: ['colmap'], probes, issues: [], delivery: 'server_readable', loadUrl: hf().load_url, license: ['cc-by-4.0'] };
+  assert.equal(requiredProbeUrls(result).length, 3);
+  const hfReport = { results: [result] }, publicReport = { results: [] };
+  const browser = { origin: 'https://colmapview.opsiclear.com', results: probes.map(probe => ({ url: probe.url, delivery: 'browser_readable', checkedAt: result.checkedAt, prefix: { status: 206 } })) };
+  const incomplete = makeDatasetAudit(hfReport, publicReport, { ...browser, results: browser.results.slice(0, 2) }, '0.16.14');
+  assert.equal(applyDatasetAudit(catalog(), incomplete).entries[0].viewerUrl, undefined);
+  const complete = makeDatasetAudit(hfReport, publicReport, browser, '0.16.14');
+  const entry = applyDatasetAudit(catalog(), complete).entries[0];
+  assert.equal(new URL(entry.viewerUrl).searchParams.get('url'), result.loadUrl);
+  assert.equal(entry.verification.delivery, 'browser_readable');
+  assert.match(render.catalogEntryPage(entry), /Complete scene parsing and rendering remain unverified/);
+  const blocked = makeDatasetAudit(hfReport, publicReport, { ...browser, results: browser.results.map((check, index) => index === 2 ? { ...check, delivery: 'browser_request_failed' } : check) }, '0.16.14');
+  assert.equal(applyDatasetAudit(catalog(), blocked).entries[0].viewerUrl, undefined);
+});
+
+test('a recovered rejected source gets a stable entry and current format evidence without reviving unrelated matches', () => {
+  const rows = [hf({ status: 'no_supported_3d_evidence' }), hf({ id: 'other/unrelated', status: 'no_supported_3d_evidence' })];
+  const result = { sourceId: 'hf:owner/dataset', level: 'header_checked', revision: 'def', checkedAt: '2026-10-16T00:00:00Z',
+    formats: ['point_cloud_ply'], probes: [{ url: 'https://example.org/scene.ply', format: 'point_cloud_ply', vertices: 12 }], issues: [],
+    loadUrl: 'https://example.org/scene.ply', delivery: 'browser_readable', summary: 'XYZ PLY header checked.', scope: 'Original header only.', browserChecks: [] };
+  const snapshot = applyDatasetAudit(catalog({ hfRows: rows }), { schemaVersion: 1, checkedAt: result.checkedAt, viewerVersion: '0.16.14', results: [result] }, rows);
+  assert.equal(snapshot.entries.length, 1);
+  assert.equal(snapshot.entries[0].id, catalog().entries[0].id);
+  assert.deepEqual(snapshot.entries[0].formats, ['XYZ point-cloud PLY']);
+  assert.equal(snapshot.importSummary.hfEntries, 1);
+});
+
+test('an asynchronous decoder rejection overrides a successful byte read or early import UI state', () => {
+  const url = 'https://example.org/new-version.spz';
+  const result = { sourceId: 'hf:owner/dataset', level: 'header_checked', revision: 'abc', checkedAt: '2026-10-16T00:00:00Z',
+    formats: ['spz_v4'], loadUrl: url, probes: [{ url }], issues: [], delivery: 'server_readable' };
+  const browser = { origin: 'https://colmapview.opsiclear.com', results: [{ url, delivery: 'browser_readable', checkedAt: result.checkedAt }] };
+  const viewer = { results: [{ sourceId: result.sourceId, sourceUrl: url, status: 'failed', imported: true,
+    decoderError: 'Invalid gzip header', scope: 'Decoder rejected the original file.' }] };
+  const audit = makeDatasetAudit({ results: [result] }, { results: [] }, browser, '0.16.14', viewer);
+  const entry = applyDatasetAudit(catalog(), audit).entries[0];
+  assert.equal(entry.statusLabel, 'Conversion needed');
+  assert.equal(entry.viewerUrl, undefined);
+  assert.match(entry.description, /failed decoding/);
+});
+
+test('delivery and checked-link filters distinguish transport from format evidence', () => {
+  const base = render.catalogSummary(catalog().entries[0]);
+  const entries = [{ ...base, delivery: 'browser_readable', hasViewer: true }, { ...base, id: 'other', delivery: 'gated', hasViewer: false }];
+  const filters = { query: '', provider: '', license: '', status: '', delivery: 'gated' };
+  assert.equal(render.filterCatalog(entries, filters).length, 1);
+  assert.equal(render.filterCatalog(entries, { ...filters, viewer: 'available' }).length, 0);
+  assert.equal(render.filterCatalog(entries, { ...filters, delivery: '', viewer: 'available' }).length, 1);
+  assert.equal(render.isCatalogSummary({ ...base, hasViewer: 'yes' }), false);
+});
+
+test('loose public models use a manifest instead of treating a virtual directory as a downloadable object', () => {
+  const snapshot = catalog({ hfRows: [], publicRows: [publicRow({ data_url: 'https://example.org/colmap/0/' })] });
+  const original = snapshot.entries[0];
+  original.facts.push({ label: 'RGB base URL', value: 'https://example.org/photos/' });
+  const result = { sourceId: original.sourceId, level: 'header_checked', checkedAt: '2026-10-16T00:00:00Z',
+    formats: ['colmap'], probes: ['cameras.bin', 'images.bin', 'points3D.bin'].map(path => ({ path, url: `https://example.org/colmap/0/${path}` })),
+    issues: [], loadUrl: 'https://example.org/colmap/0/', delivery: 'browser_readable', summary: 'Native headers checked.', scope: 'Sampled source files.', browserChecks: [] };
+  const entry = applyDatasetAudit(snapshot, { schemaVersion: 1, checkedAt: result.checkedAt, viewerVersion: '0.16.14', results: [result] }).entries[0];
+  assert.equal(entry.modelManifest.baseUrl, 'https://example.org/');
+  assert.equal(entry.modelManifest.files.points3D, 'colmap/0/points3D.bin');
+  assert.equal(entry.modelManifest.imagesPath, 'photos/');
+  assert.equal(new URL(entry.viewerUrl).searchParams.get('url'), entry.dataUrl);
+  assert.match(entry.dataUrl, /\.manifest\.json$/);
+  assert.equal(entry.sourceUrl, original.sourceUrl);
 });
 
 test('the committed snapshot preserves every supplied public row and every audit record with unique stable URLs', async () => {

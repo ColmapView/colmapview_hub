@@ -1,5 +1,13 @@
 export interface CatalogFact { label: string; value: string; url?: string }
 export interface CatalogAudit { sourceId: string; sourceUrl?: string; checkedAt: string; scope: 'source' | 'collection'; facts: CatalogFact[] }
+export interface CatalogVerification {
+  level: string;
+  delivery: string;
+  checkedAt: string;
+  summary: string;
+  scope: string;
+  viewerVersion: string;
+}
 export interface CatalogEntry {
   id: string;
   sourceId: string;
@@ -18,28 +26,38 @@ export interface CatalogEntry {
   testOrFixture: boolean;
   facts: CatalogFact[];
   audits: CatalogAudit[];
+  verification?: CatalogVerification;
+  modelManifest?: { version: 1; baseUrl: string; files: { cameras: string; images: string; points3D: string }; imagesPath?: string };
 }
 export interface CatalogSnapshot {
   schemaVersion: 1;
   sources: { kind: string; name: string; checkedAt: string; sha256: string; rowCount: number }[];
   entries: CatalogEntry[];
   importSummary: { hfCandidates: number; hfEntries: number; publicEntries: number; additionalAuditEntries: number; auditRows: number; linkedAuditRows: number; unlinkedAuditSourceIds: string[] };
+  auditSummary?: { checkedAt: string; sourcesAudited: number; levels: Record<string, number>; delivery: Record<string, number> };
 }
-export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture'>;
+export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture'> & { delivery?: string; hasViewer?: boolean };
 export const CATALOG_PAGE_SIZE = 24;
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id}`;
 export const providerLabel = (provider: CatalogEntry['provider']) => provider === 'huggingface' ? 'Hugging Face' : 'Public source';
 export const accessLabel = (access: CatalogEntry['access']) => ({ public: 'Public source', gated: 'Access approval or sign-in required', terms: 'Source agreement applies', unknown: 'Access not established' })[access];
+const deliveryLabels: Record<string, string> = { browser_readable: 'Browser read checked', server_readable: 'Server read checked',
+  gated: 'Approval or sign-in required', access_denied: 'Download access denied', not_found: 'Download not found',
+  browser_request_failed: 'Browser request failed', range_unverified: 'Archive ranges unverified', rate_limited: 'Host rate limited',
+  http_error: 'Download error', unverified: 'Delivery unverified', not_tested: 'Browser read not checked' };
+export const deliveryLabel = (delivery?: string) => deliveryLabels[delivery || 'not_tested'] || 'Delivery unverified';
 
 export function catalogSummary(entry: CatalogEntry): CatalogSummary {
   const { id, title, provider, license, access, statusLabel, formats, description, testOrFixture } = entry;
-  return { id, title, provider, license, access, statusLabel, formats, description, testOrFixture };
+  return { id, title, provider, license, access, statusLabel, formats, description, testOrFixture,
+    ...(entry.verification ? { delivery: entry.verification.delivery, hasViewer: Boolean(entry.viewerUrl) } : {}) };
 }
 
-export function filterCatalog(entries: CatalogSummary[], filters: { query: string; provider: string; license: string; status: string }): CatalogSummary[] {
+export function filterCatalog(entries: CatalogSummary[], filters: { query: string; provider: string; license: string; status: string; delivery?: string; viewer?: string }): CatalogSummary[] {
   const words = filters.query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return entries.filter(entry => (!filters.provider || entry.provider === filters.provider) && (!filters.license || entry.license === filters.license)
     && (!filters.status || entry.statusLabel === filters.status)
+    && (!filters.delivery || entry.delivery === filters.delivery) && (filters.viewer !== 'available' || entry.hasViewer === true)
     && words.every(word => [entry.title, entry.description, entry.license, ...entry.formats].join(' ').toLocaleLowerCase().includes(word)));
 }
 
@@ -50,5 +68,6 @@ export function isCatalogSummary(value: unknown): value is CatalogSummary {
     && ['title', 'license', 'statusLabel', 'description'].every(key => typeof item[key] === 'string')
     && (item.provider === 'huggingface' || item.provider === 'public')
     && ['public', 'gated', 'terms', 'unknown'].includes(String(item.access))
+    && (item.delivery === undefined || typeof item.delivery === 'string') && (item.hasViewer === undefined || typeof item.hasViewer === 'boolean')
     && typeof item.testOrFixture === 'boolean' && Array.isArray(item.formats) && item.formats.every(format => typeof format === 'string');
 }

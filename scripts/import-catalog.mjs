@@ -2,6 +2,7 @@ import { readFile, mkdir, writeFile, rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { applyCatalogReviews, buildCatalog, parseCsv, sha256 } from './catalog-import.mjs';
+import { applyDatasetAudit } from './dataset-audit-import.mjs';
 
 const { values } = parseArgs({ options: { 'viewer-root': { type: 'string' }, out: { type: 'string', default: 'data/catalog.json' }, help: { type: 'boolean' } } });
 if (values.help || !values['viewer-root']) {
@@ -20,6 +21,13 @@ const loaded = await Promise.all(inputs.map(async ([kind, name, checkedAt]) => {
 }));
 const snapshot = buildCatalog({ hfRows: loaded[0].rows, publicRows: loaded[1].rows, auditRows: loaded[2].rows,
   sources: loaded.map(({ rows, ...source }) => ({ ...source, rowCount: rows.length })) });
+try {
+  const auditBytes = await readFile(new URL('../data/dataset-audit.json', import.meta.url));
+  const audit = JSON.parse(auditBytes.toString('utf8'));
+  applyDatasetAudit(snapshot, audit, loaded[0].rows);
+  snapshot.sources.push({ kind: 'audit-refresh', name: 'dataset-audit.json', checkedAt: audit.checkedAt.slice(0, 10),
+    sha256: sha256(auditBytes), rowCount: audit.results.length });
+} catch (error) { if (error.code !== 'ENOENT') throw error; }
 const reviewBytes = await readFile(new URL('../data/catalog-reviews.json', import.meta.url));
 const reviews = JSON.parse(reviewBytes.toString('utf8'));
 if (reviews.schemaVersion !== 1 || !Array.isArray(reviews.entries)) throw new Error('Invalid catalog review schema');

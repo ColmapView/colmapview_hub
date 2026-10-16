@@ -14,5 +14,6 @@ jobs:
       - run: npm ci
       - run: cp .dev.vars.example .dev.vars
       - run: npm run check
+      - run: python3 -m unittest discover -s tests -p 'test_dataset_audit.py'
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
