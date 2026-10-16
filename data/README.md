@@ -14,6 +14,8 @@ One entry represents an HF repository or a public scene/subset/variant. Search m
 
 Entry IDs derive from stable source identities. Refreshing counts, licenses and loading evidence preserves their URLs. The normal build and deploy commands rebuild all catalog assets. Pagination works without JavaScript; search and filters use a compact same-origin metadata index.
 
+Reviewed false positives remain in the catalog with an explicit **Not loadable in ColmapView** label and the inspection evidence. Record these findings in `catalog-reviews.json`; the importer reapplies them and removes any viewer link. Each review must match the imported repository revision. If that revision changes, import stops until the finding is checked again. A repository name containing “Replica” or another 3D dataset name does not establish that it includes a reconstruction.
+
 Licenses are copied from the recorded source metadata. Missing or unconfirmed terms stay explicit; the Hub does not infer permission or license the underlying datasets. Source metadata and audit receipts are not complete render certifications. Browser transport failures and format conversions remain separate from access and licensing.
 
 No preview or source image is embedded or fetched by these catalog pages. Preview support can be added to the metadata and renderer later.

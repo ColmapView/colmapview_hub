@@ -21,6 +21,13 @@
       "checkedAt": "2026-10-15",
       "sha256": "ca0c888ee2ff9cbcf3b1658bea1d739a5e365fabdcdbedb6ba8598ed2f54bfff",
       "rowCount": 293
+    },
+    {
+      "kind": "review",
+      "name": "catalog-reviews.json",
+      "checkedAt": "2026-10-16",
+      "sha256": "6185379b1f07ba847ba3b2182bd03cf9e70c9511be59cb97189f6333ef036058",
+      "rowCount": 1
     }
   ],
   "entries": [
@@ -596,11 +603,14 @@
       "sourceUrl": "https://huggingface.co/datasets/3division/Replica_Top1_Crops",
       "license": "Not specified",
       "access": "public",
-      "status": "archive_unverified",
-      "statusLabel": "Further verification needed",
-      "formats": [],
-      "description": "Supported archives plus 3D name/tag/card signals; contents need verification",
-      "checkedAt": "2026-10-13",
+      "status": "unsupported_content",
+      "statusLabel": "Not loadable in ColmapView",
+      "formats": [
+        "JPEG image crops",
+        "JSON object labels"
+      ],
+      "description": "Contains 281 cropped JPEG images and object-label JSON across four ZIP archives. No camera intrinsics, camera poses, COLMAP model or 3D geometry is supplied, so this source cannot be loaded in ColmapView.",
+      "checkedAt": "2026-10-16",
       "testOrFixture": false,
       "facts": [
         {
@@ -656,7 +666,44 @@
           "value": "17"
         }
       ],
-      "audits": []
+      "audits": [
+        {
+          "sourceId": "review:hf:3division/Replica_Top1_Crops:d7a57fcebbe886113fca4c2ab6414eed1e81a9c8",
+          "sourceUrl": "https://huggingface.co/datasets/3division/Replica_Top1_Crops/resolve/d7a57fcebbe886113fca4c2ab6414eed1e81a9c8/summary.json",
+          "checkedAt": "2026-10-16",
+          "scope": "source",
+          "facts": [
+            {
+              "label": "Check performed",
+              "value": "Enumerated every file in the complete ZIP central directories for all four archives, and inspected the summary and all four object-label manifests. No image previews were created."
+            },
+            {
+              "label": "office2_gt_crops.zip",
+              "value": "61 JPEG crops and labels.json; no other files.",
+              "url": "https://huggingface.co/datasets/3division/Replica_Top1_Crops/resolve/d7a57fcebbe886113fca4c2ab6414eed1e81a9c8/office2_gt_crops.zip"
+            },
+            {
+              "label": "office3_gt_crops.zip",
+              "value": "80 JPEG crops and labels.json; no other files.",
+              "url": "https://huggingface.co/datasets/3division/Replica_Top1_Crops/resolve/d7a57fcebbe886113fca4c2ab6414eed1e81a9c8/office3_gt_crops.zip"
+            },
+            {
+              "label": "room0_gt_crops.zip",
+              "value": "87 JPEG crops and labels.json; no other files.",
+              "url": "https://huggingface.co/datasets/3division/Replica_Top1_Crops/resolve/d7a57fcebbe886113fca4c2ab6414eed1e81a9c8/room0_gt_crops.zip"
+            },
+            {
+              "label": "room1_gt_crops.zip",
+              "value": "53 JPEG crops and labels.json; no other files.",
+              "url": "https://huggingface.co/datasets/3division/Replica_Top1_Crops/resolve/d7a57fcebbe886113fca4c2ab6414eed1e81a9c8/room1_gt_crops.zip"
+            },
+            {
+              "label": "Label contents",
+              "value": "Object classes, instance IDs, crop filenames and frame indices. Point-count fields contain counts, not 3D point coordinates. No camera calibration or poses are included."
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hf-3dlg-hcvc-egofun3d-da83880d8d82",

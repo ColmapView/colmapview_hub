@@ -1,7 +1,7 @@
 import { readFile, mkdir, writeFile, rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { buildCatalog, parseCsv, sha256 } from './catalog-import.mjs';
+import { applyCatalogReviews, buildCatalog, parseCsv, sha256 } from './catalog-import.mjs';
 
 const { values } = parseArgs({ options: { 'viewer-root': { type: 'string' }, out: { type: 'string', default: 'data/catalog.json' }, help: { type: 'boolean' } } });
 if (values.help || !values['viewer-root']) {
@@ -20,6 +20,13 @@ const loaded = await Promise.all(inputs.map(async ([kind, name, checkedAt]) => {
 }));
 const snapshot = buildCatalog({ hfRows: loaded[0].rows, publicRows: loaded[1].rows, auditRows: loaded[2].rows,
   sources: loaded.map(({ rows, ...source }) => ({ ...source, rowCount: rows.length })) });
+const reviewBytes = await readFile(new URL('../data/catalog-reviews.json', import.meta.url));
+const reviews = JSON.parse(reviewBytes.toString('utf8'));
+if (reviews.schemaVersion !== 1 || !Array.isArray(reviews.entries)) throw new Error('Invalid catalog review schema');
+applyCatalogReviews(snapshot, reviews.entries);
+snapshot.sources.push({ kind: 'review', name: 'catalog-reviews.json',
+  checkedAt: reviews.entries.map(review => review.checkedAt).sort().at(-1) || '2026-10-16',
+  sha256: sha256(reviewBytes), rowCount: reviews.entries.length });
 const output = resolve(values.out);
 await mkdir(dirname(output), { recursive: true });
 await writeFile(`${output}.tmp`, `${JSON.stringify(snapshot, null, 2)}\n`);

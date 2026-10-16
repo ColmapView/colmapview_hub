@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { buildCatalog, parseCsv, publicUrl } from '../scripts/catalog-import.mjs';
+import { applyCatalogReviews, buildCatalog, parseCsv, publicUrl } from '../scripts/catalog-import.mjs';
 import { catalogRenderer } from '../scripts/catalog-renderer.mjs';
 
 const render = await catalogRenderer();
@@ -46,6 +46,26 @@ test('preserves gated access, unknown licenses and sampled failures without clai
   assert.equal(entry.license, 'Not specified');
   assert.equal(entry.audits[0].facts.find(fact => fact.label === 'Sampled layouts still unresolved').value, '1');
   assert.equal(entry.audits[0].facts.find(fact => fact.label === 'Scope of this check').value, audit().qualification_limit);
+});
+
+test('reviewed false positives retain their URL and evidence without a viewer action, and require a revision recheck', () => {
+  const snapshot = catalog();
+  const id = snapshot.entries[0].id;
+  const review = { sourceId: 'hf:owner/dataset', revision: 'abc', checkedAt: '2026-10-16',
+    description: 'Image crops only; no camera calibration, poses or geometry.', formats: ['JPEG', 'JSON labels'],
+    sourceUrl: 'https://huggingface.co/datasets/owner/dataset/resolve/abc/summary.json',
+    facts: [{ label: 'Archive contents', value: 'All files inspected; JPEG crops and labels.json only.' }] };
+  applyCatalogReviews(snapshot, [review]);
+  const entry = snapshot.entries[0];
+  assert.equal(entry.id, id);
+  assert.equal(entry.status, 'unsupported_content');
+  assert.equal(entry.viewerUrl, undefined);
+  assert.match(render.catalogEntryPage(entry), /Not loadable in ColmapView/);
+  assert.match(render.catalogEntryPage(entry), /JPEG crops and labels.json only/);
+  assert.doesNotMatch(render.catalogEntryPage(entry), /Try in ColmapView/);
+  assert.throws(() => applyCatalogReviews(catalog({ hfRows: [hf({ revision: 'def' })] }), [review]), /revision changed; recheck/);
+  assert.throws(() => applyCatalogReviews(catalog(), [review, review]), /duplicate catalog review/);
+  assert.throws(() => applyCatalogReviews(catalog(), [{ ...review, sourceUrl: 'https://example.org/?token=secret' }]), /credentials/);
 });
 
 test('keeps entry IDs stable when scan counts, license, evidence or source revision change', () => {

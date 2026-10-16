@@ -50,6 +50,37 @@ export function publicUrl(value) {
 
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
+/** Preserve reviewed false positives without letting a later import restore a viewer link. */
+export function applyCatalogReviews(snapshot, reviews) {
+  const seen = new Set();
+  for (const review of reviews) {
+    const entry = snapshot.entries.find(entry => entry.sourceId === review.sourceId);
+    if (!entry || seen.has(review.sourceId)) throw new Error(`Unknown or duplicate catalog review: ${review.sourceId}`);
+    seen.add(review.sourceId);
+    if (!review.revision || entry.facts.find(fact => fact.label === 'Pinned revision')?.value !== review.revision) {
+      throw new Error(`Catalog review revision changed; recheck ${review.sourceId}`);
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(review.checkedAt) || !review.description?.trim()
+      || !Array.isArray(review.formats) || !review.formats.every(format => typeof format === 'string')
+      || !Array.isArray(review.facts) || !review.facts.length) throw new Error('Invalid catalog review');
+    const sourceUrl = publicUrl(review.sourceUrl);
+    if (!sourceUrl) throw new Error('Catalog review requires its evidence URL');
+    const reviewedFacts = review.facts.map(fact => {
+      if (!fact.label?.trim() || !fact.value?.trim()) throw new Error('Invalid catalog review fact');
+      return { label: fact.label, value: fact.value, ...(fact.url ? { url: publicUrl(fact.url) } : {}) };
+    });
+    entry.status = 'unsupported_content';
+    entry.statusLabel = 'Not loadable in ColmapView';
+    entry.description = review.description;
+    entry.formats = review.formats;
+    entry.checkedAt = review.checkedAt;
+    delete entry.viewerUrl;
+    entry.audits.push({ sourceId: `review:${review.sourceId}:${review.revision}`, sourceUrl,
+      checkedAt: review.checkedAt, scope: 'source', facts: reviewedFacts });
+  }
+  return snapshot;
+}
+
 function stableId(sourceId) {
   const slug = sourceId.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64).replace(/-$/, '') || 'dataset';
   return `${slug}-${sha256(sourceId).slice(0, 12)}`;
