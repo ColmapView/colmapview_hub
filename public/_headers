@@ -1,3 +1,8 @@
 /hub/*
   X-Content-Type-Options: nosniff
   X-Robots-Tag: noindex, nofollow, noarchive
+
+/hub/datasets/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  Referrer-Policy: no-referrer
+  Cache-Control: public, max-age=300

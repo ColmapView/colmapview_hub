@@ -4,7 +4,15 @@ A small companion to [ColmapView](https://github.com/ColmapView/Colmapview.githu
 
 Cards provide an X/Twitter large-image preview. Public cards have a Play 3D button that loads the viewer only on a click; private cards link to the viewer instead, because signing in inside an iframe is unreliable. The gallery of listed results is off unless `HUB_LISTINGS_ENABLED` is `true`; while it is off, `/hub/` shows a short landing page.
 
-Target address: `https://colmapview.opsiclear.com/hub/`. A separate Cloudflare Worker owns only `/hub` and `/hub/*`; the Pages viewer and its other routes stay separate. Cloudflare serves `assets/`, `fonts/`, `colmapview.css`, `styles.css` and `favicon.ico` from `public/hub/` without running the Worker, because `run_worker_first` in `wrangler.jsonc` excludes them; every other `/hub` path reaches the Worker. That folder, the routes, `run_worker_first` and `public/_headers` must all match `HUB_PATH`.
+Target address: `https://colmapview.opsiclear.com/hub/`. A separate Cloudflare Worker owns only `/hub` and `/hub/*`; the Pages viewer and its other routes stay separate. Cloudflare serves `assets/`, `fonts/`, `datasets/`, `colmapview.css`, `styles.css` and `favicon.ico` from `public/hub/` without running the Worker, because `run_worker_first` in `wrangler.jsonc` excludes them; other `/hub` paths reach the Worker. That folder, the routes, `run_worker_first` and `public/_headers` must all match `HUB_PATH`.
+
+## Public dataset catalog
+
+`/hub/datasets/` browses imported public datasets with search, source/license/evidence filters, and a stable detail URL for each entry. Pages show dataset and source URLs, license metadata, access requirements, formats, inventory counts, pinned revisions and dated loading evidence. Images are deferred; catalog pages make no image or provider requests.
+
+The production snapshot lives in `data/catalog.json`, rather than ignored research files. `npm run catalog:import -- --viewer-root PATH` refreshes it from the local surveys. See [data/README.md](data/README.md) for inputs and qualification limits. `npm run build:assets` generates the static pages, search index and JSON download; the normal dev, check and deploy commands include this step. `/hub/datasets` and `/hub/datasets/*` must be excluded from `run_worker_first` so these assets are served directly.
+
+These are operator-curated public source entries. Upload share links retain their existing preview, ownership and listing behavior. The dataset catalog never enumerates private R2 link records.
 
 ## What is stored
 
@@ -19,7 +27,7 @@ The viewer crops its preview to fill 600 × 315 and keeps it under 64 KiB. The H
 
 The asset summary counts images, points, masks and Gaussian splats; cards show the nonzero counts. Records are read tolerantly: a page needs only a title, an http(s) viewer URL and a preview, so records written by older Hubs keep rendering.
 
-The Hub has no dataset files, provider credentials, accounts, database, storage browser, search or sitemap. The server never fetches submitted dataset URLs. X receives a thumbnail card, not an inline WebGL player.
+The Hub has no dataset payloads, provider credentials, accounts, database, storage browser or sitemap. Catalog search covers only published dataset metadata. The server never fetches submitted dataset URLs. X receives a thumbnail card for upload share links, not an inline WebGL player.
 
 Anyone with a link can read its card, and publicly disclosed links can be collected. Dataset storage permissions still apply. Deletion removes the record and any listing together; external social-card caches may keep previews they already fetched, and `preview.jpg` is served with `max-age=300`, so browsers and shared caches may keep a fetched preview for up to five minutes. With listings on, gallery pages are cached for a minute. A deletion clears the cached first page in the data center that handled it; a deleted listing can stay for up to a minute in other data centers and on later pages, and a browser may keep a page it already fetched for another minute.
 

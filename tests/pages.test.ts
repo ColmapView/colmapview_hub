@@ -32,6 +32,7 @@ describe('Hub pages', () => {
     for (const path of [`/${link.id}`, '/missing-frame']) {
       const html = await (await request(path)).text();
       expect(html).toContain('<a class="brand" href="https://colmapview.opsiclear.com/about.html">ColmapView</a>');
+      expect(html).toContain('<a href="/hub/datasets/">Datasets</a>');
       for (const [href, label] of [['/', 'Open viewer'], ['/about.html', 'About'], ['/privacy.html', 'Privacy'], ['/terms.html', 'Terms']]) {
         expect(html).toContain(`<a href="https://colmapview.opsiclear.com${href}">${label}</a>`);
       }

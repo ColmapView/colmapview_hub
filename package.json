@@ -1,20 +1,24 @@
 {
   "name": "colmapview_hub",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npm run build:client && node scripts/dev.mjs",
+    "dev": "npm run build:assets && node scripts/dev.mjs",
     "build:client": "node scripts/build-client.mjs",
+    "build:catalog": "node scripts/build-catalog.mjs",
+    "build:assets": "npm run build:client && npm run build:catalog",
+    "catalog:import": "node scripts/import-catalog.mjs",
+    "test:catalog": "node --test tests/catalog.test.mjs",
     "types": "wrangler types --strict-vars=false",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "lint": "eslint .",
     "check:css": "node scripts/check-colmapview-css.mjs",
     "test": "vitest run",
     "test:browser": "playwright test --workers=1",
-    "build": "npm run build:client && wrangler deploy --dry-run --outdir .tmp/build",
-    "check": "npm run typecheck && npm run lint && npm run check:css && npm test && npm run build",
-    "deploy": "npm run build:client && wrangler deploy"
+    "build": "npm run build:assets && wrangler deploy --dry-run --outdir .tmp/build",
+    "check": "npm run typecheck && npm run lint && npm run check:css && npm run test:catalog && npm test && npm run build",
+    "deploy": "npm run build:assets && wrangler deploy"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.4.0",

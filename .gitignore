@@ -3,6 +3,7 @@ node_modules/
 .tmp/
 dist/
 public/hub/assets/
+public/hub/datasets/
 .dev.vars
 .dev.vars.*
 !.dev.vars.example

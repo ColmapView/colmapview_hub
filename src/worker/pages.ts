@@ -37,10 +37,11 @@ export function hubLocation(env: Env): HubLocation {
 const policyLinks = ([['About', 'about.html'], ['Privacy', 'privacy.html'], ['Terms', 'terms.html']] as const)
   .map(([label, path]) => `<a href="${VIEWER}/${path}">${label}</a>`).join('');
 
-const header = [
+const header = (path: string) => [
   '<header class="site-header">',
   `<a class="brand" href="${VIEWER}/about.html">ColmapView</a>`,
   '<nav class="site-nav" aria-label="Main navigation">',
+  `<a href="${escapeHtml(path)}/datasets/">Datasets</a>`,
   `<a href="${VIEWER}/">Open viewer</a>`,
   policyLinks,
   '</nav></header>',
@@ -56,7 +57,7 @@ const footer = [
 ].join('');
 
 /** Every Hub page: ColmapView's public-page frame, stylesheets and icon. */
-function page(location: HubLocation, title: string, body: string, metadata = ''): string {
+export function page(location: HubLocation, title: string, body: string, metadata = ''): string {
   const asset = (file: string) => `${location.path}/${file}`;
   return [
     `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"><head>`,
@@ -70,7 +71,7 @@ function page(location: HubLocation, title: string, body: string, metadata = '')
     `<script type="module" src="${asset('assets/client.js')}"></script>`,
     '</head><body>',
     '<a class="skip-link" href="#main">Skip to content</a>',
-    header,
+    header(location.path),
     `<main id="main" tabindex="-1"><div class="hub-content">${body}</div></main>`,
     footer,
     '</body></html>',
@@ -78,7 +79,7 @@ function page(location: HubLocation, title: string, body: string, metadata = '')
 }
 
 /** Eyebrow, heading and lede, as on ColmapView's public pages. */
-function intro(heading: string, lede = '', extra = ''): string {
+export function intro(heading: string, lede = '', extra = ''): string {
   return `<div class="page-intro"><p class="eyebrow">ColmapView Hub</p><h1>${escapeHtml(heading)}</h1>`
     + `${lede ? `<p class="lede">${escapeHtml(lede)}</p>` : ''}${extra}</div>`;
 }
@@ -152,7 +153,7 @@ export function galleryKey(location: HubLocation, cursor?: string): string {
 
 export function landingPage(location: HubLocation): string {
   return page(location, 'Share links', intro('Share links for ColmapView results.', 'Links are created when you publish from ColmapView.',
-    `<div class="actions"><a class="button" href="${VIEWER}/">Open ColmapView</a></div>`));
+    `<div class="actions"><a class="button button-primary" href="${location.path}/datasets/">Browse datasets</a><a class="button" href="${VIEWER}/">Open ColmapView</a></div>`));
 }
 
 export function notFoundPage(location: HubLocation): string {
