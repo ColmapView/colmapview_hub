@@ -1,6 +1,8 @@
 import type { CatalogEntry, CatalogSummary, CatalogVerification } from './catalog';
 import { licenseCategory } from './license-categories';
 import type { LicenseCategory } from './license-categories';
+import { photoLabel } from './scene-photos';
+import type { PhotoStatus } from './scene-photos';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -13,12 +15,12 @@ export interface IndividualIndex {
   sources: IndividualSource[];
   facets: Record<string, Record<string, { file: string; count: number }>>;
   kinds: Record<string, number>; levels: Record<string, number>; delivery: Record<string, number>;
+  photos?: Partial<Record<PhotoStatus, number>>;
   incompleteCollections: number; scope: string;
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
   sceneCompatibility?: { status: 'native_headers_checked'; revision: string; cameraRecordChecked: boolean; poseRecordChecked: boolean;
     cameras: number | null; images: number | null; points: number | null };
-  photoAvailability?: 'complete_export_checked' | 'sample_checked' | 'not_included' | 'not_checked' | 'unresolved';
   sceneValidation?: { status: 'passed'; revision: string; cameras: number; images: number; points: number;
     photoCount: number; export: 'colmap_images'; exportSha256: string } };
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
@@ -85,6 +87,7 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
   return { id, title: title || 'Root reconstruction', provider: source.provider,
     license: source.license, licenseCategory: licenseCategory(source), access: source.access, statusLabel, formats: [format], testOrFixture: false,
     dataset: { id: source.id, label: source.label, title: source.title }, itemKind: kindLabel,
+    ...(proof?.photoAvailability ? { photoStatus: proof.photoAvailability } : {}),
     ...(canOpenIndividual(row, source) ? { openUrl: `/hub/datasets/open/${id}` } : {}),
     description: gated ? 'The source lists this model, but its files require access and cannot be downloaded anonymously. File compatibility and complete loading remain unverified.'
       : proof?.summary || `${kindLabel} listed in ${source.title}${archive ? ` inside ${archive}; extract it before attempting to load this model` : ''}. This individual model has not passed a complete load check.`,
@@ -119,9 +122,25 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
-      ...(proof?.photoAvailability ? [{ label: 'Original photographs', value: ({ complete_export_checked: 'All registered originals checked in a complete export',
-        sample_checked: 'Matching sample checked; complete coverage unverified', not_included: 'Not included by publisher',
-        not_checked: 'Availability not established', unresolved: 'Sampled paths ambiguous; model loading remains supported' })[proof.photoAvailability] }] : []),
+      ...(proof?.photoAvailability ? [{ label: 'Original photographs', value: proof.photoAvailability === 'complete_export_checked'
+        ? 'All registered originals checked in a complete export' : proof.photoAvailability === 'not_included'
+          ? 'Not included by publisher' : photoLabel(proof.photoAvailability) }] : []),
+      ...(proof?.photoAudit ? [
+        { label: 'Photo availability check', value: proof.photoAudit.summary },
+        { label: 'Current media scope', value: proof.photoAudit.sceneRoot || '(repository root)' },
+        ...(proof.photoAudit.mediaScope !== undefined ? [{ label: 'Required photo scope', value: proof.photoAudit.mediaScope || '(repository root)' }] : []),
+        ...(proof.photoAudit.photoCollection ? [{ label: 'Photo collection', value: proof.photoAudit.photoCollection }] : []),
+        ...(proof.photoAudit.mappingFile ? [{ label: 'Image-name mapping', value: proof.photoAudit.mappingFile, url: file(proof.photoAudit.mappingFile) }] : []),
+        ...(proof.photoAudit.mappingCheck ? [{ label: 'Listed mapping targets', value: `${proof.photoAudit.mappingCheck.matched}/${proof.photoAudit.mappingCheck.entries}. Mapping coverage is separate from checking every registered name.` }] : []),
+        ...(proof.photoAudit.nameCheck ? [{ label: 'Registered photo names matched', value: `${proof.photoAudit.nameCheck.matched}/${proof.photoAudit.nameCheck.registered} through the current loader; photograph bytes and complete export checked separately.` }] : []),
+        ...(proof.photoAudit.proposedNameCheck ? [{ label: 'Photo names matched with proposed scope', value: `${proof.photoAudit.proposedNameCheck.matched}/${proof.photoAudit.proposedNameCheck.registered}. This media configuration is not applied by the current scene link.` }] : []),
+        ...(proof.photoAudit.samplePath ? [{ label: 'Checked photo sample', value: proof.photoAudit.samplePath, url: file(proof.photoAudit.samplePath) },
+          { label: 'Photo sample browser read', value: proof.photoAudit.samplePixels === 'decoded' ? 'Photograph pixels decoded; other images checked separately.' : 'Photograph bytes readable; pixel decoding deferred by the audit size bound.' }] : []),
+        ...(proof.photoAudit.archive ? [{ label: 'Separate image archive', value: proof.photoAudit.archive.path, url: file(proof.photoAudit.archive.path) },
+          { label: 'Archive photo evidence', value: `${proof.photoAudit.archive.photos} image members listed; first registered name matched; browser range read checked. Every image and combined scene loading remain separate checks.` }] : []),
+        ...(proof.photoAudit.policyNote ? [{ label: 'Photo path policy', value: proof.photoAudit.policyNote }] : []),
+        { label: 'Photos checked on', value: proof.photoAudit.checkedAt },
+      ] : []),
       ...(proof?.sceneCompatibility ? [{ label: 'Native layout check', value: proof.scope },
         ...Object.entries({ 'Camera definitions': proof.sceneCompatibility.cameras, 'Registered pose records': proof.sceneCompatibility.images,
           '3D points': proof.sceneCompatibility.points }).filter(([, value]) => value !== null).map(([label, value]) => ({ label, value: String(value) }))] : []),

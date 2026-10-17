@@ -2,6 +2,7 @@ import { accessLabel, catalogOpenUrl, datasetFilterValue, datasetPath, deliveryL
 import type { CatalogSummary } from './catalog';
 import { escapeHtml as escape } from './html';
 import { licenseCategory, LICENSE_CATEGORY_LABELS } from './license-categories';
+import { photoLabel } from './scene-photos';
 
 export function catalogCardHtml(entry: CatalogSummary): string {
   const category = licenseCategory(entry);
@@ -13,10 +14,12 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     ['Dataset', entry.dataset?.title || entry.title], ['Type', entry.itemKind || entry.formats.join(' · ') || 'Collection'],
     ['Source', providerLabel(entry.provider)], ['License', entry.license], ['License category', LICENSE_CATEGORY_LABELS[category]],
     ['Access', accessLabel(entry.access)], ['Evidence', entry.statusLabel], ['Delivery', deliveryLabel(entry.delivery)],
+    ...(entry.photoStatus ? [['Photographs', photoLabel(entry.photoStatus)]] : []),
   ];
   return `<article class="card dataset-card" data-dataset-card data-entry-id="${escape(entry.id)}">`
     + `<p class="dataset-label">${escape(entry.dataset?.label || providerLabel(entry.provider))}</p>`
     + `<h2><a class="dataset-open" href="${escape(catalogOpenUrl(entry))}" aria-label="${escape(`${action}: ${entry.title}`)}">${escape(entry.title)}</a></h2>`
+    + (entry.photoStatus ? `<p class="dataset-photo-status" data-photo-status="${escape(entry.photoStatus)}">${escape(photoLabel(entry.photoStatus))}</p>` : '')
     + `<p class="dataset-card-footer"><span class="dataset-license-category" title="${LICENSE_CATEGORY_LABELS[category]}">${shortLicense}</span>`
     + `<span class="dataset-open-label">${canOpen ? entry.hasViewer ? 'Open ↗' : 'Try · unchecked ↗' : 'Source only'}</span></p>`
     + `<button type="button" class="dataset-info" aria-label="${escape(`Metadata for ${entry.title}`)}" aria-controls="${metadataId}" aria-expanded="false"><span aria-hidden="true">i</span></button>`

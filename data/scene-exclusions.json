@@ -368,6 +368,33 @@
           "path": "Tunnel/output_dir/colmap"
         }
       ]
+    },
+    {
+      "sourceId": "hf:AmirHossein-razlighi/Confident_Splatting",
+      "revision": "de85d6d0bd3b45b86694beef8c68d7f7f154bcb1",
+      "checkedAt": "2026-10-17T21:50:33.740302+00:00",
+      "reason": "truncated_native_model",
+      "summary": "Complete original images.bin downloads match the publisher LFS SHA-256 but end during declared image observations. Both declare 1,107 images; only seven and five complete records fit. Full viewer parsing and an independent strict record-bound check fail. A readable first record does not qualify these models.",
+      "scenes": [
+        {
+          "kind": "colmap",
+          "path": "Eiffel_Tower_Scene/sparse/0",
+          "failedFile": "Eiffel_Tower_Scene/sparse/0/images.bin",
+          "sha256": "b162f56de1c973a83ec868f4d80930ed38f4de4fb87d194edb980b829888e5e7",
+          "bytes": 1048576,
+          "declaredImages": 1107,
+          "completeImages": 7
+        },
+        {
+          "kind": "colmap",
+          "path": "Eiffel_Tower_Scene/distorted/sparse/0",
+          "failedFile": "Eiffel_Tower_Scene/distorted/sparse/0/images.bin",
+          "sha256": "294b7a5e1075d7a878ee4f6d3e61101080ad6b07125d0c22665ffc73a7dc1a65",
+          "bytes": 786432,
+          "declaredImages": 1107,
+          "completeImages": 5
+        }
+      ]
     }
   ]
 }

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.6 — 2026-10-17
+
+- Publish pinned photograph availability and path policies for every scene, with visible card labels, a photograph filter and per-scene details. Keep complete-export checks separate from samples, partial photos and future media configuration.
+- Add public photo audit totals and a CSV covering all 5,237 published scenes across 105 collections, including checked CSV/JSON mappings and companion image ZIP requirements.
+- Exclude two publisher-truncated Eiffel Tower models whose complete files match the published hashes but fail native pose parsing. Preserve usable model-only scenes, all 259 NGS scenes and 11 original ArmGS captures.
+
+## 0.7.5 — 2026-10-17
+
+- Restore exact pinned native camera/model layouts with optional photographs, keeping full original-photo export checks as a stronger evidence tier.
+- Preserve browser Back and Forward filter state.
+
+## 0.7.4 — 2026-10-17
+
+- Add exact scene identities and independent evidence for three complete camera-and-photo exports.
+
 ## 0.7.3 — 2026-10-17
 
 - Remove 28 scene entries whose launch opened one companion PLY instead of the scene dataset, retaining 5,239 scenes across 105 collections.

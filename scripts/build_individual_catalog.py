@@ -6,6 +6,7 @@ ingestion, source downloads, or bucket enumeration is needed for catalog reads.
 
 import array
 import base64
+import csv
 import gzip
 import hashlib
 import json
@@ -17,6 +18,7 @@ from pathlib import Path
 
 from scene_datasets import scene_records
 from scene_qualification import native_evidence, native_scene_reviews, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
+from scene_photos import apply_photo_evidence, photo_scene_reviews
 
 PACK_SIZE = 2048
 FORMATS = {'colmap': 'COLMAP', 'cameras': 'COLMAP cameras and poses', 'ply': 'PLY (header unchecked)',
@@ -225,13 +227,18 @@ def build(root=Path('.')):
     verified_scenes = verified_scene_reviews(catalog, json.loads(verified_bytes))
     native_bytes = (root / 'data/native-layouts.json.gz').read_bytes()
     native_scenes = native_scene_reviews(catalog, json.loads(gzip.decompress(native_bytes)))
+    photo_bytes = (root / 'data/scene-photos.json.gz').read_bytes()
+    photo_policy = json.loads(gzip.decompress(photo_bytes))
+    photo_reviews = photo_scene_reviews(catalog, photo_policy)
+    matched_photos = set()
     matched_reviews = set()
     matched_native = set()
     published_reviews = []
     excluded = {row['sourceId'] for row in [*catalog['entries'], *audit.values()] if is_access_restricted(row)}
     generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes
-                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + Path(__file__).read_bytes()
+                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + photo_bytes + Path(__file__).read_bytes()
                                 + Path(__file__).with_name('scene_qualification.py').read_bytes()
+                                + Path(__file__).with_name('scene_photos.py').read_bytes()
                                 + Path(__file__).with_name('scene_datasets.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
     current = output / 'index.json'
@@ -259,6 +266,8 @@ def build(root=Path('.')):
     ids = defaultdict(dict)
     sources, pack, total = [], [], 0
     counts, levels, deliveries = Counter(), Counter(), Counter()
+    photos = Counter()
+    photo_rows = []
 
     def add_posting(mapping, key, ordinal):
         if key not in mapping:
@@ -316,6 +325,12 @@ def build(root=Path('.')):
                 proof, format_name = qualified_evidence(entry, row, revision, review, hf_url)
             if not can_open_scene(entry, row, proof) or (entry['sourceId'], kind, path, archive) in scene_exclusions:
                 continue
+            photo_review = photo_reviews.get(review_key)
+            if photo_review:
+                proof = apply_photo_evidence(entry, row, revision, proof, photo_review)
+                matched_photos.add(review_key)
+            elif photo_policy['coverage'] == 'all_published_scenes':
+                raise ValueError('Published scene is missing pinned photo evidence; recheck its availability')
             source_proofs.append(proof)
             source_formats.append(format_name)
             if review:
@@ -338,7 +353,19 @@ def build(root=Path('.')):
             counts[kind_name] += 1
             levels[level] += 1
             deliveries[delivery] += 1
-            for field, value in [('kind', kind_name), ('status', level), ('delivery', delivery),
+            photo_status = proof.get('photoAvailability', 'not_checked')
+            photos[photo_status] += 1
+            if photo_status in ('complete_export_checked', 'sample_checked', 'partial'):
+                add_posting(facets['photos'], 'available', total)
+            photo_audit = proof.get('photoAudit', {})
+            photo_rows.append({'id': item_id, 'source': entry['sourceId'], 'scene': path, 'revision': revision,
+                'photos': photo_status, 'policy': photo_audit.get('policy', ''), 'modelScope': photo_audit.get('sceneRoot', ''),
+                'mediaScope': photo_audit.get('mediaScope', ''), 'photoCollection': photo_audit.get('photoCollection', ''),
+                'mappingFile': photo_audit.get('mappingFile', ''), 'companionArchive': photo_audit.get('archive', {}).get('path', ''),
+                'samplePhoto': photo_audit.get('samplePath', ''), 'registeredNamesChecked': photo_audit.get('nameCheck', {}).get('registered', ''),
+                'matchedPhotoNames': photo_audit.get('nameCheck', {}).get('matched', ''), 'checkedAt': photo_audit.get('checkedAt', ''),
+                'notes': photo_audit.get('summary', '') + ' ' + photo_audit.get('policyNote', '')})
+            for field, value in [('kind', kind_name), ('status', level), ('delivery', delivery), ('photos', photo_status),
                                  ('viewer', 'available' if proof and proof.get('viewerUrl') and not gated and not archive and not proof.get('opening') else '')]:
                 add_posting(facets[field], value, total)
             for token in tokens(' '.join([path, dataset_label, entry['title'], entry['license'], format_name, kind_name])):
@@ -359,6 +386,8 @@ def build(root=Path('.')):
         raise ValueError('Verified scene no longer matches the scene listing; recheck its identity and file paths')
     if any(key not in matched_native and key[0] not in excluded for key in native_scenes):
         raise ValueError('Native layout no longer matches the scene listing; recheck its identity and file paths')
+    if any(key not in matched_photos and key[0] not in excluded and key not in scene_exclusions for key in photo_reviews):
+        raise ValueError('Photo evidence no longer matches a published scene; recheck its identity and file paths')
     for shard, mapping in ids.items():
         write(f'ids/{shard}.json', mapping)
     del ids
@@ -377,14 +406,26 @@ def build(root=Path('.')):
             key = hashlib.sha256((field + ':' + value).encode()).hexdigest()[:16]
             write(f'facets/{key}.json', {'postings': encoded(ordinals)})
             facet_manifest[field][value] = {'file': key, 'count': len(ordinals)}
-    manifest = {'schemaVersion': 1, 'generation': generation, 'checkedAt': max((review['checkedAt'] for review in verified_scenes.values()), default=registry['checkedAt']), 'total': total,
+    checked_at = max([registry['checkedAt'], photo_policy.get('checkedAt', ''), *[review['checkedAt'] for review in verified_scenes.values()]])
+    manifest = {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'total': total,
                 'packSize': PACK_SIZE, 'sources': sources, 'facets': facet_manifest, 'kinds': dict(counts),
-                'levels': dict(levels), 'delivery': dict(deliveries),
+                'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos),
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
                 'unit': 'named_scene',
                 'scope': 'Named scenes with checked native camera/model layouts or stronger complete-scene evidence. Original photographs may be present, partial, absent or unverified. Full rendering and export checks are separate evidence tiers. Standalone geometry, inaccessible and known unsupported cases are excluded.'}
     write('index.json', manifest)
     write('verified-scenes.json', {'schemaVersion': 1, 'generation': generation, 'scope': manifest['scope'], 'scenes': published_reviews})
+    write('photo-audit.json', {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'scenes': total,
+        'collections': len(sources), 'photos': dict(photos), 'scope': photo_policy.get('scope', ''),
+        'limits': 'Pinned path inventories and photo samples are separate from full model, every-photo and export checks. Photos can require a mapping, collection choice or companion archive; their presence does not mean the current link attaches them.'})
+    if photo_rows:
+        with (output / 'photo-audit.csv').open('w', encoding='utf-8-sig', newline='') as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(photo_rows[0]))
+            writer.writeheader()
+            writer.writerows({key: "'" + value if isinstance(value, str) and value.startswith(('=', '+', '-', '@')) else value
+                             for key, value in row.items()} for row in photo_rows)
+    else:
+        (output / 'photo-audit.csv').write_text('', encoding='utf8')
     print(f'Built {total:,} individual records from {len(sources):,} source entries; previews remain on hold.', flush=True)
 
 

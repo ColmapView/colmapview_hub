@@ -177,8 +177,10 @@ class IndividualDatasetsTests(unittest.TestCase):
             save('individual-datasets.json', {'sources': registered, 'checkedAt': '2026-10-16', 'scope': 'Fixture'})
             save('dataset-audit.json', audit)
             save('scene-exclusions.json', {'schemaVersion': 1, 'reviews': []})
+            (data / 'scene-photos.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'coverage': 'reviewed_scenes', 'sources': []}).encode()))
             save('verified-scenes.json', {'schemaVersion': 1, 'scenes': reviews})
             mask_review = reviews.pop()
+            (data / 'scene-photos.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'coverage': 'reviewed_scenes', 'sources': []}).encode()))
             save('verified-scenes.json', {'schemaVersion': 1, 'scenes': reviews})
             native_policy = {'schemaVersion': 1, 'sources': [{'sourceId': entries[3]['sourceId'], 'revision': 'a' * 40,
                 'models': [[mask_review['path'], mask_review['files'], 1, 2, 3, 'not_checked', '2026-10-17',
@@ -192,6 +194,32 @@ class IndividualDatasetsTests(unittest.TestCase):
             self.assertEqual(first_proof['statusLabel'], 'Cameras + photos verified')
             mask_record = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))[-1]
             self.assertEqual(mask_record[7]['photoAvailability'], 'not_included')
+            photo_policy = {'schemaVersion': 1, 'coverage': 'all_published_scenes', 'sources': []}
+            for model in [*reviews, mask_review]:
+                photo_evidence = {'status': 'not_included' if model is mask_review else 'sample_checked', 'listingComplete': True,
+                         'policy': 'fixture', 'summary': 'Pinned photo evidence.', 'checkedAt': '2026-10-17',
+                         'samplePath': 'images/0.png', 'sampleBrowserRead': True, 'samplePixels': 'decoded'}
+                photo_policy['sources'].append({'sourceId': model['sourceId'], 'revision': model['revision'],
+                    'scenes': [{'kind': model['kind'], 'path': model['path'], 'files': model['files'], 'audit': photo_evidence}]})
+            (data / 'scene-photos.json.gz').write_bytes(gzip.compress(json.dumps(photo_policy).encode()))
+            build(root)
+            with_photos = json.loads((output / 'index.json').read_text(encoding='utf8'))
+            self.assertNotEqual(before['generation'], with_photos['generation'])
+            self.assertEqual(with_photos['photos'], {'complete_export_checked': 3, 'not_included': 1})
+            self.assertEqual(sum(value['count'] for key, value in with_photos['facets']['photos'].items() if key != 'available'), 4)
+            self.assertEqual(with_photos['facets']['photos']['available']['count'], 3)
+            self.assertTrue((output / 'photo-audit.csv').exists())
+            self.assertEqual(json.loads((output / 'photo-audit.json').read_text(encoding='utf8'))['scenes'], 4)
+            photo_policy['sources'].pop()
+            (data / 'scene-photos.json.gz').write_bytes(gzip.compress(json.dumps(photo_policy).encode()))
+            with self.assertRaisesRegex(ValueError, 'missing pinned photo evidence'):
+                build(root)
+            photo_policy['sources'].append({'sourceId': mask_review['sourceId'], 'revision': mask_review['revision'],
+                'scenes': [{'kind': mask_review['kind'], 'path': mask_review['path'], 'files': mask_review['files'],
+                            'audit': {'status': 'not_included', 'listingComplete': True, 'policy': 'fixture',
+                                      'summary': 'Originals excluded.', 'checkedAt': '2026-10-17'}}]})
+            (data / 'scene-photos.json.gz').write_bytes(gzip.compress(json.dumps(photo_policy).encode()))
+            build(root)
             self.assertTrue((output / 'sources' / (entries[3]['id'] + '.json')).exists())
             retained_id = identity(entries[0]['sourceId'], ['colmap', 'keep/sparse/0', None, None])
             removed_ids = [identity(entry['sourceId'], ['colmap', f'{entry["title"]}/sparse/0', None, None]) for entry in entries[1:3]]
@@ -252,6 +280,7 @@ class IndividualDatasetsTests(unittest.TestCase):
                  'loadUrl': url, 'viewerImport': {'sourceUrl': url, 'status': 'failed'}}]})
             policy = {'schemaVersion': 1, 'reviews': []}
             save('scene-exclusions.json', policy)
+            (data / 'scene-photos.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'coverage': 'reviewed_scenes', 'sources': []}).encode()))
             save('verified-scenes.json', {'schemaVersion': 1, 'scenes': [self.verified_review(entry, rows[0])]})
             (data / 'native-layouts.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'sources': []}).encode()))
             build(root)
@@ -274,6 +303,7 @@ class IndividualDatasetsTests(unittest.TestCase):
             save('scene-exclusions.json', {'schemaVersion': 1, 'reviews': []})
             moved = self.verified_review(entry, rows[0])
             moved['path'] = 'renamed/sparse/0'
+            (data / 'scene-photos.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'coverage': 'reviewed_scenes', 'sources': []}).encode()))
             save('verified-scenes.json', {'schemaVersion': 1, 'scenes': [moved]})
             with self.assertRaisesRegex(ValueError, 'no longer matches the scene listing'):
                 build(root)

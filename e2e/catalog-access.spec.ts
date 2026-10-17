@@ -106,7 +106,7 @@ test('complete-export evidence stays scoped while other model layouts remain loa
   expect(await checks.json()).toMatchObject({ generation: index.generation, scenes: policy.scenes });
   const response = await page.request.get('/hub/datasets/api/entries?status=Cameras%20%2B%20photos%20verified');
   const data = await response.json() as { total: number; entries: { id: string; statusLabel: string; delivery: string; hasViewer: boolean }[] };
-  expect(index.total).toBe(5239);
+  expect(index.total).toBe(5237);
   expect(data.total).toBe(policy.scenes.length);
   expect(data.entries.every(scene => scene.hasViewer && scene.statusLabel === 'Cameras + photos verified' && scene.delivery === 'browser_readable')).toBe(true);
   for (const scene of policy.scenes) {

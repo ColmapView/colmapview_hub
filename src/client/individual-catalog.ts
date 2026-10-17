@@ -157,7 +157,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const values = new URLSearchParams(location.search);
     for (const field of fields) field.value = values.get(field.name) || '';
     const advanced = form.querySelector<HTMLDetailsElement>('.catalog-advanced');
-    if (advanced && ['provider', 'license', 'status', 'delivery', 'viewer'].some(name => values.has(name))) advanced.open = true;
+    if (advanced && ['provider', 'license', 'status', 'delivery', 'viewer', 'photos'].some(name => values.has(name))) advanced.open = true;
     void load(values);
   });
 }

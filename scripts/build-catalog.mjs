@@ -16,6 +16,7 @@ const catalog = await json('data/catalog.json');
 // samples must never restore an unqualified PLY or sibling-model launch.
 const sourceEntries = await Promise.all(sceneIndex.sources.map(source => json(`public/hub/datasets/individual/sources/${source.id}.json`)));
 const { snapshot, audit } = publicationSnapshot({ ...catalog, entries: sourceEntries }, await json('data/dataset-audit.json'), await json('data/individual-datasets.json'), sceneIndex);
+snapshot.photoAudit = { checkedAt: sceneIndex.checkedAt, scenes: sceneIndex.total, photos: sceneIndex.photos || {} };
 if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.entries) || !snapshot.sources?.length || !snapshot.importSummary) throw new Error('Invalid catalog snapshot');
 // Fail stale snapshots rather than publishing disagreeing collection/model labels.
 const classified = await applyLicenseCategories(structuredClone(snapshot));

@@ -72,7 +72,7 @@ export function intersectPostings(left: Uint32Array, right: Uint32Array): Uint32
   return result.subarray(0, count);
 }
 
-export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'license', 'licenseCategory', 'kind', 'status', 'delivery', 'viewer', 'page'] as const;
+export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'license', 'licenseCategory', 'kind', 'status', 'delivery', 'viewer', 'photos', 'page'] as const;
 export function individualFilters(input: URLSearchParams): URLSearchParams {
   const filters = new URLSearchParams();
   for (const key of INDIVIDUAL_FILTERS) {
@@ -113,7 +113,7 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
     const encoded = mapping && Object.hasOwn(mapping, term) ? mapping[term] : undefined;
     return encoded === undefined ? new Uint32Array() : decodePostings(encoded, index.total);
   });
-  for (const field of ['kind', 'status', 'delivery', 'viewer']) {
+  for (const field of ['kind', 'status', 'delivery', 'viewer', 'photos']) {
     const value = filters.get(field);
     if (!value) continue;
     const values = index.facets[field];

@@ -2,6 +2,18 @@
 
 `catalog.json` is the production input for source collection metadata, reported licenses and dated audit evidence. `individual-datasets.json` and `individual-datasets/*.json.gz` preserve the research file/model inventory. The public browser projects that inventory into named scene datasets. Generated HTML, scene metadata packs, search indexes and downloadable JSON are rebuilt under `public/hub/datasets/` and are ignored by Git.
 
+## Photograph availability and path policies
+
+`scene-photos.json.gz` is a compact, curated projection of the October 17 per-scene image/path audit. It covers all 5,237 published scenes at their exact source revision and selected model file paths. `scripts/scene_photos.py` rejects revision/file drift, duplicate scenes, incomplete inventories, unsupported photo claims and invalid coverage counts. Full published coverage is required by this input; an unaudited new scene must receive an explicit availability review. Photo evidence never changes model launch eligibility or upgrades a bounded header check into a complete scene/export check. The three independently verified camera-and-photo exports keep their stronger proof.
+
+The underlying pass checked all 5,239 then-published scenes in 105 repositories, complete pinned inventory evidence, 339 complete camera/pose metadata pairs through the current native media binder, 22,417 CSV mapping targets, 2,982 Waymo V2 JSON mapping targets and 478 companion image ZIP indexes containing 61,459 image members. New production-origin browser reads covered 172 photo URLs and all 478 ZIP tails: 106 photos decoded, 66 were deferred by the pixel/byte bounds, and no attempted read or pixel decode failed. Same-pin browser receipts from earlier that day cover other existing samples. Complete model, all-photo and export checks remain separate. Raw receipts, source bytes and generated research reports stay in ignored local audit folders.
+
+Two complete Eiffel Tower `images.bin` downloads match the publisher's LFS hashes but truncate after seven and five complete records out of 1,107 declared images. Their exact paths, sizes and hashes are retained in `scene-exclusions.json`; their first readable record cannot restore publication. The other 5,237 records remain camera/model scenes, including those without photographs.
+
+Photo policies keep exact model files separate from media scopes; honor `image_mapping.csv`; record future `mapping.json` rebasing for Waymo V2; identify companion `images.zip` members; and require explicit image/mask/modality roles. They do not borrow another scene's same-name frames or substitute undistorted photos for a distorted model by filename. A scene with partial or missing photos retains model-only loading. Current generic HF listing pagination has an equivalent-slash-encoding gap in 53 audited scopes; an audit-only canonical-pagination reader established their complete inventories. No viewer implementation change is implied by these Hub records.
+
+Generated public output includes per-scene photo facts in the metadata packs, a `photos` search facet, `/hub/datasets/individual/photo-audit.csv` and `/hub/datasets/individual/photo-audit.json`. The Worker reads only fixed same-origin catalog assets; it performs no photo/source requests. Refreshing the canonical inventory requires checking photo reviews against the new pin, not copying an older source-wide sample to new scenes.
+
 Import the existing local research files with:
 
 ```powershell

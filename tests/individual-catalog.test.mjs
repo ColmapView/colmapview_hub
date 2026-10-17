@@ -19,6 +19,38 @@ test('scene publication matches the viewer action gates', () => {
     assert.equal(render.canOpenIndividual(record, source), item.publish, item.name);
   }
 });
+
+test('photo availability is displayed separately without changing model actions', () => {
+  for (const [status, label] of [['partial', 'Photos partially available'], ['path_policy_required', 'Photos need setup'],
+    ['companion_archive', 'Photos in a separate ZIP'], ['not_found', 'No source photos found'], ['not_included', 'Photos not included']]) {
+    const item = row(0, { 7: nativePhotoProof(status) });
+    const summary = render.individualSummary(item, source);
+    assert.equal(summary.photoStatus, status);
+    assert.equal(summary.hasViewer, true);
+    assert.match(render.catalogCard(summary), new RegExp(label));
+    assert.match(render.catalogEntryPage(render.individualEntry(item, source, parent)), new RegExp(label === 'Photos not included' ? 'Not included by publisher' : label));
+    assert.equal(render.isCatalogSummary(summary), true);
+  }
+  assert.equal(render.isCatalogSummary({ ...render.individualSummary(row(), source), photoStatus: '__proto__' }), false);
+});
+
+test('photo path rules preserve the model URL and expose checked source paths', () => {
+  const audit = { status: 'path_policy_required', checkedAt: '2026-10-17', listingComplete: true,
+    summary: 'Photos need their explicit mapping.', policy: 'authoritative_json_mapping_required', sceneRoot: 'colmap/scene',
+    mediaScope: 'cache/scene/images', mappingFile: 'colmap/scene/mapping.json', mappingCheck: { entries: 297, matched: 297 },
+    samplePath: 'cache/scene/images/FRONT/00000000.png', sampleBrowserRead: true, samplePixels: 'decoded',
+    policyNote: 'Keep the exact frame mapping; do not infer zero padding.' };
+  const item = row(0, { 7: { ...nativePhotoProof('path_policy_required'), photoAudit: audit } });
+  const entry = render.individualEntry(item, source, parent);
+  assert.equal(entry.viewerUrl, verified.viewerUrl);
+  assert.equal(entry.verification.photoAudit, audit);
+  const html = render.catalogEntryPage(entry);
+  assert.match(html, /Required photo scope/);
+  assert.match(html, /cache\/scene\/images/);
+  assert.match(html, /297\/297/);
+  assert.match(html, /colmap\/scene\/mapping\.json/);
+  assert.doesNotMatch(html, /Photos checked.*all original photos/s);
+});
 const parent = { id: 'hf-owner-dataset-123456abcdef', sourceId: 'hf:owner/dataset', title: 'owner/dataset', provider: 'huggingface',
   sourceUrl: 'https://huggingface.co/datasets/owner/dataset', dataUrl: 'https://huggingface.co/datasets/owner/dataset/tree/abc/first/sparse/0',
   viewerUrl: 'https://colmapview.opsiclear.com/?url=sample', license: 'cc-by-4.0', access: 'public', status: 'audited_header_checked',
@@ -29,6 +61,9 @@ const source = { id: parent.id, sourceId: parent.sourceId, title: parent.title, 
   access: 'public', start: 0, count: 3, listingComplete: false };
 const row = (number = 0, overrides = {}) => Object.assign([`data-${String(number).padStart(24, '0')}`, 0, 'colmap', `scene${number}/sparse/0`, 'COLMAP', null,
   { cameras: `scene${number}/sparse/0/cameras.bin`, images: `scene${number}/sparse/0/images.bin`, points3d: `scene${number}/sparse/0/points3D.bin` }, null], overrides);
+const nativePhotoProof = status => ({ ...parent.verification, level: 'native_layout_checked', statusLabel: 'Native COLMAP layout checked',
+  viewerUrl: verified.viewerUrl, photoAvailability: status, sceneCompatibility: { status: 'native_headers_checked', revision: 'a'.repeat(40),
+    cameraRecordChecked: true, poseRecordChecked: true, cameras: 1, images: 2, points: 3 } });
 const fixture = () => {
   const rows = [row(), row(1, { 7: { ...parent.verification, ...verified, statusLabel: parent.statusLabel, viewerUrl: parent.viewerUrl } }), row(2),
     row(3, { 1: 1, 2: 'scene', 3: 'Public scene', 4: 'COLMAP' })];

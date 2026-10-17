@@ -3,6 +3,8 @@ import type { CatalogEntry, CatalogFact, CatalogSnapshot, CatalogSummary } from 
 import { licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from '../shared/license-categories';
 import { escapeHtml as escape, intro, page } from './pages';
 import { catalogCardHtml as catalogCard } from '../shared/catalog-card';
+import { photoLabel } from '../shared/scene-photos';
+import type { PhotoStatus } from '../shared/scene-photos';
 export { catalogCard };
 import type { HubLocation } from './pages';
 
@@ -13,7 +15,7 @@ const factList = (facts: CatalogFact[]) => `<dl class="dataset-facts">${facts.ma
 const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Dataset: ${escape(entry.dataset.label)}</a>` : ''}`
   + `${entry.itemKind ? `<span class="dataset-tag">${escape(entry.itemKind)}</span>` : ''}<span class="dataset-tag">${escape(providerLabel(entry.provider))}</span>`
   + `<span class="dataset-tag dataset-license-category">License: ${LICENSE_CATEGORY_LABELS[licenseCategory(entry)]}</span>`
-  + `<span class="dataset-tag">${escape(entry.statusLabel)}</span>${entry.delivery ? `<span class="dataset-tag">${escape(deliveryLabel(entry.delivery))}</span>` : ''}${entry.testOrFixture ? '<span class="dataset-tag">Test / demo</span>' : ''}</p>`;
+  + `<span class="dataset-tag">${escape(entry.statusLabel)}</span>${entry.photoStatus ? `<span class="dataset-tag">${escape(photoLabel(entry.photoStatus))}</span>` : ''}${entry.delivery ? `<span class="dataset-tag">${escape(deliveryLabel(entry.delivery))}</span>` : ''}${entry.testOrFixture ? '<span class="dataset-tag">Test / demo</span>' : ''}</p>`;
 
 function social(url: string, title: string, description: string): string {
   return `<link rel="canonical" href="${escape(url)}"><meta property="og:type" content="website"><meta property="og:url" content="${escape(url)}">`
@@ -98,7 +100,7 @@ export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, coll
     + `<a class="button" id="catalog-next" href="${pagePath(pageNumber + 1)}"${pageNumber === pages ? ' hidden' : ''}>Next</a></nav>`
     + '<details class="catalog-notes"><summary>About this catalog</summary><div><p>Source metadata and sampled loading checks were recorded in October 2026. Collection checks cover the recorded sample; other models may need further checks.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a> · <a href="/hub/datasets/catalog.json" download>Download source metadata (JSON)</a></p></div></details></div>`,
-    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=scene-ui-6"></script>');
+    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=scene-ui-7"></script>');
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {
@@ -112,6 +114,11 @@ export function catalogAuditPage(snapshot: CatalogSnapshot): string {
   return page(location, 'Dataset audit', '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
     + intro('Dataset audit', `${number(audit.sourcesAudited)} sources assessed on ${audit.checkedAt}, including previously supported and rejected inventory records.`)
     + `<p>${number(snapshot.sceneSummary?.entries || 0)} named scenes are published with scoped model/layout evidence. Original photographs are optional. Complete camera-and-photo export checks form a separate evidence tier: <a href="/hub/datasets/individual/verified-scenes.json" download>Download verified scene checks (JSON)</a>. Historical source research below retains its own scope and dates.</p>`
+    + (snapshot.photoAudit ? '<section class="dataset-section"><h2>Photograph availability</h2>'
+      + `<p>${number(snapshot.photoAudit.scenes)} published scenes assessed on ${escape(snapshot.photoAudit.checkedAt.slice(0, 10))}. Known truncated models are excluded. Photos remain optional for supported camera models.</p>`
+      + factList(Object.entries(snapshot.photoAudit.photos).map(([status, count]) => ({ label: photoLabel(status as PhotoStatus), value: number(count) })))
+      + '<p>A checked photo sample does not establish every image or complete loading. Photos needing setup or a companion ZIP are not automatically attached by the current scene link. Model, photograph and mask evidence remain separate.</p>'
+      + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Download every scene’s photo availability and path policy (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p></section>' : '')
     + '<section class="dataset-section"><h2>Format evidence</h2>'
     + factList(Object.entries(audit.levels).map(([level, count]) => ({ label: status(level), value: number(count) }))) + '</section>'
     + '<section class="dataset-section"><h2>Download delivery</h2>'

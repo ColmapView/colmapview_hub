@@ -104,6 +104,7 @@ input::placeholder { color: var(--text-muted); }
 .dataset-card { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; position: relative; padding: var(--sp-4); overflow-wrap: anywhere; }
 .dataset-card:hover, .dataset-card:focus-within, .dataset-card[data-metadata-open] { z-index: 4; border-color: var(--border-light); background: var(--bg-tertiary); }
 .dataset-card p { margin: 0; }
+.dataset-photo-status { font-size: 11px; line-height: 1.4; color: var(--text-secondary); }
 .dataset-label { padding-right: var(--sp-6); font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dataset-card h2 { font-size: 14px; font-weight: 500; line-height: 1.4; margin: 0 0 var(--sp-2); }
 .dataset-open { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--text-primary); text-decoration: none; }
