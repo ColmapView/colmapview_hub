@@ -1,11 +1,51 @@
 import { strict as assert } from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { applyCatalogReviews, buildCatalog, parseCsv, publicUrl } from '../scripts/catalog-import.mjs';
+import { applyCatalogReviews, buildCatalog, parseCsv, publicUrl, sha256 } from '../scripts/catalog-import.mjs';
 import { catalogRenderer } from '../scripts/catalog-renderer.mjs';
 import { applyDatasetAudit, makeDatasetAudit, requiredProbeUrls } from '../scripts/dataset-audit-import.mjs';
+import { applyLicenseCategories } from '../scripts/license-categories.mjs';
 
 const render = await catalogRenderer();
+
+test('license categories recognize explicit terms and keep ambiguous or mixed permissions unresolved', () => {
+  for (const license of ['MIT', ' apache-2.0 ', 'cc-by-4.0', 'cc-by-sa-4.0', 'gpl-3.0', 'odbl', 'cdla-permissive-2.0', 'mit | cc-by-4.0 | apache-2.0']) {
+    assert.equal(render.classifyLicense(license), 'commercial', license);
+  }
+  for (const license of ['cc-by-nc-4.0', 'cc-by-nc-nd-4.0', 'cc-by-nc-sa-3.0', 'fair-noncommercial-research-license',
+    'Custom Niantic non-commercial dataset agreement; file format itself is plain text/JPEG']) {
+    assert.equal(render.classifyLicense(license), 'non-commercial', license);
+  }
+  for (const license of ['', 'Not specified', 'other', 'unknown', 'cc', 'apple-amlr', 'not independently confirmed',
+    'CC BY 4.0; author LICENSE-DATA.md', 'MIT for code only', 'mit | other', 'mit | cc-by-nc-4.0', 'apache-2.0 AND cc-by-nc-4.0', 'mit |', 'constructor']) {
+    assert.equal(render.classifyLicense(license), 'not-specified', license);
+  }
+});
+
+test('license category refresh preserves exact terms and identity, is repeatable, and reaches collection filtering', async () => {
+  const snapshot = catalog({ hfRows: [hf(), hf({ id: 'owner/nc', license: 'cc-by-nc-4.0' }), hf({ id: 'owner/custom', license: 'other' })] });
+  const before = snapshot.entries.map(entry => [entry.id, entry.license, entry.viewerUrl]);
+  await applyLicenseCategories(snapshot);
+  assert.deepEqual(snapshot.entries.map(entry => [entry.id, entry.license, entry.viewerUrl]), before);
+  assert.deepEqual(snapshot.entries.map(entry => entry.licenseCategory).sort(), ['commercial', 'non-commercial', 'not-specified']);
+  const once = JSON.stringify(snapshot);
+  await applyLicenseCategories(snapshot);
+  assert.equal(JSON.stringify(snapshot), once);
+  const summaries = snapshot.entries.map(render.catalogSummary);
+  const filters = { query: '', provider: '', license: '', status: '' };
+  for (const licenseCategory of render.LICENSE_CATEGORIES) {
+    const result = render.filterCatalog(summaries, { ...filters, licenseCategory });
+    assert.equal(result.length, 1);
+    assert.equal(result[0].licenseCategory, licenseCategory);
+    assert.match(render.catalogEntryPage(snapshot.entries.find(entry => entry.id === result[0].id)), /License category/);
+  }
+  assert.equal(render.filterCatalog(summaries, { ...filters, licenseCategory: 'commercial', license: 'cc-by-nc-4.0' }).length, 0);
+  assert.equal(render.isCatalogSummary({ ...summaries[0], licenseCategory: 'anything' }), false);
+  const olderSummary = { ...summaries.find(entry => entry.licenseCategory === 'commercial') };
+  delete olderSummary.licenseCategory;
+  assert.equal(render.isCatalogSummary(olderSummary), true);
+  assert.equal(render.licenseCategory(olderSummary), 'commercial');
+});
 const sources = [{ kind: 'hf', name: 'test.csv', checkedAt: '2026-10-13', sha256: '0'.repeat(64), rowCount: 1 }];
 const hf = (overrides = {}) => ({ id: 'owner/dataset', status: 'direct_colmap', asset_kinds: 'COLMAP', gated: 'False',
   license: 'cc-by-4.0', dataset_url: 'https://huggingface.co/datasets/owner/dataset', load_url: 'https://huggingface.co/datasets/owner/dataset/tree/abc/scene',
@@ -212,10 +252,12 @@ test('the committed snapshot preserves every supplied public row and every audit
   for (const entry of snapshot.entries) {
     assert(render.isCatalogSummary(render.catalogSummary(entry)), entry.id);
     assert(entry.license);
+    assert.equal(entry.licenseCategory, render.classifyLicense(entry.license), entry.id);
     assert(publicUrl(entry.sourceUrl));
     assert.doesNotMatch(render.catalogEntryPage(entry), /<(?:img|iframe|canvas)\b|og:image/);
   }
   assert(snapshot.sources.every(source => /^[a-f0-9]{64}$/.test(source.sha256)));
+  assert.equal(snapshot.sources.find(source => source.kind === 'license-categories').sha256, sha256((await readFile('src/shared/license-categories.ts', 'utf8')).replace(/\r\n/g, '\n')));
   const first = render.catalogIndexPage(snapshot);
   assert.match(first, /catalog-search/);
   assert.match(first, /\/hub\/assets\/catalog.js/);

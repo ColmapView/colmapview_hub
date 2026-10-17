@@ -1,6 +1,7 @@
 import { INDIVIDUAL_PAGE_SIZE, individualEntry, individualSummary, individualTokens, matchesIndividualDataset } from '../shared/individual-catalog';
 import type { IndividualIndex, IndividualPage, IndividualRecord, IndividualSource } from '../shared/individual-catalog';
 import type { CatalogEntry } from '../shared/catalog';
+import { licenseCategory } from '../shared/license-categories';
 import { InputError } from './validation';
 
 const ROOT = '/hub/datasets/individual/';
@@ -71,7 +72,7 @@ export function intersectPostings(left: Uint32Array, right: Uint32Array): Uint32
   return result.subarray(0, count);
 }
 
-export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'license', 'kind', 'status', 'delivery', 'viewer', 'page'] as const;
+export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'license', 'licenseCategory', 'kind', 'status', 'delivery', 'viewer', 'page'] as const;
 export function individualFilters(input: URLSearchParams): URLSearchParams {
   const filters = new URLSearchParams();
   for (const key of INDIVIDUAL_FILTERS) {
@@ -126,7 +127,8 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
   let candidates = postings[0];
   for (let position = 1; position < postings.length && candidates.length; position++) candidates = intersectPostings(candidates, postings[position]);
   const sources = index.sources.filter(source => matchesIndividualDataset(source, filters.get('dataset') || '')
-    && (!filters.get('provider') || source.provider === filters.get('provider')) && (!filters.get('license') || source.license === filters.get('license')) && source.count);
+    && (!filters.get('provider') || source.provider === filters.get('provider')) && (!filters.get('license') || source.license === filters.get('license'))
+    && (!filters.get('licenseCategory') || licenseCategory(source) === filters.get('licenseCategory')) && source.count);
   const requested = Number(filters.get('page') || 1);
   let total = 0;
   const selected: number[] = [];

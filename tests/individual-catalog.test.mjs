@@ -100,6 +100,33 @@ test('dataset and provider filters count individual records, not collection card
   await assert.rejects(render.searchIndividuals(binding, 'https://colmapview.opsiclear.com', index, new URLSearchParams('page=2')), /does not exist/);
 });
 
+test('license category filtering inherits each source terms and composes with exact licenses, datasets and evidence', async () => {
+  const { index, binding } = fixture();
+  index.sources[1].license = 'cc-by-nc-4.0';
+  for (const [category, expected] of [['commercial', 3], ['non-commercial', 1], ['not-specified', 0], ['constructor', 0]]) {
+    const result = await render.searchIndividuals(binding, 'https://colmapview.opsiclear.com', index, new URLSearchParams(`licenseCategory=${category}`));
+    assert.equal(result.total, expected);
+    assert.ok(result.entries.every(entry => entry.licenseCategory === category));
+  }
+  const proof = await render.searchIndividuals(binding, 'https://colmapview.opsiclear.com', index,
+    render.individualFilters(new URLSearchParams('licenseCategory=commercial&viewer=available&q=NGS')));
+  assert.equal(proof.total, 1);
+  assert.equal(proof.entries[0].hasViewer, true);
+  const mismatch = await render.searchIndividuals(binding, 'https://colmapview.opsiclear.com', index,
+    new URLSearchParams(`licenseCategory=non-commercial&dataset=${source.id}&license=cc-by-4.0`));
+  assert.equal(mismatch.total, 0);
+  index.sources[1].license = 'other';
+  const unknown = await render.searchIndividuals(binding, 'https://colmapview.opsiclear.com', index, new URLSearchParams('licenseCategory=not-specified'));
+  assert.equal(unknown.total, 1);
+  assert.equal(unknown.entries[0].license, 'other');
+  const filters = render.individualFilters(new URLSearchParams('licenseCategory=non-commercial&page=2'));
+  assert.equal(filters.get('licenseCategory'), 'non-commercial');
+  assert.equal(render.individualBrowseUrl(filters, 3), '/hub/datasets/?licenseCategory=non-commercial&page=3');
+  const html = render.individualIndexPage({ origin: 'https://colmapview.opsiclear.com', path: '/hub', base: '/hub', local: false }, index, unknown, new URLSearchParams('licenseCategory=not-specified'));
+  assert.match(html, /<option value="not-specified" selected>Not specified<\/option>/);
+  assert.match(html, /License: Not specified/);
+});
+
 test('a public dataset label groups scenes from separate source records while retaining each source identity', async () => {
   const { index, binding, rows } = fixture();
   index.sources[1].label = 'DTU';

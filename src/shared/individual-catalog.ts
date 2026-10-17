@@ -1,8 +1,10 @@
 import type { CatalogEntry, CatalogSummary, CatalogVerification } from './catalog';
+import { licenseCategory } from './license-categories';
+import type { LicenseCategory } from './license-categories';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
-  provider: CatalogEntry['provider']; license: string; access: CatalogEntry['access'];
+  provider: CatalogEntry['provider']; license: string; licenseCategory?: LicenseCategory; access: CatalogEntry['access'];
   start: number; count: number; listingComplete: boolean;
 }
 export interface IndividualIndex {
@@ -55,7 +57,7 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
   const statusLabel = proof?.statusLabel || 'Files listed; load not checked';
   const title = kind === 'colmap' ? path.replace(/(?:^|\/)(?:colmap\/)?sparse\/0$/i, '') || 'Root reconstruction' : path;
   return { id, title: title || 'Root reconstruction', provider: source.provider,
-    license: source.license, access: source.access, statusLabel, formats: [format], testOrFixture: false,
+    license: source.license, licenseCategory: licenseCategory(source), access: source.access, statusLabel, formats: [format], testOrFixture: false,
     dataset: { id: source.id, label: source.label, title: source.title }, itemKind: kindLabel,
     description: proof?.summary || `${kindLabel} listed in ${source.title}${archive ? ` inside ${archive}` : ''}. This individual model has not passed a complete load check.`,
     delivery: proof?.delivery || (source.access === 'gated' ? 'gated' : 'not_tested'), hasViewer: Boolean(proof?.viewerUrl) };

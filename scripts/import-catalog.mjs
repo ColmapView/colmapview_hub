@@ -5,6 +5,7 @@ import { applyCatalogReviews, buildCatalog, parseCsv, sha256 } from './catalog-i
 import { applyDatasetAudit } from './dataset-audit-import.mjs';
 import { applyIndividualListings } from './individual-listings.mjs';
 import { applyDatasetLabels } from './dataset-labels.mjs';
+import { applyLicenseCategories } from './license-categories.mjs';
 
 const { values } = parseArgs({ options: { 'viewer-root': { type: 'string' }, out: { type: 'string', default: 'data/catalog.json' }, help: { type: 'boolean' } } });
 if (values.help || !values['viewer-root']) {
@@ -49,6 +50,7 @@ try {
   snapshot.sources.push({ kind: 'individual-listings', name: 'individual-datasets.json', checkedAt: inventory.checkedAt,
     sha256: sha256(bytes), rowCount: inventory.individualEntries });
 } catch (error) { if (error.code !== 'ENOENT') throw error; }
+await applyLicenseCategories(snapshot);
 const output = resolve(values.out);
 await mkdir(dirname(output), { recursive: true });
 await writeFile(`${output}.tmp`, `${JSON.stringify(snapshot, null, 2)}\n`);

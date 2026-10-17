@@ -2,10 +2,15 @@ import { readFile, readdir, mkdir, writeFile, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { catalogRenderer } from './catalog-renderer.mjs';
 import { publicUrl } from './catalog-import.mjs';
+import { applyLicenseCategories } from './license-categories.mjs';
 import './build-individual-catalog.mjs';
 
 const snapshot = JSON.parse(await readFile('data/catalog.json', 'utf8'));
 if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.entries) || !snapshot.sources?.length || !snapshot.importSummary) throw new Error('Invalid catalog snapshot');
+// Fail stale snapshots rather than publishing disagreeing collection/model labels.
+const classified = await applyLicenseCategories(structuredClone(snapshot));
+if (snapshot.entries.some((entry, index) => entry.licenseCategory !== classified.entries[index].licenseCategory)
+  || snapshot.sources.find(source => source.kind === 'license-categories')?.sha256 !== classified.sources.at(-1).sha256) throw new Error('License categories are stale. Run npm run catalog:licenses.');
 const ids = new Set();
 for (const entry of snapshot.entries) {
   if (!/^[a-z0-9-]{1,80}-[a-f0-9]{12}$/.test(entry.id) || ids.has(entry.id) || !entry.title || !entry.license

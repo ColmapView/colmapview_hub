@@ -1,3 +1,7 @@
+import { licenseCategory } from './license-categories';
+import type { LicenseCategory } from './license-categories';
+export { classifyLicense, licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from './license-categories';
+
 export interface CatalogFact { label: string; value: string; url?: string }
 export interface CatalogAudit { sourceId: string; sourceUrl?: string; checkedAt: string; scope: 'source' | 'collection'; facts: CatalogFact[] }
 export interface CatalogVerification {
@@ -17,6 +21,7 @@ export interface CatalogEntry {
   dataUrl?: string;
   viewerUrl?: string;
   license: string;
+  licenseCategory?: LicenseCategory;
   access: 'public' | 'gated' | 'terms' | 'unknown';
   status: string;
   statusLabel: string;
@@ -41,7 +46,7 @@ export interface CatalogSnapshot {
   auditSummary?: { checkedAt: string; sourcesAudited: number; levels: Record<string, number>; delivery: Record<string, number> };
   individualSummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
 }
-export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind'> & { delivery?: string; hasViewer?: boolean };
+export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind'> & { delivery?: string; hasViewer?: boolean };
 export const CATALOG_PAGE_SIZE = 24;
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
 export const datasetLabel = (entry: CatalogEntry) => entry.dataset?.label || entry.datasetLabel || entry.facts.find(fact => fact.label === 'Collection')?.value || entry.title.split('/').at(-1) || entry.title;
@@ -57,14 +62,15 @@ export const deliveryLabel = (delivery?: string) => deliveryLabels[delivery || '
 
 export function catalogSummary(entry: CatalogEntry): CatalogSummary {
   const { id, title, provider, license, access, statusLabel, formats, description, testOrFixture, dataset, itemKind } = entry;
-  return { id, title, provider, license, access, statusLabel, formats, description, testOrFixture,
+  return { id, title, provider, license, licenseCategory: licenseCategory(entry), access, statusLabel, formats, description, testOrFixture,
     dataset: dataset || { id, label: datasetLabel(entry), title }, ...(itemKind ? { itemKind } : {}),
     ...(entry.verification ? { delivery: entry.verification.delivery, hasViewer: Boolean(entry.viewerUrl) } : {}) };
 }
 
-export function filterCatalog(entries: CatalogSummary[], filters: { query: string; provider: string; license: string; status: string; delivery?: string; viewer?: string }): CatalogSummary[] {
+export function filterCatalog(entries: CatalogSummary[], filters: { query: string; provider: string; license: string; licenseCategory?: string; status: string; delivery?: string; viewer?: string }): CatalogSummary[] {
   const words = filters.query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return entries.filter(entry => (!filters.provider || entry.provider === filters.provider) && (!filters.license || entry.license === filters.license)
+    && (!filters.licenseCategory || licenseCategory(entry) === filters.licenseCategory)
     && (!filters.status || entry.statusLabel === filters.status)
     && (!filters.delivery || entry.delivery === filters.delivery) && (filters.viewer !== 'available' || entry.hasViewer === true)
     && words.every(word => [entry.title, entry.dataset?.label || '', entry.dataset?.title || '', entry.itemKind || '', entry.description, entry.license, ...entry.formats].join(' ').toLocaleLowerCase().includes(word)));
@@ -76,6 +82,7 @@ export function isCatalogSummary(value: unknown): value is CatalogSummary {
   const dataset = item.dataset as Record<string, unknown> | undefined;
   return typeof item.id === 'string' && /^(?:[a-z0-9-]{1,80}-[a-f0-9]{12}|data-[a-f0-9]{24})$/.test(item.id)
     && ['title', 'license', 'statusLabel', 'description'].every(key => typeof item[key] === 'string')
+    && (item.licenseCategory === undefined || ['commercial', 'non-commercial', 'not-specified'].includes(String(item.licenseCategory)))
     && (item.provider === 'huggingface' || item.provider === 'public')
     && ['public', 'gated', 'terms', 'unknown'].includes(String(item.access))
     && (item.delivery === undefined || typeof item.delivery === 'string') && (item.hasViewer === undefined || typeof item.hasViewer === 'boolean')

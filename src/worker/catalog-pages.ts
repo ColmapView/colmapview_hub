@@ -1,5 +1,6 @@
 import { CATALOG_PAGE_SIZE, accessLabel, catalogSummary, datasetPath, datasetFilterValue, deliveryLabel, providerLabel } from '../shared/catalog';
 import type { CatalogEntry, CatalogFact, CatalogSnapshot, CatalogSummary } from '../shared/catalog';
+import { licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from '../shared/license-categories';
 import { escapeHtml as escape, intro, page } from './pages';
 import type { HubLocation } from './pages';
 
@@ -9,6 +10,7 @@ const factList = (facts: CatalogFact[]) => `<dl class="dataset-facts">${facts.ma
   ? `<a href="${escape(fact.url)}" rel="noreferrer">${escape(fact.value)}</a>` : escape(fact.value)}</dd></div>`).join('')}</dl>`;
 const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Dataset: ${escape(entry.dataset.label)}</a>` : ''}`
   + `${entry.itemKind ? `<span class="dataset-tag">${escape(entry.itemKind)}</span>` : ''}<span class="dataset-tag">${escape(providerLabel(entry.provider))}</span>`
+  + `<span class="dataset-tag dataset-license-category">License: ${LICENSE_CATEGORY_LABELS[licenseCategory(entry)]}</span>`
   + `<span class="dataset-tag">${escape(entry.statusLabel)}</span>${entry.delivery ? `<span class="dataset-tag">${escape(deliveryLabel(entry.delivery))}</span>` : ''}${entry.testOrFixture ? '<span class="dataset-tag">Test / demo</span>' : ''}</p>`;
 
 export function catalogCard(entry: CatalogSummary): string {
@@ -53,8 +55,9 @@ export function catalogEntryPage(entry: CatalogEntry): string {
       + '</section>' : '')
     + '<section class="dataset-section"><h2>Dataset information</h2>'
     + factList([{ label: 'Source', value: providerLabel(entry.provider) }, { label: 'Access', value: accessLabel(entry.access) },
+      { label: 'License category', value: LICENSE_CATEGORY_LABELS[licenseCategory(entry)] },
       { label: 'License (source metadata)', value: entry.license }, { label: 'Recorded formats', value: entry.formats.join(' · ') || 'Not established' },
-      { label: 'Scan date', value: entry.checkedAt }, ...entry.facts]) + '</section>'
+      { label: 'Scan date', value: entry.checkedAt }, ...entry.facts]) + `<p class="note">${escape(LICENSE_CATEGORY_NOTE)}</p></section>`
     + '<section class="dataset-section"><h2>Loading evidence</h2><p class="note">Checks cover the recorded files and samples. Inclusion does not certify every scene or image. Source access and license terms apply.</p>'
     + (audits || '<p>No additional dataset loading audit is recorded for this entry.</p>') + '</section>',
     social(`${location.origin}${datasetPath(entry)}`, entry.title, entry.description));
@@ -72,10 +75,12 @@ export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, coll
   return page(location, collections ? 'Dataset collections' : 'Public datasets', '<div class="catalog-index">' + intro(collections ? 'Dataset collections' : 'Public datasets', description)
     + (collections ? '<p class="note"><a href="/hub/datasets/">Browse individual models and scenes</a>. Collection pages retain source-wide metadata and audit history.</p>' : '')
     + '<p class="note">Browse source links, reported licenses, formats and sampled loading checks. The surveys were recorded in October 2026.</p>'
+    + `<p class="note">${escape(LICENSE_CATEGORY_NOTE)}</p>`
     + (snapshot.auditSummary ? `<p class="note">Rechecked ${number(snapshot.auditSummary.sourcesAudited)} sources on ${escape(snapshot.auditSummary.checkedAt)}, including previously rejected candidates. Format checks and browser reads are recorded separately. <a href="/hub/datasets/audit">Read the audit</a>.</p>` : '')
     + `<form id="catalog-search" class="catalog-filters" role="search" data-page="${pageNumber}"${collections ? ' data-collections="true"' : ''}>`
     + '<label class="catalog-query">Search datasets<input type="search" name="q" placeholder="Dataset, format, license…" disabled></label>'
     + '<label>Source<select name="provider" aria-label="Source" disabled><option value="">All sources</option><option value="huggingface">Hugging Face</option><option value="public">Public sources</option></select></label>'
+    + `<label>License category<select name="licenseCategory" aria-label="License category" disabled><option value="">All license categories</option>${LICENSE_CATEGORIES.map(value => `<option value="${value}">${LICENSE_CATEGORY_LABELS[value]}</option>`).join('')}</select></label>`
     + `<label>License<select name="license" aria-label="License" disabled><option value="">All licenses</option>${options(snapshot.entries.map(entry => entry.license))}</select></label>`
     + `<label>Evidence<select name="status" aria-label="Evidence" disabled><option value="">All evidence levels</option>${options(snapshot.entries.map(entry => entry.statusLabel))}</select></label>`
     + `<label>Delivery<select name="delivery" aria-label="Delivery" disabled><option value="">All delivery results</option>${[...new Set(snapshot.entries.map(entry => entry.verification?.delivery).filter((value): value is string => Boolean(value)))].sort().map(value => `<option value="${escape(value)}">${escape(deliveryLabel(value))}</option>`).join('')}</select></label>`
@@ -88,7 +93,7 @@ export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, coll
     + `<span id="catalog-page">Page ${pageNumber} of ${pages}</span>`
     + `<a class="button" id="catalog-next" href="${pagePath(pageNumber + 1)}"${pageNumber === pages ? ' hidden' : ''}>Next</a></nav>`
     + '<p class="note catalog-download"><a href="/hub/datasets/catalog.json" download>Download catalog metadata (JSON)</a></p></div>',
-    social(`${location.base}/datasets/`, 'Public datasets', description) + '<script type="module" src="/hub/assets/catalog.js"></script>');
+    social(`${location.base}/datasets/`, 'Public datasets', description) + '<script type="module" src="/hub/assets/catalog.js?v=licenses-1"></script>');
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {

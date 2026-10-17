@@ -1,5 +1,6 @@
 import { accessLabel, CATALOG_PAGE_SIZE, datasetPath, datasetFilterValue, deliveryLabel, filterCatalog, isCatalogSummary, providerLabel } from '../shared/catalog';
 import type { CatalogSummary } from '../shared/catalog';
+import { licenseCategory, LICENSE_CATEGORY_LABELS } from '../shared/license-categories';
 
 const form = document.querySelector<HTMLFormElement>('#catalog-search');
 if (form) {
@@ -8,10 +9,12 @@ if (form) {
   const pageLabel = document.querySelector<HTMLElement>('#catalog-page')!;
   const previous = document.querySelector<HTMLAnchorElement>('#catalog-prev')!;
   const next = document.querySelector<HTMLAnchorElement>('#catalog-next')!;
+  const categoryField = form.querySelector<HTMLSelectElement>('[name=licenseCategory]');
   const fields = {
     query: form.querySelector<HTMLInputElement>('[name=q]')!,
     provider: form.querySelector<HTMLSelectElement>('[name=provider]')!,
     license: form.querySelector<HTMLSelectElement>('[name=license]')!,
+    ...(categoryField ? { licenseCategory: categoryField } : {}),
     status: form.querySelector<HTMLSelectElement>('[name=status]')!,
     delivery: form.querySelector<HTMLSelectElement>('[name=delivery]')!,
     viewer: form.querySelector<HTMLSelectElement>('[name=viewer]')!,
@@ -42,6 +45,7 @@ if (form) {
       badges.append(dataset);
     }
     for (const label of [providerLabel(entry.provider), entry.statusLabel, ...(entry.testOrFixture ? ['Test / demo'] : [])]) badges.append(element('span', label, 'dataset-tag'));
+    badges.append(element('span', `License: ${LICENSE_CATEGORY_LABELS[licenseCategory(entry)]}`, 'dataset-tag dataset-license-category'));
     if (entry.delivery) badges.append(element('span', deliveryLabel(entry.delivery), 'dataset-tag'));
     const license = element('p', '', 'meta');
     license.append(element('strong', 'License: '), document.createTextNode(entry.license));
@@ -56,7 +60,7 @@ if (form) {
   };
   const render = (focusCount = false) => {
     if (!entries) return;
-    const filtered = filterCatalog(entries, { query: fields.query.value, provider: fields.provider.value, license: fields.license.value,
+    const filtered = filterCatalog(entries, { query: fields.query.value, provider: fields.provider.value, license: fields.license.value, licenseCategory: fields.licenseCategory?.value || '',
       status: fields.status.value, delivery: fields.delivery.value, viewer: fields.viewer.value });
     const pages = Math.max(1, Math.ceil(filtered.length / CATALOG_PAGE_SIZE));
     currentPage = Math.min(currentPage, pages);

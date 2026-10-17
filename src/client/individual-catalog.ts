@@ -1,5 +1,6 @@
 import { accessLabel, datasetPath, datasetFilterValue, deliveryLabel, isCatalogSummary, providerLabel } from '../shared/catalog';
 import type { CatalogSummary } from '../shared/catalog';
+import { licenseCategory, LICENSE_CATEGORY_LABELS } from '../shared/license-categories';
 import { INDIVIDUAL_PAGE_SIZE } from '../shared/individual-catalog';
 import type { IndividualPage, IndividualSelection } from '../shared/individual-catalog';
 
@@ -38,6 +39,7 @@ if (form) {
       entry.delivery ? deliveryLabel(entry.delivery) : undefined, ...(entry.testOrFixture ? ['Test / demo'] : [])]) {
       if (value) badges.append(element('span', value, 'dataset-tag'));
     }
+    badges.append(element('span', `License: ${LICENSE_CATEGORY_LABELS[licenseCategory(entry)]}`, 'dataset-tag dataset-license-category'));
     const license = element('p', '', 'meta');
     license.append(element('strong', 'License: '), document.createTextNode(entry.license));
     article.append(heading, badges, element('p', entry.description), element('p', accessLabel(entry.access), 'meta'), license);

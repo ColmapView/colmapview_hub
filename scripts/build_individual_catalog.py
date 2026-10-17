@@ -187,7 +187,7 @@ def build(root=Path('.')):
         else:
             continue
         source = {'id': entry['id'], 'sourceId': entry['sourceId'], 'title': entry['title'], 'label': dataset_label,
-                  'provider': entry['provider'], 'license': entry['license'], 'access': entry['access'],
+                  'provider': entry['provider'], 'license': entry['license'], 'licenseCategory': entry['licenseCategory'], 'access': entry['access'],
                   'start': total, 'count': len(rows), 'listingComplete': complete}
         sources.append(source)
         write(f'sources/{entry["id"]}.json', entry)
