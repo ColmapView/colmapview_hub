@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { request, resetState } from './helpers';
+import { base, request, resetState } from './helpers';
 
 beforeEach(resetState);
 
@@ -39,6 +39,64 @@ it('does not expose catalog writes and preserves HEAD and document security head
   expect(await missing.text()).toBe('');
 });
 
+it('does not serve a removed model from a legacy or previous-generation cache', async () => {
+  const path = `/datasets/entry/data-${'c'.repeat(24)}`;
+  const cached = new Response('Removed gated model', { headers: { 'Cache-Control': 'public, max-age=300', ETag: '"old-model"' } });
+  const legacyKey = new Request(base + path);
+  const oldKey = new Request(`${base}${path}?_catalog=${'a'.repeat(64)}`);
+  const oldUiKey = new Request(`${base}${path}?_catalog=${'b'.repeat(64)}`);
+  await caches.default.put(legacyKey, cached.clone());
+  await caches.default.put(oldKey, cached.clone());
+  await caches.default.put(oldUiKey, cached);
+  const assets = { fetch: vi.fn(async (input: Request) => input.url.endsWith('/index.json')
+    ? Response.json({ schemaVersion: 1, generation: 'b'.repeat(64), total: 1, packSize: 2048, sources: [] })
+    : new Response(null, { status: 404 })) } as unknown as Fetcher;
+  try {
+    const response = await request(path, { headers: { 'If-None-Match': '"old-model"' } }, undefined, { CATALOG_ASSETS: assets });
+    expect(response.status).toBe(404);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(await response.text()).not.toContain('Removed gated model');
+    expect(assets.fetch).toHaveBeenCalledTimes(2);
+  } finally {
+    await caches.default.delete(legacyKey);
+    await caches.default.delete(oldKey);
+    await caches.default.delete(oldUiKey);
+  }
+});
+
+it('invalidates cached search results when the published inventory changes', async () => {
+  let generation = 'd'.repeat(64);
+  const source = { id: 'hf-kept-source-0123456789ab', sourceId: 'hf:owner/kept', title: 'Kept', label: 'Kept', provider: 'huggingface',
+    access: 'public', license: 'cc0', start: 0, count: 1, listingComplete: true };
+  const assets = { fetch: vi.fn(async (input: Request) => input.url.endsWith('/index.json')
+    ? Response.json({ schemaVersion: 1, generation, total: 1, packSize: 2048, sources: [source] })
+    : Response.json([[`data-${'d'.repeat(24)}`, 0, 'ply', `${generation[0]}.ply`, 'PLY', null, null, null]])) } as unknown as Fetcher;
+  const keys = ['d', 'e'].map(char => new Request(`${base}/datasets/api/entries?_catalog=${char.repeat(64)}&_ui=scene-ui-2`));
+  try {
+    const first = await request('/datasets/api/entries', {}, undefined, { CATALOG_ASSETS: assets });
+    const firstEtag = first.headers.get('ETag')!;
+    expect(first.headers.get('Cache-Control')).toBe('public, no-cache, must-revalidate, no-transform');
+    expect(first.headers.get('Cloudflare-CDN-Cache-Control')).toBe('no-store');
+    const internal = await caches.default.match(keys[0]);
+    expect(internal?.headers.get('Cache-Control')).toBe('public, max-age=300, no-transform');
+    expect(internal?.headers.has('Cloudflare-CDN-Cache-Control')).toBe(false);
+    expect((await first.json<{ entries: { title: string }[] }>()).entries[0].title).toBe('d.ply');
+    const same = await request('/datasets/api/entries', { headers: { 'If-None-Match': firstEtag } }, undefined, { CATALOG_ASSETS: assets });
+    expect(same.status).toBe(304);
+    expect(same.headers.get('Cache-Control')).toBe('public, no-cache, must-revalidate, no-transform');
+    expect(same.headers.get('Cloudflare-CDN-Cache-Control')).toBe('no-store');
+    expect(assets.fetch).toHaveBeenCalledTimes(3); // index on every request; pack only on the first
+    generation = 'e'.repeat(64);
+    const changed = await request('/datasets/api/entries', { headers: { 'If-None-Match': firstEtag } }, undefined, { CATALOG_ASSETS: assets });
+    expect(changed.status).toBe(200);
+    expect(changed.headers.get('ETag')).not.toBe(firstEtag);
+    expect((await changed.json<{ entries: { title: string }[] }>()).entries[0].title).toBe('e.ply');
+    expect(assets.fetch).toHaveBeenCalledTimes(5);
+  } finally {
+    for (const key of keys) await caches.default.delete(key);
+  }
+});
+
 it('opens the exact public model without a provider fetch and keeps restricted models on their metadata page', async () => {
   const id = 'data-' + '0'.repeat(24);
   const source = { id: 'hf-owner-data-123456abcdef', sourceId: 'hf:owner/data', title: 'owner/data', label: 'Data',
@@ -69,6 +127,15 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   expect(target.searchParams.get('url')).toBe('https://huggingface.co/datasets/owner/data/tree/revision/room/sparse/0');
   expect(keys).toEqual(['index.json', 'ids/00.json', 'packs/0.json', `sources/${source.id}.json`]);
   source.access = 'gated';
+  expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  source.access = 'public';
+  row[5] = 'scene.zip';
+  row[7] = { level: 'header_checked', delivery: 'browser_readable', viewerUrl: target.href };
+  expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  row[5] = null;
+  row[7] = { level: 'header_checked', delivery: 'rate_limited', viewerUrl: target.href };
+  expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  row[7] = { level: 'header_checked', delivery: 'browser_readable', viewerUrl: target.href, opening: { status: 'load_failed', summary: 'Failed import.' } };
   expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
   expect((await request(`/datasets/open/not-an-id`)).status).toBe(404);
   const write = await request(`/datasets/open/${id}`, { method: 'POST' });

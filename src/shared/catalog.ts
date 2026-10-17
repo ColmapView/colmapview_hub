@@ -11,6 +11,8 @@ export interface CatalogVerification {
   summary: string;
   scope: string;
   viewerVersion: string;
+  sourceImages?: { status: 'not_included'; summary: string; sourceUrl: string };
+  opening?: { status: 'access_required' | 'extraction_required' | 'load_failed'; summary: string };
 }
 export interface CatalogEntry {
   id: string;
@@ -44,8 +46,11 @@ export interface CatalogSnapshot {
   sources: { kind: string; name: string; checkedAt: string; sha256: string; rowCount: number }[];
   entries: CatalogEntry[];
   importSummary: { hfCandidates: number; hfEntries: number; publicEntries: number; additionalAuditEntries: number; auditRows: number; linkedAuditRows: number; unlinkedAuditSourceIds: string[] };
-  auditSummary?: { checkedAt: string; sourcesAudited: number; levels: Record<string, number>; delivery: Record<string, number> };
+  auditSummary?: { checkedAt: string; sourcesAudited: number; levels: Record<string, number>; delivery: Record<string, number>;
+    evidenceRefresh?: { checkedAt: string; browserUrls: number; accessChecks: number; directSamples: number; directPassed: number; directFailed: number; modelFileChecks: number; extractedMembers: number } };
   individualSummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
+  assetInventorySummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
+  sceneSummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
 }
 export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind'> & { delivery?: string; hasViewer?: boolean; openUrl?: string };
 export const CATALOG_PAGE_SIZE = 24;
@@ -73,10 +78,13 @@ export const deliveryLabel = (delivery?: string) => deliveryLabels[delivery || '
 
 export function catalogSummary(entry: CatalogEntry): CatalogSummary {
   const { id, title, provider, license, access, statusLabel, formats, description, testOrFixture, dataset, itemKind } = entry;
+  const canOpen = access === 'public' && !entry.verification?.opening
+    && !['gated', 'access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error'].includes(entry.verification?.delivery || '')
+    && !['conversion_needed', 'no_native_assets', 'unavailable'].includes(entry.verification?.level || '');
   return { id, title, provider, license, licenseCategory: licenseCategory(entry), access, statusLabel, formats, description, testOrFixture,
-    ...(entry.access === 'public' && isCatalogOpenUrl(entry.openUrl || entry.viewerUrl) ? { openUrl: entry.openUrl || entry.viewerUrl } : {}),
+    ...(canOpen && isCatalogOpenUrl(entry.openUrl || entry.viewerUrl) ? { openUrl: entry.openUrl || entry.viewerUrl } : {}),
     dataset: dataset || { id, label: datasetLabel(entry), title }, ...(itemKind ? { itemKind } : {}),
-    ...(entry.verification ? { delivery: entry.verification.delivery, hasViewer: Boolean(entry.viewerUrl) && entry.access === 'public' } : {}) };
+    ...(entry.verification ? { delivery: entry.verification.delivery, hasViewer: Boolean(entry.viewerUrl) && canOpen } : {}) };
 }
 
 export function filterCatalog(entries: CatalogSummary[], filters: { query: string; provider: string; license: string; licenseCategory?: string; status: string; delivery?: string; viewer?: string }): CatalogSummary[] {

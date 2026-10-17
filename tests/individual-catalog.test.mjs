@@ -51,6 +51,23 @@ test('individual models inherit labels and licenses while sibling checks stay at
   assert.equal(render.catalogSummary(model).hasViewer, false);
 });
 
+test('camera datasets use scene titles and keep split files inside the detail page', () => {
+  const item = row(0, { 2: 'camera-scene', 3: 'bonsai', 4: 'Camera metadata and scene assets',
+    6: { 'metadata:transforms_train.json': 'bonsai/transforms_train.json', 'metadata:transforms_test.json': 'bonsai/transforms_test.json' },
+    8: { listedAssets: 100, linkedAssets: 2, linksTruncated: true } });
+  const summary = render.individualSummary(item, source);
+  assert.equal(summary.title, 'bonsai');
+  assert.equal(summary.itemKind, 'Camera dataset');
+  const scene = render.individualEntry(item, source, parent);
+  assert.equal(scene.dataUrl, 'https://huggingface.co/datasets/owner/dataset/tree/abc/bonsai');
+  assert.equal(scene.candidateViewerUrl, undefined);
+  const page = render.catalogEntryPage(scene);
+  assert.match(page, /Showing 2 asset links/);
+  assert.match(page, /bonsai\/transforms_train\.json/);
+  assert.match(page, /all 100 listed assets/);
+  assert.equal(render.individualSummary(row(0, { 3: 'sparse/1' }), source).title, source.label);
+});
+
 test('compact cards load an eligible model directly while archives, access restrictions and failed samples keep source details', () => {
   const native = render.individualSummary(row(), source);
   assert.equal(native.openUrl, `/hub/datasets/open/${row()[0]}`);
@@ -62,9 +79,13 @@ test('compact cards load an eligible model directly while archives, access restr
   assert.match(html, /Full metadata/);
   for (const [record, origin] of [[row(0, { 5: 'archive.zip' }), source], [row(), { ...source, access: 'gated' }],
     [row(0, { 2: 'obj' }), source], [row(0, { 7: { ...parent.verification, level: 'conversion_needed' } }), source],
-    [row(0, { 7: { ...parent.verification, delivery: 'access_denied', viewerUrl: parent.viewerUrl } }), source]]) {
+    [row(0, { 7: { ...parent.verification, delivery: 'access_denied', viewerUrl: parent.viewerUrl } }), source],
+    [row(0, { 5: 'archive.zip', 7: { ...parent.verification, viewerUrl: parent.viewerUrl } }), source],
+    [row(0, { 7: { ...parent.verification, opening: { status: 'load_failed', summary: 'Failed import.' }, viewerUrl: parent.viewerUrl } }), source]]) {
     const summary = render.individualSummary(record, origin);
     assert.equal(summary.openUrl, undefined);
+    assert.equal(summary.hasViewer, false);
+    assert.equal(render.individualEntry(record, origin, parent).viewerUrl, undefined);
     assert.equal(render.individualEntry(record, origin, parent).candidateViewerUrl, undefined);
     assert.match(render.catalogCard(summary), /Source only/);
   }
@@ -83,6 +104,53 @@ test('failed decoders keep their individual evidence and never receive a retry l
   assert.equal(model.candidateViewerUrl, undefined);
   assert.match(render.catalogEntryPage(model), /Decoder failed/);
   assert.doesNotMatch(render.catalogEntryPage(model), /Try listed model/);
+});
+
+test('gated listed PLY files show access required without a download, viewer or trial action', () => {
+  const path = 'generated-labels/kaggle-balraj98-modelnet40-princeton-3d-object-dataset/airplane_0048-a83c7315ee13/input/airplane_0048-0138384160df.ply';
+  const gatedSource = { ...source, access: 'gated' };
+  const gatedParent = { ...parent, access: 'gated' };
+  const model = render.individualEntry(row(0, { 2: 'ply', 3: path, 6: null, 7: { ...parent.verification, statusLabel: parent.statusLabel, viewerUrl: parent.viewerUrl } }), gatedSource, gatedParent);
+  assert.equal(model.statusLabel, 'Access required');
+  assert.equal(model.verification.delivery, 'gated');
+  assert.equal(model.viewerUrl, undefined);
+  assert.equal(model.candidateViewerUrl, undefined);
+  assert.equal(render.individualSummary(row(0, { 2: 'ply', 3: path, 6: null }), gatedSource).hasViewer, false);
+  const html = render.catalogEntryPage(model);
+  assert.match(html, /Get source access/);
+  assert.doesNotMatch(html, />Dataset URL|Try in ColmapView|Try listed model|sign in to Hugging Face in ColmapView/);
+});
+
+test('an archive member never inherits a direct archive viewer action or unchecked trial', () => {
+  const item = row(0, { 2: 'ply', 3: 'models/airplane.ply', 5: 'models.zip', 6: null,
+    7: { ...parent.verification, statusLabel: 'Member headers checked; extraction required', viewerUrl: parent.viewerUrl } });
+  const model = render.individualEntry(item, source, parent);
+  assert.equal(model.viewerUrl, undefined);
+  assert.equal(model.candidateViewerUrl, undefined);
+  assert.equal(render.individualSummary(item, source).hasViewer, false);
+  assert.equal(model.verification.opening.status, 'extraction_required');
+  assert.match(render.catalogEntryPage(model), /Extract models\/airplane.ply/);
+});
+
+test('known failed native files cannot regain a trial through the listing fallback', () => {
+  const item = row(0, { 2: 'ply', 3: 'failed.ply', 6: null,
+    7: { ...parent.verification, statusLabel: 'Sample failed to load', opening: { status: 'load_failed', summary: 'Exact file failed.' } } });
+  const model = render.individualEntry(item, source, parent);
+  assert.equal(model.viewerUrl, undefined);
+  assert.equal(model.candidateViewerUrl, undefined);
+  assert.match(render.catalogEntryPage(model), /Exact file failed/);
+});
+
+test('known failed browser delivery cannot be relabeled as an unchecked trial', () => {
+  for (const delivery of ['access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error']) {
+    const item = row(0, { 2: 'ply', 3: 'model.ply', 6: null,
+      7: { ...parent.verification, statusLabel: 'Format headers checked', delivery, viewerUrl: parent.viewerUrl } });
+    const model = render.individualEntry(item, source, parent);
+    assert.equal(model.viewerUrl, undefined, delivery);
+    assert.equal(model.candidateViewerUrl, undefined, delivery);
+    assert.equal(render.individualSummary(item, source).openUrl, undefined, delivery);
+    assert.equal(render.catalogSummary({ ...parent, verification: { ...parent.verification, delivery } }).openUrl, undefined, delivery);
+  }
 });
 
 test('dataset labels and model names remain escaped in cards and detail pages', () => {

@@ -67,9 +67,9 @@ export function page(location: HubLocation, title: string, body: string, metadat
     metadata,
     `<link rel="icon" href="${asset('favicon.ico')}">`,
     `<link rel="stylesheet" href="${asset('colmapview.css')}">`,
-    `<script src="${asset('assets/theme.js')}?v=hub-ui-1"></script>`,
-    `<link rel="stylesheet" href="${asset('styles.css')}?v=hub-ui-1">`,
-    `<script type="module" src="${asset('assets/client.js')}?v=hub-ui-2"></script>`,
+    `<script src="${asset('assets/theme.js')}?v=scene-ui-2"></script>`,
+    `<link rel="stylesheet" href="${asset('styles.css')}?v=scene-ui-2">`,
+    `<script type="module" src="${asset('assets/client.js')}?v=scene-ui-2"></script>`,
     '</head><body>',
     '<a class="skip-link" href="#main">Skip to content</a>',
     header(location.path),
@@ -155,7 +155,7 @@ export function galleryKey(location: HubLocation, cursor?: string): string {
 export function landingPage(location: HubLocation): string {
   return page(location, 'Datasets and shared results', '<div class="hub-landing">' + intro('Explore in ColmapView.', 'Find a model, check its source and open it in the viewer.',
     `<div class="actions"><a class="button button-primary" href="${location.path}/datasets/">Browse datasets</a><a class="button" href="${VIEWER}/">Open viewer</a></div>`)
-    + '<section class="hub-landing-panels"><div class="card"><h2>Public datasets</h2><p>Individual models and scenes, grouped by dataset. Filter by format and license.</p>'
+    + '<section class="hub-landing-panels"><div class="card"><h2>Public datasets</h2><p>Named scene datasets with related files kept together. Filter by format and license.</p>'
     + `<a href="${location.path}/datasets/collections">Browse collections ↗</a></div><div class="card"><h2>Share a reconstruction</h2><p>Publish from ColmapView to create a Hub link for your result.</p>`
     + `<a href="${VIEWER}/">Open ColmapView ↗</a></div></section></div>`);
 }

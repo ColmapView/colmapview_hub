@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 import { preview } from '../tests/fixtures/preview';
 
-const origin = 'http://localhost:5201';
+const origin = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB_E2E_PORT || '5201'}`;
 interface Link { id: string; url: string; owner: string }
 
 async function createLink(page: Page, overrides: Record<string, unknown> = {}): Promise<Link> {
@@ -252,8 +252,7 @@ test('shows the landing page in the ColmapView frame', async ({ page }) => {
   await page.getByLabel('Viewer link', { exact: true }).selectOption('available');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await expect(page.locator('.dataset-card').getByText('Browser read checked', { exact: true })).toHaveCount(24);
-  await page.getByLabel('Delivery', { exact: true }).selectOption('gated');
-  await expect(page.locator('.dataset-card')).toHaveCount(0);
+  await expect(page.getByLabel('Delivery', { exact: true }).locator('option[value="gated"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search datasets' }).fill('Hagenberg Ellipse');
   await page.getByRole('button', { name: 'Metadata for CV course Ellipse — Hagenberg Ellipse (camera + RGB)', exact: true }).click();
@@ -266,7 +265,7 @@ test('shows the landing page in the ColmapView frame', async ({ page }) => {
   await page.getByText('About this catalog', { exact: true }).click();
   await page.getByRole('link', { name: 'Audit and coverage', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Dataset audit', exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Download all audit records (JSON)', exact: true })).toHaveAttribute('href', '/hub/datasets/dataset-audit.json');
+  await expect(page.getByRole('link', { name: 'Download public audit records (JSON)', exact: true })).toHaveAttribute('href', '/hub/datasets/dataset-audit.json');
   const manifest = await page.request.get('/hub/datasets/public-megascenes-000000-arc-de-bera-component-0-native-complete-99744eaac47a.manifest.json', { headers: { Origin: 'https://colmapview.github.io' } });
   expect(manifest.status()).toBe(200);
   expect(manifest.headers()['access-control-allow-origin']).toBe('*');

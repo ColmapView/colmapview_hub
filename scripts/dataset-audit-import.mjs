@@ -10,7 +10,20 @@ export const auditLabels = {
 const formatNames = { colmap: 'COLMAP', point_cloud_ply: 'XYZ point-cloud PLY', gaussian_ply: 'Gaussian PLY', spz: 'SPZ', sog: 'SOG',
   spz_v4: 'SPZ version 4', zstd_wrapped_splat: 'Zstandard-compressed splat', camera_metadata: 'Camera metadata',
   camera_only: 'COLMAP cameras and poses', geometry_conversion: 'Geometry requiring conversion', splat_extension_only: 'SPZ/SOG filename; payload unverified' };
-const formatName = value => formatNames[value] || value;
+export const formatName = value => formatNames[value] || value;
+
+/** The outer download route must work as well as a contained format header. */
+export function openingRequirement(result) {
+  if (result.gated || result.delivery === 'gated') return { status: 'access_required',
+    summary: 'Files require source access and cannot be downloaded anonymously. Obtain access and download the files on Hugging Face, then attempt local import. Direct gated loading and file compatibility are not established by this catalog.' };
+  const archive = (result.probes || []).find(probe => probe.url === result.loadUrl && Number.isSafeInteger(probe.members));
+  if (archive?.completeDirectory && archive.modelCount === 0 && result.level === 'header_checked' && !(result.formats || []).includes('colmap')) {
+    return { status: 'extraction_required', summary: 'Supported-format headers were found inside the selected sample archive, which has no complete COLMAP model. The released viewer cannot open this archive directly. Extract the appropriate model file and attempt standalone import; other collection files, cameras, photos and masks remain unverified.' };
+  }
+  if (result.viewerImport?.status === 'failed' && !result.viewerImport.decoderError) return { status: 'load_failed',
+    summary: 'The exact sampled source failed to import in the released viewer. See the recorded error; a successful byte read does not establish a working load.' };
+  return undefined;
+}
 
 export function requiredProbeUrls(result) {
   if (result.loadUrl && !result.loadUrl.includes('/tree/')) {
@@ -94,12 +107,18 @@ export function applyDatasetAudit(snapshot, audit, hfRows = []) {
     const result = bySource.get(entry.sourceId);
     if (!result) throw new Error(`Dataset audit is missing ${entry.sourceId}`);
     const checkedAt = result.checkedAt.slice(0, 10);
+    const opening = openingRequirement({ ...result, gated: result.gated ?? (entry.access === 'gated') });
     entry.verification = { level: result.level, delivery: result.delivery, checkedAt, summary: result.summary, scope: result.scope,
+      ...(opening ? { opening } : {}),
+      ...(result.sourceImages ? { sourceImages: result.sourceImages } : {}),
       viewerVersion: audit.viewerVersion };
     entry.status = `audited_${result.level}`;
     entry.statusLabel = auditLabels[result.level] || 'Further verification needed';
     if (result.viewerImport?.status === 'passed') entry.statusLabel = 'Sample opened in viewer';
-    entry.description = result.summary;
+    if (result.sourceImages?.status === 'not_included') entry.statusLabel = result.viewerImport?.status === 'passed'
+      ? 'Model checked; RGB not included' : 'RGB not included; load unverified';
+    if (opening) entry.statusLabel = { access_required: 'Access required', extraction_required: 'Extract archive before loading', load_failed: 'Sample failed to load' }[opening.status];
+    entry.description = opening?.summary || result.summary;
     entry.checkedAt = checkedAt;
     if (result.formats?.length) entry.formats = result.formats.map(formatName);
     if ('license' in result) entry.license = license(result.license);
@@ -114,13 +133,12 @@ export function applyDatasetAudit(snapshot, audit, hfRows = []) {
     delete entry.modelManifest;
     // Only offer links whose exact native sample passed anonymous reads in the viewer's origin.
     // Public archive scene entries keep their extraction instructions: one archive can contain many scenes.
-    if (entry.provider === 'huggingface' && ['header_checked', 'viewer_checked'].includes(result.level) && result.delivery === 'browser_readable' && result.loadUrl
-      && result.viewerImport?.status !== 'failed') {
+    if (entry.access !== 'gated' && entry.provider === 'huggingface' && ['header_checked', 'viewer_checked'].includes(result.level) && result.delivery === 'browser_readable' && result.loadUrl) {
       const source = publicUrl(result.loadUrl);
       entry.dataUrl = source;
-      entry.viewerUrl = `https://colmapview.opsiclear.com/?url=${encodeURIComponent(source)}`;
+      if (!opening && result.viewerImport?.status !== 'failed') entry.viewerUrl = `https://colmapview.opsiclear.com/?url=${encodeURIComponent(source)}`;
     }
-    if (entry.provider === 'public' && result.level === 'header_checked' && result.delivery === 'browser_readable'
+    if (!opening && entry.access !== 'gated' && entry.provider === 'public' && result.level === 'header_checked' && result.delivery === 'browser_readable'
       && result.loadUrl?.endsWith('/') && result.formats.includes('colmap')) {
       const base = new URL(publicUrl(result.loadUrl)).origin + '/';
       const native = result.probes.filter(probe => probe.path && probe.url);
@@ -139,9 +157,16 @@ export function applyDatasetAudit(snapshot, audit, hfRows = []) {
       }
     }
     const facts = [{ label: 'Result', value: result.summary }, { label: 'Scope', value: result.scope }];
+    if (opening) facts.push({ label: 'Opening this source', value: opening.summary });
     if (result.viewerImport) facts.push({ label: 'Released viewer import', value: `${result.viewerImport.status}; ${result.viewerImport.scope}` });
+    if (result.viewerImport?.error) facts.push({ label: 'Import error', value: result.viewerImport.error });
+    if (result.modelFileImport) facts.push({ label: 'Model files only', value: `${result.modelFileImport.status}; ${result.modelFileImport.scope}` });
+    if (result.extractedMemberImport) facts.push({ label: 'Extracted member import', value: `${result.extractedMemberImport.path}: ${result.extractedMemberImport.status}; ${result.extractedMemberImport.scope}` });
+    for (const check of result.accessChecks || []) facts.push({ label: 'Anonymous file access', value: `HTTP ${check.status}${check.errorCode ? ` ${check.errorCode}` : ''}; checked ${check.checkedAt}`, url: publicUrl(check.url) });
     if (result.viewerImport?.decoderError) facts.push({ label: 'Decoder result', value: result.viewerImport.decoderError });
     if (result.detail) facts.push({ label: 'Recorded finding', value: result.detail });
+    if (result.sourceImages) facts.push({ label: 'Source RGB', value: result.sourceImages.summary, url: publicUrl(result.sourceImages.sourceUrl) });
+    if (result.licenseMetadata) facts.push({ label: 'Reported custom license', value: `${result.licenseMetadata.identifier}; ${result.licenseMetadata.name}`, url: publicUrl(result.licenseMetadata.sourceUrl) });
     if (result.listingComplete === false) facts.push({ label: 'Listing scope', value: `The source listing reached ${result.fileCount} files; completeness was not established in this bounded check.` });
     facts.push({ label: 'License evidence', value: entry.provider === 'huggingface'
       ? 'Reported by current public repository metadata. Coverage of underlying source assets was not independently verified.'
@@ -163,7 +188,8 @@ export function applyDatasetAudit(snapshot, audit, hfRows = []) {
   }
   snapshot.importSummary.hfEntries = snapshot.entries.filter(entry => entry.provider === 'huggingface').length;
   const counts = key => Object.fromEntries([...new Set(audit.results.map(result => result[key]))].map(value => [value, audit.results.filter(result => result[key] === value).length]));
-  snapshot.auditSummary = { checkedAt: audit.checkedAt.slice(0, 10), sourcesAudited: audit.results.length, levels: counts('level'), delivery: counts('delivery') };
+  snapshot.auditSummary = { checkedAt: audit.checkedAt.slice(0, 10), sourcesAudited: audit.results.length, levels: counts('level'), delivery: counts('delivery'),
+    ...(audit.evidenceRefresh ? { evidenceRefresh: audit.evidenceRefresh } : {}) };
   const rank = entry => entry.statusLabel === 'Sample opened in viewer' ? 0 : entry.viewerUrl ? 1 : entry.verification.level === 'header_checked' ? 2 : entry.verification.level === 'no_native_assets' || entry.verification.level === 'unavailable' ? 4 : 3;
   snapshot.entries.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title, 'en'));
   return snapshot;

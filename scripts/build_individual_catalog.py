@@ -15,20 +15,30 @@ import urllib.parse
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from scene_datasets import scene_records
+
 PACK_SIZE = 2048
 FORMATS = {'colmap': 'COLMAP', 'cameras': 'COLMAP cameras and poses', 'ply': 'PLY (header unchecked)',
            'spz': 'SPZ (header unchecked)', 'sog': 'SOG (header unchecked)', 'splat': 'SPLAT (header unchecked)',
-           'ksplat': 'KSPLAT (header unchecked)', 'splat-scene': 'Gaussian components (headers unchecked)', 'camera-metadata': 'Camera metadata'}
+           'ksplat': 'KSPLAT (header unchecked)', 'splat-scene': 'Gaussian components (headers unchecked)', 'camera-metadata': 'Camera metadata',
+           'camera-scene': 'Camera metadata and scene assets'}
 AUDIT_FORMATS = {'colmap': 'COLMAP', 'point_cloud_ply': 'XYZ point-cloud PLY', 'gaussian_ply': 'Gaussian PLY',
                  'spz': 'SPZ', 'spz_v4': 'SPZ version 4', 'sog': 'SOG', 'zstd_wrapped_splat': 'Zstandard-compressed splat'}
 KIND_LABELS = {'colmap': 'COLMAP reconstruction', 'cameras': 'Cameras and poses', 'ply': 'PLY model',
                'spz': 'Gaussian splat', 'sog': 'Gaussian splat', 'splat': 'Gaussian splat', 'ksplat': 'Gaussian splat',
-               'camera-metadata': 'Camera metadata', 'splat-scene': 'Gaussian splat', 'scene': 'Public scene'}
+               'camera-metadata': 'Camera metadata', 'camera-scene': 'Camera dataset', 'splat-scene': 'Gaussian scene', 'scene': 'Public scene'}
 
 
 def read(path):
     raw = path.read_bytes()
     return json.loads(gzip.decompress(raw) if path.suffix == '.gz' else raw)
+
+
+def is_access_restricted(entry):
+    """Same policy as catalog-publication.mjs; shared fixtures cover both builds."""
+    proof = entry.get('verification') or {}
+    return (entry.get('access') == 'gated' or bool(entry.get('gated')) or entry.get('delivery') == 'gated'
+            or proof.get('delivery') == 'gated' or (proof.get('opening') or {}).get('status') == 'access_required')
 
 
 def encoded(values):
@@ -66,32 +76,47 @@ def item_evidence(entry, row, revision, result):
     kind, path, files, archive = row
     candidate = hf_url(entry, revision, archive or path, tree=kind in ('colmap', 'cameras') and not archive)
     matched = False
+    archive_probe = None
+    member_probe = None
     if archive:
-        matched = any(probe.get('url') == candidate and probe.get('modelDirectory') == path
-                      for probe in result.get('probes', []))
+        archive_probe = next((probe for probe in result.get('probes', []) if probe.get('url') == candidate), None)
+        if archive_probe:
+            member_probe = next((probe for probe in archive_probe.get('probes', []) if probe.get('path') == path and probe.get('format')), None)
+            matched = archive_probe.get('modelDirectory') == path or member_probe is not None
     elif kind in ('colmap', 'cameras'):
         matched = result.get('modelDirectory') == path and result.get('revision') == revision
     else:
         matched = candidate == result.get('loadUrl') or any(probe.get('url') == candidate and probe.get('format')
                                                            for probe in result.get('probes', []))
     companion_sample = False
-    if not matched and not archive and kind == 'colmap':
+    metadata_sample = False
+    if not matched and not archive and kind in ('colmap', 'cameras', 'camera-scene', 'splat-scene'):
         for role, value in (files or {}).items():
             if role.startswith('asset:') and hf_url(entry, revision, value) == result.get('loadUrl'):
                 candidate = result['loadUrl']
                 companion_sample = matched = True
                 break
+    if not matched and not archive and kind == 'camera-scene':
+        for role, value in (files or {}).items():
+            if role.startswith('metadata:') and hf_url(entry, revision, value) == result.get('loadUrl'):
+                candidate = result['loadUrl']
+                metadata_sample = matched = True
+                break
     if not matched or entry['status'] == 'unsupported_content':
         return None, FORMATS.get(kind, '.' + kind)
     proof = dict(entry.get('verification', {}))
+    # A source's opening restriction or failed sibling is not individual proof.
+    proof.pop('opening', None)
     proof['statusLabel'] = entry['statusLabel']
     imported = result.get('viewerImport', {})
     proof['scope'] = 'This recorded model or file only. Other collection entries, source photos, and masks have separate evidence.'
-    matching_probe = next((probe for probe in result.get('probes', []) if probe.get('url') == candidate), {})
+    matching_probe = member_probe or archive_probe or next((probe for probe in result.get('probes', []) if probe.get('url') == candidate), {})
     format_name = AUDIT_FORMATS.get(matching_probe.get('format'), FORMATS.get(kind, '.' + kind))
     if companion_sample:
-        proof['scope'] = 'Only the linked companion model file was checked. The listed COLMAP reconstruction, remaining assets, source photos, and masks need their own checks.'
-        format_name = 'COLMAP files listed · ' + format_name
+        proof['scope'] = 'Only the linked companion model file was checked. The scene cameras, reconstruction, remaining assets, source photos, and masks need their own checks.'
+        format_name = FORMATS.get(kind, 'Scene assets listed') + ' · ' + format_name
+    elif metadata_sample:
+        proof['scope'] = 'Only the linked camera metadata file was checked. The remaining scene assets, source photos and masks need their own checks.'
     elif kind == 'colmap':
         format_name = 'COLMAP'
     required = [candidate]
@@ -116,7 +141,25 @@ def item_evidence(entry, row, revision, result):
         proof['summary'] = f'{format_name} identified from this model’s original header. Complete loading and rendering remain unverified.'
     elif original_import and imported.get('status') == 'passed':
         proof['summary'] = f'{format_name} sample opened in ColmapView {proof.get("viewerVersion", "the released viewer")}. Other assets, photos and masks remain unverified.'
-    if entry.get('viewerUrl') and proof['delivery'] == 'browser_readable' and candidate.rstrip('/') == result.get('loadUrl', '').rstrip('/') and not archive and not unsupported:
+        if companion_sample:
+            proof['statusLabel'] = 'Companion asset opened; scene unverified'
+            proof['summary'] = 'The linked companion asset opened in the viewer. Scene cameras, original photos, masks and complete-scene export remain unverified.'
+    if entry.get('access') == 'gated' or proof['delivery'] == 'gated':
+        proof['delivery'] = 'gated'
+        proof['statusLabel'] = 'Access required'
+        proof['opening'] = {'status': 'access_required', 'summary': 'Obtain access and download the original file on Hugging Face before attempting local import. Direct gated loading is not qualified.'}
+    elif archive:
+        proof['opening'] = {'status': 'extraction_required', 'summary': 'Extract this exact model or file from its archive before attempting to load it. Archive byte access does not establish a working direct model link.'}
+        member_import = result.get('extractedMemberImport', {})
+        if member_import.get('path') == path and member_import.get('status') == 'passed' and member_import.get('sourceUrl') == candidate:
+            proof['statusLabel'] = 'Extracted file opened; extraction required'
+            proof['summary'] = 'This original extracted member imported in the released viewer through a controlled same-origin response. Direct archive loading, source cameras, photos and masks are not qualified by that check.'
+        elif not unsupported:
+            proof['statusLabel'] = 'Member headers checked; extraction required'
+            proof['summary'] = f'{format_name} identified at this exact path inside the archive. Extract it before attempting import; complete loading remains unverified.'
+    elif original_import and imported.get('status') == 'failed':
+        proof['opening'] = {'status': 'load_failed', 'summary': 'This exact sampled file failed in the released viewer. See its retained decoder or import error.'}
+    if entry.get('viewerUrl') and entry.get('access') != 'gated' and not proof.get('opening') and proof['delivery'] == 'browser_readable' and candidate.rstrip('/') == result.get('loadUrl', '').rstrip('/') and not archive and not unsupported:
         proof['viewerUrl'] = entry['viewerUrl']
     return proof, format_name
 
@@ -126,8 +169,10 @@ def build(root=Path('.')):
     registry_bytes = (root / 'data/individual-datasets.json').read_bytes()
     registry = json.loads(registry_bytes)
     audit = {row['sourceId']: row for row in read(root / 'data/dataset-audit.json')['results']}
+    excluded = {row['sourceId'] for row in [*catalog['entries'], *audit.values()] if is_access_restricted(row)}
     generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes
-                                + (root / 'data/dataset-audit.json').read_bytes() + Path(__file__).read_bytes()).hexdigest()
+                                + (root / 'data/dataset-audit.json').read_bytes() + Path(__file__).read_bytes()
+                                + Path(__file__).with_name('scene_datasets.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
     current = output / 'index.json'
     if current.exists() and read(current).get('generation') == generation:
@@ -161,11 +206,15 @@ def build(root=Path('.')):
         mapping[key].append(ordinal)
 
     for entry in catalog['entries']:
+        if entry['sourceId'] in excluded:
+            continue
         source_index = len(sources)
         dataset_label = label(entry)
         registered = by_dataset.get(entry['id'])
+        result = audit.get(entry['sourceId'], {})
         complete = True
         revision = None
+        scene_details = {}
         if registered:
             if registered['file'] != entry['id'] + '.json.gz':
                 raise ValueError('Individual listing file does not match its dataset identity')
@@ -178,7 +227,8 @@ def build(root=Path('.')):
                 raise ValueError('Individual listing identity or record count changed')
             if listing['revision'] != revision:
                 raise ValueError(f'Individual listing revision changed: {entry["sourceId"]}')
-            rows = listing['items']
+            rows = scene_records(listing['items'], scene_details,
+                                 result.get('sceneRootAliases') if result.get('revision') == revision else None)
             complete = listing['listingComplete']
         elif entry['provider'] == 'public' and any(fact['label'] == 'Collection' for fact in entry['facts']):
             # Existing public entries already identify a scene/subset/variant.
@@ -187,11 +237,13 @@ def build(root=Path('.')):
         else:
             continue
         source = {'id': entry['id'], 'sourceId': entry['sourceId'], 'title': entry['title'], 'label': dataset_label,
-                  'provider': entry['provider'], 'license': entry['license'], 'licenseCategory': entry['licenseCategory'], 'access': entry['access'],
+                  'provider': entry['provider'], 'license': entry['license'],
+                  **({'licenseCategory': entry['licenseCategory']} if 'licenseCategory' in entry else {}), 'access': entry['access'],
                   'start': total, 'count': len(rows), 'listingComplete': complete}
         sources.append(source)
-        write(f'sources/{entry["id"]}.json', entry)
-        result = audit.get(entry['sourceId'], {})
+        source_entry = {**entry, 'facts': [({**fact, 'label': 'Listed 3D assets and model file sets'} if fact['label'] == 'Individual model or scene entries listed' else fact)
+                                          for fact in entry['facts']] + [{'label': 'Named scene datasets identified', 'value': str(len(rows))}]}
+        write(f'sources/{entry["id"]}.json', source_entry)
         for row in rows:
             kind, path, files, archive = row
             item_id = identity(entry['sourceId'], row)
@@ -207,16 +259,29 @@ def build(root=Path('.')):
                 proof, format_name = item_evidence(entry, row, revision, result)
             else:
                 proof, format_name = None, FORMATS.get(kind, '.' + kind)
-            level = proof.get('statusLabel', 'Files listed; load not checked') if proof else 'Files listed; load not checked'
-            delivery = proof.get('delivery', 'not_tested') if proof else ('gated' if entry['access'] == 'gated' else 'not_tested')
+            source_images = (entry.get('verification') or {}).get('sourceImages')
+            if source_images:
+                if proof is None:
+                    proof = {'level': 'file_set_only', 'delivery': 'not_tested', 'checkedAt': entry['checkedAt'],
+                             'summary': 'Scene model files are listed; this model has not passed a complete load check.',
+                             'scope': 'Listed scene files only. A source-wide RGB exclusion applies to this scene.',
+                             'viewerVersion': (entry.get('verification') or {}).get('viewerVersion', 'Not checked')}
+                proof['sourceImages'] = source_images
+                proof['statusLabel'] = 'Model checked; RGB not included' if proof.get('viewerUrl') else 'RGB not included; load unverified'
+                proof['summary'] += ' ' + source_images['summary']
+            gated = entry['access'] == 'gated' or bool(proof and proof.get('delivery') == 'gated')
+            level = 'Access required' if gated else proof.get('statusLabel', 'Files listed; load not checked') if proof else 'Extraction required; load unverified' if archive else 'Files listed; load not checked'
+            delivery = 'gated' if gated else proof.get('delivery', 'not_tested') if proof else 'not_tested'
             item = [item_id, source_index, kind, path, format_name, archive, files, proof]
+            if kind != 'scene' and (kind, path, archive) in scene_details:
+                item.append(scene_details[(kind, path, archive)])
             pack.append(item)
             kind_name = 'Gaussian splat' if kind == 'ply' and format_name == 'Gaussian PLY' else KIND_LABELS.get(kind, '3D geometry')
             counts[kind_name] += 1
             levels[level] += 1
             deliveries[delivery] += 1
             for field, value in [('kind', kind_name), ('status', level), ('delivery', delivery),
-                                 ('viewer', 'available' if proof and proof.get('viewerUrl') else '')]:
+                                 ('viewer', 'available' if proof and proof.get('viewerUrl') and not gated and not archive and not proof.get('opening') else '')]:
                 add_posting(facets[field], value, total)
             for token in tokens(' '.join([path, dataset_label, entry['title'], entry['license'], format_name, kind_name])):
                 add_posting(postings, token, total)
@@ -249,8 +314,9 @@ def build(root=Path('.')):
     manifest = {'schemaVersion': 1, 'generation': generation, 'checkedAt': registry['checkedAt'], 'total': total,
                 'packSize': PACK_SIZE, 'sources': sources, 'facets': facet_manifest, 'kinds': dict(counts),
                 'levels': dict(levels), 'delivery': dict(deliveries),
-                'incompleteCollections': sum(not source['listingComplete'] for source in sources),
-                'scope': registry['scope']}
+                'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
+                'unit': 'named_scene',
+                'scope': 'Named scene datasets established by reconstruction sets, camera metadata or explicit public scene records. Files and companion assets remain inside their scene; loose asset filenames do not establish scenes.'}
     write('index.json', manifest)
     print(f'Built {total:,} individual records from {len(sources):,} source entries; previews remain on hold.', flush=True)
 

@@ -6,6 +6,17 @@ import type { HubLocation } from './pages';
 import { individualSelection } from '../shared/individual-catalog';
 import { isCatalogOpenUrl, datasetPath } from '../shared/catalog';
 
+const UI_GENERATION = 'scene-ui-2';
+const REVALIDATE = 'public, no-cache, must-revalidate, no-transform';
+const respond = (request: Request, response: Response) => {
+  const headers = new Headers(response.headers);
+  headers.set('Cache-Control', REVALIDATE);
+  headers.set('Cloudflare-CDN-Cache-Control', 'no-store');
+  return new Response(request.headers.get('If-None-Match') === headers.get('ETag') ? null : response.body, {
+    status: request.headers.get('If-None-Match') === headers.get('ETag') ? 304 : response.status, headers,
+  });
+};
+
 /** A public, operator-built metadata namespace. No user-created share record,
  * management secret, R2 listing, or private lookup path is reachable here. */
 export async function individualRoute(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
@@ -23,15 +34,8 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   const open = /^\/datasets\/open\/(data-[a-f0-9]{24})$/.exec(path);
   if (path !== '/datasets/' && path !== '/datasets/api/entries' && !entry && !open) return fail(404, 'Dataset entry not found.');
   const filters = entry || open ? new URLSearchParams() : individualFilters(url.searchParams);
-  const cacheUrl = new URL(url.pathname, location.origin);
-  cacheUrl.search = filters.toString();
-  cacheUrl.searchParams.set('_ui', 'hub-design-2');
-  const key = new Request(cacheUrl);
-  const cached = await caches.default.match(key);
-  if (cached) {
-    if (request.headers.get('If-None-Match') === cached.headers.get('ETag')) return new Response(null, { status: 304, headers: cached.headers });
-    return cached;
-  }
+  // Read the current inventory before the response cache. Removed entries and
+  // search results must not survive a catalog deployment in an older cache.
   const index = await individualIndex(env.CATALOG_ASSETS, location.origin);
   if (open) {
     const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, open[1]);
@@ -39,6 +43,12 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
     const target = model.openUrl && (model.viewerUrl || model.candidateViewerUrl);
     return new Response(null, { status: 302, headers: { Location: target && isCatalogOpenUrl(target) ? target : datasetPath(model), 'Cache-Control': 'no-store' } });
   }
+  const cacheQuery = new URLSearchParams(filters);
+  cacheQuery.set('_catalog', index.generation);
+  cacheQuery.set('_ui', UI_GENERATION);
+  const key = new Request(`${location.origin}${url.pathname}?${cacheQuery}`);
+  const cached = await caches.default.match(key);
+  if (cached) return respond(request, cached);
   let body: string;
   if (entry) {
     const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, entry[1]);
@@ -46,7 +56,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
     body = catalogEntryPage(model);
   } else {
     const result = await searchIndividuals(env.CATALOG_ASSETS, location.origin, index, filters);
-    body = api ? JSON.stringify({ ...result, dataset: individualSelection(index.sources, filters.get('dataset') || '') })
+    body = api ? JSON.stringify({ ...result, ...(index.unit ? { unit: index.unit } : {}), dataset: individualSelection(index.sources, filters.get('dataset') || '') })
       : individualIndexPage(location, index, result, filters);
   }
   // Hash the response content so template-only releases also invalidate a
@@ -56,5 +66,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   const response = new Response(body, { headers: { 'Content-Type': api ? 'application/json; charset=utf-8' : 'text/html; charset=utf-8',
     'Cache-Control': 'public, max-age=300, no-transform', 'ETag': etag } });
   if (request.method === 'GET') ctx.waitUntil(caches.default.put(key, response.clone()));
-  return request.headers.get('If-None-Match') === etag ? new Response(null, { status: 304, headers: response.headers }) : response;
+  // The Cache API stores a short-lived internal copy. Browser and outer CDN
+  // responses always revalidate against the current published generation.
+  return respond(request, response);
 }

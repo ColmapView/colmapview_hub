@@ -15,6 +15,7 @@ from collections import Counter
 from pathlib import Path
 
 from dataset_audit import Network, model_sets, now
+from sampled_individuals import supplement_rows
 
 ASSETS = {'.ply': 'ply', '.spz': 'spz', '.sog': 'sog', '.splat': 'splat', '.ksplat': 'ksplat',
           '.obj': 'obj', '.glb': 'glb', '.gltf': 'gltf', '.pcd': 'pcd', '.las': 'las',
@@ -152,7 +153,7 @@ def refresh_model_listing(repo, revision, network, cache):
     return result
 
 
-def prepare(catalog, metadata_dir, old_inventory, output, refresh_sources=(), cache=Path('.tmp/model-listings')):
+def prepare(catalog, metadata_dir, old_inventory, output, refresh_sources=(), cache=Path('.tmp/model-listings'), audit=None):
     output.mkdir(parents=True, exist_ok=True)
     metadata = {}
     for path in metadata_dir.glob('*.json.gz'):
@@ -162,6 +163,7 @@ def prepare(catalog, metadata_dir, old_inventory, output, refresh_sources=(), ca
     manifest = {'schemaVersion': 1, 'checkedAt': now()[:10], 'sources': [],
                 'scope': 'Individual listed model folders and standalone 3D assets; no complete load certification. Archive and capped-listing coverage is recorded per collection.'}
     counts = Counter()
+    audit_by_source = {row['sourceId']: row for row in (audit or {}).get('results', [])}
     network = Network()
     for entry in catalog['entries']:
         if entry['provider'] != 'huggingface':
@@ -195,6 +197,7 @@ def prepare(catalog, metadata_dir, old_inventory, output, refresh_sources=(), ca
                     rows.append(['ply', probe['path'], None, sample['archive']])
         rows = list({(row[0], row[1], row[3]): row for row in rows}.values())
         rows = group_components(rows)
+        rows = supplement_rows(rows, audit_by_source.get(entry['sourceId']), revision)
         value = {'schemaVersion': 1, 'datasetId': entry['id'], 'sourceId': entry['sourceId'], 'revision': revision,
                  'checkedAt': listing['checkedAt'][:10], 'listingComplete': listing.get('listingComplete') is True,
                  'scope': listing.get('scope', 'Public repository sibling listing; capped listings remain incomplete.'),
@@ -220,5 +223,7 @@ if __name__ == '__main__':
     parser.add_argument('--old-inventory', type=Path)
     parser.add_argument('--out', type=Path, default=Path('data/individual-datasets'))
     parser.add_argument('--refresh-model-source', action='append', default=[])
+    parser.add_argument('--audit', type=Path, default=Path('data/dataset-audit.json'))
     args = parser.parse_args()
-    prepare(read(args.catalog), args.metadata, args.old_inventory, args.out, args.refresh_model_source)
+    prepare(read(args.catalog), args.metadata, args.old_inventory, args.out, args.refresh_model_source,
+            audit=read(args.audit) if args.audit.exists() else None)

@@ -24,6 +24,6 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + `<p class="dataset-metadata-title">${escape(entry.title)}</p><dl>${facts.map(([label, value]) => `<div><dt>${label}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl>`
     + `<p class="note">${escape(entry.description)}</p>`
     + `<div class="dataset-metadata-links"><a href="${datasetPath(entry)}">Full metadata</a>`
-    + (entry.dataset ? `<a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Related models</a>` : '')
+    + (entry.dataset ? `<a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Related scenes</a>` : '')
     + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></article>`;
 }

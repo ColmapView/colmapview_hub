@@ -1,0 +1,17 @@
+[
+  { "name": "anonymous source", "entry": { "access": "public" }, "excluded": false },
+  { "name": "gated collection", "entry": { "access": "gated" }, "excluded": true },
+  { "name": "automatic approval", "entry": { "gated": "auto" }, "excluded": true },
+  { "name": "manual approval", "entry": { "gated": "manual" }, "excluded": true },
+  { "name": "ungated metadata", "entry": { "gated": false }, "excluded": false },
+  { "name": "gated audit delivery", "entry": { "delivery": "gated" }, "excluded": true },
+  { "name": "gated verification", "entry": { "access": "public", "verification": { "delivery": "gated" } }, "excluded": true },
+  { "name": "opening requires access", "entry": { "verification": { "opening": { "status": "access_required" } } }, "excluded": true },
+  { "name": "archive extraction", "entry": { "verification": { "opening": { "status": "extraction_required" } } }, "excluded": false },
+  { "name": "failed import", "entry": { "verification": { "opening": { "status": "load_failed" } } }, "excluded": false },
+  { "name": "browser failure", "entry": { "verification": { "delivery": "browser_request_failed" } }, "excluded": false },
+  { "name": "format conversion", "entry": { "verification": { "level": "conversion_needed" } }, "excluded": false },
+  { "name": "source agreement", "entry": { "access": "terms" }, "excluded": false },
+  { "name": "unknown compatibility", "entry": { "access": "unknown" }, "excluded": false },
+  { "name": "no verification", "entry": {}, "excluded": false }
+]

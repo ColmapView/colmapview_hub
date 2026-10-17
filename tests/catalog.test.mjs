@@ -3,16 +3,62 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { applyCatalogReviews, buildCatalog, parseCsv, publicUrl, sha256 } from '../scripts/catalog-import.mjs';
 import { catalogRenderer } from '../scripts/catalog-renderer.mjs';
-import { applyDatasetAudit, makeDatasetAudit, requiredProbeUrls } from '../scripts/dataset-audit-import.mjs';
+import { applyDatasetAudit, makeDatasetAudit, requiredProbeUrls, openingRequirement } from '../scripts/dataset-audit-import.mjs';
+import { isAccessRestricted, publicationSnapshot } from '../scripts/catalog-publication.mjs';
 import { applyLicenseCategories } from '../scripts/license-categories.mjs';
 
 const render = await catalogRenderer();
+
+test('both catalog builds share the access-restriction policy fixtures', async () => {
+  const cases = JSON.parse(await readFile('tests/fixtures/catalog-publication.json', 'utf8'));
+  for (const item of cases) assert.equal(isAccessRestricted(item.entry), item.excluded, item.name);
+});
+
+test('publication removes gated identities from all public metadata and recounts retained sources', () => {
+  const entry = (id, overrides = {}) => ({ id, sourceId: `hf:${id}`, provider: 'huggingface', facts: [], access: 'public', ...overrides });
+  const catalog = { entries: [entry('keep'), entry('gated', { access: 'gated' }), entry('stale'), entry('missing-audit', { access: 'gated' }),
+    entry('scene', { provider: 'public', sourceId: 'public:scene', facts: [{ label: 'Collection', value: 'Scenes' }] })],
+  importSummary: { hfCandidates: 10 }, auditSummary: { checkedAt: '2026-10-16' } };
+  const audit = { scope: 'Original inventory.', results: [
+    { sourceId: 'hf:keep', level: 'header_checked', delivery: 'browser_readable',
+      browserChecks: [{ url: 'https://example.com/model' }, { url: 'https://example.com/model' }], viewerImport: { status: 'passed' } },
+    { sourceId: 'hf:gated', level: 'unverified', delivery: 'not_tested' },
+    { sourceId: 'hf:stale', gated: 'auto', level: 'unverified', delivery: 'gated', accessChecks: [{}] },
+    { sourceId: 'hf:missing-audit', level: 'unavailable', delivery: 'not_tested' },
+    { sourceId: 'hf:rejected-gated', gated: 'manual', level: 'no_native_assets', delivery: 'gated' },
+    { sourceId: 'hf:rejected-public', level: 'no_native_assets', delivery: 'not_tested' }],
+  browserCoverage: { completed: 2, total: 2 }, evidenceRefresh: { checkedAt: '2026-10-17', browserUrls: 2, accessChecks: 1 } };
+  const registry = { checkedAt: '2026-10-16', sources: ['keep', 'gated', 'stale', 'missing-audit'].map((id, index) =>
+    ({ datasetId: id, sourceId: `hf:${id}`, count: index + 2, listingComplete: id === 'keep' })) };
+  const before = JSON.stringify({ catalog, audit, registry });
+  const published = publicationSnapshot(catalog, audit, registry, { checkedAt: '2026-10-16', total: 2,
+    sources: [{ count: 1 }, { count: 1 }], incompleteCollections: 0 });
+  assert.deepEqual(published.snapshot.entries.map(entry => entry.id), ['keep', 'scene']);
+  assert.deepEqual(published.audit.results.map(row => row.sourceId), ['hf:keep', 'hf:rejected-public']);
+  assert.equal(published.snapshot.importSummary.hfEntries, 1);
+  assert.equal(published.snapshot.importSummary.publicEntries, 1);
+  assert.equal(published.snapshot.individualSummary, undefined);
+  assert.equal(published.snapshot.assetInventorySummary.entries, 3);
+  assert.equal(published.snapshot.sceneSummary.entries, 2);
+  assert.equal(published.snapshot.sceneSummary.sourceEntriesWithModels, 2);
+  assert.equal(published.snapshot.sceneSummary.incompleteCollections, 0);
+  assert.equal(published.snapshot.auditSummary.sourcesAudited, 2);
+  assert.deepEqual(published.snapshot.auditSummary.delivery, { browser_readable: 1, not_tested: 1 });
+  assert.equal(published.audit.evidenceRefresh.browserUrls, 1);
+  assert.equal(published.audit.evidenceRefresh.accessChecks, 0);
+  assert.equal(published.audit.evidenceRefresh.directSamples, 1);
+  assert.equal(JSON.stringify({ catalog, audit, registry }), before, 'research evidence is not mutated');
+  for (const excluded of ['gated', 'stale', 'missing-audit']) {
+    assert(!published.snapshot.entries.some(entry => entry.id === excluded));
+  }
+});
 
 test('license categories recognize explicit terms and keep ambiguous or mixed permissions unresolved', () => {
   for (const license of ['MIT', ' apache-2.0 ', 'cc-by-4.0', 'cc-by-sa-4.0', 'gpl-3.0', 'odbl', 'cdla-permissive-2.0', 'mit | cc-by-4.0 | apache-2.0']) {
     assert.equal(render.classifyLicense(license), 'commercial', license);
   }
   for (const license of ['cc-by-nc-4.0', 'cc-by-nc-nd-4.0', 'cc-by-nc-sa-3.0', 'fair-noncommercial-research-license',
+    'waymo-dataset-license-non-commercial',
     'Custom Niantic non-commercial dataset agreement; file format itself is plain text/JPEG']) {
     assert.equal(render.classifyLicense(license), 'non-commercial', license);
   }
@@ -58,6 +104,23 @@ const audit = (overrides = {}) => ({ source_id: 'hf:owner/dataset', dataset: 'ow
   url: 'https://huggingface.co/datasets/owner/dataset/resolve/abc/', complete_model_records: '2', representative_pairs_checked: '1',
   all_sampled_paths_match: '0', current_sampled_layouts_unresolved: '1', qualification_limit: 'Sampled paths do not certify every scene.', ...overrides });
 const catalog = (overrides = {}) => buildCatalog({ hfRows: [hf()], publicRows: [], auditRows: [], sources, ...overrides });
+
+test('source-wide excluded RGB remains explicit without blocking a checked native model', () => {
+  const snapshot = catalog();
+  const sourceImages = { status: 'not_included', summary: 'The publisher excludes RGB images. Masks are included separately.', sourceUrl: 'https://example.org/README.md' };
+  const url = 'https://huggingface.co/datasets/owner/dataset/tree/abc/scene';
+  applyDatasetAudit(snapshot, { schemaVersion: 1, checkedAt: '2026-10-17', viewerVersion: '0.16.14', results: [{ sourceId: 'hf:owner/dataset',
+    checkedAt: '2026-10-17', level: 'header_checked', delivery: 'browser_readable', formats: ['colmap'], loadUrl: url,
+    summary: 'Model loaded; RGB excluded.', scope: 'Exact model only.', sourceImages, license: 'waymo-dataset-license-non-commercial',
+    viewerImport: { status: 'passed', sourceUrl: url, scope: 'Exact model.' }, probes: [], issues: [], browserChecks: [] }] });
+  const entry = snapshot.entries[0];
+  assert.equal(entry.statusLabel, 'Model checked; RGB not included');
+  assert.equal(entry.verification.sourceImages.status, 'not_included');
+  assert.equal(render.catalogSummary(entry).hasViewer, true);
+  assert.equal(render.catalogSummary(entry).licenseCategory, 'non-commercial');
+  assert.match(render.catalogEntryPage(entry), /Source RGB/);
+  assert.match(render.catalogEntryPage(entry), /publisher excludes RGB/);
+});
 
 test('CSV preserves quoted newlines, commas, escaped quotes, blank values and UTF-8 BOM', () => {
   assert.deepEqual(parseCsv('\uFEFFname,note,empty\r\n"one,two","line 1\nline ""2""",\r\n'), [
@@ -223,6 +286,46 @@ test('delivery and checked-link filters distinguish transport from format eviden
   assert.equal(render.isCatalogSummary({ ...base, hasViewer: 'yes' }), false);
 });
 
+test('a readable PLY header inside a model-free ZIP cannot create a direct viewer action', () => {
+  const url = 'https://huggingface.co/datasets/owner/dataset/resolve/abc/models.zip';
+  const result = { sourceId: 'hf:owner/dataset', level: 'header_checked', revision: 'abc', checkedAt: '2026-10-17T00:00:00Z',
+    formats: ['point_cloud_ply'], loadUrl: url, probes: [{ url, members: 2, completeDirectory: true, modelCount: 0,
+      probes: [{ path: 'models/airplane.ply', format: 'point_cloud_ply' }] }], issues: [], delivery: 'browser_readable',
+    summary: 'Contained PLY header checked.', scope: 'One contained member.', browserChecks: [] };
+  const entry = applyDatasetAudit(catalog(), { schemaVersion: 1, checkedAt: result.checkedAt, viewerVersion: '0.16.14', results: [result] }).entries[0];
+  assert.equal(entry.verification.level, 'header_checked');
+  assert.equal(entry.verification.opening.status, 'extraction_required');
+  assert.equal(entry.viewerUrl, undefined);
+  assert.equal(entry.dataUrl, url);
+  assert.match(entry.statusLabel, /Extract archive/);
+  assert.match(render.catalogEntryPage(entry), /Download archive/);
+  assert.doesNotMatch(render.catalogEntryPage(entry), /Try in ColmapView/);
+  assert.equal(openingRequirement({ ...result, formats: ['colmap'], probes: [{ ...result.probes[0], modelCount: 1 }] }), undefined);
+  assert.equal(openingRequirement({ ...result, probes: [{ ...result.probes[0], completeDirectory: false }] }), undefined);
+});
+
+test('gated sources keep format evidence but cannot offer direct file or viewer actions', () => {
+  const result = { sourceId: 'hf:owner/dataset', level: 'file_set_only', revision: 'abc', checkedAt: '2026-10-17T00:00:00Z',
+    formats: [], probes: [], issues: [], delivery: 'gated', gated: 'auto', summary: 'Filenames only.', scope: 'Public listing.', browserChecks: [] };
+  const entry = applyDatasetAudit(catalog(), { schemaVersion: 1, checkedAt: result.checkedAt, viewerVersion: '0.16.14', results: [result] }).entries[0];
+  assert.equal(entry.statusLabel, 'Access required');
+  assert.equal(entry.viewerUrl, undefined);
+  const html = render.catalogEntryPage({ ...entry, viewerUrl: 'https://example.org/invalid-old-link', candidateViewerUrl: 'https://example.org/invalid-trial' });
+  assert.match(html, /Get source access/);
+  assert.match(html, /download them there/);
+  assert.doesNotMatch(html, /Try in ColmapView|Try listed model|invalid-old-link|invalid-trial|sign in to Hugging Face in ColmapView/);
+});
+
+test('a failed exact import cannot become an unchecked trial after a browser read', () => {
+  const result = { sourceId: 'hf:owner/dataset', level: 'header_checked', revision: 'abc', checkedAt: '2026-10-17T00:00:00Z',
+    formats: ['point_cloud_ply'], loadUrl: 'https://example.org/invalid.ply', probes: [], issues: [], delivery: 'browser_readable',
+    summary: 'Header checked.', scope: 'One file.', browserChecks: [], viewerImport: { status: 'failed', scope: 'Original file.', error: 'Invalid body' } };
+  const entry = applyDatasetAudit(catalog(), { schemaVersion: 1, checkedAt: result.checkedAt, viewerVersion: '0.16.14', results: [result] }).entries[0];
+  assert.equal(entry.viewerUrl, undefined);
+  assert.equal(entry.verification.opening.status, 'load_failed');
+  assert.match(render.catalogEntryPage(entry), /Invalid body/);
+});
+
 test('loose public models use a manifest instead of treating a virtual directory as a downloadable object', () => {
   const snapshot = catalog({ hfRows: [], publicRows: [publicRow({ data_url: 'https://example.org/colmap/0/' })] });
   const original = snapshot.entries[0];
@@ -264,5 +367,6 @@ test('the committed snapshot preserves every supplied public row and every audit
   assert.match(first, /\/hub\/datasets\/page-2/);
   assert.doesNotMatch(first, /<img|og:image/);
   const headers = await readFile('public/_headers', 'utf8');
-  assert.match(headers, /\/hub\/datasets\/\*[\s\S]*Cache-Control: public, max-age=300, no-transform/);
+  assert.match(headers, /\/hub\/datasets\/\*[\s\S]*Cache-Control: public, no-cache, must-revalidate, no-transform/);
+  assert.match(headers, /Cloudflare-CDN-Cache-Control: no-store/);
 });

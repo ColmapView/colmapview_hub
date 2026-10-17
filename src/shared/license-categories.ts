@@ -15,6 +15,7 @@ const commercial = new Set([
 const nonCommercial = new Set([
   'cc-by-nc-3.0', 'cc-by-nc-4.0', 'cc-by-nc-nd-4.0', 'cc-by-nc-sa-3.0', 'cc-by-nc-sa-4.0',
   'fair-noncommercial-research-license',
+  'waymo-dataset-license-non-commercial',
   'custom niantic non-commercial dataset agreement; file format itself is plain text/jpeg',
 ]);
 

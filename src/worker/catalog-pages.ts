@@ -22,10 +22,15 @@ function social(url: string, title: string, description: string): string {
 
 export function catalogEntryPage(entry: CatalogEntry): string {
   const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(href)}" target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
-  const actions = action(entry.sourceUrl === entry.dataUrl ? 'Dataset URL' : 'Source', entry.sourceUrl)
-    + (entry.dataUrl && entry.dataUrl !== entry.sourceUrl ? action('Dataset URL', entry.dataUrl) : '')
-    + (entry.viewerUrl ? action('Try in ColmapView', entry.viewerUrl, true) : '');
-  const individualAction = entry.candidateViewerUrl ? action('Try listed model (unchecked)', entry.candidateViewerUrl) : '';
+  const gated = entry.access === 'gated' || entry.verification?.delivery === 'gated';
+  const blocked = gated || Boolean(entry.verification?.opening);
+  const viewerUrl = !blocked ? entry.viewerUrl : undefined;
+  const candidateViewerUrl = !blocked ? entry.candidateViewerUrl : undefined;
+  const dataLabel = entry.verification?.opening?.status === 'extraction_required' ? 'Download archive' : 'Dataset URL';
+  const actions = action(gated ? 'Get source access' : entry.sourceUrl === entry.dataUrl ? dataLabel : 'Source', entry.sourceUrl)
+    + (!gated && entry.dataUrl && entry.dataUrl !== entry.sourceUrl ? action(dataLabel, entry.dataUrl) : '')
+    + (viewerUrl ? action('Try in ColmapView', viewerUrl, true) : '');
+  const individualAction = candidateViewerUrl ? action('Try listed model (unchecked)', candidateViewerUrl) : '';
   const audits = entry.audits.map(audit => {
     const name = audit.sourceUrl ? decodeURIComponent(new URL(audit.sourceUrl).pathname.split('/').filter(part => part && part !== 'content').at(-1) || audit.sourceId) : audit.sourceId;
     return `<details class="dataset-audit"><summary>${escape(name)} · checked ${escape(audit.checkedAt)}</summary>`
@@ -38,15 +43,17 @@ export function catalogEntryPage(entry: CatalogEntry): string {
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
     + `<div class="actions">${actions}${individualAction}</div>`
     + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(catalogSummary(entry)))}">${escape(entry.dataset.label)}</a>. <a href="/hub/datasets/${entry.dataset.id}">Collection information</a>.</p>`
-      : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s individual models and scenes</a>.</p>`)
+      : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s named scenes</a>.</p>`)
     + (entry.verification ? '<section class="dataset-section"><h2>Loading status</h2>'
-      + factList([{ label: 'Format evidence', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },
+      + factList([{ label: 'Loading qualification', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },
+        ...(entry.verification.opening ? [{ label: 'Opening this entry', value: entry.verification.opening.summary }] : []),
         { label: 'Check scope', value: entry.verification.scope }, { label: 'Released viewer', value: entry.verification.viewerVersion }])
-      + (!entry.viewerUrl ? `<p class="note">${escape(entry.candidateViewerUrl
+      + (!viewerUrl ? `<p class="note">${escape(gated
+        ? 'Files require access on Hugging Face. Obtain access and download them there, then attempt local import. Direct gated loading and file compatibility have not been verified.'
+        : entry.verification.opening ? entry.verification.opening.summary : candidateViewerUrl
         ? 'The model link is based on the source file listing. Its format, browser access and complete loading need individual checks.'
         : entry.provider === 'public' && entry.verification.level === 'header_checked'
         ? 'Download and extract the source archive, then open this entry’s model or scene folder in ColmapView. The loading evidence identifies the inspected files.'
-        : entry.verification.delivery === 'gated' ? 'Obtain access from the source and sign in to Hugging Face in ColmapView. The source’s file format still needs the checks recorded below.'
           : 'Use the source link for the original files. The evidence below records the conversion, missing assets or checks needed before opening this source in ColmapView.')}</p>` : '')
       + '</section>' : '')
     + '<section class="dataset-section"><h2>Dataset information</h2>'
@@ -68,7 +75,7 @@ export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, coll
   const pagePath = (value: number) => value <= 1 ? (collections ? '/hub/datasets/collections' : '/hub/datasets/') : `/hub/datasets/${collections ? 'collection-' : ''}page-${value}`;
   const description = `${number(total)} source collections · Hugging Face and public datasets`;
   return page(location, collections ? 'Dataset collections' : 'Public datasets', '<div class="catalog-index">' + intro(collections ? 'Dataset collections' : 'Public datasets', description)
-    + '<p class="catalog-hint">Hover for source and license details. <a href="/hub/datasets/">Browse individual models and scenes</a>.</p>'
+    + '<p class="catalog-hint">Hover for source and license details. <a href="/hub/datasets/">Browse named scene datasets</a>.</p>'
     + `<form id="catalog-search" class="catalog-filters" role="search" data-page="${pageNumber}"${collections ? ' data-collections="true"' : ''}>`
     + '<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" placeholder="Search collections…" disabled></label>'
     + '<label>Source<select name="provider" aria-label="Source" disabled><option value="">All sources</option><option value="huggingface">Hugging Face</option><option value="public">Public sources</option></select></label>'
@@ -89,7 +96,7 @@ export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, coll
     + `<a class="button" id="catalog-next" href="${pagePath(pageNumber + 1)}"${pageNumber === pages ? ' hidden' : ''}>Next</a></nav>`
     + '<details class="catalog-notes"><summary>About this catalog</summary><div><p>Source metadata and sampled loading checks were recorded in October 2026. Collection checks cover the recorded sample; other models may need further checks.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a> · <a href="/hub/datasets/catalog.json" download>Download source metadata (JSON)</a></p></div></details></div>`,
-    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=hub-ui-2"></script>');
+    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=scene-ui-2"></script>');
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {
@@ -106,12 +113,20 @@ export function catalogAuditPage(snapshot: CatalogSnapshot): string {
     + factList(Object.entries(audit.levels).map(([level, count]) => ({ label: status(level), value: number(count) }))) + '</section>'
     + '<section class="dataset-section"><h2>Download delivery</h2>'
     + factList(Object.entries(audit.delivery).map(([delivery, count]) => ({ label: deliveryLabel(delivery), value: number(count) }))) + '</section>'
+    + (audit.evidenceRefresh ? '<section class="dataset-section"><h2>Access and loading follow-up</h2>'
+      + `<p>Evidence recorded through ${escape(audit.evidenceRefresh.checkedAt.slice(0, 10))}. Totals cover the published audit records; each check retains its original date. Import receipts cover the exact recorded samples.</p>`
+      + factList([{ label: 'Browser asset URLs checked', value: number(audit.evidenceRefresh.browserUrls) },
+        { label: 'Gated-source file access probes', value: number(audit.evidenceRefresh.accessChecks) },
+        { label: 'Original sampled asset imports', value: `${number(audit.evidenceRefresh.directSamples)} tested; ${number(audit.evidenceRefresh.directPassed)} passed; ${number(audit.evidenceRefresh.directFailed)} failed` },
+        { label: 'Native model files imported through controlled manifests', value: `${number(audit.evidenceRefresh.modelFileChecks)}; ordinary source links, RGB and masks not tested by these checks` },
+        { label: 'Original extracted members imported', value: `${number(audit.evidenceRefresh.extractedMembers)}; direct archive loading remains separate` }])
+      + '<p>Access-restricted sources are excluded from the public Hub and this download. PLY or splat headers inside a ZIP do not establish that the viewer can open the archive. Archive entries retain extraction requirements, with no checked viewer action.</p></section>' : '')
     + '<section class="dataset-section"><h2>What was checked</h2>'
     + '<p>Every repository in the saved Hugging Face search inventory was revisited, including previously excluded matches. The public scene and source entries were also rechecked. Current public metadata, reported repository licenses, file arrangements and bounded format samples are recorded.</p>'
     + '<p>COLMAP checks inspect representative camera, pose and point headers. PLY checks inspect vertex properties and counts. SPZ checks inspect the compression wrapper and format header. SOG checks inspect metadata and referenced property filenames. ZIP checks inspect complete central directories within a 16 MiB metadata budget and sample contained model headers.</p>'
     + '<p>One source can contain many models and archives. Direct checks sample one COLMAP model or up to three 3D files. Large collections sample up to three ZIPs; smaller collections examine up to eight, stopping when a native sample is established or the time budget expires. A negative archive finding requires every listed archive to be inspected without unresolved nested archives. Incomplete listings, access errors and unknown schemas stay qualified.</p>'
     + '<p>Browser reads use anonymous requests from the production viewer origin. Archive checks include an exact tail range. A successful browser read establishes access to those bytes; a header check establishes sampled format evidence. Complete scene parsing, GPU rendering, every photograph and mask, and licensing of underlying assets require separate evidence.</p>'
     + '<p>No dataset previews were generated. Reported licenses remain separate from technical compatibility.</p>'
-    + '<p><a href="/hub/datasets/dataset-audit.json" download>Download all audit records (JSON)</a></p></section>',
+    + '<p><a href="/hub/datasets/dataset-audit.json" download>Download public audit records (JSON)</a></p></section>',
     social(`${location.base}/datasets/audit`, 'Dataset audit', `${number(audit.sourcesAudited)} sources assessed with separate format and delivery evidence.`));
 }

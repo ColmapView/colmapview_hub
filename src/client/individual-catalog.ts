@@ -40,7 +40,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const metadata = document.createElement('a');
     metadata.textContent = 'Collection metadata';
     metadata.href = source.metadataUrl || `/hub/datasets/${source.id}`;
-    selection.replaceChildren(document.createTextNode(`Dataset: ${source.label} · ${source.count.toLocaleString()} entries${source.listingComplete ? '' : ' · listing incomplete'}. `), metadata);
+    selection.replaceChildren(document.createTextNode(`Dataset: ${source.label} · ${source.count.toLocaleString()} scenes${source.listingComplete ? '' : ' · listing incomplete'}. `), metadata);
   };
   const load = async (values: URLSearchParams, options: { append?: boolean; focus?: boolean; push?: boolean } = {}): Promise<void> => {
     pending?.abort();
@@ -51,9 +51,9 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (!options.append) canAppend = false;
     more.disabled = true;
     more.textContent = options.append ? 'Loading…' : 'Load more';
-    status.textContent = options.append ? 'Loading more entries…' : 'Searching…';
+    status.textContent = options.append ? 'Loading more scenes…' : 'Searching…';
     results.setAttribute('aria-busy', 'true');
-    let failure = options.append ? 'Could not load more entries. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
+    let failure = options.append ? 'Could not load more scenes. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
     try {
       const response = await fetch(`/hub/datasets/api/entries${values.size ? `?${values}` : ''}`, { signal: controller.signal });
       if (!response.ok) throw new Error('Dataset search is unavailable.');
@@ -90,7 +90,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       committed = new URLSearchParams(values);
       if (firstPage > 1) committed.set('page', String(firstPage)); else committed.delete('page');
       const offset = (firstPage - 1) * INDIVIDUAL_PAGE_SIZE;
-      count.textContent = data.total ? `Showing ${(offset + 1).toLocaleString()}–${(offset + loaded).toLocaleString()} of ${data.total.toLocaleString()} ${data.total === 1 ? 'entry' : 'entries'}` : 'No matching datasets';
+      count.textContent = data.total ? `Showing ${(offset + 1).toLocaleString()}–${(offset + loaded).toLocaleString()} of ${data.total.toLocaleString()} ${data.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
       committedCount = count.textContent;
       pageLabel.textContent = `${loaded.toLocaleString()} loaded`;
       previous.hidden = firstPage === 1;
@@ -100,7 +100,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       more.hidden = lastPage >= data.pages;
       updateSelection(data.dataset);
       if (options.push) history.pushState(null, '', urlFor(committed)); else history.replaceState(null, '', urlFor(committed));
-      status.textContent = options.append ? `Loaded ${cards.length} more entries.` : '';
+      status.textContent = options.append ? `Loaded ${cards.length} more scenes.` : '';
       if (options.focus) (options.append ? cards[0]?.querySelector<HTMLElement>('a') : count)?.focus();
     } catch {
       if (controller.signal.aborted || sequence !== request) return;

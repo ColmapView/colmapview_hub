@@ -19,10 +19,18 @@ export function applyIndividualListings(snapshot, registry) {
     if (Number.isSafeInteger(source.looseColmapCount)) update('Complete COLMAP models listed', source.looseColmapCount);
     if (Number.isSafeInteger(source.plyFileCount)) update('PLY files listed', source.plyFileCount);
   }
-  const publicScenes = snapshot.entries.filter(entry => entry.provider === 'public' && !bySource.has(entry.sourceId)
-    && entry.facts.some(fact => fact.label === 'Collection')).length;
-  snapshot.individualSummary = { checkedAt: registry.checkedAt, entries: registry.individualEntries + publicScenes,
-    sourceEntriesWithModels: registry.sources.filter(source => source.count).length + publicScenes,
-    incompleteCollections: registry.sources.filter(source => !source.listingComplete).length };
+  snapshot.individualSummary = individualListingSummary(snapshot.entries, registry);
   return snapshot;
+}
+
+/** Count only sources in this snapshot, including when publication excludes a source. */
+export function individualListingSummary(entries, registry) {
+  const ids = new Map(entries.map(entry => [entry.sourceId, entry.id]));
+  const active = registry.sources.filter(source => ids.get(source.sourceId) === source.datasetId);
+  const registered = new Set(active.map(source => source.sourceId));
+  const publicScenes = entries.filter(entry => entry.provider === 'public' && !registered.has(entry.sourceId)
+    && entry.facts.some(fact => fact.label === 'Collection')).length;
+  return { checkedAt: registry.checkedAt, entries: active.reduce((sum, source) => sum + source.count, 0) + publicScenes,
+    sourceEntriesWithModels: active.filter(source => source.count).length + publicScenes,
+    incompleteCollections: active.filter(source => !source.listingComplete).length };
 }
