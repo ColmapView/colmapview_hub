@@ -243,7 +243,7 @@ test('shows the landing page in the ColmapView frame', async ({ page }) => {
   await expect(page.locator('.dataset-card')).toHaveCount(48);
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await expect(page.locator('.dataset-card')).toHaveCount(24);
-  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('Hagenberg Ellipse');
+  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('000000 Arc de Berà');
   await expect(page.locator('.dataset-card')).toHaveCount(1);
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
@@ -254,12 +254,12 @@ test('shows the landing page in the ColmapView frame', async ({ page }) => {
   await expect(page.locator('.dataset-card').getByText('Browser read checked', { exact: true })).toHaveCount(24);
   await expect(page.getByLabel('Delivery', { exact: true }).locator('option[value="gated"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
-  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('Hagenberg Ellipse');
-  await page.getByRole('button', { name: 'Metadata for CV course Ellipse — Hagenberg Ellipse (camera + RGB)', exact: true }).click();
+  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('000000 Arc de Berà');
+  await page.getByRole('button', { name: /^Metadata for MegaScenes.*Arc de Berà/ }).click();
   await page.getByRole('link', { name: 'Full metadata', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Dataset information', exact: true })).toBeVisible();
   await expect(page.getByText('License (source metadata)', { exact: true })).toBeVisible();
-  await expect(page.getByText('not independently confirmed', { exact: true })).toBeVisible();
+  await expect(page.locator('main')).toContainText('Not specified');
   await expect(page.locator('img,iframe')).toHaveCount(0);
   await page.getByRole('link', { name: '← All datasets', exact: true }).click();
   await page.getByText('About this catalog', { exact: true }).click();

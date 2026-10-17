@@ -14,7 +14,7 @@ test('both catalog builds share the access-restriction policy fixtures', async (
   for (const item of cases) assert.equal(isAccessRestricted(item.entry), item.excluded, item.name);
 });
 
-test('publication removes gated identities from all public metadata and recounts retained sources', () => {
+test('publication removes gated and nonopening collections from all public metadata and recounts retained sources', () => {
   const entry = (id, overrides = {}) => ({ id, sourceId: `hf:${id}`, provider: 'huggingface', facts: [], access: 'public', ...overrides });
   const catalog = { entries: [entry('keep'), entry('gated', { access: 'gated' }), entry('stale'), entry('missing-audit', { access: 'gated' }),
     entry('scene', { provider: 'public', sourceId: 'public:scene', facts: [{ label: 'Collection', value: 'Scenes' }] })],
@@ -32,9 +32,9 @@ test('publication removes gated identities from all public metadata and recounts
     ({ datasetId: id, sourceId: `hf:${id}`, count: index + 2, listingComplete: id === 'keep' })) };
   const before = JSON.stringify({ catalog, audit, registry });
   const published = publicationSnapshot(catalog, audit, registry, { checkedAt: '2026-10-16', total: 2,
-    sources: [{ count: 1 }, { count: 1 }], incompleteCollections: 0 });
+    sources: [{ id: 'keep', count: 1 }, { id: 'scene', count: 1 }, { id: 'gated', count: 0 }], incompleteCollections: 0 });
   assert.deepEqual(published.snapshot.entries.map(entry => entry.id), ['keep', 'scene']);
-  assert.deepEqual(published.audit.results.map(row => row.sourceId), ['hf:keep', 'hf:rejected-public']);
+  assert.deepEqual(published.audit.results.map(row => row.sourceId), ['hf:keep']);
   assert.equal(published.snapshot.importSummary.hfEntries, 1);
   assert.equal(published.snapshot.importSummary.publicEntries, 1);
   assert.equal(published.snapshot.individualSummary, undefined);
@@ -42,8 +42,8 @@ test('publication removes gated identities from all public metadata and recounts
   assert.equal(published.snapshot.sceneSummary.entries, 2);
   assert.equal(published.snapshot.sceneSummary.sourceEntriesWithModels, 2);
   assert.equal(published.snapshot.sceneSummary.incompleteCollections, 0);
-  assert.equal(published.snapshot.auditSummary.sourcesAudited, 2);
-  assert.deepEqual(published.snapshot.auditSummary.delivery, { browser_readable: 1, not_tested: 1 });
+  assert.equal(published.snapshot.auditSummary.sourcesAudited, 1);
+  assert.deepEqual(published.snapshot.auditSummary.delivery, { browser_readable: 1 });
   assert.equal(published.audit.evidenceRefresh.browserUrls, 1);
   assert.equal(published.audit.evidenceRefresh.accessChecks, 0);
   assert.equal(published.audit.evidenceRefresh.directSamples, 1);

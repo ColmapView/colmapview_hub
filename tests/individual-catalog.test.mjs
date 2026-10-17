@@ -1,11 +1,21 @@
 import { strict as assert } from 'node:assert';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { catalogRenderer } from '../scripts/catalog-renderer.mjs';
 import { applyIndividualListings } from '../scripts/individual-listings.mjs';
 import { applyDatasetLabels } from '../scripts/dataset-labels.mjs';
 
 const render = await catalogRenderer();
+
+test('scene publication matches the viewer action gates', () => {
+  const cases = JSON.parse(readFileSync('tests/fixtures/scene-publication.json', 'utf8'));
+  for (const item of cases) {
+    const source = { provider: item.provider || 'huggingface', access: item.access || 'public' };
+    const record = ['id', 0, item.kind, 'scene', 'COLMAP', item.archive || null, null, item.proof || null];
+    assert.equal(render.canOpenIndividual(record, source), item.publish, item.name);
+  }
+});
 const parent = { id: 'hf-owner-dataset-123456abcdef', sourceId: 'hf:owner/dataset', title: 'owner/dataset', provider: 'huggingface',
   sourceUrl: 'https://huggingface.co/datasets/owner/dataset', dataUrl: 'https://huggingface.co/datasets/owner/dataset/tree/abc/first/sparse/0',
   viewerUrl: 'https://colmapview.opsiclear.com/?url=sample', license: 'cc-by-4.0', access: 'public', status: 'audited_header_checked',

@@ -31,32 +31,43 @@ test('removed gated collections have no page, search result or dataset option', 
   expect((await page.request.get(`/hub/datasets/individual/sources/${gatedSource}.json`)).status()).toBe(404);
 });
 
-test('a PLY-only ZIP collection exposes extraction requirements instead of a checked viewer action', async ({ page }) => {
-  await page.goto('/hub/datasets/hf-imchuling-3d-room-collections-bcd1917cdfaa');
-  await expect(page.locator('.dataset-tags').getByText('Extract archive before loading', { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Download archive' })).toBeVisible();
-  await expect(page.locator('main')).toContainText('cannot open this archive directly');
+test('extraction-only collections are removed from pages and public metadata', async ({ page }) => {
+  const source = 'hf-imchuling-3d-room-collections-bcd1917cdfaa';
+  expect((await page.goto(`/hub/datasets/${source}`))!.status()).toBe(404);
+  expect((await page.request.get(`/hub/datasets/individual/sources/${source}.json`)).status()).toBe(404);
+  const response = await page.request.get(`/hub/datasets/api/entries?dataset=${source}`);
+  expect(await response.json()).toMatchObject({ total: 0, entries: [], dataset: null });
 });
 
-test('standalone extracted members remain collection evidence and do not become scene cards', async ({ page }) => {
+test('standalone extracted members and their nonopening collections are absent', async ({ page }) => {
   const member = id('hf:paroj/ycbev', 'ply', 'models_eval/obj_000001.ply', 'ycbv_models.zip');
   expect((await page.goto(`/hub/datasets/entry/${member}`))!.status()).toBe(404);
-  await page.goto('/hub/datasets/hf-paroj-ycbev-sd-c89da44da829');
-  await expect(page.getByRole('link', { name: 'Download archive' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveCount(0);
+  expect((await page.goto('/hub/datasets/hf-paroj-ycbev-sd-c89da44da829'))!.status()).toBe(404);
 });
 
-test('checked standalone samples remain available as collection evidence', async ({ page }) => {
+test('a checked standalone file does not keep a collection without loadable named scenes published', async ({ page }) => {
   const audit = JSON.parse(readFileSync('data/dataset-audit.json', 'utf8')) as { results: { sourceId: string; loadUrl?: string; gated?: boolean | string; viewerImport?: { status: string } }[] };
-  const sample = audit.results.find(row => row.sourceId.startsWith('hf:') && row.loadUrl?.endsWith('.ply') && !row.gated && row.viewerImport?.status === 'passed');
-  expect(sample).toBeTruthy();
   const catalog = JSON.parse(readFileSync('data/catalog.json', 'utf8')) as { entries: { id: string; sourceId: string }[] };
+  const published = JSON.parse(readFileSync('public/hub/datasets/catalog.json', 'utf8')) as typeof catalog;
+  const retained = new Set(published.entries.map(entry => entry.sourceId));
+  const sample = audit.results.find(row => row.sourceId.startsWith('hf:') && row.loadUrl?.endsWith('.ply') && !row.gated
+    && row.viewerImport?.status === 'passed' && !retained.has(row.sourceId) && catalog.entries.some(entry => entry.sourceId === row.sourceId));
+  expect(sample).toBeTruthy();
   const collection = catalog.entries.find(entry => entry.sourceId === sample!.sourceId)!;
-  await page.goto(`/hub/datasets/${collection.id}`);
-  await expect(page.getByRole('link', { name: 'Try in ColmapView', exact: true })).toHaveAttribute('href',
-    'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(sample!.loadUrl!));
-  await expect(page.getByRole('link', { name: 'Try listed model (unchecked)' })).toHaveCount(0);
+  expect((await page.goto(`/hub/datasets/${collection.id}`))!.status()).toBe(404);
+  expect((await page.request.get(`/hub/datasets/individual/sources/${collection.id}.json`)).status()).toBe(404);
+});
+
+test('reviewed missing models and unsupported spherical cameras have no public scenes or collection pages', async ({ page }) => {
+  for (const source of ['hf-perry233-astrovision-data-a1cdfc4cd9d3', 'hf-siminkou-dyomni-9f8f10c760ba']) {
+    expect((await page.goto(`/hub/datasets/${source}`))!.status()).toBe(404);
+    const response = await page.request.get(`/hub/datasets/api/entries?dataset=${source}`);
+    expect(await response.json()).toMatchObject({ total: 0, entries: [], dataset: null });
+    expect((await page.request.get(`/hub/datasets/individual/sources/${source}.json`)).status()).toBe(404);
+  }
+  const removed = id('hf:SiminKou/DyOmni', 'colmap', 'Ayutthaya/output_dir/colmap');
+  expect((await page.goto(`/hub/datasets/entry/${removed}`))!.status()).toBe(404);
+  expect((await page.request.get(`/hub/datasets/open/${removed}`, { maxRedirects: 0 })).status()).toBe(404);
 });
 
 test('Hourglass and other standalone file names are absent from scene browsing', async ({ page }) => {

@@ -27,6 +27,38 @@ AUDIT_FORMATS = {'colmap': 'COLMAP', 'point_cloud_ply': 'XYZ point-cloud PLY', '
 KIND_LABELS = {'colmap': 'COLMAP reconstruction', 'cameras': 'Cameras and poses', 'ply': 'PLY model',
                'spz': 'Gaussian splat', 'sog': 'Gaussian splat', 'splat': 'Gaussian splat', 'ksplat': 'Gaussian splat',
                'camera-metadata': 'Camera metadata', 'camera-scene': 'Camera dataset', 'splat-scene': 'Gaussian scene', 'scene': 'Public scene'}
+FAILED_DELIVERY = {'gated', 'access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error'}
+
+
+def can_open_scene(entry, row, proof):
+    """Publish named scenes with a viewer action; match canOpenIndividual's gates."""
+    kind, _, _, archive = row
+    proof = proof or {}
+    if (entry.get('status') == 'unsupported_content' or entry.get('access') != 'public' or archive
+            or proof.get('opening') or proof.get('delivery') in FAILED_DELIVERY
+            or proof.get('level') in {'conversion_needed', 'no_native_assets', 'unavailable'}):
+        return False
+    return bool(proof.get('viewerUrl')) or entry.get('provider') == 'huggingface' and kind == 'colmap'
+
+
+def reviewed_scene_exclusions(catalog, policy):
+    if policy.get('schemaVersion') != 1 or not isinstance(policy.get('reviews'), list):
+        raise ValueError('Invalid scene publication reviews')
+    entries = {entry['sourceId']: entry for entry in catalog['entries']}
+    excluded = set()
+    for review in policy['reviews']:
+        entry = entries.get(review['sourceId'])
+        revision = next((fact['value'] for fact in (entry or {}).get('facts', []) if fact['label'] == 'Pinned revision'), None)
+        if not entry or revision != review.get('revision'):
+            raise ValueError(f'Scene exclusion revision changed; recheck {review["sourceId"]}')
+        if not review.get('reason') or not review.get('summary') or not review.get('scenes'):
+            raise ValueError('Scene exclusions require a reason and exact scene paths')
+        for scene in review['scenes']:
+            key = (review['sourceId'], scene['kind'], scene['path'], scene.get('archive'))
+            if key in excluded:
+                raise ValueError('Duplicate scene exclusion')
+            excluded.add(key)
+    return excluded
 
 
 def read(path):
@@ -169,9 +201,11 @@ def build(root=Path('.')):
     registry_bytes = (root / 'data/individual-datasets.json').read_bytes()
     registry = json.loads(registry_bytes)
     audit = {row['sourceId']: row for row in read(root / 'data/dataset-audit.json')['results']}
+    policy_bytes = (root / 'data/scene-exclusions.json').read_bytes()
+    scene_exclusions = reviewed_scene_exclusions(catalog, json.loads(policy_bytes))
     excluded = {row['sourceId'] for row in [*catalog['entries'], *audit.values()] if is_access_restricted(row)}
     generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes
-                                + (root / 'data/dataset-audit.json').read_bytes() + Path(__file__).read_bytes()
+                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + Path(__file__).read_bytes()
                                 + Path(__file__).with_name('scene_datasets.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
     current = output / 'index.json'
@@ -205,7 +239,7 @@ def build(root=Path('.')):
             mapping[key] = array.array('I')
         mapping[key].append(ordinal)
 
-    for entry in catalog['entries']:
+    for entry_number, entry in enumerate(catalog['entries']):
         if entry['sourceId'] in excluded:
             continue
         source_index = len(sources)
@@ -239,17 +273,9 @@ def build(root=Path('.')):
         source = {'id': entry['id'], 'sourceId': entry['sourceId'], 'title': entry['title'], 'label': dataset_label,
                   'provider': entry['provider'], 'license': entry['license'],
                   **({'licenseCategory': entry['licenseCategory']} if 'licenseCategory' in entry else {}), 'access': entry['access'],
-                  'start': total, 'count': len(rows), 'listingComplete': complete}
-        sources.append(source)
-        source_entry = {**entry, 'facts': [({**fact, 'label': 'Listed 3D assets and model file sets'} if fact['label'] == 'Individual model or scene entries listed' else fact)
-                                          for fact in entry['facts']] + [{'label': 'Named scene datasets identified', 'value': str(len(rows))}]}
-        write(f'sources/{entry["id"]}.json', source_entry)
+                  'start': total, 'count': 0, 'listingComplete': complete}
         for row in rows:
             kind, path, files, archive = row
-            item_id = identity(entry['sourceId'], row)
-            if item_id in ids[item_id[-24:-22]]:
-                raise ValueError('Duplicate individual model identity')
-            ids[item_id[-24:-22]][item_id] = total
             if kind == 'scene':
                 proof = {**entry.get('verification', {}), 'statusLabel': entry['statusLabel']}
                 if entry.get('viewerUrl'):
@@ -269,6 +295,15 @@ def build(root=Path('.')):
                 proof['sourceImages'] = source_images
                 proof['statusLabel'] = 'Model checked; RGB not included' if proof.get('viewerUrl') else 'RGB not included; load unverified'
                 proof['summary'] += ' ' + source_images['summary']
+            if not can_open_scene(entry, row, proof) or (entry['sourceId'], kind, path, archive) in scene_exclusions:
+                continue
+            if not source['count']:
+                sources.append(source)
+            source['count'] += 1
+            item_id = identity(entry['sourceId'], row)
+            if item_id in ids[item_id[-24:-22]]:
+                raise ValueError('Duplicate individual model identity')
+            ids[item_id[-24:-22]][item_id] = total
             gated = entry['access'] == 'gated' or bool(proof and proof.get('delivery') == 'gated')
             level = 'Access required' if gated else proof.get('statusLabel', 'Files listed; load not checked') if proof else 'Extraction required; load unverified' if archive else 'Files listed; load not checked'
             delivery = 'gated' if gated else proof.get('delivery', 'not_tested') if proof else 'not_tested'
@@ -289,8 +324,12 @@ def build(root=Path('.')):
             if len(pack) == PACK_SIZE:
                 write(f'packs/{(total - 1) // PACK_SIZE}.json', pack)
                 pack = []
-        if source_index % 100 == 0:
-            print(f'Indexed {source_index + 1}/{len(catalog["entries"])} source entries; {total:,} individual records', flush=True)
+        if source['count']:
+            source_entry = {**entry, 'facts': [({**fact, 'label': 'Listed 3D assets and model file sets'} if fact['label'] == 'Individual model or scene entries listed' else fact)
+                                              for fact in entry['facts']] + [{'label': 'Named scene datasets identified', 'value': str(source['count'])}]}
+            write(f'sources/{entry["id"]}.json', source_entry)
+        if entry_number % 100 == 0:
+            print(f'Indexed {entry_number + 1}/{len(catalog["entries"])} source entries; {total:,} individual records', flush=True)
     if pack:
         write(f'packs/{(total - 1) // PACK_SIZE}.json', pack)
     for shard, mapping in ids.items():
@@ -316,7 +355,7 @@ def build(root=Path('.')):
                 'levels': dict(levels), 'delivery': dict(deliveries),
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
                 'unit': 'named_scene',
-                'scope': 'Named scene datasets established by reconstruction sets, camera metadata or explicit public scene records. Files and companion assets remain inside their scene; loose asset filenames do not establish scenes.'}
+                'scope': 'Named scene datasets with eligible viewer links. Unsupported, inaccessible, extraction-only and source-only scenes are excluded. Unchecked native links retain their qualification labels; inclusion does not certify every photo or mask.'}
     write('index.json', manifest)
     print(f'Built {total:,} individual records from {len(sources):,} source entries; previews remain on hold.', flush=True)
 

@@ -1,0 +1,373 @@
+{
+  "schemaVersion": 1,
+  "reviews": [
+    {
+      "sourceId": "hf:Perry233/astrovision-data",
+      "revision": "5083daa3b14d3efb944f1dee771ac35ffdbb7802",
+      "checkedAt": "2026-10-17",
+      "viewerVersion": "0.17.0",
+      "reason": "model_files_unavailable",
+      "summary": "The October 17 per-scene audit returned HTTP 404 for the required original model files at these exact pinned scene paths. A repository listing is not a working model download.",
+      "scenes": [
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_ceres/00000007"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_ceres/00000011"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_ceres/00000014"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_ceres/00000022"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_ceres/00000030"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_ceres/00000032"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_ceres/00000039"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_vesta/00000007"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_vesta/00000011"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_vesta/00000014"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_vesta/00000022"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_vesta/00000030"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_vesta/00000032"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/dawn_vesta/00000039"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/orex_bennu/00000007"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/orex_bennu/00000011"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/orex_bennu/00000014"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/orex_bennu/00000022"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/orex_bennu/00000030"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/orex_bennu/00000032"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/orex_bennu/00000039"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosetta_67p/00000007"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosetta_67p/00000011"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosetta_67p/00000014"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosetta_67p/00000022"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosetta_67p/00000030"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosetta_67p/00000032"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosetta_67p/00000039"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosiris_67p/00000007"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosiris_67p/00000011"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosiris_67p/00000014"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosiris_67p/00000022"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosiris_67p/00000030"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosiris_67p/00000032"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/test/rosiris_67p/00000039"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000000"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000001"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000002"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000003"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000004"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000005"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000006"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000008"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000009"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000010"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000012"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000013"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000015"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000016"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000017"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000018"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000019"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000020"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000021"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000023"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000024"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000025"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000026"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000027"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000028"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000029"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000031"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000033"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000034"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000035"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000036"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000037"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000038"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000040"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000041"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000042"
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:SiminKou/DyOmni",
+      "revision": "27a0d8974fa10a3063aadf78739bd02e161bf94f",
+      "checkedAt": "2026-10-17",
+      "viewerVersion": "0.17.0",
+      "reason": "unsupported_camera_model",
+      "summary": "These pinned scene models declare a custom spherical text camera unsupported by ColmapView 0.17.0. The October 17 per-scene audit rejects their camera records.",
+      "scenes": [
+        {
+          "kind": "colmap",
+          "path": "Ayutthaya/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Basketball/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "CableCar/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Campus/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "City/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Corridor/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Floor/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Garden/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "GreatWall/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Lab/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Shop/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Square/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Stage/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Street/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Studio/output_dir/colmap"
+        },
+        {
+          "kind": "colmap",
+          "path": "Tunnel/output_dir/colmap"
+        }
+      ]
+    }
+  ]
+}

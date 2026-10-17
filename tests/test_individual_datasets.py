@@ -8,12 +8,35 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from prepare_individual_datasets import individual_records, group_components
-from build_individual_catalog import build, identity, is_access_restricted, item_evidence, tokens
+from build_individual_catalog import build, can_open_scene, identity, is_access_restricted, item_evidence, reviewed_scene_exclusions, tokens
 from sampled_individuals import supplement_rows
 from scene_datasets import MAX_SCENE_FILE_LINKS, scene_records
 
 
 class IndividualDatasetsTests(unittest.TestCase):
+    def test_scene_publication_matches_the_viewer_action_gates(self):
+        cases = json.loads((Path(__file__).parent / 'fixtures/scene-publication.json').read_text(encoding='utf8'))
+        for case in cases:
+            with self.subTest(case['name']):
+                entry = {'provider': case.get('provider', 'huggingface'), 'access': case.get('access', 'public')}
+                row = [case['kind'], 'scene', None, case.get('archive')]
+                self.assertEqual(can_open_scene(entry, row, case.get('proof')), case['publish'])
+
+    def test_reviewed_scene_exclusions_are_exact_and_require_the_pinned_revision(self):
+        entry = {'sourceId': 'hf:owner/data', 'facts': [{'label': 'Pinned revision', 'value': 'abc'}]}
+        review = {'sourceId': entry['sourceId'], 'revision': 'abc', 'reason': 'unsupported_camera_model',
+                  'summary': 'Unsupported spherical camera.', 'scenes': [{'kind': 'colmap', 'path': 'bad/sparse/0'}]}
+        policy = {'schemaVersion': 1, 'reviews': [review]}
+        self.assertEqual(reviewed_scene_exclusions({'entries': [entry]}, policy),
+                         {(entry['sourceId'], 'colmap', 'bad/sparse/0', None)})
+        entry['facts'][0]['value'] = 'def'
+        with self.assertRaisesRegex(ValueError, 'revision changed; recheck'):
+            reviewed_scene_exclusions({'entries': [entry]}, policy)
+        entry['facts'][0]['value'] = 'abc'
+        policy['reviews'].append(review)
+        with self.assertRaisesRegex(ValueError, 'Duplicate scene exclusion'):
+            reviewed_scene_exclusions({'entries': [entry]}, policy)
+
     def test_publication_policy_matches_the_collection_build(self):
         cases = json.loads((Path(__file__).parent / 'fixtures/catalog-publication.json').read_text(encoding='utf8'))
         for case in cases:
@@ -42,7 +65,7 @@ class IndividualDatasetsTests(unittest.TestCase):
                                    'file': file, 'sha256': hashlib.sha256(raw).hexdigest()})
             entries.append({'id': 'public-scene-0123456789ab', 'sourceId': 'public:scene', 'title': 'Public scene', 'provider': 'public',
                             'facts': [{'label': 'Collection', 'value': 'Scenes'}], 'access': 'public', 'license': 'cc0',
-                            'formats': ['COLMAP'], 'statusLabel': 'Files listed'})
+                            'formats': ['COLMAP'], 'statusLabel': 'Files listed', 'viewerUrl': 'https://colmapview.opsiclear.com/?url=sample'})
             entries[0]['checkedAt'] = '2026-10-17'
             entries[0]['verification'] = {'sourceImages': {'status': 'not_included',
                 'summary': 'The publisher excludes original RGB images.', 'sourceUrl': 'https://example.org/readme'}}
@@ -53,6 +76,7 @@ class IndividualDatasetsTests(unittest.TestCase):
             save('catalog.json', catalog)
             save('individual-datasets.json', {'sources': registered, 'checkedAt': '2026-10-16', 'scope': 'Fixture'})
             save('dataset-audit.json', audit)
+            save('scene-exclusions.json', {'schemaVersion': 1, 'reviews': []})
             build(root)
             output = root / 'public/hub/datasets/individual'
             before = json.loads((output / 'index.json').read_text(encoding='utf8'))
@@ -91,6 +115,51 @@ class IndividualDatasetsTests(unittest.TestCase):
                 shard = hashlib.sha256(token.encode()).hexdigest()[:3]
                 path = output / 'tokens' / (shard + '.json')
                 self.assertTrue(not path.exists() or token not in json.loads(path.read_text(encoding='utf8')))
+
+    def test_publication_removes_nonopening_scenes_and_cleans_excluded_assets(self):
+        temporary = Path(__file__).resolve().parents[1] / '.tmp'
+        temporary.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='scene-publication-', dir=temporary) as directory:
+            root = Path(directory)
+            data = root / 'data'
+            (data / 'individual-datasets').mkdir(parents=True)
+            entry = {'id': 'hf-owner-data-0123456789ab', 'sourceId': 'hf:owner/data', 'title': 'Scenes', 'provider': 'huggingface',
+                     'access': 'public', 'license': 'cc0', 'status': 'audited_header_checked', 'statusLabel': 'Sample failed',
+                     'facts': [{'label': 'Pinned revision', 'value': 'abc'}], 'verification': {'level': 'header_checked'}}
+            rows = [['colmap', f'{name}/sparse/0', {role: f'{name}/sparse/0/{role}.bin' for role in ['cameras', 'images', 'points3d']}, archive]
+                    for name, archive in [('keep', None), ('failed', None), ('extract', 'bundle.zip')]]
+            rows.append(['camera-metadata', 'source-only/transforms.json', None, None])
+            listing = {'datasetId': entry['id'], 'sourceId': entry['sourceId'], 'revision': 'abc', 'listingComplete': True, 'items': rows}
+            raw = gzip.compress(json.dumps(listing).encode())
+            filename = entry['id'] + '.json.gz'
+            (data / 'individual-datasets' / filename).write_bytes(raw)
+            def save(name, value):
+                (data / name).write_text(json.dumps(value), encoding='utf8')
+            save('catalog.json', {'entries': [entry]})
+            save('individual-datasets.json', {'checkedAt': '2026-10-17', 'sources': [{'datasetId': entry['id'], 'sourceId': entry['sourceId'],
+                 'count': len(rows), 'file': filename, 'sha256': hashlib.sha256(raw).hexdigest()}]})
+            url = 'https://huggingface.co/datasets/owner/data/tree/abc/failed/sparse/0'
+            save('dataset-audit.json', {'results': [{'sourceId': entry['sourceId'], 'modelDirectory': 'failed/sparse/0', 'revision': 'abc',
+                 'loadUrl': url, 'viewerImport': {'sourceUrl': url, 'status': 'failed'}}]})
+            policy = {'schemaVersion': 1, 'reviews': []}
+            save('scene-exclusions.json', policy)
+            build(root)
+            output = root / 'public/hub/datasets/individual'
+            before = json.loads((output / 'index.json').read_text(encoding='utf8'))
+            self.assertEqual(before['total'], 1)
+            self.assertEqual(before['sources'][0]['count'], 1)
+            record = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))[0]
+            self.assertEqual(record[3], 'keep/sparse/0', 'a failed sibling does not block a different native scene')
+            policy['reviews'] = [{'sourceId': entry['sourceId'], 'revision': 'abc', 'reason': 'model_files_unavailable',
+                'summary': 'Original model URLs return 404.', 'scenes': [{'kind': 'colmap', 'path': 'keep/sparse/0'}]}]
+            save('scene-exclusions.json', policy)
+            build(root)
+            after = json.loads((output / 'index.json').read_text(encoding='utf8'))
+            self.assertNotEqual(before['generation'], after['generation'])
+            self.assertEqual(after['total'], 0)
+            self.assertEqual(after['sources'], [])
+            for child in ['packs', 'ids', 'tokens', 'facets', 'sources']:
+                self.assertEqual(list((output / child).glob('*.json')), [], child)
 
     def model(self, root):
         return [f'{root}/sparse/0/{name}.bin' for name in ('cameras', 'images', 'points3D')]

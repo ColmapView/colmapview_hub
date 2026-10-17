@@ -9,9 +9,11 @@ export function isAccessRestricted(entry) {
 
 /** Research inputs remain complete. Only this projection is published. */
 export function publicationSnapshot(catalog, audit, registry, scenes) {
+  const active = new Set(scenes.sources.filter(source => source.count).map(source => source.id));
   const excluded = new Set([...catalog.entries, ...audit.results].filter(isAccessRestricted).map(entry => entry.sourceId));
-  const entries = catalog.entries.filter(entry => !excluded.has(entry.sourceId));
-  const results = audit.results.filter(entry => !excluded.has(entry.sourceId));
+  const entries = catalog.entries.filter(entry => active.has(entry.id) && !excluded.has(entry.sourceId));
+  const publishedSources = new Set(entries.map(entry => entry.sourceId));
+  const results = audit.results.filter(entry => publishedSources.has(entry.sourceId) && !excluded.has(entry.sourceId));
   const counts = key => results.reduce((totals, row) => {
     const value = row[key] || 'not_tested';
     totals[value] = (totals[value] || 0) + 1;
@@ -27,7 +29,7 @@ export function publicationSnapshot(catalog, audit, registry, scenes) {
     modelFileChecks: results.filter(row => row.modelFileImport).length,
     extractedMembers: results.filter(row => row.extractedMemberImport).length } : undefined;
   const publishedAudit = { ...audit, results,
-    scope: `${audit.scope} Access-restricted sources are excluded from this public download.`,
+    scope: `${audit.scope} Only collections with published, viewer-eligible named scenes are included in this public download.`,
     ...(audit.browserCoverage ? { browserCoverage: { completed: browserUrls, total: browserUrls } } : {}),
     ...(evidenceRefresh ? { evidenceRefresh } : {}) };
   const base = { ...catalog };
@@ -36,7 +38,8 @@ export function publicationSnapshot(catalog, audit, registry, scenes) {
     importSummary: { ...catalog.importSummary,
       hfEntries: entries.filter(entry => entry.provider === 'huggingface').length,
       publicEntries: entries.filter(entry => entry.provider === 'public' && !entry.sourceId.startsWith('audit:')).length,
-      additionalAuditEntries: entries.filter(entry => entry.sourceId.startsWith('audit:')).length },
+      additionalAuditEntries: entries.filter(entry => entry.sourceId.startsWith('audit:')).length,
+      unlinkedAuditSourceIds: (catalog.importSummary.unlinkedAuditSourceIds || []).filter(sourceId => publishedSources.has(sourceId)) },
     ...(catalog.auditSummary ? { auditSummary: { ...catalog.auditSummary,
       sourcesAudited: results.length, levels: counts('level'), delivery: counts('delivery'),
       ...(evidenceRefresh ? { evidenceRefresh } : {}) } } : {}),

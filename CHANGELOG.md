@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1 — 2026-10-17
+
+- Remove unsupported, nonopening, inaccessible and extraction-only cases from scene browsing, collections and public metadata; retain 5,267 viewer-eligible scenes across 133 collections.
+- Exclude 87 additional pinned models with unavailable files or unsupported spherical cameras, and require a new review when their source revision changes.
+- Preserve scene identities, loading evidence and working model/mask-only launches while keeping the complete research inventory offline.
+
 ## 0.7.0 — 2026-10-17
 
 - Show one card per named scene, grouping camera splits, reconstruction variants and companion assets. Standalone model files remain inside collection evidence.
