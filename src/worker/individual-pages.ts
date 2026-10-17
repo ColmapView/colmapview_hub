@@ -48,5 +48,5 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + '<p>Each entry identifies one model or scene. Related files stay together. Counts cover listed models; uninspected archives and incomplete listings may contain more. A listed model has not necessarily passed a complete load.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/collections">Dataset collections</a> · <a href="/hub/datasets/audit">Audit and coverage</a></p>`
     + '<p><a href="/hub/datasets/individual/index.json" download>Labels and coverage (JSON)</a> · <a href="/hub/datasets/catalog.json" download>Source metadata (JSON)</a></p></div></details></div>',
-    '<script type="module" src="/hub/assets/individual-catalog.js?v=hub-ui-1"></script>');
+    '<script type="module" src="/hub/assets/individual-catalog.js?v=hub-ui-2"></script>');
 }

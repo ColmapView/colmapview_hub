@@ -7,6 +7,9 @@ const more = document.querySelector<HTMLButtonElement>('#catalog-more');
 if (form && more) {
   const results = document.querySelector<HTMLElement>('#catalog-results')!;
   const count = document.querySelector<HTMLElement>('#catalog-count')!;
+  const status = document.querySelector<HTMLElement>('#catalog-status');
+  const retry = document.querySelector<HTMLButtonElement>('#catalog-retry');
+  const initialCount = count.textContent || '';
   const pageLabel = document.querySelector<HTMLElement>('#catalog-page')!;
   const previous = document.querySelector<HTMLAnchorElement>('#catalog-prev')!;
   const next = document.querySelector<HTMLAnchorElement>('#catalog-next')!;
@@ -64,14 +67,33 @@ if (form && more) {
     render(false, true);
   });
   more.addEventListener('click', event => render(true, event.detail === 0));
+  let loading = false;
   const load = async () => {
-    const response = await fetch('/hub/datasets/catalog-index.json');
-    if (!response.ok) throw new Error('Catalog search is unavailable');
-    const data: unknown = await response.json();
-    if (!Array.isArray(data) || !data.every(isCatalogSummary)) throw new Error('Invalid catalog index');
-    entries = data;
-    for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLButtonElement>('input,select,button')) control.disabled = false;
-    render();
+    if (loading) return;
+    loading = true;
+    const focus = retry === document.activeElement;
+    if (retry) retry.disabled = true;
+    if (status) status.textContent = 'Loading collection search…';
+    try {
+      const response = await fetch('/hub/datasets/catalog-index.json');
+      if (!response.ok) throw new Error('Catalog search is unavailable');
+      const data: unknown = await response.json();
+      if (!Array.isArray(data) || !data.every(isCatalogSummary)) throw new Error('Invalid catalog index');
+      entries = data;
+      for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLButtonElement>('input,select,button')) control.disabled = false;
+      render(false, focus);
+      if (status) status.textContent = '';
+      if (retry) retry.hidden = true;
+    } catch {
+      count.textContent = `Unfiltered collections · ${initialCount}`;
+      const message = 'Collection search is unavailable. Retry, or browse the pages below.';
+      if (status) status.textContent = message; else count.textContent = message;
+      if (retry) retry.hidden = false;
+    } finally {
+      loading = false;
+      if (retry) retry.disabled = false;
+    }
   };
-  void load().catch(() => { count.textContent = 'Search is unavailable. Browse the dataset pages below.'; });
+  retry?.addEventListener('click', () => { void load(); });
+  void load();
 }

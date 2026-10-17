@@ -25,7 +25,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   const filters = entry || open ? new URLSearchParams() : individualFilters(url.searchParams);
   const cacheUrl = new URL(url.pathname, location.origin);
   cacheUrl.search = filters.toString();
-  cacheUrl.searchParams.set('_ui', 'hub-design-1');
+  cacheUrl.searchParams.set('_ui', 'hub-design-2');
   const key = new Request(cacheUrl);
   const cached = await caches.default.match(key);
   if (cached) {

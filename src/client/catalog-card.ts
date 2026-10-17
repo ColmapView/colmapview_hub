@@ -10,25 +10,52 @@ export function catalogCardElement(entry: CatalogSummary): HTMLElement {
 
 export function initializeCatalogMetadata(): void {
   const cardFor = (target: EventTarget | null) => target instanceof Element ? target.closest<HTMLElement>('[data-dataset-card]') : null;
-  const show = (card: HTMLElement) => {
-    if (card.dataset.metadataDismissed) return;
-    const panel = card.querySelector<HTMLElement>('.dataset-metadata');
-    if (!panel) return;
-    card.dataset.metadataOpen = 'true';
-    card.querySelector('.dataset-info')?.setAttribute('aria-expanded', 'true');
-    const box = card.getBoundingClientRect();
-    const height = panel.getBoundingClientRect().height;
-    const above = Math.max(0, box.top - 12);
-    const below = Math.max(0, innerHeight - box.bottom - 12);
-    const flip = below < height && above > below;
-    card.dataset.metadataSide = flip ? 'above' : 'below';
-    panel.style.maxHeight = `${Math.min(400, Math.max(0, flip ? above : below))}px`;
-  };
   const hide = (card: HTMLElement, dismiss = false) => {
     delete card.dataset.metadataOpen;
     if (dismiss) card.dataset.metadataDismissed = 'true';
     card.querySelector('.dataset-info')?.setAttribute('aria-expanded', 'false');
   };
+  const position = (card: HTMLElement) => {
+    const panel = card.querySelector<HTMLElement>('.dataset-metadata');
+    if (!panel) return;
+    const box = card.getBoundingClientRect();
+    const top = visualViewport?.offsetTop || 0;
+    const bottom = top + (visualViewport?.height || innerHeight);
+    if (box.bottom <= top || box.top >= bottom) {
+      if (panel.contains(document.activeElement)) card.querySelector<HTMLButtonElement>('.dataset-info')?.focus({ preventScroll: true });
+      delete card.dataset.metadataPinned;
+      hide(card, true);
+      return;
+    }
+    // Measure the content rather than the previous viewport's height limit.
+    const height = Math.min(400, panel.scrollHeight + 2);
+    const above = Math.max(0, box.top - top - 12);
+    const below = Math.max(0, bottom - box.bottom - 12);
+    const flip = below < height && above > below;
+    card.dataset.metadataSide = flip ? 'above' : 'below';
+    panel.style.maxHeight = `${Math.min(400, Math.max(0, flip ? above : below))}px`;
+  };
+  const show = (card: HTMLElement) => {
+    if (card.dataset.metadataDismissed) return;
+    card.dataset.metadataOpen = 'true';
+    card.querySelector('.dataset-info')?.setAttribute('aria-expanded', 'true');
+    position(card);
+  };
+  let positioning = false;
+  const reposition = () => {
+    if (positioning) return;
+    positioning = true;
+    requestAnimationFrame(() => {
+      positioning = false;
+      for (const card of document.querySelectorAll<HTMLElement>('[data-metadata-open]')) position(card);
+    });
+  };
+  addEventListener('resize', reposition, { passive: true });
+  visualViewport?.addEventListener('resize', reposition, { passive: true });
+  visualViewport?.addEventListener('scroll', reposition, { passive: true });
+  document.addEventListener('scroll', event => {
+    if (!(event.target instanceof Element && event.target.closest('.dataset-metadata'))) reposition();
+  }, { capture: true, passive: true });
   document.addEventListener('pointerover', event => {
     const card = cardFor(event.target);
     if (!card || event.pointerType === 'touch') return;

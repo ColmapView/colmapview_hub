@@ -24,6 +24,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   let loaded = results.querySelectorAll('.dataset-card').length;
   let canAppend = true;
   let busy = false;
+  let committedCount = count.textContent || '';
 
   const query = (page = 1) => {
     const values = new URLSearchParams();
@@ -52,13 +53,17 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     more.textContent = options.append ? 'Loading…' : 'Load more';
     status.textContent = options.append ? 'Loading more entries…' : 'Searching…';
     results.setAttribute('aria-busy', 'true');
+    let failure = options.append ? 'Could not load more entries. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
     try {
       const response = await fetch(`/hub/datasets/api/entries${values.size ? `?${values}` : ''}`, { signal: controller.signal });
-      const data: IndividualPage & { dataset: IndividualSelection | null; error?: string } = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Dataset search is unavailable.');
-      if (!Array.isArray(data.entries) || data.entries.length > INDIVIDUAL_PAGE_SIZE || !data.entries.every(isCatalogSummary)
+      if (!response.ok) throw new Error('Dataset search is unavailable.');
+      const data: IndividualPage & { dataset: IndividualSelection | null } = await response.json();
+      if (!data || !Array.isArray(data.entries) || data.entries.length > INDIVIDUAL_PAGE_SIZE || !data.entries.every(isCatalogSummary)
         || typeof data.generation !== 'string' || ![data.page, data.pages, data.total].every(Number.isSafeInteger)
-        || data.page < 1 || data.pages < data.page || data.total < 0) throw new Error('Dataset search returned invalid metadata.');
+        || data.page < 1 || data.pages < data.page || data.total < 0) {
+        failure = 'Dataset search returned incomplete metadata. Use Search to retry.';
+        throw new Error(failure);
+      }
       if (sequence !== request) return;
       if (options.append && generation && generation !== data.generation) {
         const refreshed = new URLSearchParams(values);
@@ -68,7 +73,10 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       const cards = data.entries.map(catalogCardElement);
       if (options.append) {
         const existing = new Set([...results.querySelectorAll<HTMLElement>('[data-entry-id]')].map(card => card.dataset.entryId));
-        if (data.entries.some(entry => existing.has(entry.id))) throw new Error('The catalog changed. Use Search to refresh these results.');
+        if (data.entries.some(entry => existing.has(entry.id))) {
+          failure = 'The catalog changed. Use Search to refresh these results.';
+          throw new Error(failure);
+        }
         results.append(...cards);
         loaded += cards.length;
       } else {
@@ -83,6 +91,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       if (firstPage > 1) committed.set('page', String(firstPage)); else committed.delete('page');
       const offset = (firstPage - 1) * INDIVIDUAL_PAGE_SIZE;
       count.textContent = data.total ? `Showing ${(offset + 1).toLocaleString()}–${(offset + loaded).toLocaleString()} of ${data.total.toLocaleString()} ${data.total === 1 ? 'entry' : 'entries'}` : 'No matching datasets';
+      committedCount = count.textContent;
       pageLabel.textContent = `${loaded.toLocaleString()} loaded`;
       previous.hidden = firstPage === 1;
       const previousQuery = new URLSearchParams(committed);
@@ -93,9 +102,10 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       if (options.push) history.pushState(null, '', urlFor(committed)); else history.replaceState(null, '', urlFor(committed));
       status.textContent = options.append ? `Loaded ${cards.length} more entries.` : '';
       if (options.focus) (options.append ? cards[0]?.querySelector<HTMLElement>('a') : count)?.focus();
-    } catch (error) {
+    } catch {
       if (controller.signal.aborted || sequence !== request) return;
-      status.textContent = error instanceof Error ? error.message : 'Dataset search is unavailable. Use Search to retry.';
+      status.textContent = failure;
+      if (!options.append) count.textContent = `Previous results · ${committedCount}`;
       if (options.append) more.textContent = 'Retry loading more';
     } finally {
       if (sequence === request) {
@@ -136,6 +146,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     void load(new URL(previous.href).searchParams, { focus: true, push: true });
   });
   addEventListener('popstate', () => {
+    clearTimeout(timer);
     const values = new URLSearchParams(location.search);
     for (const field of fields) field.value = values.get(field.name) || '';
     void load(values);

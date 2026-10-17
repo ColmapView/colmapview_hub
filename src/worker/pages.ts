@@ -69,7 +69,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
     `<link rel="stylesheet" href="${asset('colmapview.css')}">`,
     `<script src="${asset('assets/theme.js')}?v=hub-ui-1"></script>`,
     `<link rel="stylesheet" href="${asset('styles.css')}?v=hub-ui-1">`,
-    `<script type="module" src="${asset('assets/client.js')}?v=hub-ui-1"></script>`,
+    `<script type="module" src="${asset('assets/client.js')}?v=hub-ui-2"></script>`,
     '</head><body>',
     '<a class="skip-link" href="#main">Skip to content</a>',
     header(location.path),
