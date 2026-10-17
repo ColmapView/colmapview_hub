@@ -71,7 +71,7 @@ it('invalidates cached search results when the published inventory changes', asy
   const assets = { fetch: vi.fn(async (input: Request) => input.url.endsWith('/index.json')
     ? Response.json({ schemaVersion: 1, generation, total: 1, packSize: 2048, sources: [source] })
     : Response.json([[`data-${'d'.repeat(24)}`, 0, 'ply', `${generation[0]}.ply`, 'PLY', null, null, null]])) } as unknown as Fetcher;
-  const keys = ['d', 'e'].map(char => new Request(`${base}/datasets/api/entries?_catalog=${char.repeat(64)}&_ui=scene-ui-4`));
+  const keys = ['d', 'e'].map(char => new Request(`${base}/datasets/api/entries?_catalog=${char.repeat(64)}&_ui=scene-ui-5`));
   try {
     const first = await request('/datasets/api/entries', {}, undefined, { CATALOG_ASSETS: assets });
     const firstEtag = first.headers.get('ETag')!;

@@ -2,6 +2,8 @@ import { isCatalogSummary } from '../shared/catalog';
 import { INDIVIDUAL_PAGE_SIZE } from '../shared/individual-catalog';
 import type { IndividualPage, IndividualSelection } from '../shared/individual-catalog';
 import { catalogCardElement } from './catalog-card';
+import { catalogHistory } from './catalog-history';
+import type { CatalogHistoryMode } from './catalog-history';
 
 const form = document.querySelector<HTMLFormElement>('#individual-search');
 if (form && document.querySelector('#catalog-more') && document.querySelector('#catalog-status')) {
@@ -14,6 +16,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const more = document.querySelector<HTMLButtonElement>('#catalog-more')!;
   const selection = document.querySelector<HTMLElement>('#dataset-selection')!;
   const fields = [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[name],select[name]')];
+  const navigation = catalogHistory(form);
   let pending: AbortController | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let sequence = 0;
@@ -42,7 +45,8 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     metadata.href = source.metadataUrl || `/hub/datasets/${source.id}`;
     selection.replaceChildren(document.createTextNode(`Dataset: ${source.label} · ${source.count.toLocaleString()} scenes${source.listingComplete ? '' : ' · listing incomplete'}. `), metadata);
   };
-  const load = async (values: URLSearchParams, options: { append?: boolean; focus?: boolean; push?: boolean } = {}): Promise<void> => {
+  const load = async (values: URLSearchParams, options: { append?: boolean; focus?: boolean; history?: CatalogHistoryMode } = {}): Promise<void> => {
+    const updateHistory = navigation.prepare(options.history);
     pending?.abort();
     const controller = new AbortController();
     pending = controller;
@@ -99,7 +103,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       previous.href = urlFor(previousQuery);
       more.hidden = lastPage >= data.pages;
       updateSelection(data.dataset);
-      if (options.push) history.pushState(null, '', urlFor(committed)); else history.replaceState(null, '', urlFor(committed));
+      updateHistory(urlFor(committed));
       status.textContent = options.append ? `Loaded ${cards.length} more scenes.` : '';
       if (options.focus) (options.append ? cards[0]?.querySelector<HTMLElement>('a') : count)?.focus();
     } catch {
@@ -116,14 +120,15 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       }
     }
   };
-  const search = () => { clearTimeout(timer); void load(query()); };
+  const search = (history: CatalogHistoryMode = 'push') => { clearTimeout(timer); void load(query(), { history }); };
   form.addEventListener('input', event => {
     clearTimeout(timer);
     pending?.abort();
     sequence++;
     canAppend = false;
     more.disabled = true;
-    timer = setTimeout(search, event.target instanceof HTMLSelectElement ? 0 : 200);
+    const select = event.target instanceof HTMLSelectElement;
+    timer = setTimeout(() => search(select ? 'push' : 'typing'), select ? 0 : 200);
   });
   form.addEventListener('submit', event => { event.preventDefault(); search(); });
   form.addEventListener('reset', event => {
@@ -143,12 +148,16 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     clearTimeout(timer);
-    void load(new URL(previous.href).searchParams, { focus: true, push: true });
+    const values = new URL(previous.href).searchParams;
+    for (const field of fields) field.value = values.get(field.name) || '';
+    void load(values, { focus: true, history: 'push' });
   });
   addEventListener('popstate', () => {
     clearTimeout(timer);
     const values = new URLSearchParams(location.search);
     for (const field of fields) field.value = values.get(field.name) || '';
+    const advanced = form.querySelector<HTMLDetailsElement>('.catalog-advanced');
+    if (advanced && ['provider', 'license', 'status', 'delivery', 'viewer'].some(name => values.has(name))) advanced.open = true;
     void load(values);
   });
 }
