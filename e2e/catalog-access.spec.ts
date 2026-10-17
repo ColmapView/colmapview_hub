@@ -118,14 +118,17 @@ test('ArmGS groups reconstruction variants and labels excluded RGB without losin
   await expect(page.locator('main')).toContainText('colmap_castrack_centered/10448102132863604198_472_000_492_000');
 });
 
-test('ADGS preserves its exact checked point-cloud companion within the camera scene', async ({ page }) => {
-  const response = await page.request.get('/hub/datasets/api/entries?dataset=hf-dororo99-ours-waymo-adgs-b00d3434f2f7&q=9747453753779078631_940_000_960_000');
-  const data = await response.json() as { total: number; entries: { id: string; statusLabel: string; openUrl: string; hasViewer: boolean }[] };
-  expect(data.total).toBe(1);
-  expect(data.entries[0].statusLabel).toBe('Companion asset opened; scene unverified');
-  expect(data.entries[0].hasViewer).toBe(true);
-  const open = await page.request.get(data.entries[0].openUrl, { maxRedirects: 0 });
-  expect(new URL(open.headers().location).searchParams.get('url')).toMatch(/\/9747453753779078631_940_000_960_000\/colmap\.ply$/);
-  await page.goto(`/hub/datasets/entry/${data.entries[0].id}`);
-  await expect(page.locator('main')).toContainText('Scene cameras, original photos, masks and complete-scene export remain unverified');
+test('a checked companion PLY cannot qualify a scene or collection for publication', async ({ page }) => {
+  for (const sample of [
+    { source: 'hf:Dororo99/Ours_Waymo_ADGS', collection: 'hf-dororo99-ours-waymo-adgs-b00d3434f2f7', path: '9747453753779078631_940_000_960_000' },
+    { source: 'hf:HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting', collection: 'hf-haoqinhong-physics-informed-deformable-gaussian-splatting-18cc223a260c', path: 'dry_ice' },
+  ]) {
+    const response = await page.request.get(`/hub/datasets/api/entries?dataset=${sample.collection}`);
+    expect(await response.json()).toMatchObject({ total: 0, entries: [], dataset: null });
+    const entry = id(sample.source, 'camera-scene', sample.path);
+    expect((await page.goto(`/hub/datasets/entry/${entry}`))!.status()).toBe(404);
+    expect((await page.request.get(`/hub/datasets/open/${entry}`, { maxRedirects: 0 })).status()).toBe(404);
+    expect((await page.request.get(`/hub/datasets/${sample.collection}`)).status()).toBe(404);
+    expect((await page.request.get(`/hub/datasets/individual/sources/${sample.collection}.json`)).status()).toBe(404);
+  }
 });

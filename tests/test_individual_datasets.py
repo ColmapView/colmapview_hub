@@ -181,7 +181,7 @@ class IndividualDatasetsTests(unittest.TestCase):
         self.assertEqual(details[('colmap', scene[0][1], None)]['listedAssets'], 9)
         self.assertEqual(json.dumps(rows), original)
 
-    def test_a_camera_scene_keeps_its_exact_companion_import_without_qualifying_cameras(self):
+    def test_a_companion_import_is_evidence_without_a_camera_scene_viewer_launch(self):
         url = 'https://huggingface.co/datasets/owner/data/resolve/abc/scene/colmap.ply'
         entry = {'sourceId': 'hf:owner/data', 'access': 'public', 'status': 'audited_header_checked',
                  'statusLabel': 'Sample opened in viewer', 'viewerUrl': 'https://colmapview.opsiclear.com/?url=' + url,
@@ -191,7 +191,9 @@ class IndividualDatasetsTests(unittest.TestCase):
                   'browserChecks': [{'url': url, 'delivery': 'browser_readable'}]}
         scene = ['camera-scene', 'scene', {'metadata:cameras.npz': 'scene/cameras.npz', 'asset:ply': 'scene/colmap.ply'}, None]
         proof, _ = item_evidence(entry, scene, 'abc', result)
-        self.assertEqual(proof['viewerUrl'], entry['viewerUrl'])
+        self.assertNotIn('viewerUrl', proof)
+        self.assertEqual(proof['sampleScope'], 'companion_asset')
+        self.assertFalse(can_open_scene(entry, scene, proof))
         self.assertEqual(proof['statusLabel'], 'Companion asset opened; scene unverified')
         self.assertIn('Scene cameras', proof['summary'])
         self.assertIn('Only the linked companion', proof['scope'])

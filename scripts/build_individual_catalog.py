@@ -38,6 +38,8 @@ def can_open_scene(entry, row, proof):
             or proof.get('opening') or proof.get('delivery') in FAILED_DELIVERY
             or proof.get('level') in {'conversion_needed', 'no_native_assets', 'unavailable'}):
         return False
+    if proof.get('viewerUrl') and proof.get('sampleScope') == 'companion_asset':
+        return False
     return bool(proof.get('viewerUrl')) or entry.get('provider') == 'huggingface' and kind == 'colmap'
 
 
@@ -137,14 +139,16 @@ def item_evidence(entry, row, revision, result):
     if not matched or entry['status'] == 'unsupported_content':
         return None, FORMATS.get(kind, '.' + kind)
     proof = dict(entry.get('verification', {}))
-    # A source's opening restriction or failed sibling is not individual proof.
+    # Source-level opening restrictions and viewer links are not individual proof.
     proof.pop('opening', None)
+    proof.pop('viewerUrl', None)
     proof['statusLabel'] = entry['statusLabel']
     imported = result.get('viewerImport', {})
     proof['scope'] = 'This recorded model or file only. Other collection entries, source photos, and masks have separate evidence.'
     matching_probe = member_probe or archive_probe or next((probe for probe in result.get('probes', []) if probe.get('url') == candidate), {})
     format_name = AUDIT_FORMATS.get(matching_probe.get('format'), FORMATS.get(kind, '.' + kind))
     if companion_sample:
+        proof['sampleScope'] = 'companion_asset'
         proof['scope'] = 'Only the linked companion model file was checked. The scene cameras, reconstruction, remaining assets, source photos, and masks need their own checks.'
         format_name = FORMATS.get(kind, 'Scene assets listed') + ' · ' + format_name
     elif metadata_sample:
@@ -191,7 +195,7 @@ def item_evidence(entry, row, revision, result):
             proof['summary'] = f'{format_name} identified at this exact path inside the archive. Extract it before attempting import; complete loading remains unverified.'
     elif original_import and imported.get('status') == 'failed':
         proof['opening'] = {'status': 'load_failed', 'summary': 'This exact sampled file failed in the released viewer. See its retained decoder or import error.'}
-    if entry.get('viewerUrl') and entry.get('access') != 'gated' and not proof.get('opening') and proof['delivery'] == 'browser_readable' and candidate.rstrip('/') == result.get('loadUrl', '').rstrip('/') and not archive and not unsupported:
+    if entry.get('viewerUrl') and entry.get('access') != 'gated' and not proof.get('opening') and proof['delivery'] == 'browser_readable' and candidate.rstrip('/') == result.get('loadUrl', '').rstrip('/') and not archive and not unsupported and not companion_sample:
         proof['viewerUrl'] = entry['viewerUrl']
     return proof, format_name
 

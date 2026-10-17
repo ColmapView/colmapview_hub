@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.3 — 2026-10-17
+
+- Remove 28 scene entries whose launch opened one companion PLY instead of the scene dataset, retaining 5,239 scenes across 105 collections.
+- Keep companion-file import evidence separate from scene launch qualification and block it from becoming a dataset action.
+
 ## 0.7.2 — 2026-10-17
 
 - Describe the filtered catalog accurately and invalidate cached templates and client asset URLs.

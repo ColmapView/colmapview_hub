@@ -15,7 +15,7 @@ export interface IndividualIndex {
   kinds: Record<string, number>; levels: Record<string, number>; delivery: Record<string, number>;
   incompleteCollections: number; scope: string;
 }
-export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string };
+export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset' };
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
   files: Record<string, string> | null, proof: IndividualProof | null,
   inventory?: { listedAssets: number; linkedAssets: number; linksTruncated: boolean }];
@@ -58,6 +58,7 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
   const [, , kind, , , archive, , proof] = row;
   if (source.access !== 'public' || archive || proof?.opening || failedDelivery.has(proof?.delivery || '')) return false;
   if (['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')) return false;
+  if (proof?.viewerUrl && proof.sampleScope === 'companion_asset') return false;
   return Boolean(proof?.viewerUrl) || (source.provider === 'huggingface' && ['colmap', 'ply', 'spz', 'sog', 'splat'].includes(kind));
 }
 
