@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.7 — 2026-10-17
+
+- Show available images, cameras, point clouds, splats, masks and other scene models beneath every scene card, distinguishing checked content, listed files, partial photos, required setup and separate image ZIPs.
+- Add small square previews from the first available registered image for commercially licensed scenes. Serve prepared JPEGs from the Hub with original image credits, image-specific licenses and crop disclosure. Unknown and non-commercial image terms do not receive previews.
+- Keep exact scene ownership, model-only loading and existing viewer destinations. Confirm Gaussian PLY properties before labeling a companion model as splats; keep masks separate from photographs.
+
 ## 0.7.6 — 2026-10-17
 
 - Publish pinned photograph availability and path policies for every scene, with visible card labels, a photograph filter and per-scene details. Keep complete-export checks separate from samples, partial photos and future media configuration.

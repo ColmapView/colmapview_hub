@@ -5,6 +5,7 @@ import { escapeHtml as escape, intro, page } from './pages';
 import { catalogCardHtml as catalogCard } from '../shared/catalog-card';
 import { photoLabel } from '../shared/scene-photos';
 import type { PhotoStatus } from '../shared/scene-photos';
+import { sceneContentsHtml, sceneThumbnailHtml } from '../shared/scene-contents';
 export { catalogCard };
 import type { HubLocation } from './pages';
 
@@ -43,6 +44,7 @@ export function catalogEntryPage(entry: CatalogEntry): string {
   return page(location, entry.title,
     '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
+    + sceneThumbnailHtml(entry) + sceneContentsHtml(entry.availableData)
     + `<div class="actions">${actions}${individualAction}</div>`
     + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(catalogSummary(entry)))}">${escape(entry.dataset.label)}</a>. <a href="/hub/datasets/${entry.dataset.id}">Collection information</a>.</p>`
       : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s named scenes</a>.</p>`)
@@ -100,7 +102,7 @@ export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, coll
     + `<a class="button" id="catalog-next" href="${pagePath(pageNumber + 1)}"${pageNumber === pages ? ' hidden' : ''}>Next</a></nav>`
     + '<details class="catalog-notes"><summary>About this catalog</summary><div><p>Source metadata and sampled loading checks were recorded in October 2026. Collection checks cover the recorded sample; other models may need further checks.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a> · <a href="/hub/datasets/catalog.json" download>Download source metadata (JSON)</a></p></div></details></div>`,
-    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=scene-ui-7"></script>');
+    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=scene-ui-8"></script>');
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {

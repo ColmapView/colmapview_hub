@@ -53,5 +53,5 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/collections">Dataset collections</a> · <a href="/hub/datasets/audit">Audit and coverage</a></p>`
     + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Photo availability and path policies for every scene (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p>'
     + '<p><a href="/hub/datasets/individual/verified-scenes.json" download>Verified scene checks (JSON)</a> · <a href="/hub/datasets/individual/index.json" download>Labels and coverage (JSON)</a> · <a href="/hub/datasets/catalog.json" download>Source metadata (JSON)</a></p></div></details></div>',
-    '<script type="module" src="/hub/assets/individual-catalog.js?v=scene-ui-7"></script>');
+    '<script type="module" src="/hub/assets/individual-catalog.js?v=scene-ui-8"></script>');
 }

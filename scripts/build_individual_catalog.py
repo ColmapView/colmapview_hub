@@ -11,6 +11,7 @@ import gzip
 import hashlib
 import json
 import re
+import shutil
 import unicodedata
 import urllib.parse
 from collections import Counter, defaultdict
@@ -19,6 +20,7 @@ from pathlib import Path
 from scene_datasets import scene_records
 from scene_qualification import native_evidence, native_scene_reviews, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
 from scene_photos import apply_photo_evidence, photo_scene_reviews
+from scene_contents import apply_content_evidence, content_scene_reviews
 
 PACK_SIZE = 2048
 FORMATS = {'colmap': 'COLMAP', 'cameras': 'COLMAP cameras and poses', 'ply': 'PLY (header unchecked)',
@@ -230,19 +232,27 @@ def build(root=Path('.')):
     photo_bytes = (root / 'data/scene-photos.json.gz').read_bytes()
     photo_policy = json.loads(gzip.decompress(photo_bytes))
     photo_reviews = photo_scene_reviews(catalog, photo_policy)
+    content_bytes = (root / 'data/scene-contents.json.gz').read_bytes()
+    content_policy = json.loads(gzip.decompress(content_bytes))
+    content_reviews = content_scene_reviews(catalog, content_policy, root)
+    matched_contents = set()
     matched_photos = set()
     matched_reviews = set()
     matched_native = set()
     published_reviews = []
     excluded = {row['sourceId'] for row in [*catalog['entries'], *audit.values()] if is_access_restricted(row)}
     generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes
-                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + photo_bytes + Path(__file__).read_bytes()
+                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + photo_bytes + content_bytes + Path(__file__).read_bytes()
                                 + Path(__file__).with_name('scene_qualification.py').read_bytes()
                                 + Path(__file__).with_name('scene_photos.py').read_bytes()
+                                + Path(__file__).with_name('scene_contents.py').read_bytes()
                                 + Path(__file__).with_name('scene_datasets.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
     current = output / 'index.json'
-    if current.exists() and read(current).get('generation') == generation:
+    preview_files = {review['thumbnail']['file'] for review in content_reviews.values() if review.get('thumbnail')}
+    if (current.exists() and read(current).get('generation') == generation
+            and all((output / 'thumbnails' / name).is_file()
+                    and hashlib.sha256((output / 'thumbnails' / name).read_bytes()).hexdigest() + '.jpg' == name for name in preview_files)):
         print('Individual metadata index is current.', flush=True)
         return
     output.mkdir(parents=True, exist_ok=True)
@@ -267,6 +277,9 @@ def build(root=Path('.')):
     sources, pack, total = [], [], 0
     counts, levels, deliveries = Counter(), Counter(), Counter()
     photos = Counter()
+    contents = Counter()
+    thumbnails = set()
+    thumbnail_scenes = 0
     photo_rows = []
 
     def add_posting(mapping, key, ordinal):
@@ -331,6 +344,15 @@ def build(root=Path('.')):
                 matched_photos.add(review_key)
             elif photo_policy['coverage'] == 'all_published_scenes':
                 raise ValueError('Published scene is missing pinned photo evidence; recheck its availability')
+            content_review = content_reviews.get(review_key)
+            if not content_review:
+                raise ValueError('Published scene is missing pinned content evidence')
+            proof = apply_content_evidence(entry, row, revision, proof, content_review)
+            matched_contents.add(review_key)
+            contents.update(proof['availableData'].keys())
+            if proof.get('thumbnail'):
+                thumbnails.add(content_review['thumbnail']['file'])
+                thumbnail_scenes += 1
             source_proofs.append(proof)
             source_formats.append(format_name)
             if review:
@@ -377,6 +399,14 @@ def build(root=Path('.')):
         if source['count']:
             source_entry = {**verified_source_entry(entry, source_proofs, source_formats), 'facts': [({**fact, 'label': 'Listed 3D assets and model file sets'} if fact['label'] == 'Individual model or scene entries listed' else fact)
                                               for fact in entry['facts']] + [{'label': 'Supported named scene datasets', 'value': str(source['count'])}]}
+            source_entry['availableData'] = {}
+            for proof in source_proofs:
+                for kind, evidence in proof['availableData'].items():
+                    if kind not in source_entry['availableData'] or evidence['status'] == 'checked':
+                        source_entry['availableData'][kind] = {'status': evidence['status']}
+            thumbnail = next((proof['thumbnail'] for proof in source_proofs if proof.get('thumbnail')), None)
+            if thumbnail:
+                source_entry['thumbnail'] = thumbnail
             write(f'sources/{entry["id"]}.json', source_entry)
         if entry_number % 100 == 0:
             print(f'Indexed {entry_number + 1}/{len(catalog["entries"])} source entries; {total:,} individual records', flush=True)
@@ -388,6 +418,15 @@ def build(root=Path('.')):
         raise ValueError('Native layout no longer matches the scene listing; recheck its identity and file paths')
     if any(key not in matched_photos and key[0] not in excluded and key not in scene_exclusions for key in photo_reviews):
         raise ValueError('Photo evidence no longer matches a published scene; recheck its identity and file paths')
+    if any(key not in matched_contents and key[0] not in excluded and key not in scene_exclusions for key in content_reviews):
+        raise ValueError('Content evidence no longer matches the published scene identities')
+    thumbnail_output = output / 'thumbnails'
+    thumbnail_output.mkdir(exist_ok=True)
+    for path in thumbnail_output.iterdir():
+        if path.is_file() and not path.is_symlink() and re.fullmatch(r'[a-f0-9]{64}\.jpg', path.name) and path.name not in thumbnails:
+            path.unlink()
+    for name in thumbnails:
+        shutil.copyfile(root / 'data/scene-thumbnails' / name, thumbnail_output / name)
     for shard, mapping in ids.items():
         write(f'ids/{shard}.json', mapping)
     del ids
@@ -406,10 +445,11 @@ def build(root=Path('.')):
             key = hashlib.sha256((field + ':' + value).encode()).hexdigest()[:16]
             write(f'facets/{key}.json', {'postings': encoded(ordinals)})
             facet_manifest[field][value] = {'file': key, 'count': len(ordinals)}
-    checked_at = max([registry['checkedAt'], photo_policy.get('checkedAt', ''), *[review['checkedAt'] for review in verified_scenes.values()]])
+    checked_at = max([registry['checkedAt'], photo_policy.get('checkedAt', ''), content_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
     manifest = {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'total': total,
                 'packSize': PACK_SIZE, 'sources': sources, 'facets': facet_manifest, 'kinds': dict(counts),
-                'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos),
+                'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos), 'contents': dict(contents),
+                'thumbnails': thumbnail_scenes,
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
                 'unit': 'named_scene',
                 'scope': 'Named scenes with checked native camera/model layouts or stronger complete-scene evidence. Original photographs may be present, partial, absent or unverified. Full rendering and export checks are separate evidence tiers. Standalone geometry, inaccessible and known unsupported cases are excluded.'}
@@ -426,7 +466,7 @@ def build(root=Path('.')):
                              for key, value in row.items()} for row in photo_rows)
     else:
         (output / 'photo-audit.csv').write_text('', encoding='utf8')
-    print(f'Built {total:,} individual records from {len(sources):,} source entries; previews remain on hold.', flush=True)
+    print(f'Built {total:,} scenes from {len(sources):,} sources with {len(thumbnails):,} distinct licensed previews.', flush=True)
 
 
 if __name__ == '__main__':

@@ -51,6 +51,57 @@ test('photo path rules preserve the model URL and expose checked source paths', 
   assert.match(html, /colmap\/scene\/mapping\.json/);
   assert.doesNotMatch(html, /Photos checked.*all original photos/s);
 });
+
+test('cards expose scene contents without treating pose metadata or unknown PLY files as photos or splats', () => {
+  const availableData = { cameras: { status: 'checked', count: 2 }, point_cloud: { status: 'checked', count: 43 },
+    images: { status: 'needs_setup' }, masks: { status: 'listed', count: 12 }, splats: { status: 'checked' }, meshes: { status: 'checked' } };
+  const summary = render.individualSummary(row(0, { 7: { ...nativePhotoProof('path_policy_required'), availableData } }), source);
+  assert.deepEqual(summary.availableData, availableData);
+  const html = render.catalogCard(summary);
+  assert.match(html, /aria-label="Available data"/);
+  for (const kind of Object.keys(availableData)) assert.match(html, new RegExp(`data-asset="${kind}"`));
+  assert.match(html, /Images · setup/);
+  assert.match(html, /Masks · listed/);
+  assert.match(html, /43 points/);
+  assert.equal(render.isCatalogSummary(summary), true);
+  assert.equal(render.isCatalogSummary({ ...summary, availableData: { splats: { status: 'guessed' } } }), false);
+  assert.equal(render.isCatalogSummary({ ...summary, availableData: { unknown: { status: 'listed' } } }), false);
+  const modelOnly = render.individualSummary(row(0, { 7: { ...nativePhotoProof('not_included'), availableData: { cameras: { status: 'checked' } } } }), source);
+  assert.doesNotMatch(render.catalogCard(modelOnly), /data-asset="(?:images|splats)"/);
+});
+
+const squareThumbnail = { url: '/hub/datasets/individual/thumbnails/' + 'a'.repeat(64) + '.jpg', width: 320, height: 320,
+  sourcePath: 'scene/images/a.jpg', sourceSha256: 'b'.repeat(64), datasetLicense: 'cc-by-4.0', license: 'cc-by-sa-4.0',
+  licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', creditUrl: 'https://commons.wikimedia.org/wiki/File:a.jpg',
+  attribution: 'Original photographer', crop: 'center_square' };
+
+test('square previews remain same-origin, attributed and commercially licensed at both source and photo level', () => {
+  const summary = render.individualSummary(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source);
+  const html = render.catalogCard(summary);
+  assert.equal(render.isCatalogSummary(summary), true);
+  assert.match(html, /class="dataset-thumbnail"/);
+  assert.match(html, /width="320" height="320" loading="lazy" decoding="async"/);
+  assert.match(html, /Original photographer/);
+  assert.match(html, /cc-by-sa-4.0/);
+  assert.match(html, /square crop/);
+  for (const license of ['cc-by-nc-4.0', 'unknown']) {
+    assert.doesNotMatch(render.catalogCard({ ...summary, license }), /class="dataset-thumbnail"/);
+    assert.doesNotMatch(render.catalogCard({ ...summary, thumbnail: { ...squareThumbnail, license } }), /class="dataset-thumbnail"/);
+  }
+  assert.doesNotMatch(render.catalogCard({ ...summary, license: 'unknown', licenseCategory: 'commercial' }), /class="dataset-thumbnail"/);
+  for (const url of ['https://huggingface.co/photo.jpg', '//example.com/photo.jpg', '/hub/datasets/individual/thumbnails/../private.jpg']) {
+    assert.equal(render.isCatalogSummary({ ...summary, thumbnail: { ...squareThumbnail, url } }), false);
+  }
+  assert.equal(render.isCatalogSummary({ ...summary, thumbnail: { ...squareThumbnail, creditUrl: 'javascript:alert(1)' } }), false);
+});
+
+test('a scene cannot inherit the collection thumbnail or its sibling asset list', () => {
+  const entry = render.individualEntry(row(0, { 7: nativePhotoProof('not_included') }), source,
+    { ...parent, thumbnail: squareThumbnail, availableData: { images: { status: 'checked' }, splats: { status: 'checked' } } });
+  assert.equal(entry.thumbnail, undefined);
+  assert.equal(entry.availableData, undefined);
+  assert.doesNotMatch(render.catalogCard(render.catalogSummary(entry)), /dataset-thumbnail|data-asset="splats"/);
+});
 const parent = { id: 'hf-owner-dataset-123456abcdef', sourceId: 'hf:owner/dataset', title: 'owner/dataset', provider: 'huggingface',
   sourceUrl: 'https://huggingface.co/datasets/owner/dataset', dataUrl: 'https://huggingface.co/datasets/owner/dataset/tree/abc/first/sparse/0',
   viewerUrl: 'https://colmapview.opsiclear.com/?url=sample', license: 'cc-by-4.0', access: 'public', status: 'audited_header_checked',

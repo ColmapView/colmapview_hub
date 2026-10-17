@@ -56,4 +56,4 @@ if (snapshot.auditSummary) {
   await writeFile(resolve(output, 'audit.html'), catalogAuditPage(snapshot));
   await writeFile(resolve(output, 'dataset-audit.json'), JSON.stringify(audit));
 }
-console.log(`Built ${snapshot.entries.length} dataset pages and ${pages} browse pages without images.`);
+console.log(`Built ${snapshot.entries.length} dataset pages and ${pages} browse pages with local licensed scene previews.`);

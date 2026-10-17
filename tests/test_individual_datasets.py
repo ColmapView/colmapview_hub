@@ -186,6 +186,11 @@ class IndividualDatasetsTests(unittest.TestCase):
                 'models': [[mask_review['path'], mask_review['files'], 1, 2, 3, 'not_checked', '2026-10-17',
                             {'cameraRecordChecked': True, 'poseRecordChecked': True}]]}]}
             (data / 'native-layouts.json.gz').write_bytes(gzip.compress(json.dumps(native_policy).encode()))
+            (data / 'scene-contents.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1,
+                'coverage': 'all_published_scenes', 'checkedAt': '2026-10-17', 'sources': [
+                    {'sourceId': model['sourceId'], 'revision': model['revision'], 'scenes': [
+                        {key: model[key] for key in ('kind', 'path', 'files')} | {'data': {}}]}
+                    for model in [*reviews, mask_review]]}).encode()))
             build(root)
             output = root / 'public/hub/datasets/individual'
             before = json.loads((output / 'index.json').read_text(encoding='utf8'))
@@ -283,6 +288,10 @@ class IndividualDatasetsTests(unittest.TestCase):
             (data / 'scene-photos.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'coverage': 'reviewed_scenes', 'sources': []}).encode()))
             save('verified-scenes.json', {'schemaVersion': 1, 'scenes': [self.verified_review(entry, rows[0])]})
             (data / 'native-layouts.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'sources': []}).encode()))
+            (data / 'scene-contents.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1,
+                'coverage': 'all_published_scenes', 'checkedAt': '2026-10-17', 'sources': [
+                    {'sourceId': entry['sourceId'], 'revision': 'a' * 40, 'scenes': [
+                        {'kind': rows[0][0], 'path': rows[0][1], 'files': rows[0][2], 'data': {}}]}]}).encode()))
             build(root)
             output = root / 'public/hub/datasets/individual'
             before = json.loads((output / 'index.json').read_text(encoding='utf8'))

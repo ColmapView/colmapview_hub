@@ -3,6 +3,7 @@ import { licenseCategory } from './license-categories';
 import type { LicenseCategory } from './license-categories';
 import { photoLabel } from './scene-photos';
 import type { PhotoStatus } from './scene-photos';
+import { sceneDataText } from './scene-contents';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -16,6 +17,8 @@ export interface IndividualIndex {
   facets: Record<string, Record<string, { file: string; count: number }>>;
   kinds: Record<string, number>; levels: Record<string, number>; delivery: Record<string, number>;
   photos?: Partial<Record<PhotoStatus, number>>;
+  contents?: Record<string, number>;
+  thumbnails?: number;
   incompleteCollections: number; scope: string;
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
@@ -88,6 +91,8 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
     license: source.license, licenseCategory: licenseCategory(source), access: source.access, statusLabel, formats: [format], testOrFixture: false,
     dataset: { id: source.id, label: source.label, title: source.title }, itemKind: kindLabel,
     ...(proof?.photoAvailability ? { photoStatus: proof.photoAvailability } : {}),
+    ...(proof?.availableData ? { availableData: proof.availableData } : {}),
+    ...(proof?.thumbnail ? { thumbnail: proof.thumbnail } : {}),
     ...(canOpenIndividual(row, source) ? { openUrl: `/hub/datasets/open/${id}` } : {}),
     description: gated ? 'The source lists this model, but its files require access and cannot be downloaded anonymously. File compatibility and complete loading remain unverified.'
       : proof?.summary || `${kindLabel} listed in ${source.title}${archive ? ` inside ${archive}; extract it before attempting to load this model` : ''}. This individual model has not passed a complete load check.`,
@@ -115,6 +120,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
   return { ...parent, ...summary, id, sourceId: `${parent.sourceId}#${kind}:${archive || ''}:${path}`, sourceUrl: parent.provider === 'public' ? parent.sourceUrl
     : archive ? tree(archive.split('/').slice(0, -1).join('/')) : tree(folder ? path : path.split('/').slice(0, -1).join('/')),
     dataUrl, viewerUrl, candidateViewerUrl: undefined, modelManifest: undefined,
+    availableData: summary.availableData, thumbnail: summary.thumbnail,
     status: proof ? `audited_${proof.level}` : 'individual_file_listing', verification,
     facts: [{ label: 'Dataset label', value: source.label }, { label: 'Source collection', value: source.title, url: `/hub/datasets/${source.id}` },
       { label: 'Entry type', value: summary.itemKind! }, { label: 'Model path', value: path || '/' },
@@ -122,6 +128,13 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
+      ...(summary.availableData ? [{ label: 'Available data', value: sceneDataText(summary.availableData) },
+        ...Object.entries(summary.availableData).filter(([, evidence]) => evidence?.samplePath).map(([kind, evidence]) => ({
+          label: `${kind.replaceAll('_', ' ')} sample`, value: evidence!.samplePath!, ...(parent.provider === 'public' ? {} : { url: file(evidence!.samplePath!) }),
+        }))] : []),
+      ...(summary.thumbnail ? [{ label: 'Preview attribution', value: `${summary.thumbnail.attribution} · ${summary.thumbnail.license}. Center-square crop of the first available registered photograph.` },
+        { label: 'Preview original', value: summary.thumbnail.sourcePath, ...(summary.thumbnail.sourceArchive ? {} : { url: file(summary.thumbnail.sourcePath) }) },
+        ...(summary.thumbnail.sourceArchive ? [{ label: 'Preview source archive', value: summary.thumbnail.sourceArchive, url: file(summary.thumbnail.sourceArchive) }] : [])] : []),
       ...(proof?.photoAvailability ? [{ label: 'Original photographs', value: proof.photoAvailability === 'complete_export_checked'
         ? 'All registered originals checked in a complete export' : proof.photoAvailability === 'not_included'
           ? 'Not included by publisher' : photoLabel(proof.photoAvailability) }] : []),
