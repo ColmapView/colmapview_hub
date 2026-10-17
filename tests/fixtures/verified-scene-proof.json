@@ -1,0 +1,15 @@
+{
+  "level": "scene_verified",
+  "delivery": "browser_readable",
+  "viewerUrl": "https://colmapview.opsiclear.com/?url=sample",
+  "sceneValidation": {
+    "status": "passed",
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "cameras": 1,
+    "images": 2,
+    "points": 3,
+    "photoCount": 2,
+    "export": "colmap_images",
+    "exportSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}

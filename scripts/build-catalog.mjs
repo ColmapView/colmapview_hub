@@ -11,12 +11,11 @@ const sceneIndex = await json('public/hub/datasets/individual/index.json');
 if (sceneIndex.unit !== 'named_scene' || Object.keys(sceneIndex.kinds).some(kind => !['COLMAP reconstruction', 'Cameras and poses', 'Camera dataset', 'Gaussian scene', 'Public scene'].includes(kind))) {
   throw new Error('Public browse entries must be named scene datasets. Refusing to publish a file inventory.');
 }
-const { snapshot, audit } = publicationSnapshot(await json('data/catalog.json'), await json('data/dataset-audit.json'), await json('data/individual-datasets.json'), sceneIndex);
-const sceneCounts = new Map(sceneIndex.sources.map(source => [source.id, source.count]));
-for (const entry of snapshot.entries) {
-  entry.facts = entry.facts.map(fact => fact.label === 'Individual model or scene entries listed' ? { ...fact, label: 'Listed 3D assets and model file sets' } : fact);
-  entry.facts.push({ label: 'Named scene datasets identified', value: String(sceneCounts.get(entry.id) || 0) });
-}
+const catalog = await json('data/catalog.json');
+// Use the exact-scene projection for collection pages too. Historical collection
+// samples must never restore an unqualified PLY or sibling-model launch.
+const sourceEntries = await Promise.all(sceneIndex.sources.map(source => json(`public/hub/datasets/individual/sources/${source.id}.json`)));
+const { snapshot, audit } = publicationSnapshot({ ...catalog, entries: sourceEntries }, await json('data/dataset-audit.json'), await json('data/individual-datasets.json'), sceneIndex);
 if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.entries) || !snapshot.sources?.length || !snapshot.importSummary) throw new Error('Invalid catalog snapshot');
 // Fail stale snapshots rather than publishing disagreeing collection/model labels.
 const classified = await applyLicenseCategories(structuredClone(snapshot));

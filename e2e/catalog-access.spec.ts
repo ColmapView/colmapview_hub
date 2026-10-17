@@ -79,43 +79,53 @@ test('Hourglass and other standalone file names are absent from scene browsing',
   expect(await response.json()).toMatchObject({ unit: 'named_scene', total: 0, entries: [] });
 });
 
-test('NGS lists one dataset per named scene with its assets kept inside', async ({ page }) => {
-  const catalog = JSON.parse(readFileSync('data/catalog.json', 'utf8')) as { entries: { id: string; sourceId: string }[] };
-  const ngs = catalog.entries.find(entry => entry.sourceId === 'hf:OpsiClear/NGS')!.id;
-  await page.goto(`/hub/datasets/?dataset=${ngs}`);
-  const response = await page.request.get(`/hub/datasets/api/entries?dataset=${ngs}`);
-  const data = await response.json() as { unit: string; total: number; entries: { title: string }[] };
-  expect(data.unit).toBe('named_scene');
-  expect(data.total).toBe(259);
-  expect(data.entries.every(entry => !/\.(?:ply|stl|json|npz|npy)$/i.test(entry.title))).toBe(true);
-  const card = page.locator('#catalog-results .dataset-card').first();
-  await card.getByRole('button', { name: /^Metadata for / }).click();
-  await card.getByRole('link', { name: 'Full metadata', exact: true }).click();
-  await expect(page.locator('main')).toContainText('Scene assets listed');
-  const duplicate = await page.request.get(`/hub/datasets/api/entries?dataset=${ngs}&q=scan_20250410_110806`);
-  expect(await duplicate.json()).toMatchObject({ total: 1 });
+test('unverified native collections and model-only scenes are excluded', async ({ page }) => {
+  for (const source of ['hf-opsiclear-ngs-19c25258f77b', 'hf-dororo99-ours-waymo-armgs-dc9c063eca1c',
+    'public-megascenes-000000-arc-de-bera-component-0-native-complete-99744eaac47a']) {
+    expect((await page.request.get(`/hub/datasets/${source}`)).status()).toBe(404);
+    expect((await page.request.get(`/hub/datasets/individual/sources/${source}.json`)).status()).toBe(404);
+    const response = await page.request.get(`/hub/datasets/api/entries?dataset=${source}`);
+    expect(await response.json()).toMatchObject({ total: 0, entries: [], dataset: null });
+  }
+  const maskOnly = id('hf:Dororo99/Ours_Waymo_ArmGS', 'colmap',
+    'preprocessing/waymo_prepared/colmap/9747453753779078631_940_000_960_000/triangulated_model');
+  expect((await page.request.get(`/hub/datasets/entry/${maskOnly}`)).status()).toBe(404);
+  expect((await page.request.get(`/hub/datasets/open/${maskOnly}`, { maxRedirects: 0 })).status()).toBe(404);
 });
 
-test('ArmGS groups reconstruction variants and labels excluded RGB without losing geometry', async ({ page }) => {
-  const source = 'hf-dororo99-ours-waymo-armgs-dc9c063eca1c';
-  const response = await page.request.get(`/hub/datasets/api/entries?dataset=${source}`);
-  const data = await response.json() as { total: number; entries: { id: string; title: string; statusLabel: string; description: string; licenseCategory: string; hasViewer: boolean; openUrl: string }[] };
-  expect(data.total).toBe(11);
-  expect(data.entries.every(row => !/\/(known_pose_model|triangulated_model|triangulated_text)$/.test(row.title))).toBe(true);
-  expect(data.entries.every(row => row.description.includes('excludes original and resized Waymo RGB'))).toBe(true);
-  expect(data.entries.every(row => row.licenseCategory === 'non-commercial')).toBe(true);
-  const checked = data.entries.find(row => row.title.endsWith('9747453753779078631_940_000_960_000'))!;
-  expect(checked.statusLabel).toBe('Model checked; RGB not included');
-  expect(checked.hasViewer).toBe(true);
-  const open = await page.request.get(checked.openUrl, { maxRedirects: 0 });
-  expect(open.status()).toBe(302);
-  expect(new URL(open.headers().location).searchParams.get('url')).toMatch(/\/triangulated_model$/);
-  await page.goto(`/hub/datasets/entry/${checked.id}`);
-  await expect(page.locator('main')).toContainText('Source RGB');
-  await expect(page.locator('main')).toContainText('known_pose_model/cameras.txt');
-  const centered = data.entries.find(row => row.title.endsWith('10448102132863604198_472_000_492_000'))!;
-  await page.goto(`/hub/datasets/entry/${centered.id}`);
-  await expect(page.locator('main')).toContainText('colmap_castrack_centered/10448102132863604198_472_000_492_000');
+test('every published scene has exact complete camera-and-photo evidence and the checked launch', async ({ page }) => {
+  const policy = JSON.parse(readFileSync('data/verified-scenes.json', 'utf8')) as {
+    scenes: { sourceId: string; kind: string; path: string; viewerUrl: string; counts: { images: number } }[] };
+  const indexResponse = await page.request.get('/hub/datasets/individual/index.json');
+  const index = await indexResponse.json() as { total: number; generation: string };
+  const checks = await page.request.get('/hub/datasets/individual/verified-scenes.json');
+  expect(await checks.json()).toMatchObject({ generation: index.generation, scenes: policy.scenes });
+  const response = await page.request.get('/hub/datasets/api/entries?viewer=available');
+  const data = await response.json() as { total: number; entries: { id: string; statusLabel: string; delivery: string; hasViewer: boolean }[] };
+  expect(index.total).toBe(3);
+  expect(data.total).toBe(policy.scenes.length);
+  expect(data.entries.every(scene => scene.hasViewer && scene.statusLabel === 'Cameras + photos verified' && scene.delivery === 'browser_readable')).toBe(true);
+  for (const scene of policy.scenes) {
+    const sceneId = id(scene.sourceId, scene.kind, scene.path);
+    expect(data.entries.some(row => row.id === sceneId)).toBe(true);
+    const open = await page.request.get(`/hub/datasets/open/${sceneId}`, { maxRedirects: 0 });
+    expect(open.status()).toBe(302);
+    expect(open.headers().location).toBe(scene.viewerUrl);
+    await page.goto(`/hub/datasets/entry/${sceneId}`);
+    await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveAttribute('href', scene.viewerUrl);
+    await expect(page.locator('main')).toContainText('Verified original photographs');
+    await expect(page.locator('main')).toContainText(`${scene.counts.images} posed original photographs`);
+  }
+  const catalogResponse = await page.request.get('/hub/datasets/catalog.json');
+  const catalog = await catalogResponse.json() as { entries: { id: string; viewerUrl?: string; dataUrl: string; sourceUrl: string }[] };
+  expect(catalog.entries).toHaveLength(3);
+  for (const source of catalog.entries) {
+    expect(source.viewerUrl).toBeUndefined();
+    expect(source.dataUrl).toBe(source.sourceUrl);
+    await page.goto(`/hub/datasets/${source.id}`);
+    await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Browse this dataset’s named scenes' })).toBeVisible();
+  }
 });
 
 test('a checked companion PLY cannot qualify a scene or collection for publication', async ({ page }) => {

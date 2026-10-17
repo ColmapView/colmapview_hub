@@ -8,7 +8,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from prepare_individual_datasets import individual_records, group_components
-from build_individual_catalog import build, can_open_scene, identity, is_access_restricted, item_evidence, reviewed_scene_exclusions, tokens
+from build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, reviewed_scene_exclusions, tokens
+from scene_qualification import REQUIRED_CHECKS, qualified_evidence, verified_scene_reviews, verified_source_entry
 from sampled_individuals import supplement_rows
 from scene_datasets import MAX_SCENE_FILE_LINKS, scene_records
 
@@ -16,11 +17,82 @@ from scene_datasets import MAX_SCENE_FILE_LINKS, scene_records
 class IndividualDatasetsTests(unittest.TestCase):
     def test_scene_publication_matches_the_viewer_action_gates(self):
         cases = json.loads((Path(__file__).parent / 'fixtures/scene-publication.json').read_text(encoding='utf8'))
+        verified = json.loads((Path(__file__).parent / 'fixtures/verified-scene-proof.json').read_text(encoding='utf8'))
         for case in cases:
             with self.subTest(case['name']):
                 entry = {'provider': case.get('provider', 'huggingface'), 'access': case.get('access', 'public')}
                 row = [case['kind'], 'scene', None, case.get('archive')]
-                self.assertEqual(can_open_scene(entry, row, case.get('proof')), case['publish'])
+                proof = {**(verified if case.get('verified') else {}), **case.get('proof', {})}
+                if case.get('proof', {}).get('sceneValidation'):
+                    proof['sceneValidation'] = {**verified['sceneValidation'], **case['proof']['sceneValidation']}
+                self.assertEqual(can_open_scene(entry, row, proof), case['publish'])
+
+    def verified_review(self, entry, row):
+        revision = next(fact['value'] for fact in entry['facts'] if fact['label'] == 'Pinned revision')
+        return {'sourceId': entry['sourceId'], 'revision': revision, 'kind': row[0], 'path': row[1],
+                'files': row[2], 'loadPath': row[1], 'viewerUrl': 'https://colmapview.opsiclear.com/?url=' + hf_url(entry, revision, row[1]),
+                'checkedAt': '2026-10-17T14:24:25.257Z', 'viewerVersion': '0.17.0', 'viewerCommit': 'a' * 40,
+                'counts': {'cameras': 1, 'images': 2, 'points': 3}, 'exportSha256': 'b' * 64,
+                'checks': {key: 'passed' for key in REQUIRED_CHECKS},
+                'photos': [{'name': f'{n}.png', 'sourcePath': f'images/{n}.png', 'bytes': 123, 'sha256': str(n) * 64} for n in range(2)]}
+
+    def test_verified_scene_receipts_fail_closed_for_incomplete_or_stale_evidence(self):
+        entry = {'sourceId': 'hf:owner/data', 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
+        row = ['colmap', 'scene/sparse/0', {role: f'scene/sparse/0/{role}.bin' for role in ['cameras', 'images', 'points3d']}, None]
+        review = self.verified_review(entry, row)
+        policy = {'schemaVersion': 1, 'scenes': [review]}
+        self.assertEqual(len(verified_scene_reviews({'entries': [entry]}, policy)), 1)
+        for key in REQUIRED_CHECKS:
+            with self.subTest(key=key):
+                incomplete = json.loads(json.dumps(policy))
+                incomplete['scenes'][0]['checks'][key] = 'not_tested'
+                with self.assertRaisesRegex(ValueError, 'checks must pass'):
+                    verified_scene_reviews({'entries': [entry]}, incomplete)
+        for mutate in [lambda r: r.update(revision='b' * 40), lambda r: r['photos'].pop(),
+                       lambda r: r['photos'][1].update(name='0.png'), lambda r: r['photos'][0].update(sha256='bad'),
+                       lambda r: r['counts'].update(cameras=0), lambda r: r['counts'].update(images=True),
+                       lambda r: r.update(exportSha256='bad')]:
+            invalid = json.loads(json.dumps(policy))
+            mutate(invalid['scenes'][0])
+            with self.assertRaises(ValueError):
+                verified_scene_reviews({'entries': [entry]}, invalid)
+        policy['scenes'].append(review)
+        with self.assertRaisesRegex(ValueError, 'Duplicate verified scene'):
+            verified_scene_reviews({'entries': [entry]}, policy)
+
+    def test_verified_scene_cannot_change_model_paths_or_launch_a_companion(self):
+        entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface', 'sourceUrl': 'https://huggingface.co/datasets/owner/data',
+                 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}], 'viewerUrl': 'https://colmapview.opsiclear.com/?url=unqualified.ply'}
+        row = ['colmap', 'scene/sparse/0', {role: f'scene/sparse/0/{role}.bin' for role in ['cameras', 'images', 'points3d']}, None]
+        review = self.verified_review(entry, row)
+        proof, format_name = qualified_evidence(entry, row, 'a' * 40, review, hf_url)
+        self.assertEqual(proof['sceneValidation']['photoCount'], 2)
+        collection = verified_source_entry(entry, [proof], [format_name])
+        self.assertNotIn('viewerUrl', collection)
+        self.assertEqual(collection['dataUrl'], entry['sourceUrl'])
+        for mutation in [lambda r: r.update(loadPath='scene/points3d.ply'),
+                         lambda r: r['files'].update(cameras='different/cameras.bin'),
+                         lambda r: r.update(viewerUrl='https://colmapview.opsiclear.com/?url=unqualified.ply')]:
+            invalid = json.loads(json.dumps(review))
+            mutation(invalid)
+            with self.assertRaises(ValueError):
+                qualified_evidence(entry, row, 'a' * 40, invalid, hf_url)
+
+    def test_verified_camera_json_scene_can_export_without_a_point_cloud(self):
+        entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface',
+                 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
+        row = ['camera-scene', 'panorama', {'metadata:panorama/transforms.json': 'panorama/transforms.json',
+                                        'asset:geometry': 'panorama/points3d.ply'}, None]
+        review = self.verified_review(entry, row)
+        review['files'] = {'metadata:panorama/transforms.json': 'panorama/transforms.json'}
+        review['loadPath'] = 'panorama/transforms.json'
+        review['viewerUrl'] = 'https://colmapview.opsiclear.com/?url=' + hf_url(entry, 'a' * 40, review['loadPath'])
+        review['counts']['points'] = 0
+        proof, _ = qualified_evidence(entry, row, 'a' * 40, review, hf_url)
+        self.assertTrue(can_open_scene({'provider': 'huggingface', 'access': 'public'}, row, proof))
+        review['loadPath'] = 'panorama/points3d.ply'
+        with self.assertRaisesRegex(ValueError, 'checked camera metadata'):
+            qualified_evidence(entry, row, 'a' * 40, review, hf_url)
 
     def test_reviewed_scene_exclusions_are_exact_and_require_the_pinned_revision(self):
         entry = {'sourceId': 'hf:owner/data', 'facts': [{'label': 'Pinned revision', 'value': 'abc'}]}
@@ -51,12 +123,15 @@ class IndividualDatasetsTests(unittest.TestCase):
             data = root / 'data'
             (data / 'individual-datasets').mkdir(parents=True)
             entries, registered = [], []
-            for name in ['keep', 'gated', 'stale']:
+            reviews = []
+            for name in ['keep', 'gated', 'stale', 'mask-only']:
                 entry = {'id': f'hf-{name}-0123456789ab', 'sourceId': f'hf:owner/{name}', 'title': name,
-                         'facts': [{'label': 'Pinned revision', 'value': 'abc'}], 'provider': 'huggingface',
+                         'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}], 'provider': 'huggingface',
+                         'sourceUrl': f'https://huggingface.co/datasets/owner/{name}',
                          'access': 'public', 'license': 'cc0', 'status': 'audited_unverified', 'statusLabel': 'Further verification needed'}
                 row = ['colmap', f'{name}/sparse/0', {role: f'{name}/sparse/0/{role}.bin' for role in ['cameras', 'images', 'points3d']}, None]
-                listing = {'datasetId': entry['id'], 'sourceId': entry['sourceId'], 'revision': 'abc', 'listingComplete': True, 'items': [row]}
+                reviews.append(self.verified_review(entry, row))
+                listing = {'datasetId': entry['id'], 'sourceId': entry['sourceId'], 'revision': 'a' * 40, 'listingComplete': True, 'items': [row]}
                 raw = gzip.compress(json.dumps(listing).encode())
                 file = entry['id'] + '.json.gz'
                 (data / 'individual-datasets' / file).write_bytes(raw)
@@ -66,8 +141,8 @@ class IndividualDatasetsTests(unittest.TestCase):
             entries.append({'id': 'public-scene-0123456789ab', 'sourceId': 'public:scene', 'title': 'Public scene', 'provider': 'public',
                             'facts': [{'label': 'Collection', 'value': 'Scenes'}], 'access': 'public', 'license': 'cc0',
                             'formats': ['COLMAP'], 'statusLabel': 'Files listed', 'viewerUrl': 'https://colmapview.opsiclear.com/?url=sample'})
-            entries[0]['checkedAt'] = '2026-10-17'
-            entries[0]['verification'] = {'sourceImages': {'status': 'not_included',
+            entries[3]['checkedAt'] = '2026-10-17'
+            entries[3]['verification'] = {'sourceImages': {'status': 'not_included',
                 'summary': 'The publisher excludes original RGB images.', 'sourceUrl': 'https://example.org/readme'}}
             catalog = {'entries': entries}
             audit = {'results': []}
@@ -77,14 +152,14 @@ class IndividualDatasetsTests(unittest.TestCase):
             save('individual-datasets.json', {'sources': registered, 'checkedAt': '2026-10-16', 'scope': 'Fixture'})
             save('dataset-audit.json', audit)
             save('scene-exclusions.json', {'schemaVersion': 1, 'reviews': []})
+            save('verified-scenes.json', {'schemaVersion': 1, 'scenes': reviews})
             build(root)
             output = root / 'public/hub/datasets/individual'
             before = json.loads((output / 'index.json').read_text(encoding='utf8'))
-            self.assertEqual(before['total'], 4)
+            self.assertEqual(before['total'], 3)
             first_proof = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))[0][7]
-            self.assertEqual(first_proof['statusLabel'], 'RGB not included; load unverified')
-            self.assertEqual(first_proof['sourceImages']['status'], 'not_included')
-            self.assertIn('publisher excludes original RGB', first_proof['summary'])
+            self.assertEqual(first_proof['statusLabel'], 'Cameras + photos verified')
+            self.assertFalse((output / 'sources' / (entries[3]['id'] + '.json')).exists())
             retained_id = identity(entries[0]['sourceId'], ['colmap', 'keep/sparse/0', None, None])
             removed_ids = [identity(entry['sourceId'], ['colmap', f'{entry["title"]}/sparse/0', None, None]) for entry in entries[1:3]]
             entries[1]['access'] = 'gated'
@@ -92,14 +167,14 @@ class IndividualDatasetsTests(unittest.TestCase):
             save('catalog.json', catalog)
             save('dataset-audit.json', audit)
             # Excluded payload listings need not be present or readable at build time.
-            for source in registered[1:]:
+            for source in registered[1:3]:
                 (data / 'individual-datasets' / source['file']).unlink()
             build(root)
             after = json.loads((output / 'index.json').read_text(encoding='utf8'))
             self.assertNotEqual(before['generation'], after['generation'])
-            self.assertEqual(after['total'], 2)
-            self.assertEqual([source['id'] for source in after['sources']], [entries[0]['id'], entries[3]['id']])
-            self.assertEqual(sum(facet['count'] for facet in after['facets']['status'].values()), 2)
+            self.assertEqual(after['total'], 1)
+            self.assertEqual([source['id'] for source in after['sources']], [entries[0]['id']])
+            self.assertEqual(sum(facet['count'] for facet in after['facets']['status'].values()), 1)
             self.assertNotIn('Access required', after['facets']['status'])
             rows = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))
             self.assertEqual(rows[0][0], retained_id)
@@ -125,11 +200,12 @@ class IndividualDatasetsTests(unittest.TestCase):
             (data / 'individual-datasets').mkdir(parents=True)
             entry = {'id': 'hf-owner-data-0123456789ab', 'sourceId': 'hf:owner/data', 'title': 'Scenes', 'provider': 'huggingface',
                      'access': 'public', 'license': 'cc0', 'status': 'audited_header_checked', 'statusLabel': 'Sample failed',
-                     'facts': [{'label': 'Pinned revision', 'value': 'abc'}], 'verification': {'level': 'header_checked'}}
+                     'sourceUrl': 'https://huggingface.co/datasets/owner/data',
+                     'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}], 'verification': {'level': 'header_checked'}}
             rows = [['colmap', f'{name}/sparse/0', {role: f'{name}/sparse/0/{role}.bin' for role in ['cameras', 'images', 'points3d']}, archive]
                     for name, archive in [('keep', None), ('failed', None), ('extract', 'bundle.zip')]]
             rows.append(['camera-metadata', 'source-only/transforms.json', None, None])
-            listing = {'datasetId': entry['id'], 'sourceId': entry['sourceId'], 'revision': 'abc', 'listingComplete': True, 'items': rows}
+            listing = {'datasetId': entry['id'], 'sourceId': entry['sourceId'], 'revision': 'a' * 40, 'listingComplete': True, 'items': rows}
             raw = gzip.compress(json.dumps(listing).encode())
             filename = entry['id'] + '.json.gz'
             (data / 'individual-datasets' / filename).write_bytes(raw)
@@ -143,6 +219,7 @@ class IndividualDatasetsTests(unittest.TestCase):
                  'loadUrl': url, 'viewerImport': {'sourceUrl': url, 'status': 'failed'}}]})
             policy = {'schemaVersion': 1, 'reviews': []}
             save('scene-exclusions.json', policy)
+            save('verified-scenes.json', {'schemaVersion': 1, 'scenes': [self.verified_review(entry, rows[0])]})
             build(root)
             output = root / 'public/hub/datasets/individual'
             before = json.loads((output / 'index.json').read_text(encoding='utf8'))
@@ -150,7 +227,7 @@ class IndividualDatasetsTests(unittest.TestCase):
             self.assertEqual(before['sources'][0]['count'], 1)
             record = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))[0]
             self.assertEqual(record[3], 'keep/sparse/0', 'a failed sibling does not block a different native scene')
-            policy['reviews'] = [{'sourceId': entry['sourceId'], 'revision': 'abc', 'reason': 'model_files_unavailable',
+            policy['reviews'] = [{'sourceId': entry['sourceId'], 'revision': 'a' * 40, 'reason': 'model_files_unavailable',
                 'summary': 'Original model URLs return 404.', 'scenes': [{'kind': 'colmap', 'path': 'keep/sparse/0'}]}]
             save('scene-exclusions.json', policy)
             build(root)
@@ -160,6 +237,12 @@ class IndividualDatasetsTests(unittest.TestCase):
             self.assertEqual(after['sources'], [])
             for child in ['packs', 'ids', 'tokens', 'facets', 'sources']:
                 self.assertEqual(list((output / child).glob('*.json')), [], child)
+            save('scene-exclusions.json', {'schemaVersion': 1, 'reviews': []})
+            moved = self.verified_review(entry, rows[0])
+            moved['path'] = 'renamed/sparse/0'
+            save('verified-scenes.json', {'schemaVersion': 1, 'scenes': [moved]})
+            with self.assertRaisesRegex(ValueError, 'no longer matches the scene listing'):
+                build(root)
 
     def model(self, root):
         return [f'{root}/sparse/0/{name}.bin' for name in ('cameras', 'images', 'points3D')]

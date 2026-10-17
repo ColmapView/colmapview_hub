@@ -71,7 +71,7 @@ it('invalidates cached search results when the published inventory changes', asy
   const assets = { fetch: vi.fn(async (input: Request) => input.url.endsWith('/index.json')
     ? Response.json({ schemaVersion: 1, generation, total: 1, packSize: 2048, sources: [source] })
     : Response.json([[`data-${'d'.repeat(24)}`, 0, 'ply', `${generation[0]}.ply`, 'PLY', null, null, null]])) } as unknown as Fetcher;
-  const keys = ['d', 'e'].map(char => new Request(`${base}/datasets/api/entries?_catalog=${char.repeat(64)}&_ui=scene-ui-3`));
+  const keys = ['d', 'e'].map(char => new Request(`${base}/datasets/api/entries?_catalog=${char.repeat(64)}&_ui=scene-ui-4`));
   try {
     const first = await request('/datasets/api/entries', {}, undefined, { CATALOG_ASSETS: assets });
     const firstEtag = first.headers.get('ETag')!;
@@ -120,11 +120,18 @@ it('opens the exact public model without a provider fetch and keeps restricted m
     keys.push(key);
     return metadata[key] ? Response.json(metadata[key]) : new Response(null, { status: 404 });
   });
+  const unchecked = await request(`/datasets/open/${id}`);
+  expect(unchecked.headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  keys.length = 0;
+  const viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent('https://huggingface.co/datasets/owner/data/resolve/revision/room/sparse/0');
+  row[7] = { level: 'scene_verified', delivery: 'browser_readable', viewerUrl,
+    sceneValidation: { status: 'passed', revision: 'revision', cameras: 1, images: 2, points: 3, photoCount: 2,
+      export: 'colmap_images', exportSha256: 'a'.repeat(64) } };
   const response = await request(`/datasets/open/${id}`);
   expect(response.status).toBe(302);
   const target = new URL(response.headers.get('Location')!);
   expect(target.origin).toBe('https://colmapview.opsiclear.com');
-  expect(target.searchParams.get('url')).toBe('https://huggingface.co/datasets/owner/data/tree/revision/room/sparse/0');
+  expect(target.searchParams.get('url')).toBe('https://huggingface.co/datasets/owner/data/resolve/revision/room/sparse/0');
   expect(keys).toEqual(['index.json', 'ids/00.json', 'packs/0.json', `sources/${source.id}.json`]);
   source.access = 'gated';
   expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);

@@ -7,12 +7,15 @@ import { applyIndividualListings } from '../scripts/individual-listings.mjs';
 import { applyDatasetLabels } from '../scripts/dataset-labels.mjs';
 
 const render = await catalogRenderer();
+const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));
 
 test('scene publication matches the viewer action gates', () => {
   const cases = JSON.parse(readFileSync('tests/fixtures/scene-publication.json', 'utf8'));
   for (const item of cases) {
     const source = { provider: item.provider || 'huggingface', access: item.access || 'public' };
-    const record = ['id', 0, item.kind, 'scene', 'COLMAP', item.archive || null, null, item.proof || null];
+    const proof = { ...(item.verified ? verified : {}), ...item.proof };
+    if (item.proof?.sceneValidation) proof.sceneValidation = { ...verified.sceneValidation, ...item.proof.sceneValidation };
+    const record = ['id', 0, item.kind, 'scene', 'COLMAP', item.archive || null, null, proof];
     assert.equal(render.canOpenIndividual(record, source), item.publish, item.name);
   }
 });
@@ -27,7 +30,7 @@ const source = { id: parent.id, sourceId: parent.sourceId, title: parent.title, 
 const row = (number = 0, overrides = {}) => Object.assign([`data-${String(number).padStart(24, '0')}`, 0, 'colmap', `scene${number}/sparse/0`, 'COLMAP', null,
   { cameras: `scene${number}/sparse/0/cameras.bin`, images: `scene${number}/sparse/0/images.bin`, points3d: `scene${number}/sparse/0/points3D.bin` }, null], overrides);
 const fixture = () => {
-  const rows = [row(), row(1, { 7: { ...parent.verification, statusLabel: parent.statusLabel, viewerUrl: parent.viewerUrl } }), row(2),
+  const rows = [row(), row(1, { 7: { ...parent.verification, ...verified, statusLabel: parent.statusLabel, viewerUrl: parent.viewerUrl } }), row(2),
     row(3, { 1: 1, 2: 'scene', 3: 'Public scene', 4: 'COLMAP' })];
   const other = { ...source, id: 'public-other-123456abcdef', sourceId: 'public:other', title: 'Other', label: 'Other', provider: 'public', start: 3, count: 1, listingComplete: true };
   const index = { schemaVersion: 1, generation: 'test-generation', total: 4, packSize: 2048, checkedAt: '2026-10-16', sources: [source, other],
@@ -56,7 +59,7 @@ test('individual models inherit labels and licenses while sibling checks stay at
   assert.equal(model.verification.level, 'file_set_only');
   assert.equal(model.statusLabel, 'Files listed; load not checked');
   assert.equal(model.audits[1].scope, 'collection');
-  assert.ok(model.candidateViewerUrl.includes('scene0'));
+  assert.equal(model.candidateViewerUrl, undefined);
   assert.equal(render.datasetPath(model), `/hub/datasets/entry/${model.id}`);
   assert.equal(render.catalogSummary(model).hasViewer, false);
 });
@@ -78,16 +81,16 @@ test('camera datasets use scene titles and keep split files inside the detail pa
   assert.equal(render.individualSummary(row(0, { 3: 'sparse/1' }), source).title, source.label);
 });
 
-test('compact cards load an eligible model directly while archives, access restrictions and failed samples keep source details', () => {
-  const native = render.individualSummary(row(), source);
+test('only verified camera-and-photo cards open directly; unchecked or blocked records keep source details', () => {
+  const native = render.individualSummary(row(0, { 7: { ...parent.verification, ...verified } }), source);
   assert.equal(native.openUrl, `/hub/datasets/open/${row()[0]}`);
-  assert.equal(native.hasViewer, false);
+  assert.equal(native.hasViewer, true);
   const html = render.catalogCard(native);
   assert.match(html, /class="dataset-open" href="\/hub\/datasets\/open\/data-/);
-  assert.match(html, /Try · unchecked/);
+  assert.doesNotMatch(html, /Try · unchecked/);
   assert.match(html, /aria-controls="metadata-data-/);
   assert.match(html, /Full metadata/);
-  for (const [record, origin] of [[row(0, { 5: 'archive.zip' }), source], [row(), { ...source, access: 'gated' }],
+  for (const [record, origin] of [[row(), source], [row(0, { 5: 'archive.zip' }), source], [row(), { ...source, access: 'gated' }],
     [row(0, { 2: 'obj' }), source], [row(0, { 7: { ...parent.verification, level: 'conversion_needed' } }), source],
     [row(0, { 7: { ...parent.verification, delivery: 'access_denied', viewerUrl: parent.viewerUrl } }), source],
     [row(0, { 5: 'archive.zip', 7: { ...parent.verification, viewerUrl: parent.viewerUrl } }), source],

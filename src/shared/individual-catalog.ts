@@ -15,7 +15,9 @@ export interface IndividualIndex {
   kinds: Record<string, number>; levels: Record<string, number>; delivery: Record<string, number>;
   incompleteCollections: number; scope: string;
 }
-export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset' };
+export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
+  sceneValidation?: { status: 'passed'; revision: string; cameras: number; images: number; points: number;
+    photoCount: number; export: 'colmap_images'; exportSha256: string } };
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
   files: Record<string, string> | null, proof: IndividualProof | null,
   inventory?: { listedAssets: number; linkedAssets: number; linksTruncated: boolean }];
@@ -58,8 +60,13 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
   const [, , kind, , , archive, , proof] = row;
   if (source.access !== 'public' || archive || proof?.opening || failedDelivery.has(proof?.delivery || '')) return false;
   if (['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')) return false;
-  if (proof?.viewerUrl && proof.sampleScope === 'companion_asset') return false;
-  return Boolean(proof?.viewerUrl) || (source.provider === 'huggingface' && ['colmap', 'ply', 'spz', 'sog', 'splat'].includes(kind));
+  if (proof?.sampleScope === 'companion_asset' || proof?.sourceImages?.status === 'not_included') return false;
+  const validation = proof?.sceneValidation;
+  return ['colmap', 'cameras', 'camera-scene', 'scene'].includes(kind) && proof?.level === 'scene_verified'
+    && proof.delivery === 'browser_readable' && Boolean(proof.viewerUrl) && validation?.status === 'passed'
+    && Number.isInteger(validation.cameras) && validation.cameras > 0
+    && validation.export === 'colmap_images' && Number.isInteger(validation.images) && validation.images > 0
+    && Number.isInteger(validation.photoCount) && validation.photoCount === validation.images;
 }
 
 export function individualSummary(row: IndividualRecord, source: IndividualSource): CatalogSummary {
@@ -90,8 +97,6 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
   const dataUrl = parent.provider === 'public' ? parent.dataUrl : archive ? file(archive) : folder ? tree(path) : file(path);
   const canOpen = canOpenIndividual(row, gated ? { ...source, access: 'gated' } : source);
   const viewerUrl = canOpen ? proof?.viewerUrl : undefined;
-  const candidate = canOpen && !viewerUrl
-    ? `https://colmapview.opsiclear.com/?url=${encodeURIComponent(dataUrl!)}` : undefined;
   const verification: CatalogVerification = { ...(proof || { level: 'file_set_only', delivery: summary.delivery!, checkedAt: parent.checkedAt,
     summary: summary.description, scope: 'This model’s filenames only. Source-wide samples do not certify sibling models or their photos and masks.',
     viewerVersion: parent.verification?.viewerVersion || 'Not checked' }),
@@ -99,7 +104,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
       : archive ? { opening: { status: 'extraction_required' as const, summary: `Extract ${path || 'the selected model'} from the source archive before attempting to load this entry. Other archive members do not certify this model.` } } : {}) };
   return { ...parent, ...summary, id, sourceId: `${parent.sourceId}#${kind}:${archive || ''}:${path}`, sourceUrl: parent.provider === 'public' ? parent.sourceUrl
     : archive ? tree(archive.split('/').slice(0, -1).join('/')) : tree(folder ? path : path.split('/').slice(0, -1).join('/')),
-    dataUrl, viewerUrl, candidateViewerUrl: candidate, modelManifest: undefined,
+    dataUrl, viewerUrl, candidateViewerUrl: undefined, modelManifest: undefined,
     status: proof ? `audited_${proof.level}` : 'individual_file_listing', verification,
     facts: [{ label: 'Dataset label', value: source.label }, { label: 'Source collection', value: source.title, url: `/hub/datasets/${source.id}` },
       { label: 'Entry type', value: summary.itemKind! }, { label: 'Model path', value: path || '/' },
@@ -107,6 +112,10 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
+      ...(proof?.sceneValidation ? [{ label: 'Verified original photographs', value: String(proof.sceneValidation.photoCount) },
+        { label: 'Verified camera models', value: String(proof.sceneValidation.cameras) },
+        { label: 'COLMAP + images export SHA-256', value: proof.sceneValidation.exportSha256 },
+        { label: 'Scene verified on', value: proof.checkedAt }] : []),
       ...(parent.verification?.sourceImages ? [{ label: 'Source RGB', value: parent.verification.sourceImages.summary, url: parent.verification.sourceImages.sourceUrl }] : []),
       ...(row[8] ? [{ label: 'Scene assets listed', value: String(row[8].listedAssets) },
         { label: 'Scene asset links', value: row[8].linksTruncated ? `Showing ${row[8].linkedAssets} asset links. Use the source scene folder for all ${row[8].listedAssets} listed assets.` : 'Recorded scene asset links are shown below; source photographs, masks and uninspected archives need separate checks.' }] : []),

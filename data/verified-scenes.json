@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "scope": "Exact scenes checked in deployed ColmapView 0.17.0 on 2026-10-17. Original anonymous source URLs were imported in the browser and exported as complete COLMAP + original RGB ZIPs. Independent PyCOLMAP parsing and source comparisons confirmed camera calibration, poses and every registered photograph hash. Companion geometry, masks, siblings and other revisions are not qualified. Export checksums identify the reviewed downloads; runtime reports and ZIPs remain local.",
+  "scenes": [
+    {
+      "sourceId": "hf:pablovela5620/example-colmap-glomap",
+      "revision": "25b7627795f98414c02a7a7ff8670e59d878242b",
+      "kind": "colmap",
+      "path": "colmap/sparse/0",
+      "files": {
+        "cameras": "colmap/sparse/0/cameras.bin",
+        "images": "colmap/sparse/0/images.bin",
+        "points3d": "colmap/sparse/0/points3D.bin"
+      },
+      "loadPath": "colmap/sparse/0",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fpablovela5620%2Fexample-colmap-glomap%2Fresolve%2F25b7627795f98414c02a7a7ff8670e59d878242b%2Fcolmap%2Fsparse%2F0",
+      "checkedAt": "2026-10-17T14:24:25.257Z",
+      "viewerVersion": "0.17.0",
+      "viewerCommit": "346552ee9fb8aec47fefb61ba31a4ee1be5dda22",
+      "counts": {
+        "cameras": 1,
+        "images": 2,
+        "points": 2843
+      },
+      "photos": [
+        {
+          "name": "frame_00006.png",
+          "bytes": 1399778,
+          "sha256": "70cd2a840153b58d34e9a8ccc637a3df1e9857ec35378d6bcc53896486c8fe5e",
+          "sourcePath": "images/frame_00006.png"
+        },
+        {
+          "name": "frame_00067.png",
+          "bytes": 1492601,
+          "sha256": "0b50eb77bd0f7adf9d493999d92971f412055dd09e1fc210b68fecaa7080e53f",
+          "sourcePath": "images/frame_00067.png"
+        }
+      ],
+      "checks": {
+        "browserImport": "passed",
+        "photoExport": "passed",
+        "independentColmapRead": "passed",
+        "originalPhotoHashes": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "exportSha256": "a83ef2880c2772ff1ced6e6a42ecaa9a8278eb0e5c939aec660635e42c11a521"
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/basketball/dense/colmap_workspace/sparse_native",
+      "files": {
+        "cameras": "large_overlap/basketball/dense/colmap_workspace/sparse_native/cameras.bin",
+        "images": "large_overlap/basketball/dense/colmap_workspace/sparse_native/images.bin",
+        "points3d": "large_overlap/basketball/dense/colmap_workspace/sparse_native/points3D.bin"
+      },
+      "loadPath": "large_overlap/basketball/dense/colmap_workspace/sparse_native",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FWuuu3511%2Fbmvs_sparse_dtu2%2Fresolve%2F40fd1370ea9c87e6fed2fb91ebd94785fb632352%2Flarge_overlap%2Fbasketball%2Fdense%2Fcolmap_workspace%2Fsparse_native",
+      "checkedAt": "2026-10-17T14:24:25.257Z",
+      "viewerVersion": "0.17.0",
+      "viewerCommit": "346552ee9fb8aec47fefb61ba31a4ee1be5dda22",
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 2101
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "bytes": 976119,
+          "sha256": "782190886155c94448ca0897f1c89e9f920e5b07410c9f0e4c83239d53a92af5",
+          "sourcePath": "large_overlap/basketball/dense/images/0000.png"
+        },
+        {
+          "name": "0001.png",
+          "bytes": 923535,
+          "sha256": "a4296a06aad92d009ee4073a6e56ed7ae37a33c87c7d55cd4d1034ef007e306a",
+          "sourcePath": "large_overlap/basketball/dense/images/0001.png"
+        },
+        {
+          "name": "0002.png",
+          "bytes": 982082,
+          "sha256": "1eeaa0258e2a4cc5feaeaa8b680d7c942ef9749d07021ba20e70e81bbe4d64be",
+          "sourcePath": "large_overlap/basketball/dense/images/0002.png"
+        }
+      ],
+      "checks": {
+        "browserImport": "passed",
+        "photoExport": "passed",
+        "independentColmapRead": "passed",
+        "originalPhotoHashes": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "exportSha256": "aa0464586224fc6fd57c6ef3fa25cfa6de715e6afd2a3398770ad0b72cec1fd0"
+    },
+    {
+      "sourceId": "hf:JiaJinrang/PanoWorld",
+      "revision": "5c2352a189d99e56665069f1b56309c6013b9123",
+      "kind": "camera-scene",
+      "path": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000",
+      "files": {
+        "metadata:training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/transforms.json": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/transforms.json"
+      },
+      "loadPath": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FJiaJinrang%2FPanoWorld%2Fresolve%2F5c2352a189d99e56665069f1b56309c6013b9123%2Ftraining_data%2F3D-FRONT%2F00004f89-9aa5-43c2-ae3c-129586be8aaa%2Fviewpoints%2Fpanorama_0000%2Ftransforms.json",
+      "checkedAt": "2026-10-17T14:24:25.257Z",
+      "viewerVersion": "0.17.0",
+      "viewerCommit": "346552ee9fb8aec47fefb61ba31a4ee1be5dda22",
+      "counts": {
+        "cameras": 6,
+        "images": 6,
+        "points": 0
+      },
+      "photos": [
+        {
+          "name": "pose_0000_front.png",
+          "bytes": 1938925,
+          "sha256": "57ebdbf9fc8594e6d6923123634b7f2c9916adba64d5d337b6927d67f2633428",
+          "sourcePath": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/images/pose_0000_front.png"
+        },
+        {
+          "name": "pose_0000_right.png",
+          "bytes": 1519842,
+          "sha256": "cdf3b7bbb0268df0b5ceaabfce1ab2dd16e32c87db9a89839619bf0dbc63a319",
+          "sourcePath": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/images/pose_0000_right.png"
+        },
+        {
+          "name": "pose_0000_back.png",
+          "bytes": 1561468,
+          "sha256": "1543c2cd82fa6faf0c6bf661d77bc3fd72e90b302be095f171cfafdf1e5e5de2",
+          "sourcePath": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/images/pose_0000_back.png"
+        },
+        {
+          "name": "pose_0000_left.png",
+          "bytes": 1572571,
+          "sha256": "bccba6d62d636cd09a14677b446bcccd42483460b5a4bc78075a82baa93dd270",
+          "sourcePath": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/images/pose_0000_left.png"
+        },
+        {
+          "name": "pose_0000_top.png",
+          "bytes": 680465,
+          "sha256": "d44dc4659da62d993a0c949ab348593d1fb2d8f5a8eb3e12d00227b4d6fdc0c5",
+          "sourcePath": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/images/pose_0000_top.png"
+        },
+        {
+          "name": "pose_0000_bottom.png",
+          "bytes": 1520862,
+          "sha256": "21c5c6a0b120b6cceb3cc288de413ba7d331cf0d044b03f4533e4b695b5aafa5",
+          "sourcePath": "training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000/images/pose_0000_bottom.png"
+        }
+      ],
+      "checks": {
+        "browserImport": "passed",
+        "photoExport": "passed",
+        "independentColmapRead": "passed",
+        "originalPhotoHashes": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "exportSha256": "53e303030721bfeace276b0bbe2785eaa385c7d21a17c39e5beb0e556343df6a"
+    }
+  ]
+}
