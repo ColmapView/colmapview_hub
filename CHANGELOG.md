@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2 — 2026-10-17
+
+- Describe the filtered catalog accurately and invalidate cached templates and client asset URLs.
+
 ## 0.7.1 — 2026-10-17
 
 - Remove unsupported, nonopening, inaccessible and extraction-only cases from scene browsing, collections and public metadata; retain 5,267 viewer-eligible scenes across 133 collections.

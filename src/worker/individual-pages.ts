@@ -21,7 +21,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const offset = (result.page - 1) * INDIVIDUAL_PAGE_SIZE;
   const advanced = ['provider', 'license', 'status', 'delivery', 'viewer'].some(field => filters.has(field));
   return page(location, 'Public datasets', '<div class="catalog-index">' + intro('Public datasets', `${number(index.total)} named scene datasets · ${number(index.sources.filter(source => source.count).length)} source collections`)
-    + '<p class="catalog-hint">Select a scene to open it. Hover or use the info button for metadata. Unchecked loads and source-only entries are labeled.</p>'
+    + '<p class="catalog-hint">Select a scene to open it. Hover or use the info button for metadata. Unchecked native loads retain their qualification labels.</p>'
     + `<form id="individual-search" class="catalog-filters" role="search" action="/hub/datasets/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
     + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"></label>`
     + select('dataset', 'Dataset', 'All datasets', individualDatasetOptions(index.sources, filters.get('dataset') || ''))
@@ -48,5 +48,5 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + '<p>Each card identifies one named scene dataset. Reconstructions, camera files and companion assets stay inside that scene. Standalone file listings do not become dataset cards. Uninspected archives and incomplete listings may contain more scenes. A listed scene has not necessarily passed a complete load.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/collections">Dataset collections</a> · <a href="/hub/datasets/audit">Audit and coverage</a></p>`
     + '<p><a href="/hub/datasets/individual/index.json" download>Labels and coverage (JSON)</a> · <a href="/hub/datasets/catalog.json" download>Source metadata (JSON)</a></p></div></details></div>',
-    '<script type="module" src="/hub/assets/individual-catalog.js?v=scene-ui-2"></script>');
+    '<script type="module" src="/hub/assets/individual-catalog.js?v=scene-ui-3"></script>');
 }
