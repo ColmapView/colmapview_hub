@@ -51,6 +51,13 @@ export const individualKind = (kind: string, format = '') => kind === 'ply' && f
   'camera-metadata': 'Camera metadata', scene: 'Public scene' })[kind] || '3D geometry';
 export const individualTokens = (text: string) => [...new Set(text.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().match(/[\p{L}\p{N}]+/gu) || [])];
 
+export function canOpenIndividual(row: IndividualRecord, source: IndividualSource): boolean {
+  const [, , kind, , , archive, , proof] = row;
+  if (source.access !== 'public' || ['gated', 'access_denied', 'not_found', 'browser_request_failed', 'http_error'].includes(proof?.delivery || '')) return false;
+  if (['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')) return false;
+  return Boolean(proof?.viewerUrl) || (source.provider === 'huggingface' && !archive && ['colmap', 'ply', 'spz', 'sog', 'splat'].includes(kind));
+}
+
 export function individualSummary(row: IndividualRecord, source: IndividualSource): CatalogSummary {
   const [id, , kind, path, format, archive, , proof] = row;
   const kindLabel = individualKind(kind, format);
@@ -59,8 +66,9 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
   return { id, title: title || 'Root reconstruction', provider: source.provider,
     license: source.license, licenseCategory: licenseCategory(source), access: source.access, statusLabel, formats: [format], testOrFixture: false,
     dataset: { id: source.id, label: source.label, title: source.title }, itemKind: kindLabel,
+    ...(canOpenIndividual(row, source) ? { openUrl: `/hub/datasets/open/${id}` } : {}),
     description: proof?.summary || `${kindLabel} listed in ${source.title}${archive ? ` inside ${archive}` : ''}. This individual model has not passed a complete load check.`,
-    delivery: proof?.delivery || (source.access === 'gated' ? 'gated' : 'not_tested'), hasViewer: Boolean(proof?.viewerUrl) };
+    delivery: proof?.delivery || (source.access === 'gated' ? 'gated' : 'not_tested'), hasViewer: Boolean(proof?.viewerUrl) && canOpenIndividual(row, source) };
 }
 
 const encodePath = (path: string) => path.split('/').map(encodeURIComponent).join('/');
@@ -73,8 +81,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
   const file = (value: string) => `https://huggingface.co/datasets/${encodePath(repo)}/resolve/${revision}/${encodePath(value)}`;
   const folder = ['colmap', 'cameras', 'splat-scene'].includes(kind);
   const dataUrl = parent.provider === 'public' ? parent.dataUrl : archive ? file(archive) : folder ? tree(path) : file(path);
-  const candidate = !proof?.viewerUrl && !archive && parent.provider === 'huggingface' && parent.access === 'public'
-    && ['colmap', 'ply', 'spz', 'sog', 'splat'].includes(kind) && !['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')
+  const candidate = !proof?.viewerUrl && canOpenIndividual(row, source)
     ? `https://colmapview.opsiclear.com/?url=${encodeURIComponent(dataUrl!)}` : undefined;
   const verification: CatalogVerification = proof || { level: 'file_set_only', delivery: summary.delivery!, checkedAt: parent.checkedAt,
     summary: summary.description, scope: 'This model’s filenames only. Source-wide samples do not certify sibling models or their photos and masks.',

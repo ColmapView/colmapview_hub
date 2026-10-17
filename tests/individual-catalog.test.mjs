@@ -51,6 +51,31 @@ test('individual models inherit labels and licenses while sibling checks stay at
   assert.equal(render.catalogSummary(model).hasViewer, false);
 });
 
+test('compact cards load an eligible model directly while archives, access restrictions and failed samples keep source details', () => {
+  const native = render.individualSummary(row(), source);
+  assert.equal(native.openUrl, `/hub/datasets/open/${row()[0]}`);
+  assert.equal(native.hasViewer, false);
+  const html = render.catalogCard(native);
+  assert.match(html, /class="dataset-open" href="\/hub\/datasets\/open\/data-/);
+  assert.match(html, /Try · unchecked/);
+  assert.match(html, /aria-controls="metadata-data-/);
+  assert.match(html, /Full metadata/);
+  for (const [record, origin] of [[row(0, { 5: 'archive.zip' }), source], [row(), { ...source, access: 'gated' }],
+    [row(0, { 2: 'obj' }), source], [row(0, { 7: { ...parent.verification, level: 'conversion_needed' } }), source],
+    [row(0, { 7: { ...parent.verification, delivery: 'access_denied', viewerUrl: parent.viewerUrl } }), source]]) {
+    const summary = render.individualSummary(record, origin);
+    assert.equal(summary.openUrl, undefined);
+    assert.equal(render.individualEntry(record, origin, parent).candidateViewerUrl, undefined);
+    assert.match(render.catalogCard(summary), /Source only/);
+  }
+  for (const openUrl of ['javascript:alert(1)', '//evil.example/', 'https://evil.example/?url=data', '/hub/datasets/open/../../secret']) {
+    assert.equal(render.isCatalogSummary({ ...native, openUrl }), false);
+    assert.ok(render.catalogCard({ ...native, openUrl }).includes(`href="${render.datasetPath(native)}"`));
+  }
+  const escaped = render.catalogCard({ ...native, title: '<img src=x onerror=alert(1)>', license: '<script>bad()</script>' });
+  assert.doesNotMatch(escaped, /<img|<script>/);
+});
+
 test('failed decoders keep their individual evidence and never receive a retry labeled as supported', () => {
   const proof = { ...parent.verification, level: 'conversion_needed', summary: 'Decoder failed.', statusLabel: 'Conversion needed' };
   const model = render.individualEntry(row(0, { 2: 'spz', 3: 'new.spz', 6: null, 7: proof }), source, parent);
@@ -124,7 +149,7 @@ test('license category filtering inherits each source terms and composes with ex
   assert.equal(render.individualBrowseUrl(filters, 3), '/hub/datasets/?licenseCategory=non-commercial&page=3');
   const html = render.individualIndexPage({ origin: 'https://colmapview.opsiclear.com', path: '/hub', base: '/hub', local: false }, index, unknown, new URLSearchParams('licenseCategory=not-specified'));
   assert.match(html, /<option value="not-specified" selected>Not specified<\/option>/);
-  assert.match(html, /License: Not specified/);
+  assert.match(html, /<dt>License category<\/dt><dd>Not specified/);
 });
 
 test('a public dataset label groups scenes from separate source records while retaining each source identity', async () => {

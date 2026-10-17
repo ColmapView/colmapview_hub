@@ -31,7 +31,7 @@ describe('Hub pages', () => {
     const link = await create(input());
     for (const path of [`/${link.id}`, '/missing-frame']) {
       const html = await (await request(path)).text();
-      expect(html).toContain('<a class="brand" href="https://colmapview.opsiclear.com/about.html">ColmapView</a>');
+      expect(html).toContain('<a class="brand" href="/hub/">ColmapView <span>Hub</span></a>');
       expect(html).toContain('<a href="/hub/datasets/">Datasets</a>');
       for (const [href, label] of [['/', 'Open viewer'], ['/about.html', 'About'], ['/privacy.html', 'Privacy'], ['/terms.html', 'Terms']]) {
         expect(html).toContain(`<a href="https://colmapview.opsiclear.com${href}">${label}</a>`);
@@ -40,6 +40,8 @@ describe('Hub pages', () => {
       expect(html).toContain('<a href="mailto:info@opsiclear.com">Contact</a>');
       expect(html).toContain('<p class="eyebrow">ColmapView Hub</p>');
       expect(html.indexOf('/hub/colmapview.css')).toBeLessThan(html.indexOf('/hub/styles.css'));
+      expect(html).toContain('/hub/assets/theme.js?v=hub-ui-1');
+      expect(html).toContain('aria-label="Appearance"');
       expect(html).toContain('<link rel="icon" href="/hub/favicon.ico">');
       expect(html).toMatch(/<title>[^<]+ · ColmapView Hub<\/title>/);
     }

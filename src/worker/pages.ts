@@ -1,12 +1,10 @@
 import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, VIEWER_ORIGINS, waitText } from '../shared/model';
 import type { AssetSummary, CardRecord, ListedLink } from '../shared/model';
+import { escapeHtml } from '../shared/html';
+export { escapeHtml } from '../shared/html';
 
 /** ColmapView's own pages; the Hub shares their header and footer. */
 const VIEWER = VIEWER_ORIGINS[0];
-
-export function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
-}
 
 /** Nonzero counts only, for example "83 images · 83,749 points · 82 masks · 1 splat". */
 export function assetLine(assets?: AssetSummary): string {
@@ -39,12 +37,14 @@ const policyLinks = ([['About', 'about.html'], ['Privacy', 'privacy.html'], ['Te
 
 const header = (path: string) => [
   '<header class="site-header">',
-  `<a class="brand" href="${VIEWER}/about.html">ColmapView</a>`,
+  `<a class="brand" href="${escapeHtml(path)}/">ColmapView <span>Hub</span></a>`,
   '<nav class="site-nav" aria-label="Main navigation">',
   `<a href="${escapeHtml(path)}/datasets/">Datasets</a>`,
+  `<a href="${escapeHtml(path)}/datasets/collections">Collections</a>`,
   `<a href="${VIEWER}/">Open viewer</a>`,
-  policyLinks,
-  '</nav></header>',
+  '</nav>',
+  '<label class="hub-theme"><span class="sr-only">Appearance</span><select id="hub-theme" aria-label="Appearance" disabled><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label>',
+  '</header>',
 ].join('');
 
 const footer = [
@@ -67,8 +67,9 @@ export function page(location: HubLocation, title: string, body: string, metadat
     metadata,
     `<link rel="icon" href="${asset('favicon.ico')}">`,
     `<link rel="stylesheet" href="${asset('colmapview.css')}">`,
-    `<link rel="stylesheet" href="${asset('styles.css')}">`,
-    `<script type="module" src="${asset('assets/client.js')}"></script>`,
+    `<script src="${asset('assets/theme.js')}?v=hub-ui-1"></script>`,
+    `<link rel="stylesheet" href="${asset('styles.css')}?v=hub-ui-1">`,
+    `<script type="module" src="${asset('assets/client.js')}?v=hub-ui-1"></script>`,
     '</head><body>',
     '<a class="skip-link" href="#main">Skip to content</a>',
     header(location.path),
@@ -152,8 +153,11 @@ export function galleryKey(location: HubLocation, cursor?: string): string {
 }
 
 export function landingPage(location: HubLocation): string {
-  return page(location, 'Share links', intro('Share links for ColmapView results.', 'Links are created when you publish from ColmapView.',
-    `<div class="actions"><a class="button button-primary" href="${location.path}/datasets/">Browse datasets</a><a class="button" href="${VIEWER}/">Open ColmapView</a></div>`));
+  return page(location, 'Datasets and shared results', '<div class="hub-landing">' + intro('Explore in ColmapView.', 'Find a model, check its source and open it in the viewer.',
+    `<div class="actions"><a class="button button-primary" href="${location.path}/datasets/">Browse datasets</a><a class="button" href="${VIEWER}/">Open viewer</a></div>`)
+    + '<section class="hub-landing-panels"><div class="card"><h2>Public datasets</h2><p>Individual models and scenes, grouped by dataset. Filter by format and license.</p>'
+    + `<a href="${location.path}/datasets/collections">Browse collections ↗</a></div><div class="card"><h2>Share a reconstruction</h2><p>Publish from ColmapView to create a Hub link for your result.</p>`
+    + `<a href="${VIEWER}/">Open ColmapView ↗</a></div></section></div>`);
 }
 
 export function notFoundPage(location: HubLocation): string {

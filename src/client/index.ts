@@ -1,4 +1,7 @@
 import { SECRET_PATTERN, waitText } from '../shared/model';
+import { initializeCatalogMetadata } from './catalog-card';
+
+initializeCatalogMetadata();
 
 const path = document.documentElement.dataset.hubPath ?? '';
 // Not named `status`, which would shadow the DOM library's global `status`.

@@ -2,6 +2,8 @@ import { CATALOG_PAGE_SIZE, accessLabel, catalogSummary, datasetPath, datasetFil
 import type { CatalogEntry, CatalogFact, CatalogSnapshot, CatalogSummary } from '../shared/catalog';
 import { licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from '../shared/license-categories';
 import { escapeHtml as escape, intro, page } from './pages';
+import { catalogCardHtml as catalogCard } from '../shared/catalog-card';
+export { catalogCard };
 import type { HubLocation } from './pages';
 
 const location: HubLocation = { origin: 'https://colmapview.opsiclear.com', path: '/hub', base: 'https://colmapview.opsiclear.com/hub', local: false };
@@ -12,12 +14,6 @@ const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset
   + `${entry.itemKind ? `<span class="dataset-tag">${escape(entry.itemKind)}</span>` : ''}<span class="dataset-tag">${escape(providerLabel(entry.provider))}</span>`
   + `<span class="dataset-tag dataset-license-category">License: ${LICENSE_CATEGORY_LABELS[licenseCategory(entry)]}</span>`
   + `<span class="dataset-tag">${escape(entry.statusLabel)}</span>${entry.delivery ? `<span class="dataset-tag">${escape(deliveryLabel(entry.delivery))}</span>` : ''}${entry.testOrFixture ? '<span class="dataset-tag">Test / demo</span>' : ''}</p>`;
-
-export function catalogCard(entry: CatalogSummary): string {
-  return `<article class="card dataset-card"><h2><a href="${datasetPath(entry)}">${escape(entry.title)}</a></h2>${tags(entry)}`
-    + `<p>${escape(entry.description)}</p><p class="meta">${escape(accessLabel(entry.access))}</p>`
-    + `<p class="meta"><strong>License:</strong> ${escape(entry.license)}</p></article>`;
-}
 
 function social(url: string, title: string, description: string): string {
   return `<link rel="canonical" href="${escape(url)}"><meta property="og:type" content="website"><meta property="og:url" content="${escape(url)}">`
@@ -70,30 +66,29 @@ export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, coll
   const selected = snapshot.entries.slice((pageNumber - 1) * CATALOG_PAGE_SIZE, pageNumber * CATALOG_PAGE_SIZE);
   const options = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b, 'en')).map(value => `<option value="${escape(value)}">${escape(value)}</option>`).join('');
   const pagePath = (value: number) => value <= 1 ? (collections ? '/hub/datasets/collections' : '/hub/datasets/') : `/hub/datasets/${collections ? 'collection-' : ''}page-${value}`;
-  const description = `${number(snapshot.importSummary.hfEntries)} Hugging Face repositories and ${number(snapshot.importSummary.publicEntries)} public scene or subset entries.`
-    + (snapshot.importSummary.additionalAuditEntries ? ` Includes ${number(snapshot.importSummary.additionalAuditEntries)} additional audited sources.` : '');
+  const description = `${number(total)} source collections · Hugging Face and public datasets`;
   return page(location, collections ? 'Dataset collections' : 'Public datasets', '<div class="catalog-index">' + intro(collections ? 'Dataset collections' : 'Public datasets', description)
-    + (collections ? '<p class="note"><a href="/hub/datasets/">Browse individual models and scenes</a>. Collection pages retain source-wide metadata and audit history.</p>' : '')
-    + '<p class="note">Browse source links, reported licenses, formats and sampled loading checks. The surveys were recorded in October 2026.</p>'
-    + `<p class="note">${escape(LICENSE_CATEGORY_NOTE)}</p>`
-    + (snapshot.auditSummary ? `<p class="note">Rechecked ${number(snapshot.auditSummary.sourcesAudited)} sources on ${escape(snapshot.auditSummary.checkedAt)}, including previously rejected candidates. Format checks and browser reads are recorded separately. <a href="/hub/datasets/audit">Read the audit</a>.</p>` : '')
+    + '<p class="catalog-hint">Hover for source and license details. <a href="/hub/datasets/">Browse individual models and scenes</a>.</p>'
     + `<form id="catalog-search" class="catalog-filters" role="search" data-page="${pageNumber}"${collections ? ' data-collections="true"' : ''}>`
-    + '<label class="catalog-query">Search datasets<input type="search" name="q" placeholder="Dataset, format, license…" disabled></label>'
+    + '<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" placeholder="Search collections…" disabled></label>'
     + '<label>Source<select name="provider" aria-label="Source" disabled><option value="">All sources</option><option value="huggingface">Hugging Face</option><option value="public">Public sources</option></select></label>'
-    + `<label>License category<select name="licenseCategory" aria-label="License category" disabled><option value="">All license categories</option>${LICENSE_CATEGORIES.map(value => `<option value="${value}">${LICENSE_CATEGORY_LABELS[value]}</option>`).join('')}</select></label>`
-    + `<label>License<select name="license" aria-label="License" disabled><option value="">All licenses</option>${options(snapshot.entries.map(entry => entry.license))}</select></label>`
+    + `<label class="catalog-license-filter">License category<select name="licenseCategory" aria-label="License category" disabled><option value="">All licenses</option>${LICENSE_CATEGORIES.map(value => `<option value="${value}">${LICENSE_CATEGORY_LABELS[value]}</option>`).join('')}</select></label>`
+    + '<button type="submit" class="button button-primary" disabled>Search</button><button type="reset" class="button" disabled>Reset</button></div>'
+    + '<details class="catalog-advanced"><summary>More filters</summary><div class="catalog-secondary">'
+    + `<label>License<select name="license" aria-label="License" disabled><option value="">All reported licenses</option>${options(snapshot.entries.map(entry => entry.license))}</select></label>`
     + `<label>Evidence<select name="status" aria-label="Evidence" disabled><option value="">All evidence levels</option>${options(snapshot.entries.map(entry => entry.statusLabel))}</select></label>`
     + `<label>Delivery<select name="delivery" aria-label="Delivery" disabled><option value="">All delivery results</option>${[...new Set(snapshot.entries.map(entry => entry.verification?.delivery).filter((value): value is string => Boolean(value)))].sort().map(value => `<option value="${escape(value)}">${escape(deliveryLabel(value))}</option>`).join('')}</select></label>`
     + '<label>Viewer link<select name="viewer" aria-label="Viewer link" disabled><option value="">All sources</option><option value="available">Checked sample link</option></select></label>'
-    + '<button type="reset" class="button" disabled>Reset</button></form><noscript><p class="note">Search requires JavaScript. Browse the dataset pages below.</p></noscript>'
+    + '</div></details></form><noscript><p class="note">Search requires JavaScript. Browse the dataset pages below.</p></noscript>'
     + `<p id="catalog-count" class="catalog-count" role="status" tabindex="-1">${number(total)} entries · page ${pageNumber} of ${pages}</p>`
     + `<div id="catalog-results" class="dataset-grid">${selected.map(entry => catalogCard(catalogSummary(entry))).join('')}</div>`
     + '<nav class="catalog-pagination" aria-label="Dataset pages">'
     + `<a class="button" id="catalog-prev" href="${pagePath(pageNumber - 1)}"${pageNumber === 1 ? ' hidden' : ''}>Previous</a>`
-    + `<span id="catalog-page">Page ${pageNumber} of ${pages}</span>`
+    + `<span id="catalog-page">Page ${pageNumber} of ${pages}</span><button type="button" class="button" id="catalog-more" hidden>Load more</button>`
     + `<a class="button" id="catalog-next" href="${pagePath(pageNumber + 1)}"${pageNumber === pages ? ' hidden' : ''}>Next</a></nav>`
-    + '<p class="note catalog-download"><a href="/hub/datasets/catalog.json" download>Download catalog metadata (JSON)</a></p></div>',
-    social(`${location.base}/datasets/`, 'Public datasets', description) + '<script type="module" src="/hub/assets/catalog.js?v=licenses-1"></script>');
+    + '<details class="catalog-notes"><summary>About this catalog</summary><div><p>Source metadata and sampled loading checks were recorded in October 2026. Collection checks cover the recorded sample; other models may need further checks.</p>'
+    + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a> · <a href="/hub/datasets/catalog.json" download>Download source metadata (JSON)</a></p></div></details></div>`,
+    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=hub-ui-1"></script>');
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {

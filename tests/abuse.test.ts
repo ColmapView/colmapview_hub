@@ -75,8 +75,8 @@ describe('listings flag', () => {
     const page = await request('/');
     expect(page.status).toBe(200);
     const html = await page.text();
-    expect(html).toContain('<h1>Share links for ColmapView results.</h1>');
-    expect(html).toContain('<a class="button" href="https://colmapview.opsiclear.com/">Open ColmapView</a>');
+    expect(html).toContain('<h1>Explore in ColmapView.</h1>');
+    expect(html).toContain('<a class="button" href="https://colmapview.opsiclear.com/">Open viewer</a>');
     expect((await post(input({ listed: true }))).status).toBe(403);
   });
 

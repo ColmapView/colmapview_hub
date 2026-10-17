@@ -36,6 +36,7 @@ export interface CatalogEntry {
   dataset?: { id: string; label: string; title: string };
   itemKind?: string;
   candidateViewerUrl?: string;
+  openUrl?: string;
   datasetLabel?: string;
 }
 export interface CatalogSnapshot {
@@ -46,9 +47,19 @@ export interface CatalogSnapshot {
   auditSummary?: { checkedAt: string; sourcesAudited: number; levels: Record<string, number>; delivery: Record<string, number> };
   individualSummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
 }
-export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind'> & { delivery?: string; hasViewer?: boolean };
+export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind'> & { delivery?: string; hasViewer?: boolean; openUrl?: string };
 export const CATALOG_PAGE_SIZE = 24;
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
+export function isCatalogOpenUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  if (/^\/hub\/datasets\/open\/data-[a-f0-9]{24}$/.test(value)) return true;
+  try {
+    const url = new URL(value);
+    return ['https://colmapview.opsiclear.com', 'https://colmapview.github.io'].includes(url.origin)
+      && !url.username && !url.password && url.pathname === '/' && url.searchParams.has('url');
+  } catch { return false; }
+}
+export const catalogOpenUrl = (entry: CatalogSummary) => isCatalogOpenUrl(entry.openUrl) ? entry.openUrl : datasetPath(entry);
 export const datasetLabel = (entry: CatalogEntry) => entry.dataset?.label || entry.datasetLabel || entry.facts.find(fact => fact.label === 'Collection')?.value || entry.title.split('/').at(-1) || entry.title;
 export const datasetFilterValue = (entry: Pick<CatalogSummary, 'dataset' | 'provider'>) => entry.dataset
   ? entry.provider === 'public' ? `public:${entry.dataset.label}` : entry.dataset.id : '';
@@ -63,8 +74,9 @@ export const deliveryLabel = (delivery?: string) => deliveryLabels[delivery || '
 export function catalogSummary(entry: CatalogEntry): CatalogSummary {
   const { id, title, provider, license, access, statusLabel, formats, description, testOrFixture, dataset, itemKind } = entry;
   return { id, title, provider, license, licenseCategory: licenseCategory(entry), access, statusLabel, formats, description, testOrFixture,
+    ...(entry.access === 'public' && isCatalogOpenUrl(entry.openUrl || entry.viewerUrl) ? { openUrl: entry.openUrl || entry.viewerUrl } : {}),
     dataset: dataset || { id, label: datasetLabel(entry), title }, ...(itemKind ? { itemKind } : {}),
-    ...(entry.verification ? { delivery: entry.verification.delivery, hasViewer: Boolean(entry.viewerUrl) } : {}) };
+    ...(entry.verification ? { delivery: entry.verification.delivery, hasViewer: Boolean(entry.viewerUrl) && entry.access === 'public' } : {}) };
 }
 
 export function filterCatalog(entries: CatalogSummary[], filters: { query: string; provider: string; license: string; licenseCategory?: string; status: string; delivery?: string; viewer?: string }): CatalogSummary[] {
@@ -86,6 +98,7 @@ export function isCatalogSummary(value: unknown): value is CatalogSummary {
     && (item.provider === 'huggingface' || item.provider === 'public')
     && ['public', 'gated', 'terms', 'unknown'].includes(String(item.access))
     && (item.delivery === undefined || typeof item.delivery === 'string') && (item.hasViewer === undefined || typeof item.hasViewer === 'boolean')
+    && (item.openUrl === undefined || isCatalogOpenUrl(item.openUrl))
     && (item.itemKind === undefined || typeof item.itemKind === 'string')
     && (dataset === undefined || Boolean(dataset && typeof dataset === 'object' && typeof dataset.id === 'string' && /^[a-z0-9-]{1,80}-[a-f0-9]{12}$/.test(dataset.id)
       && typeof dataset.label === 'string' && typeof dataset.title === 'string'))

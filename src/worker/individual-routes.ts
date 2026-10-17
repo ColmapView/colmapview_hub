@@ -4,6 +4,7 @@ import { individualIndexPage } from './individual-pages';
 import { errorPage } from './pages';
 import type { HubLocation } from './pages';
 import { individualSelection } from '../shared/individual-catalog';
+import { isCatalogOpenUrl, datasetPath } from '../shared/catalog';
 
 /** A public, operator-built metadata namespace. No user-created share record,
  * management secret, R2 listing, or private lookup path is reachable here. */
@@ -19,15 +20,25 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   }
   if (path === '/datasets') return new Response(null, { status: 308, headers: { Location: `${location.base}/datasets/${url.search}` } });
   const entry = /^\/datasets\/entry\/(data-[a-f0-9]{24})$/.exec(path);
-  if (path !== '/datasets/' && path !== '/datasets/api/entries' && !entry) return fail(404, 'Dataset entry not found.');
-  const filters = entry ? new URLSearchParams() : individualFilters(url.searchParams);
-  const key = new Request(`${location.origin}${url.pathname}${filters.size ? `?${filters}` : ''}`);
+  const open = /^\/datasets\/open\/(data-[a-f0-9]{24})$/.exec(path);
+  if (path !== '/datasets/' && path !== '/datasets/api/entries' && !entry && !open) return fail(404, 'Dataset entry not found.');
+  const filters = entry || open ? new URLSearchParams() : individualFilters(url.searchParams);
+  const cacheUrl = new URL(url.pathname, location.origin);
+  cacheUrl.search = filters.toString();
+  cacheUrl.searchParams.set('_ui', 'hub-design-1');
+  const key = new Request(cacheUrl);
   const cached = await caches.default.match(key);
   if (cached) {
     if (request.headers.get('If-None-Match') === cached.headers.get('ETag')) return new Response(null, { status: 304, headers: cached.headers });
     return cached;
   }
   const index = await individualIndex(env.CATALOG_ASSETS, location.origin);
+  if (open) {
+    const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, open[1]);
+    if (!model) return fail(404, 'Dataset entry not found.');
+    const target = model.openUrl && (model.viewerUrl || model.candidateViewerUrl);
+    return new Response(null, { status: 302, headers: { Location: target && isCatalogOpenUrl(target) ? target : datasetPath(model), 'Cache-Control': 'no-store' } });
+  }
   let body: string;
   if (entry) {
     const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, entry[1]);

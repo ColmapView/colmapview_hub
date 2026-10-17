@@ -236,7 +236,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, location
   const path = url.pathname.slice(location.path.length);
   if (path === '') return redirect(`${location.base}/`, 307);
   if (path === '/datasets/index.html') return redirect(`${location.base}/datasets/${url.search}`, 308);
-  if (path === '/datasets' || path === '/datasets/' || path.startsWith('/datasets/entry/') || path.startsWith('/datasets/api/')) {
+  if (path === '/datasets' || path === '/datasets/' || path.startsWith('/datasets/entry/') || path.startsWith('/datasets/open/') || path.startsWith('/datasets/api/')) {
     return individualRoute(request, env, ctx, location, url);
   }
   if (path.startsWith('/datasets/')) return failure(location, false, 404);

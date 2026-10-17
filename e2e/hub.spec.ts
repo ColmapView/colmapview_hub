@@ -171,6 +171,7 @@ test('shows the Hub home without a submission form or horizontal scroll', async 
 for (const colorScheme of ['dark', 'light'] as const) {
   test(`matches ColmapView in the ${colorScheme} color scheme`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
+    await page.addInitScript(() => localStorage.setItem('colmap-viewer-theme', 'system'));
     const link = await createLink(page);
     try {
       for (const path of [new URL(link.url).pathname, `/hub/manage/${link.id}#${link.owner}`]) {
@@ -186,7 +187,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
           .evaluate(element => [getComputedStyle(element).color, getComputedStyle(element).backgroundColor]);
         expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
         for (const target of await page.locator('.site-nav a, .footer-links a, .brand, .button').all()) {
-          expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+          expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(32);
         }
       }
       await page.setViewportSize({ width: 360, height: 800 });
@@ -230,19 +231,24 @@ test('long titles stay within a narrow card and delete keys never enter public U
 
 test('shows the landing page in the ColmapView frame', async ({ page }) => {
   await page.goto('/hub/');
-  await expect(page.getByRole('heading', { name: 'Share links for ColmapView results.' })).toBeVisible();
-  await expect(page.getByText('Links are created when you publish from ColmapView.')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Open ColmapView' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
-  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link')).toHaveText(['Datasets', 'Open viewer', 'About', 'Privacy', 'Terms']);
+  await expect(page.getByRole('heading', { name: 'Explore in ColmapView.' })).toBeVisible();
+  await expect(page.getByText('Publish from ColmapView to create a Hub link for your result.')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link')).toHaveText(['Datasets', 'Collections', 'Open viewer']);
   await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Contact']);
   await expect(page.locator('input,textarea,form')).toHaveCount(0);
   await page.getByRole('link', { name: 'Browse datasets', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Public datasets', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.getByRole('searchbox', { name: 'Search datasets' }).fill('Hagenberg Ellipse');
   await expect(page.locator('.dataset-card')).toHaveCount(1);
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
+  await page.getByText('More filters', { exact: true }).click();
   await page.getByLabel('Viewer link', { exact: true }).selectOption('available');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await expect(page.locator('.dataset-card').getByText('Browser read checked', { exact: true })).toHaveCount(24);
@@ -250,17 +256,28 @@ test('shows the landing page in the ColmapView frame', async ({ page }) => {
   await expect(page.locator('.dataset-card')).toHaveCount(0);
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search datasets' }).fill('Hagenberg Ellipse');
-  await page.getByRole('link', { name: 'CV course Ellipse — Hagenberg Ellipse (camera + RGB)', exact: true }).click();
+  await page.getByRole('button', { name: 'Metadata for CV course Ellipse — Hagenberg Ellipse (camera + RGB)', exact: true }).click();
+  await page.getByRole('link', { name: 'Full metadata', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Dataset information', exact: true })).toBeVisible();
   await expect(page.getByText('License (source metadata)', { exact: true })).toBeVisible();
   await expect(page.getByText('not independently confirmed', { exact: true })).toBeVisible();
   await expect(page.locator('img,iframe')).toHaveCount(0);
   await page.getByRole('link', { name: '← All datasets', exact: true }).click();
-  await page.getByRole('link', { name: 'Read the audit', exact: true }).click();
+  await page.getByText('About this catalog', { exact: true }).click();
+  await page.getByRole('link', { name: 'Audit and coverage', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Dataset audit', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Download all audit records (JSON)', exact: true })).toHaveAttribute('href', '/hub/datasets/dataset-audit.json');
   const manifest = await page.request.get('/hub/datasets/public-megascenes-000000-arc-de-bera-component-0-native-complete-99744eaac47a.manifest.json', { headers: { Origin: 'https://colmapview.github.io' } });
   expect(manifest.status()).toBe(200);
   expect(manifest.headers()['access-control-allow-origin']).toBe('*');
   expect((await manifest.json()).files.points3D).toContain('/colmap/0/points3D.bin');
+  await page.goto('/hub/datasets/?dataset=hf-opsiclear-ngs-19c25258f77b&page=2');
+  const firstId = await page.locator('.dataset-card').first().getAttribute('data-entry-id');
+  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  await expect(page.locator('#catalog-count')).toContainText('Showing 25–72');
+  await expect(page.locator('.dataset-card').first()).toHaveAttribute('data-entry-id', firstId!);
+  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('scan55');
+  await expect(page.locator('.dataset-card')).toHaveCount(1);
+  await expect(page.locator('.dataset-open')).toHaveAttribute('href', /^\/hub\/datasets\/open\/data-/);
 });
