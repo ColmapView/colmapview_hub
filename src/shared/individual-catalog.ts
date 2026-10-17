@@ -16,6 +16,9 @@ export interface IndividualIndex {
   incompleteCollections: number; scope: string;
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
+  sceneCompatibility?: { status: 'native_headers_checked'; revision: string; cameraRecordChecked: boolean; poseRecordChecked: boolean;
+    cameras: number | null; images: number | null; points: number | null };
+  photoAvailability?: 'complete_export_checked' | 'sample_checked' | 'not_included' | 'not_checked' | 'unresolved';
   sceneValidation?: { status: 'passed'; revision: string; cameras: number; images: number; points: number;
     photoCount: number; export: 'colmap_images'; exportSha256: string } };
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
@@ -60,13 +63,17 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
   const [, , kind, , , archive, , proof] = row;
   if (source.access !== 'public' || archive || proof?.opening || failedDelivery.has(proof?.delivery || '')) return false;
   if (['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')) return false;
-  if (proof?.sampleScope === 'companion_asset' || proof?.sourceImages?.status === 'not_included') return false;
+  if (proof?.sampleScope === 'companion_asset') return false;
+  const compatibility = proof?.sceneCompatibility;
+  if (kind === 'colmap' && proof?.level === 'native_layout_checked' && proof.viewerUrl
+    && ['browser_readable', 'cors_headers_checked'].includes(proof.delivery) && compatibility?.status === 'native_headers_checked'
+    && [compatibility.cameras, compatibility.images].every(value => value === null || Number.isInteger(value) && value > 0)
+    && compatibility.cameraRecordChecked === true && compatibility.poseRecordChecked === true) return true;
   const validation = proof?.sceneValidation;
   return ['colmap', 'cameras', 'camera-scene', 'scene'].includes(kind) && proof?.level === 'scene_verified'
     && proof.delivery === 'browser_readable' && Boolean(proof.viewerUrl) && validation?.status === 'passed'
     && Number.isInteger(validation.cameras) && validation.cameras > 0
-    && validation.export === 'colmap_images' && Number.isInteger(validation.images) && validation.images > 0
-    && Number.isInteger(validation.photoCount) && validation.photoCount === validation.images;
+    && validation.export === 'colmap_images' && Number.isInteger(validation.images) && validation.images > 0;
 }
 
 export function individualSummary(row: IndividualRecord, source: IndividualSource): CatalogSummary {
@@ -112,6 +119,12 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
+      ...(proof?.photoAvailability ? [{ label: 'Original photographs', value: ({ complete_export_checked: 'All registered originals checked in a complete export',
+        sample_checked: 'Matching sample checked; complete coverage unverified', not_included: 'Not included by publisher',
+        not_checked: 'Availability not established', unresolved: 'Sampled paths ambiguous; model loading remains supported' })[proof.photoAvailability] }] : []),
+      ...(proof?.sceneCompatibility ? [{ label: 'Native layout check', value: proof.scope },
+        ...Object.entries({ 'Camera definitions': proof.sceneCompatibility.cameras, 'Registered pose records': proof.sceneCompatibility.images,
+          '3D points': proof.sceneCompatibility.points }).filter(([, value]) => value !== null).map(([label, value]) => ({ label, value: String(value) }))] : []),
       ...(proof?.sceneValidation ? [{ label: 'Verified original photographs', value: String(proof.sceneValidation.photoCount) },
         { label: 'Verified camera models', value: String(proof.sceneValidation.cameras) },
         { label: 'COLMAP + images export SHA-256', value: proof.sceneValidation.exportSha256 },

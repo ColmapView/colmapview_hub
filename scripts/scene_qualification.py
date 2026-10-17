@@ -1,11 +1,12 @@
-"""Exact, revision-bound evidence for publishing camera-and-photo scenes.
+"""Exact, revision-bound compatibility and optional full-export evidence.
 
 The offline research inventory is deliberately broader than the public Hub.
-Listed files, readable headers and geometry-only imports cannot qualify a scene.
+Native camera/pose models can qualify without photographs. Standalone geometry
+cannot establish a scene. Full RGB export checks remain a stronger evidence tier.
 """
 
 import re
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 
 REQUIRED_CHECKS = ('browserImport', 'photoExport', 'independentColmapRead',
@@ -14,6 +15,59 @@ REQUIRED_CHECKS = ('browserImport', 'photoExport', 'independentColmapRead',
 
 def scene_key(source_id, kind, path, archive=None):
     return source_id, kind, path, archive
+
+
+def native_scene_reviews(catalog, policy):
+    if policy.get('schemaVersion') != 1 or not isinstance(policy.get('sources'), list):
+        raise ValueError('Invalid native layout evidence')
+    entries = {entry['sourceId']: entry for entry in catalog['entries']}
+    reviews = {}
+    for source in policy['sources']:
+        entry = entries.get(source['sourceId'])
+        revision = next((fact['value'] for fact in (entry or {}).get('facts', []) if fact['label'] == 'Pinned revision'), None)
+        if not entry or revision != source.get('revision') or not re.fullmatch('[a-f0-9]{40}', revision or ''):
+            raise ValueError(f'Native layout revision changed; recheck {source["sourceId"]}')
+        for model in source['models']:
+            # path, required files, camera count, registered pose count, points,
+            # photo evidence, checked date. Original byte reads remain offline.
+            path, files, cameras, poses, points, photos, checked_at, records = model
+            if (not all(role in files for role in ('cameras', 'images', 'points3d'))
+                    or any(value is not None and (type(value) is not int or value < 1) for value in (cameras, poses))
+                    or points is not None and (type(points) is not int or points < 0)
+                    or records.get('cameraRecordChecked') is not True or records.get('poseRecordChecked') is not True or not checked_at
+                    or photos not in ('sample_checked', 'not_checked', 'unresolved')):
+                raise ValueError('Native layout evidence requires camera/pose headers, exact model files and scoped photo evidence')
+            key = scene_key(source['sourceId'], 'colmap', path)
+            if key in reviews:
+                raise ValueError('Duplicate native layout evidence')
+            reviews[key] = {'sourceId': source['sourceId'], 'revision': revision, 'path': path, 'files': dict(files),
+                            'cameras': cameras, 'images': poses, 'points': points, 'photos': photos, 'checkedAt': checked_at}
+    return reviews
+
+
+def native_evidence(entry, row, revision, review, hf_url):
+    kind, path, files, archive = row
+    if (entry.get('provider') != 'huggingface' or kind != 'colmap' or archive
+            or entry['sourceId'] != review['sourceId'] or revision != review['revision'] or path != review['path']
+            or any((files or {}).get(role) != value for role, value in review['files'].items())):
+        raise ValueError('Native model identity or required file paths changed; recheck the scene')
+    source_images = (entry.get('verification') or {}).get('sourceImages')
+    photos = 'not_included' if source_images and source_images.get('status') == 'not_included' else review['photos']
+    photo_summary = {'sample_checked': 'A matching original photograph passed a browser-read check; complete photo coverage is not established.',
+                     'not_included': 'The publisher does not include the original photographs. Cameras and reconstruction remain usable.',
+                     'not_checked': 'Original photograph availability is unverified; missing photographs do not prevent model loading.',
+                     'unresolved': 'Sampled photograph paths are ambiguous; cameras and reconstruction remain usable.'}[photos]
+    proof = {'level': 'native_layout_checked', 'delivery': 'cors_headers_checked', 'checkedAt': review['checkedAt'],
+             'statusLabel': 'Native COLMAP layout checked', 'viewerVersion': '0.17.0',
+             'viewerUrl': 'https://colmapview.opsiclear.com/?url=' + quote(hf_url(entry, revision, path), safe=''),
+             'summary': 'Native camera, registered pose and point-file headers checked. ' + photo_summary,
+             'scope': 'Exact pinned model file set and bounded native headers. Required model byte responses and CORS headers were checked. Full parsing, rendering and complete export are separate checks.',
+             'sceneCompatibility': {'status': 'native_headers_checked', 'revision': revision,
+                                    'cameraRecordChecked': True, 'poseRecordChecked': True, 'cameras': review['cameras'],
+                                    'images': review['images'], 'points': review['points']}, 'photoAvailability': photos}
+    if source_images:
+        proof['sourceImages'] = source_images
+    return proof, 'COLMAP'
 
 
 def verified_scene_reviews(catalog, policy):
@@ -53,6 +107,8 @@ def verified_scene_reviews(catalog, policy):
 
 
 def qualified_evidence(entry, row, revision, review, hf_url):
+    if (entry.get('verification') or {}).get('sourceImages', {}).get('status') == 'not_included':
+        raise ValueError('Complete source-photo evidence conflicts with the publisher RGB exclusion; retain model-only evidence instead')
     kind, path, files, archive = row
     if (entry.get('provider') != 'huggingface' or archive or kind not in ('colmap', 'cameras', 'camera-scene')
             or revision != review['revision'] or scene_key(entry['sourceId'], kind, path, archive)
@@ -80,6 +136,7 @@ def qualified_evidence(entry, row, revision, review, hf_url):
              'statusLabel': 'Cameras + photos verified', 'viewerVersion': review['viewerVersion'], 'viewerUrl': viewer_url,
              'summary': f'{counts["images"]} posed original photographs and {counts["points"]:,} points loaded and exported as COLMAP + images. Independent checks matched original photo hashes, camera calibration and poses.',
              'scope': 'This exact scene and pinned revision. Other scenes, reconstruction variants and masks are not qualified by this check.',
+             'photoAvailability': 'complete_export_checked',
              'sceneValidation': {'status': 'passed', 'revision': revision, 'images': counts['images'],
                                  'cameras': counts['cameras'], 'points': counts['points'], 'photoCount': len(review['photos']),
                                  'export': 'colmap_images', 'exportSha256': review['exportSha256']}}
@@ -93,11 +150,11 @@ def verified_source_entry(entry, proofs, formats):
     result['dataUrl'] = entry['sourceUrl']
     result['checkedAt'] = max(proof['checkedAt'] for proof in proofs)
     result['formats'] = sorted(set(formats))
-    result['status'] = 'verified_scenes_available'
-    result['statusLabel'] = 'Verified scenes available'
+    result['status'] = 'supported_scenes_available'
+    result['statusLabel'] = 'Supported scenes available'
     scene_label = 'scene' if len(proofs) == 1 else 'scenes'
-    result['description'] = f'{len(proofs)} named {scene_label} verified with cameras, original photographs and COLMAP + images export. Browse this collection’s published scenes to open them.'
-    result['verification'] = {'level': 'verified_scenes_available', 'delivery': 'browser_readable',
+    result['description'] = f'{len(proofs)} named {scene_label} with supported camera/model layouts. Photograph availability and full-export checks are recorded separately for each scene. Browse the published scenes to open them.'
+    result['verification'] = {'level': 'supported_scenes_available', 'delivery': 'browser_readable' if all(proof['delivery'] == 'browser_readable' for proof in proofs) else 'cors_headers_checked',
                               'checkedAt': result['checkedAt'], 'viewerVersion': ', '.join(sorted({proof['viewerVersion'] for proof in proofs})),
                               'summary': result['description'],
                               'scope': 'Only the published named scenes are qualified. Historical collection samples do not qualify other scenes or masks.'}

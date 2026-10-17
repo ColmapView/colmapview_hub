@@ -52,8 +52,8 @@ export function catalogEntryPage(entry: CatalogEntry): string {
         ? 'Files require access on Hugging Face. Obtain access and download them there, then attempt local import. Direct gated loading and file compatibility have not been verified.'
         : entry.verification.opening ? entry.verification.opening.summary : candidateViewerUrl
         ? 'The model link is based on the source file listing. Its format, browser access and complete loading need individual checks.'
-        : entry.verification.level === 'verified_scenes_available'
-        ? 'Browse this collection’s published named scenes to open a verified camera-and-photo dataset.'
+        : entry.verification.level === 'supported_scenes_available'
+        ? 'Browse this collection’s published named scenes. Model compatibility, photograph availability and full-export evidence are recorded separately.'
         : entry.provider === 'public' && entry.verification.level === 'header_checked'
         ? 'Download and extract the source archive, then open this entry’s model or scene folder in ColmapView. The loading evidence identifies the inspected files.'
           : 'Use the source link for the original files. The evidence below records the conversion, missing assets or checks needed before opening this source in ColmapView.')}</p>` : '')
@@ -98,7 +98,7 @@ export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, coll
     + `<a class="button" id="catalog-next" href="${pagePath(pageNumber + 1)}"${pageNumber === pages ? ' hidden' : ''}>Next</a></nav>`
     + '<details class="catalog-notes"><summary>About this catalog</summary><div><p>Source metadata and sampled loading checks were recorded in October 2026. Collection checks cover the recorded sample; other models may need further checks.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a> · <a href="/hub/datasets/catalog.json" download>Download source metadata (JSON)</a></p></div></details></div>`,
-    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=scene-ui-5"></script>');
+    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + '<script type="module" src="/hub/assets/catalog.js?v=scene-ui-6"></script>');
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {
@@ -111,7 +111,7 @@ export function catalogAuditPage(snapshot: CatalogSnapshot): string {
   const status = (level: string) => levelLabels[level] || level.replace(/_/g, ' ');
   return page(location, 'Dataset audit', '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
     + intro('Dataset audit', `${number(audit.sourcesAudited)} sources assessed on ${audit.checkedAt}, including previously supported and rejected inventory records.`)
-    + `<p>${number(snapshot.sceneSummary?.entries || 0)} published named scenes have exact, revision-bound camera-and-photo loading and COLMAP + images export checks. <a href="/hub/datasets/individual/verified-scenes.json" download>Download verified scene checks (JSON)</a>. Historical source research below can predate those scene checks; it does not qualify other scenes.</p>`
+    + `<p>${number(snapshot.sceneSummary?.entries || 0)} named scenes are published with scoped model/layout evidence. Original photographs are optional. Complete camera-and-photo export checks form a separate evidence tier: <a href="/hub/datasets/individual/verified-scenes.json" download>Download verified scene checks (JSON)</a>. Historical source research below retains its own scope and dates.</p>`
     + '<section class="dataset-section"><h2>Format evidence</h2>'
     + factList(Object.entries(audit.levels).map(([level, count]) => ({ label: status(level), value: number(count) }))) + '</section>'
     + '<section class="dataset-section"><h2>Download delivery</h2>'

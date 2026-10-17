@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from prepare_individual_datasets import individual_records, group_components
 from build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, reviewed_scene_exclusions, tokens
-from scene_qualification import REQUIRED_CHECKS, qualified_evidence, verified_scene_reviews, verified_source_entry
+from scene_qualification import REQUIRED_CHECKS, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
 from sampled_individuals import supplement_rows
 from scene_datasets import MAX_SCENE_FILE_LINKS, scene_records
 
@@ -77,6 +77,31 @@ class IndividualDatasetsTests(unittest.TestCase):
             mutation(invalid)
             with self.assertRaises(ValueError):
                 qualified_evidence(entry, row, 'a' * 40, invalid, hf_url)
+
+    def test_native_layouts_qualify_without_photographs_and_keep_counts_unknown_for_text_headers(self):
+        entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface', 'access': 'public',
+                 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}],
+                 'verification': {'sourceImages': {'status': 'not_included', 'summary': 'Original RGB is not published.', 'sourceUrl': 'https://example.org/readme'}}}
+        row = ['colmap', 'capture/sparse/0', {role: f'capture/sparse/0/{role}.txt' for role in ['cameras', 'images', 'points3d']}, None]
+        policy = {'schemaVersion': 1, 'sources': [{'sourceId': entry['sourceId'], 'revision': 'a' * 40,
+                  'models': [[row[1], row[2], None, None, None, 'not_checked', '2026-10-17',
+                              {'cameraRecordChecked': True, 'poseRecordChecked': True}]]}]}
+        review = next(iter(native_scene_reviews({'entries': [entry]}, policy).values()))
+        proof, _ = native_evidence(entry, row, 'a' * 40, review, hf_url)
+        self.assertTrue(can_open_scene(entry, row, proof))
+        self.assertEqual(proof['photoAvailability'], 'not_included')
+        self.assertIsNone(proof['sceneCompatibility']['images'])
+        self.assertNotIn('sceneValidation', proof)
+        for mutate in [lambda p: p['sources'][0].update(revision='b' * 40),
+                       lambda p: p['sources'][0]['models'][0][7].update(poseRecordChecked=False),
+                       lambda p: p['sources'][0]['models'][0].__setitem__(3, 0)]:
+            invalid = json.loads(json.dumps(policy))
+            mutate(invalid)
+            with self.assertRaises(ValueError):
+                native_scene_reviews({'entries': [entry]}, invalid)
+        row[2]['cameras'] = 'other/cameras.txt'
+        with self.assertRaisesRegex(ValueError, 'required file paths changed'):
+            native_evidence(entry, row, 'a' * 40, review, hf_url)
 
     def test_verified_camera_json_scene_can_export_without_a_point_cloud(self):
         entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface',
@@ -153,13 +178,21 @@ class IndividualDatasetsTests(unittest.TestCase):
             save('dataset-audit.json', audit)
             save('scene-exclusions.json', {'schemaVersion': 1, 'reviews': []})
             save('verified-scenes.json', {'schemaVersion': 1, 'scenes': reviews})
+            mask_review = reviews.pop()
+            save('verified-scenes.json', {'schemaVersion': 1, 'scenes': reviews})
+            native_policy = {'schemaVersion': 1, 'sources': [{'sourceId': entries[3]['sourceId'], 'revision': 'a' * 40,
+                'models': [[mask_review['path'], mask_review['files'], 1, 2, 3, 'not_checked', '2026-10-17',
+                            {'cameraRecordChecked': True, 'poseRecordChecked': True}]]}]}
+            (data / 'native-layouts.json.gz').write_bytes(gzip.compress(json.dumps(native_policy).encode()))
             build(root)
             output = root / 'public/hub/datasets/individual'
             before = json.loads((output / 'index.json').read_text(encoding='utf8'))
-            self.assertEqual(before['total'], 3)
+            self.assertEqual(before['total'], 4)
             first_proof = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))[0][7]
             self.assertEqual(first_proof['statusLabel'], 'Cameras + photos verified')
-            self.assertFalse((output / 'sources' / (entries[3]['id'] + '.json')).exists())
+            mask_record = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))[-1]
+            self.assertEqual(mask_record[7]['photoAvailability'], 'not_included')
+            self.assertTrue((output / 'sources' / (entries[3]['id'] + '.json')).exists())
             retained_id = identity(entries[0]['sourceId'], ['colmap', 'keep/sparse/0', None, None])
             removed_ids = [identity(entry['sourceId'], ['colmap', f'{entry["title"]}/sparse/0', None, None]) for entry in entries[1:3]]
             entries[1]['access'] = 'gated'
@@ -172,9 +205,9 @@ class IndividualDatasetsTests(unittest.TestCase):
             build(root)
             after = json.loads((output / 'index.json').read_text(encoding='utf8'))
             self.assertNotEqual(before['generation'], after['generation'])
-            self.assertEqual(after['total'], 1)
-            self.assertEqual([source['id'] for source in after['sources']], [entries[0]['id']])
-            self.assertEqual(sum(facet['count'] for facet in after['facets']['status'].values()), 1)
+            self.assertEqual(after['total'], 2)
+            self.assertEqual([source['id'] for source in after['sources']], [entries[0]['id'], entries[3]['id']])
+            self.assertEqual(sum(facet['count'] for facet in after['facets']['status'].values()), 2)
             self.assertNotIn('Access required', after['facets']['status'])
             rows = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))
             self.assertEqual(rows[0][0], retained_id)
@@ -220,6 +253,7 @@ class IndividualDatasetsTests(unittest.TestCase):
             policy = {'schemaVersion': 1, 'reviews': []}
             save('scene-exclusions.json', policy)
             save('verified-scenes.json', {'schemaVersion': 1, 'scenes': [self.verified_review(entry, rows[0])]})
+            (data / 'native-layouts.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'sources': []}).encode()))
             build(root)
             output = root / 'public/hub/datasets/individual'
             before = json.loads((output / 'index.json').read_text(encoding='utf8'))

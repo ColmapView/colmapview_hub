@@ -16,7 +16,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from scene_datasets import scene_records
-from scene_qualification import qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
+from scene_qualification import native_evidence, native_scene_reviews, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
 
 PACK_SIZE = 2048
 FORMATS = {'colmap': 'COLMAP', 'cameras': 'COLMAP cameras and poses', 'ply': 'PLY (header unchecked)',
@@ -32,23 +32,29 @@ FAILED_DELIVERY = {'gated', 'access_denied', 'not_found', 'browser_request_faile
 
 
 def can_open_scene(entry, row, proof):
-    """Publish only verified camera-and-photo scenes; match canOpenIndividual."""
+    """Camera/model compatibility is independent of photographs and export checks."""
     kind, _, _, archive = row
     proof = proof or {}
     if (entry.get('status') == 'unsupported_content' or entry.get('access') != 'public' or archive
             or proof.get('opening') or proof.get('delivery') in FAILED_DELIVERY
             or proof.get('level') in {'conversion_needed', 'no_native_assets', 'unavailable'}):
         return False
-    if proof.get('sampleScope') == 'companion_asset' or proof.get('sourceImages', {}).get('status') == 'not_included':
+    if proof.get('sampleScope') == 'companion_asset':
         return False
+    compatibility = proof.get('sceneCompatibility') or {}
+    if (kind == 'colmap' and proof.get('level') == 'native_layout_checked' and proof.get('viewerUrl')
+            and proof.get('delivery') in {'browser_readable', 'cors_headers_checked'}
+            and compatibility.get('status') == 'native_headers_checked'
+            and all(value is None or type(value) is int and value > 0
+                    for value in (compatibility.get('cameras'), compatibility.get('images')))
+            and compatibility.get('cameraRecordChecked') is True and compatibility.get('poseRecordChecked') is True):
+        return True
     validation = proof.get('sceneValidation') or {}
     return (kind in {'colmap', 'cameras', 'camera-scene', 'scene'} and proof.get('level') == 'scene_verified'
             and proof.get('delivery') == 'browser_readable' and bool(proof.get('viewerUrl'))
             and validation.get('status') == 'passed' and validation.get('export') == 'colmap_images'
             and type(validation.get('cameras')) is int and validation['cameras'] > 0
-            and type(validation.get('images')) is int and validation['images'] > 0
-            and type(validation.get('photoCount')) is int
-            and validation.get('photoCount') == validation['images'])
+            and type(validation.get('images')) is int and validation['images'] > 0)
 
 
 def reviewed_scene_exclusions(catalog, policy):
@@ -217,11 +223,14 @@ def build(root=Path('.')):
     scene_exclusions = reviewed_scene_exclusions(catalog, json.loads(policy_bytes))
     verified_bytes = (root / 'data/verified-scenes.json').read_bytes()
     verified_scenes = verified_scene_reviews(catalog, json.loads(verified_bytes))
+    native_bytes = (root / 'data/native-layouts.json.gz').read_bytes()
+    native_scenes = native_scene_reviews(catalog, json.loads(gzip.decompress(native_bytes)))
     matched_reviews = set()
+    matched_native = set()
     published_reviews = []
     excluded = {row['sourceId'] for row in [*catalog['entries'], *audit.values()] if is_access_restricted(row)}
     generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes
-                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + Path(__file__).read_bytes()
+                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + Path(__file__).read_bytes()
                                 + Path(__file__).with_name('scene_qualification.py').read_bytes()
                                 + Path(__file__).with_name('scene_datasets.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
@@ -296,20 +305,21 @@ def build(root=Path('.')):
             kind, path, files, archive = row
             review_key = scene_key(entry['sourceId'], kind, path, archive)
             review = verified_scenes.get(review_key)
-            if not review:
+            native = native_scenes.get(review_key)
+            if not review and not native:
                 continue
-            matched_reviews.add(review_key)
-            source_images = (entry.get('verification') or {}).get('sourceImages')
-            if source_images and source_images.get('status') == 'not_included':
-                continue
-            # A newer complete scene receipt supersedes only its exact older
-            # sample result. Source access and explicit RGB exclusions still win.
-            proof, format_name = qualified_evidence(entry, row, revision, review, hf_url)
+            if native:
+                matched_native.add(review_key)
+                proof, format_name = native_evidence(entry, row, revision, native, hf_url)
+            if review:
+                matched_reviews.add(review_key)
+                proof, format_name = qualified_evidence(entry, row, revision, review, hf_url)
             if not can_open_scene(entry, row, proof) or (entry['sourceId'], kind, path, archive) in scene_exclusions:
                 continue
             source_proofs.append(proof)
             source_formats.append(format_name)
-            published_reviews.append(review)
+            if review:
+                published_reviews.append(review)
             if not source['count']:
                 sources.append(source)
             source['count'] += 1
@@ -339,7 +349,7 @@ def build(root=Path('.')):
                 pack = []
         if source['count']:
             source_entry = {**verified_source_entry(entry, source_proofs, source_formats), 'facts': [({**fact, 'label': 'Listed 3D assets and model file sets'} if fact['label'] == 'Individual model or scene entries listed' else fact)
-                                              for fact in entry['facts']] + [{'label': 'Verified named scene datasets', 'value': str(source['count'])}]}
+                                              for fact in entry['facts']] + [{'label': 'Supported named scene datasets', 'value': str(source['count'])}]}
             write(f'sources/{entry["id"]}.json', source_entry)
         if entry_number % 100 == 0:
             print(f'Indexed {entry_number + 1}/{len(catalog["entries"])} source entries; {total:,} individual records', flush=True)
@@ -347,6 +357,8 @@ def build(root=Path('.')):
         write(f'packs/{(total - 1) // PACK_SIZE}.json', pack)
     if any(key not in matched_reviews and key[0] not in excluded for key in verified_scenes):
         raise ValueError('Verified scene no longer matches the scene listing; recheck its identity and file paths')
+    if any(key not in matched_native and key[0] not in excluded for key in native_scenes):
+        raise ValueError('Native layout no longer matches the scene listing; recheck its identity and file paths')
     for shard, mapping in ids.items():
         write(f'ids/{shard}.json', mapping)
     del ids
@@ -370,7 +382,7 @@ def build(root=Path('.')):
                 'levels': dict(levels), 'delivery': dict(deliveries),
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
                 'unit': 'named_scene',
-                'scope': 'Only exact pinned scenes with verified cameras, original photographs, browser loading and independently checked COLMAP + images exports are published. Unverified scenes and geometry-only assets remain in offline research inputs. Masks require separate qualification.'}
+                'scope': 'Named scenes with checked native camera/model layouts or stronger complete-scene evidence. Original photographs may be present, partial, absent or unverified. Full rendering and export checks are separate evidence tiers. Standalone geometry, inaccessible and known unsupported cases are excluded.'}
     write('index.json', manifest)
     write('verified-scenes.json', {'schemaVersion': 1, 'generation': generation, 'scope': manifest['scope'], 'scenes': published_reviews})
     print(f'Built {total:,} individual records from {len(sources):,} source entries; previews remain on hold.', flush=True)

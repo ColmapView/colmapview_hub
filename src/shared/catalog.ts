@@ -70,7 +70,7 @@ export const datasetFilterValue = (entry: Pick<CatalogSummary, 'dataset' | 'prov
   ? entry.provider === 'public' ? `public:${entry.dataset.label}` : entry.dataset.id : '';
 export const providerLabel = (provider: CatalogEntry['provider']) => provider === 'huggingface' ? 'Hugging Face' : 'Public source';
 export const accessLabel = (access: CatalogEntry['access']) => ({ public: 'Public source', gated: 'Access approval or sign-in required', terms: 'Source agreement applies', unknown: 'Access not established' })[access];
-const deliveryLabels: Record<string, string> = { browser_readable: 'Browser read checked', server_readable: 'Server read checked',
+const deliveryLabels: Record<string, string> = { browser_readable: 'Browser read checked', cors_headers_checked: 'Model access and CORS headers checked', server_readable: 'Server read checked',
   gated: 'Approval or sign-in required', access_denied: 'Download access denied', not_found: 'Download not found',
   browser_request_failed: 'Browser request failed', range_unverified: 'Archive ranges unverified', rate_limited: 'Host rate limited',
   http_error: 'Download error', unverified: 'Delivery unverified', not_tested: 'Browser read not checked' };

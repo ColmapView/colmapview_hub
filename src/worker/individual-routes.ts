@@ -6,7 +6,7 @@ import type { HubLocation } from './pages';
 import { individualSelection } from '../shared/individual-catalog';
 import { isCatalogOpenUrl, datasetPath } from '../shared/catalog';
 
-const UI_GENERATION = 'scene-ui-5';
+const UI_GENERATION = 'scene-ui-6';
 const REVALIDATE = 'public, no-cache, must-revalidate, no-transform';
 const respond = (request: Request, response: Response) => {
   const headers = new Headers(response.headers);

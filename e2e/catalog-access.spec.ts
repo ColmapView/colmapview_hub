@@ -79,30 +79,34 @@ test('Hourglass and other standalone file names are absent from scene browsing',
   expect(await response.json()).toMatchObject({ unit: 'named_scene', total: 0, entries: [] });
 });
 
-test('unverified native collections and model-only scenes are excluded', async ({ page }) => {
-  for (const source of ['hf-opsiclear-ngs-19c25258f77b', 'hf-dororo99-ours-waymo-armgs-dc9c063eca1c',
-    'public-megascenes-000000-arc-de-bera-component-0-native-complete-99744eaac47a']) {
-    expect((await page.request.get(`/hub/datasets/${source}`)).status()).toBe(404);
-    expect((await page.request.get(`/hub/datasets/individual/sources/${source}.json`)).status()).toBe(404);
+test('native layouts remain listed with optional or missing photographs', async ({ page }) => {
+  for (const [source, count] of [['hf-opsiclear-ngs-19c25258f77b', 259], ['hf-dororo99-ours-waymo-armgs-dc9c063eca1c', 11]] as const) {
     const response = await page.request.get(`/hub/datasets/api/entries?dataset=${source}`);
-    expect(await response.json()).toMatchObject({ total: 0, entries: [], dataset: null });
+    const data = await response.json() as { total: number; entries: { id: string; openUrl: string; description: string }[] };
+    expect(data.total).toBe(count);
+    const target = await page.request.get(data.entries[0].openUrl, { maxRedirects: 0 });
+    expect(target.status()).toBe(302);
+    expect(new URL(target.headers().location).searchParams.get('url')).not.toMatch(/\.ply$/);
+    await page.goto(`/hub/datasets/entry/${data.entries[0].id}`);
+    await expect(page.locator('main')).toContainText('Original photographs');
+    await expect(page.locator('main')).toContainText('Native layout check');
+    if (count === 11) {
+      await expect(page.locator('main')).toContainText('Not included by publisher');
+      expect(data.entries.every(row => row.description.includes('does not include the original photographs'))).toBe(true);
+    }
   }
-  const maskOnly = id('hf:Dororo99/Ours_Waymo_ArmGS', 'colmap',
-    'preprocessing/waymo_prepared/colmap/9747453753779078631_940_000_960_000/triangulated_model');
-  expect((await page.request.get(`/hub/datasets/entry/${maskOnly}`)).status()).toBe(404);
-  expect((await page.request.get(`/hub/datasets/open/${maskOnly}`, { maxRedirects: 0 })).status()).toBe(404);
 });
 
-test('every published scene has exact complete camera-and-photo evidence and the checked launch', async ({ page }) => {
+test('complete-export evidence stays scoped while other model layouts remain loadable', async ({ page }) => {
   const policy = JSON.parse(readFileSync('data/verified-scenes.json', 'utf8')) as {
     scenes: { sourceId: string; kind: string; path: string; viewerUrl: string; counts: { images: number } }[] };
   const indexResponse = await page.request.get('/hub/datasets/individual/index.json');
   const index = await indexResponse.json() as { total: number; generation: string };
   const checks = await page.request.get('/hub/datasets/individual/verified-scenes.json');
   expect(await checks.json()).toMatchObject({ generation: index.generation, scenes: policy.scenes });
-  const response = await page.request.get('/hub/datasets/api/entries?viewer=available');
+  const response = await page.request.get('/hub/datasets/api/entries?status=Cameras%20%2B%20photos%20verified');
   const data = await response.json() as { total: number; entries: { id: string; statusLabel: string; delivery: string; hasViewer: boolean }[] };
-  expect(index.total).toBe(3);
+  expect(index.total).toBe(5239);
   expect(data.total).toBe(policy.scenes.length);
   expect(data.entries.every(scene => scene.hasViewer && scene.statusLabel === 'Cameras + photos verified' && scene.delivery === 'browser_readable')).toBe(true);
   for (const scene of policy.scenes) {
@@ -118,8 +122,8 @@ test('every published scene has exact complete camera-and-photo evidence and the
   }
   const catalogResponse = await page.request.get('/hub/datasets/catalog.json');
   const catalog = await catalogResponse.json() as { entries: { id: string; viewerUrl?: string; dataUrl: string; sourceUrl: string }[] };
-  expect(catalog.entries).toHaveLength(3);
-  for (const source of catalog.entries) {
+  expect(catalog.entries.length).toBeGreaterThan(3);
+  for (const source of catalog.entries.slice(0, 3)) {
     expect(source.viewerUrl).toBeUndefined();
     expect(source.dataUrl).toBe(source.sourceUrl);
     await page.goto(`/hub/datasets/${source.id}`);
