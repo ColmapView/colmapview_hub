@@ -73,7 +73,7 @@ test('complete text-model counts and manifest photo requirements appear in the r
   expect(await csv.text()).toContain('data/i2slam_trigsplat_gt/scene0736_00_manifest.json');
 });
 
-test('Kicker retains its complete counts and verified sibling photos without claiming complete export', async ({ page }) => {
+test('Kicker retains counts, sibling photo policy and verified streamed-export evidence', async ({ page }) => {
   await page.goto('/hub/datasets/entry/data-ea3370325634b929035638c5');
   await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('31');
   await expect(page.locator('[data-stat="cameraModels"]')).toHaveText('1');
@@ -83,9 +83,11 @@ test('Kicker retains its complete counts and verified sibling photos without cla
   await expect(page.locator('main')).toContainText('31/31');
   await expect(page.locator('main')).toContainText('kicker/images');
   await expect(page.locator('main')).toContainText('6048 x 4032');
-  await expect(page.locator('main')).toContainText('Both the calibration-folder and parent Kicker URLs attach all photographs');
+  await expect(page.locator('main')).toContainText('complete COLMAP and original-photo ZIP preserves all registered names');
   await expect(page.locator('main')).toContainText('Photograph pixels decoded');
-  await expect(page.locator('main')).toContainText('complete image ZIP exceeds the existing 256 MiB package budget');
+  await expect(page.locator('main')).toContainText('414,603,162-byte image package');
+  await expect(page.locator('main')).toContainText('every photo CRC and SHA-256 against the pinned publisher LFS objects');
+  await expect(page.locator('main')).not.toContainText('256 MiB package budget');
   await expect(page.locator('main')).not.toContainText('All photos verified in export');
   const open = await page.request.get('/hub/datasets/open/data-ea3370325634b929035638c5', { maxRedirects: 0 });
   expect(open.status()).toBe(302);

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.16 — 2026-10-18
+
+- Record Kicker's complete streamed COLMAP and original-photo export: all 31 photographs match pinned publisher hashes, and calibration, poses, observations and points are unchanged.
+- Remove the obsolete Kicker package-limit notice. Preserve the selected models and evidence levels of every other scene.
+
 ## 0.7.15 — 2026-10-17
 
 - Replace outdated image-setup notices for 57 ETH3D calibration records after checking all 2,003 registered names against the viewer's sibling-photo policy.
