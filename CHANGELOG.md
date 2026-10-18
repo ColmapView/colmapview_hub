@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.15 — 2026-10-17
+
+- Replace outdated image-setup notices for 57 ETH3D calibration records after checking all 2,003 registered names against the viewer's sibling-photo policy.
+- Record all 31 Kicker originals loading and decoding, with unchanged model export. Keep full-scene export qualification separate and disclose the existing 256 MiB image-package limit.
+
 ## 0.7.14 — 2026-10-17
 
 - Establish complete camera, pose and point totals for all seven pinned scenes in `alexmkwizu/colmap-testing-dataset`.
