@@ -20,7 +20,8 @@ from pathlib import Path
 from scene_datasets import scene_records
 from scene_qualification import native_evidence, native_scene_reviews, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
 from scene_photos import apply_photo_evidence, photo_scene_reviews
-from scene_contents import apply_content_evidence, content_scene_reviews
+from scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
+from scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
 
 PACK_SIZE = 2048
 FORMATS = {'colmap': 'COLMAP', 'cameras': 'COLMAP cameras and poses', 'ply': 'PLY (header unchecked)',
@@ -236,6 +237,19 @@ def build(root=Path('.')):
     content_bytes = (root / 'data/scene-contents.json.gz').read_bytes()
     content_policy = json.loads(gzip.decompress(content_bytes))
     content_reviews = content_scene_reviews(catalog, content_policy, root)
+    checked_photo_previews = {}
+    for key, review in content_reviews.items():
+        thumbnail = review.get('thumbnail')
+        if thumbnail and not thumbnail.get('sourceArchive'):
+            checked_photo_previews[(key[0], review['revision'], thumbnail['sourcePath'], thumbnail['sourceSha256'])] = thumbnail
+    manifest_bytes = (root / 'data/scene-manifests.json').read_bytes()
+    manifest_policy = json.loads(manifest_bytes)
+    manifest_reviews = manifest_scene_reviews(catalog, manifest_policy)
+    matched_manifests = set()
+    generated_manifests = {}
+    parents = {entry['sourceId']: entry for entry in catalog['entries']}
+    for review in manifest_reviews.values():
+        generated_manifests.update(manifest_assets(review, parents[review['sourceId']], hf_url))
     matched_contents = set()
     matched_photos = set()
     matched_reviews = set()
@@ -243,20 +257,34 @@ def build(root=Path('.')):
     published_reviews = []
     excluded = {row['sourceId'] for row in [*catalog['entries'], *audit.values()] if is_access_restricted(row)}
     generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes
-                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + photo_bytes + content_bytes + Path(__file__).read_bytes()
+                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + photo_bytes + content_bytes + manifest_bytes + Path(__file__).read_bytes()
                                 + Path(__file__).with_name('scene_qualification.py').read_bytes()
                                 + Path(__file__).with_name('scene_photos.py').read_bytes()
                                 + Path(__file__).with_name('scene_contents.py').read_bytes()
-                                + Path(__file__).with_name('scene_datasets.py').read_bytes()).hexdigest()
+                                + Path(__file__).with_name('scene_datasets.py').read_bytes()
+                                + Path(__file__).with_name('scene_manifests.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
+    if (output / 'manifests').is_symlink():
+        raise ValueError('Manifest output must be a regular generated directory')
     current = output / 'index.json'
     preview_files = {review['thumbnail']['file'] for review in content_reviews.values() if review.get('thumbnail')}
     if (current.exists() and read(current).get('generation') == generation
             and all((output / 'thumbnails' / name).is_file()
-                    and hashlib.sha256((output / 'thumbnails' / name).read_bytes()).hexdigest() + '.jpg' == name for name in preview_files)):
+                    and hashlib.sha256((output / 'thumbnails' / name).read_bytes()).hexdigest() + '.jpg' == name for name in preview_files)
+            and all((output / 'manifests' / name).is_file() and not (output / 'manifests' / name).is_symlink()
+                    and (output / 'manifests' / name).read_bytes() == body
+                    for name, body in generated_manifests.items())):
         print('Individual metadata index is current.', flush=True)
         return
     output.mkdir(parents=True, exist_ok=True)
+    manifest_output = output / 'manifests'
+    manifest_output.mkdir(exist_ok=True)
+    # Retain immutable old manifests so previously shared public links still resolve.
+    for name, body in generated_manifests.items():
+        path = manifest_output / name
+        if path.is_symlink():
+            raise ValueError('Manifest asset must be a regular generated file')
+        path.write_bytes(body)
     for name in ['packs', 'ids', 'tokens', 'facets', 'sources']:
         directory = output / name
         directory.mkdir(exist_ok=True)
@@ -350,9 +378,18 @@ def build(root=Path('.')):
                 raise ValueError('Published scene is missing pinned content evidence')
             proof = apply_content_evidence(entry, row, revision, proof, content_review)
             matched_contents.add(review_key)
+            manifest_review = manifest_reviews.get(review_key)
+            if manifest_review:
+                proof, format_name = apply_manifest_evidence(entry, row, revision, proof, manifest_review, hf_url)
+                matched_manifests.add(review_key)
+                if not proof.get('thumbnail') and manifest_review['photos']:
+                    first_photo = manifest_review['photos'][0]
+                    thumbnail = checked_photo_previews.get((entry['sourceId'], revision, first_photo['sourcePath'], first_photo['sha256']))
+                    if thumbnail:
+                        proof = apply_thumbnail_evidence(entry, proof, thumbnail)
             contents.update(proof['availableData'].keys())
             if proof.get('thumbnail'):
-                thumbnails.add(content_review['thumbnail']['file'])
+                thumbnails.add(proof['thumbnail']['url'].split('/')[-1])
                 thumbnail_scenes += 1
             source_proofs.append(proof)
             source_formats.append(format_name)
@@ -447,7 +484,9 @@ def build(root=Path('.')):
             key = hashlib.sha256((field + ':' + value).encode()).hexdigest()[:16]
             write(f'facets/{key}.json', {'postings': encoded(ordinals)})
             facet_manifest[field][value] = {'file': key, 'count': len(ordinals)}
-    checked_at = max([registry['checkedAt'], native_policy.get('checkedAt', ''), photo_policy.get('checkedAt', ''), content_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
+    if matched_manifests != set(manifest_reviews):
+        raise ValueError('A scene manifest no longer matches a published scene; recheck its selection')
+    checked_at = max([registry['checkedAt'], native_policy.get('checkedAt', ''), photo_policy.get('checkedAt', ''), content_policy['checkedAt'], manifest_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
     manifest = {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'total': total,
                 'packSize': PACK_SIZE, 'sources': sources, 'facets': facet_manifest, 'kinds': dict(counts),
                 'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos), 'contents': dict(contents),

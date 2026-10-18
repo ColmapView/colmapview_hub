@@ -1,5 +1,47 @@
 import { expect, test } from '@playwright/test';
 
+test('a scene manifest attaches the exact sibling-photo model and selected cloud, with readable saved settings', async ({ page }) => {
+  const id = 'data-69b9f9cf0aaab1bc0ece0617';
+  await page.goto('/hub/datasets/entry/' + id);
+  const origin = new URL(page.url()).origin;
+  await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('3');
+  await expect(page.locator('[data-stat="points"]')).toHaveText('350,710');
+  await expect(page.locator('[data-asset="images"]')).toHaveAttribute('data-asset-status', 'checked');
+  await expect(page.locator('[data-asset="masks"]')).toHaveCount(1);
+  await expect(page.locator('main')).toContainText('Native 3D points');
+  const opened = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  expect(opened.status()).toBe(302);
+  const target = new URL(new URL(opened.headers().location).searchParams.get('url')!);
+  expect(target.pathname).toMatch(/^\/hub\/datasets\/individual\/manifests\/[a-f0-9]{64}\.manifest\.json$/);
+  const response = await page.request.get(target.pathname);
+  const manifest = await response.json();
+  expect(manifest.version).toBe(1);
+  expect(manifest.files.cameras).toContain('/basketball/dense/sparse_mast3r/cameras.bin');
+  expect(manifest.files.images).toContain('/basketball/dense/sparse_mast3r/images.bin');
+  expect(manifest.files.points3D).toContain('/basketball/dense/sparse_mast3r/points3D.ply');
+  expect(manifest.imageNameToPath['0000.png']).toContain('/basketball/dense/images/0000.png');
+  expect(manifest.maskNameToPath['0000.png']).toContain('/basketball/dense/mask/0000.png');
+  const statePath = new URL(manifest.viewerStatePath, manifest.baseUrl).pathname;
+  const stateResponse = await page.request.get(statePath);
+  expect(response.headers()['access-control-allow-origin']).toBe('*');
+  expect(stateResponse.headers()['access-control-allow-origin']).toBe('*');
+  const client = new URL(origin);
+  client.hostname = client.hostname === 'localhost' ? '127.0.0.1' : 'localhost';
+  client.pathname = '/manifest-cors-client';
+  // Chromium's local-network permission is separate from the asset CORS check.
+  await page.context().grantPermissions(['local-network-access'], { origin: client.origin });
+  await page.route(client.href, route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Manifest reader</title>' }));
+  await page.goto(client.href);
+  const read = await page.evaluate(async urls => Promise.all(urls.map(async url => {
+    const response = await fetch(url, { credentials: 'omit' });
+    if (!response.ok) throw new Error('Manifest asset read failed');
+    return response.json();
+  })), [origin + target.pathname, origin + statePath]);
+  expect(read[0].files.points3D).toBe(manifest.files.points3D);
+  expect(read[1].config.pointCloud.minTrackLength).toBe(0);
+  expect(read[1].viewState.target).toHaveLength(3);
+});
+
 test('cards show content roles and load licensed square photos from the Hub', async ({ page }) => {
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com|wikimedia\.org/.test(request.url())) providerRequests.push(request.url()); });

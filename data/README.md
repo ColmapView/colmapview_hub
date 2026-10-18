@@ -119,6 +119,35 @@ The streaming reader retains record IDs but discards point objects and tracks be
 
 `recordChecks.countAudit` records the exact viewer commit, check date and each completely parsed text file's path, byte length, SHA-256 and total. Mixed models can audit just the text role while retaining binary header evidence for other roles. Per-file evidence is revision- and path-bound and must match the saved totals. It does not upgrade model compatibility, photograph coverage, pixel validation or complete-export evidence. Unknown totals are retained when a complete read cannot be established.
 
+## Explicit scene manifest audit
+
+`scene-manifests.json` records the October 18 complete checks for 16 explicit v1 scene manifests, using viewer 0.17.5 at `9d068ec97ad9015c584b8b3953a84e382430fd5d`. The manifest builder keeps camera/pose files and all media at their original pinned Hugging Face revision. It selects a separate XYZ PLY only when the native point file is empty and the companion's coordinate frame has been checked. The saved settings include a zero minimum track length and a reviewed overview. Native evidence stays unchanged; Hub statistics describe the selected launch representation.
+
+| Source and named captures | Variants | Poses per variant | Points per variant | Photos / masks |
+| --- | ---: | ---: | ---: | --- |
+| `Wuuu3511/bmvs_sparse_dtu2`: basketball | 2 | 3 | 350,710 | 3 / 3 |
+| bear | 2 | 3 | 340,440 | 3 / 3 |
+| bread | 2 | 3 | 326,806 | 3 / 3 |
+| camera | 2 | 3 | 359,250 | 3 / 3 |
+| clock | 2 | 3 | 220,844 | 3 / 3 |
+| cow | 2 | 3 | 303,922 | 3 / 3 |
+| dog | 2 | 3 | 399,842 | 3 / 3 |
+| `zhaoshiwen/blur-slam-bpn-data`: `scene0024_01`, `scene0024_01_abl3` | 2 | 227 | 4,449,654 | 227 / 0 |
+
+All 16 imported in a real Chromium viewer and submitted their complete point sets to WebGL. Every registered photo binding was checked; original RGB and mask pixels decoded at the calibration dimensions. Foreground overview captures and native camera projection checks establish the recorded scene association. The two blur-slam variants have identical camera, pose and PLY byte hashes; the second manifest explicitly binds the first representation's original photos. This also resolves its former association-review status. Mask roles remain unknown, so these receipts qualify COLMAP + images exports and mask display, not feature-mask exports.
+
+`scripts/verify_scene_manifest_exports.py` independently reads the downloaded viewer ZIPs with PyCOLMAP 4.0.3. It checks the complete model, all point coordinates and RGB bytes, generated untracked point IDs, original camera calibration, pose matrices, observation references, every original photograph hash, dimensions and orientation. It reads only an existing URL-hash cache and never fetches or publishes. The audit caught and fixed a PLY parser defect that turned integer color channels of `1` into `255`; the corrected exports preserve every source color channel.
+
+To update coverage, prepare an explicit scene selection with exact native file receipts, the selected points receipt, registered photo/mask mappings and a saved viewer state. Perform anonymous browser imports and exports, then run the independent check in an environment containing NumPy, Pillow and PyCOLMAP:
+
+```sh
+python scripts/verify_scene_manifest_exports.py --scenes data/scene-manifests.json --browser-reports PATH_TO_BROWSER_RECEIPTS --exports PATH_TO_VIEWER_ZIPS --cache PATH_TO_PINNED_SOURCE_CACHE --output .tmp/manifest-export-check.json
+```
+
+The cache names each complete immutable source response `SHA256(source_url).bin`. Each ZIP is named with its `data-…` scene identity. Browser receipt logs start with `### Result` followed by JSON containing `id`, `status: "passed"`, `pointDrawCount`, `photoCount`, `maskCount`, and an empty `errors` array. Retain screenshots and detailed transport/renderer receipts locally. Camera/cloud alignment still needs review; the independent file checker cannot infer semantic alignment or mask roles.
+
+Copy only passing, selection-bound receipts into `scene-manifests.json`; `selection_digest()` in `scripts/scene_manifests.py` computes the binding. `npm run build:catalog` generates the manifests, settings, launch targets and statistics together. `python -m unittest discover -s tests -p "test_*.py"`, `npm run check` and `npm run test:browser` check the policy gates and public routes. The manifest/settings CORS rules must not overlap: duplicate wildcard CORS values are rejected by browsers. Changing a selection requires a fresh check; a nonempty tracked native cloud cannot be silently replaced by unrelated PLY vertex IDs. A complete comparison against the preceding catalog found only the intended 16 changes, with all 5,221 other scene records identical.
+
 ## Full inventory audit
 
 The repository's `dataset-audit.json` preserves the assessment of all 5,602 original HF candidates and 95 public scene/source entries, including rejected matches. The public audit download excludes 447 access-restricted records, leaving **5,250 public audit records**; its summary is recomputed from those retained records. That includes 839 distinct recorded browser-check URLs and all 150 retained original sample import receipts, with their original dates. The full browser follow-up examined additional candidate URLs that were not retained as required-source checks.

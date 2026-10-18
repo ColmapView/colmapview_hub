@@ -6,11 +6,22 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from scene_contents import apply_content_evidence, content_scene_reviews
+from scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
 from prepare_scene_contents import ply_content
 
 
 class SceneContentsTests(unittest.TestCase):
+    def test_reused_preview_must_match_the_manifest_bound_photo_and_commercial_terms(self):
+        proof = {'photoAvailability': 'complete_export_checked', 'photoAudit': {'samplePath': 'scene/images/a.png'}}
+        entry = {'licenseCategory': 'commercial', 'license': 'cc-by-4.0'}
+        thumbnail = {'file': 'a' * 64 + '.jpg', 'sourcePath': 'scene/images/a.png', 'datasetLicense': 'cc-by-4.0'}
+        self.assertIn('thumbnail', apply_thumbnail_evidence(entry, proof, thumbnail))
+        self.assertNotIn('thumbnail', proof)
+        with self.assertRaisesRegex(ValueError, 'photograph does not match'):
+            apply_thumbnail_evidence(entry, proof, {**thumbnail, 'sourcePath': 'peer/images/a.png'})
+        with self.assertRaisesRegex(ValueError, 'license evidence'):
+            apply_thumbnail_evidence({**entry, 'licenseCategory': 'unknown'}, proof, thumbnail)
+
     def setUp(self):
         self.entry = {'sourceId': 'hf:owner/data', 'license': 'cc-by-4.0', 'licenseCategory': 'commercial',
                       'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}

@@ -92,7 +92,13 @@ def apply_content_evidence(entry, row, revision, proof, review):
         if kind not in data or data[kind]['status'] != 'checked':
             data[kind] = {**deepcopy(evidence), 'status': 'checked' if evidence['status'] == 'header_checked' else 'listed'}
     result['availableData'] = data
-    thumbnail = review.get('thumbnail')
+    return apply_thumbnail_evidence(entry, result, review.get('thumbnail'))
+
+
+def apply_thumbnail_evidence(entry, proof, thumbnail):
+    """Reuse only a validated crop of this scene's exact, checked photograph."""
+    result = deepcopy(proof)
+    state = proof.get('photoAvailability')
     if thumbnail:
         audit = proof.get('photoAudit') or {}
         if state not in PHOTO_STATES or entry.get('licenseCategory') != 'commercial' or entry['license'] != thumbnail['datasetLicense']:

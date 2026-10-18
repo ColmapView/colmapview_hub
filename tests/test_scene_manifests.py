@@ -1,0 +1,154 @@
+import copy
+import hashlib
+import json
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from build_individual_catalog import hf_url
+from scene_manifests import (ASSET_BASE, CHECKS, apply_manifest_evidence, manifest_assets,
+                             manifest_scene_reviews, selection_digest)
+
+
+class SceneManifestTests(unittest.TestCase):
+    def setUp(self):
+        self.entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface', 'access': 'public',
+                      'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
+        self.files = {'cameras': 'scene/sparse_mast3r/cameras.bin', 'images': 'scene/sparse_mast3r/images.bin',
+                      'points3d': 'scene/sparse_mast3r/points3D.txt',
+                      'asset:scene/sparse_mast3r/points3D.ply': 'scene/sparse_mast3r/points3D.ply'}
+        receipt = lambda path: {'sourcePath': path, 'sha256': 'b' * 64, 'bytes': 100}
+        self.review = {'sourceId': self.entry['sourceId'], 'revision': 'a' * 40, 'kind': 'colmap', 'path': 'scene/sparse_mast3r',
+            'files': self.files, 'modelFiles': {role: receipt(self.files[role]) for role in ('cameras', 'images')},
+            'points': {**receipt('scene/sparse_mast3r/points3D.ply'), 'format': 'xyz_ply', 'count': 42},
+            'counts': {'cameras': 1, 'images': 1, 'points': 42},
+            'photos': [{**receipt('scene/images/cam/a.png'), 'name': 'cam/a.png', 'width': 80, 'height': 60}],
+            'masks': [{**receipt('scene/mask/cam/a.png'), 'name': 'cam/a.png', 'width': 80, 'height': 60}], 'maskRole': 'unknown',
+            'viewerState': {'version': 1, 'viewerVersion': '0.17.5', 'viewState': {'position': [2, 3, 4],
+                'target': [0, 0, 0], 'quaternion': [0, 0, 0, 1], 'distance': 5},
+                'config': {'pointCloud': {'showPointCloud': True, 'minTrackLength': 0}}},
+            'checkedAt': '2026-10-18', 'viewerVersion': '0.17.5', 'viewerCommit': 'c' * 40, 'exportSha256': 'd' * 64,
+            'checks': {key: 'passed' for key in (*CHECKS, 'photoDecode', 'maskDecode', 'originalPhotoHashes')}}
+        self.bind()
+        self.proof = {'level': 'native_layout_checked', 'viewerUrl': 'old-model-url',
+            'sceneCompatibility': {'cameras': 1, 'images': 1, 'points': 0}, 'photoAvailability': 'path_policy_required',
+            'availableData': {'cameras': {'status': 'checked'}, 'images': {'status': 'needs_setup'}}}
+        self.row = ['colmap', self.review['path'], self.files, None]
+
+    def bind(self):
+        self.review['selectionSha256'] = selection_digest(self.review)
+
+    def reviews(self):
+        return manifest_scene_reviews({'entries': [self.entry]}, {'schemaVersion': 1, 'checkedAt': '2026-10-18', 'scenes': [self.review]})
+
+    def test_manifest_selects_ply_without_mutating_native_counts_and_binds_sibling_media(self):
+        self.reviews()
+        assets = manifest_assets(self.review, self.entry, hf_url)
+        manifest = json.loads(assets[self.review['selectionSha256'] + '.manifest.json'])
+        self.assertEqual(manifest['version'], 1)
+        self.assertEqual(manifest['baseUrl'], ASSET_BASE)
+        self.assertTrue(manifest['files']['cameras'].endswith('/scene/sparse_mast3r/cameras.bin'))
+        self.assertTrue(manifest['files']['points3D'].endswith('/points3D.ply'))
+        self.assertTrue(manifest['imageNameToPath']['cam/a.png'].endswith('/scene/images/cam/a.png'))
+        self.assertTrue(manifest['maskNameToPath']['cam/a.png'].endswith('/scene/mask/cam/a.png'))
+        state = json.loads(assets[manifest['viewerStatePath']])
+        self.assertEqual(state['config']['pointCloud']['minTrackLength'], 0)
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(updated['sceneCompatibility']['points'], 0)
+        self.assertEqual(updated['sceneManifest']['counts']['points'], 42)
+        self.assertEqual(updated['availableData']['images'], {'status': 'checked', 'count': 1})
+        self.assertEqual(updated['photoAvailability'], 'complete_export_checked')
+        self.assertEqual(self.proof['viewerUrl'], 'old-model-url')
+        self.assertEqual(updated['sceneManifest']['sha256'], hashlib.sha256(assets[self.review['selectionSha256'] + '.manifest.json']).hexdigest())
+
+    def test_unbound_selection_edits_fail_until_reaudited(self):
+        self.review['photos'][0]['sourcePath'] = 'other/images/cam/a.png'
+        with self.assertRaisesRegex(ValueError, 'selection-bound'):
+            self.reviews()
+
+    def test_all_import_geometry_and_export_checks_are_required(self):
+        for key in CHECKS:
+            with self.subTest(key):
+                self.review['checks'][key] = 'not_checked'
+                with self.assertRaisesRegex(ValueError, 'checks must pass'):
+                    self.reviews()
+                self.review['checks'][key] = 'passed'
+
+    def test_changed_revision_nonfinite_overview_and_track_filter_are_rejected(self):
+        original = copy.deepcopy(self.review)
+        for edit in [lambda r: r.update(revision='e' * 40),
+                     lambda r: r['viewerState']['viewState']['target'].__setitem__(0, float('inf')),
+                     lambda r: r['viewerState']['config']['pointCloud'].update(minTrackLength=2)]:
+            self.review = copy.deepcopy(original)
+            edit(self.review)
+            with self.assertRaises(ValueError):
+                self.bind()
+                self.reviews()
+
+    def test_duplicate_or_incomplete_photo_mapping_and_wrong_mask_size_fail(self):
+        original = copy.deepcopy(self.review)
+        for edit in [lambda r: r['photos'].append(copy.deepcopy(r['photos'][0])),
+                     lambda r: r['counts'].update(images=0),
+                     lambda r: r['masks'][0].update(width=81)]:
+            self.review = copy.deepcopy(original)
+            edit(self.review)
+            self.bind()
+            with self.assertRaises(ValueError):
+                self.reviews()
+
+    def test_camera_only_media_selection_does_not_claim_missing_photos_or_masks(self):
+        self.review.update(photos=[], masks=[])
+        self.proof['photoAvailability'] = 'not_found'
+        self.bind()
+        self.reviews()
+        manifest = json.loads(manifest_assets(self.review, self.entry, hf_url)[self.review['selectionSha256'] + '.manifest.json'])
+        self.assertTrue(manifest['skipImages'])
+        self.assertNotIn('imageNameToPath', manifest)
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertNotIn('images', updated['availableData'])
+        self.assertNotEqual(updated['photoAvailability'], 'complete_export_checked')
+
+    def test_omitting_known_photos_cannot_keep_a_complete_photo_badge(self):
+        self.review.update(photos=[], masks=[])
+        self.bind()
+        self.proof['photoAvailability'] = 'complete_export_checked'
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(updated['photoAvailability'], 'path_policy_required')
+        self.assertEqual(updated['availableData']['images']['status'], 'needs_setup')
+
+    def test_native_points_and_partial_photos_keep_their_original_meaning(self):
+        self.review['points'].update(sourcePath=self.files['points3d'], format='colmap_text')
+        self.review['counts']['images'] = 2
+        self.bind()
+        self.reviews()
+        self.proof['sceneCompatibility'].update(points=42, images=2)
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(updated['sceneManifest']['counts']['points'], 42)
+        self.assertEqual(updated['photoAvailability'], 'partial')
+        self.assertEqual(updated['photoAudit']['nameCheck']['missing'], 1)
+        self.review['points']['sourcePath'] = 'peer/points3D.txt'
+        with self.assertRaisesRegex(ValueError, 'preserve native points'):
+            apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+
+    def test_nonempty_native_cloud_or_different_companion_cannot_be_silently_replaced(self):
+        for native_points in (1, None):
+            proof = {**self.proof, 'sceneCompatibility': {**self.proof['sceneCompatibility'], 'points': native_points}}
+            with self.assertRaisesRegex(ValueError, 'exact empty native'):
+                apply_manifest_evidence(self.entry, self.row, 'a' * 40, proof, self.review, hf_url)
+        self.review['points']['sourcePath'] = 'peer/points3D.ply'
+        with self.assertRaisesRegex(ValueError, 'exact empty native'):
+            apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+
+    def test_cross_scope_photo_association_needs_both_identical_camera_and_pose_files(self):
+        self.review['associationFiles'] = copy.deepcopy(self.review['modelFiles'])
+        self.bind()
+        self.reviews()
+        self.review['associationFiles']['images']['sha256'] = 'e' * 64
+        self.bind()
+        with self.assertRaisesRegex(ValueError, 'identical camera and pose'):
+            self.reviews()
+
+
+if __name__ == '__main__':
+    unittest.main()

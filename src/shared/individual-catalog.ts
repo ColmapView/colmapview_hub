@@ -5,6 +5,8 @@ import type { LicenseCategory } from './license-categories';
 import { photoLabel } from './scene-photos';
 import type { PhotoStatus } from './scene-photos';
 import { sceneDataText, sceneStatistics } from './scene-contents';
+import { isSceneManifestEvidence, manifestViewerUrlMatches } from './scene-manifests';
+import type { SceneManifestEvidence } from './scene-manifests';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -23,6 +25,7 @@ export interface IndividualIndex {
   incompleteCollections: number; scope: string;
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
+  sceneManifest?: SceneManifestEvidence;
   sceneCompatibility?: { status: 'native_headers_checked'; revision: string; cameraRecordChecked: boolean; poseRecordChecked: boolean;
     cameras: number | null; images: number | null; points: number | null;
     countAudit?: { method: 'viewer_native_text_parse'; checkedAt: string; viewerCommit: string;
@@ -74,12 +77,20 @@ export const individualKind = (kind: string, format = '') => kind === 'ply' && f
 export const individualTokens = (text: string) => [...new Set(text.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().match(/[\p{L}\p{N}]+/gu) || [])];
 const failedDelivery = new Set(['gated', 'access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error']);
 
+function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): proof is IndividualProof & { sceneManifest: SceneManifestEvidence } {
+  if (!proof || !isSceneManifestEvidence(proof.sceneManifest) || !manifestViewerUrlMatches(proof.viewerUrl, proof.sceneManifest)) return false;
+  const native = proof.sceneCompatibility ?? proof.sceneValidation;
+  return native?.cameras === proof.sceneManifest.counts.cameras && native.images === proof.sceneManifest.counts.images
+    && (proof.sceneManifest.pointFormat === 'xyz_ply' ? native.points === 0 : native.points === proof.sceneManifest.counts.points);
+}
+
 export function canOpenIndividual(row: IndividualRecord, source: IndividualSource): boolean {
   const [, , kind, , , archive, , proof] = row;
   if (source.access !== 'public' || archive || proof?.opening || failedDelivery.has(proof?.delivery || '')) return false;
   if (['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')) return false;
   if (proof?.sampleScope === 'companion_asset') return false;
   const compatibility = proof?.sceneCompatibility;
+  if (proof?.sceneManifest !== undefined && !hasCheckedSceneManifest(proof)) return false;
   if (kind === 'colmap' && proof?.level === 'native_layout_checked' && proof.viewerUrl
     && ['browser_readable', 'cors_headers_checked'].includes(proof.delivery) && compatibility?.status === 'native_headers_checked'
     && [compatibility.cameras, compatibility.images].every(value => value === null || Number.isInteger(value) && value > 0)
@@ -103,7 +114,8 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
     ...(proof?.photoAvailability ? { photoStatus: proof.photoAvailability } : {}),
     ...(proof?.availableData ? { availableData: proof.availableData } : {}),
     ...(proof?.thumbnail ? { thumbnail: proof.thumbnail } : {}),
-    sceneStats: sceneStatistics(proof?.sceneValidation ?? proof?.sceneCompatibility),
+    sceneStats: sceneStatistics(hasCheckedSceneManifest(proof) ? proof.sceneManifest.counts
+      : proof?.sceneValidation ?? proof?.sceneCompatibility),
     ...(canOpenIndividual(row, source) ? { openUrl: `/hub/datasets/open/${id}` } : {}),
     description: gated ? 'The source lists this model, but its files require access and cannot be downloaded anonymously. File compatibility and complete loading remain unverified.'
       : proof?.summary || `${kindLabel} listed in ${source.title}${archive ? ` inside ${archive}; extract it before attempting to load this model` : ''}. This individual model has not passed a complete load check.`,
@@ -139,6 +151,14 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
+      ...(proof?.sceneManifest && isSceneManifestEvidence(proof.sceneManifest) ? [
+        { label: 'Scene manifest', value: 'Explicit v1 model and media selection', url: proof.sceneManifest.url },
+        ...(proof.sceneManifest.pointSource ? [{ label: 'Selected point cloud', value: proof.sceneManifest.pointSource, url: file(proof.sceneManifest.pointSource) }] : []),
+        { label: 'Selected scene export SHA-256', value: proof.sceneManifest.exportSha256 },
+        { label: 'Manifest viewer build', value: `${proof.sceneManifest.viewerVersion} (${proof.sceneManifest.viewerCommit})` },
+        ...(proof.sceneManifest.maskCount && proof.sceneManifest.maskRole === 'unknown'
+          ? [{ label: 'Mask export', value: 'Masks display in the viewer. Their role is unverified, so they are not qualified as COLMAP feature masks.' }] : []),
+      ] : []),
       ...(summary.availableData ? [{ label: 'Available data', value: sceneDataText(summary.availableData) },
         ...Object.entries(summary.availableData).filter(([, evidence]) => evidence?.samplePath).map(([kind, evidence]) => ({
           label: `${kind.replaceAll('_', ' ')} sample`, value: evidence!.samplePath!, ...(parent.provider === 'public' ? {} : { url: file(evidence!.samplePath!) }),
@@ -168,7 +188,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
       ] : []),
       ...(proof?.sceneCompatibility ? [{ label: 'Native layout check', value: proof.scope },
         ...Object.entries({ 'Camera definitions': proof.sceneCompatibility.cameras, 'Registered pose records': proof.sceneCompatibility.images,
-          '3D points': proof.sceneCompatibility.points }).filter(([, value]) => value !== null).map(([label, value]) => ({ label, value: String(value) }))] : []),
+          [proof.sceneManifest ? 'Native 3D points' : '3D points']: proof.sceneCompatibility.points }).filter(([, value]) => value !== null).map(([label, value]) => ({ label, value: String(value) }))] : []),
       ...(proof?.sceneCompatibility?.countAudit ? [{ label: 'Scene statistics check', value: `Complete text files (${Object.values(proof.sceneCompatibility.countAudit.files).map(file => file!.path.split('/').at(-1)).join(', ')}) parsed with ColmapView’s native readers on ${proof.sceneCompatibility.countAudit.checkedAt}. Photograph availability is checked separately.` }] : []),
       ...(proof?.sceneValidation ? [{ label: 'Verified original photographs', value: String(proof.sceneValidation.photoCount) },
         { label: 'Verified camera models', value: String(proof.sceneValidation.cameras) },

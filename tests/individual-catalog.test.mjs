@@ -115,6 +115,68 @@ test('unknown totals stay unknown, zero points stay zero and companion counts ca
   assert.deepEqual(stronger.sceneStats, { cameraPoses: 7, cameraModels: 3, points: 0 });
 });
 
+function explicitManifestProof() {
+  const selection = 'e'.repeat(64);
+  const manifest = { url: `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${selection}.manifest.json`,
+    sha256: 'a'.repeat(64), selectionSha256: selection, counts: { cameras: 1, images: 2, points: 350710 },
+    pointSource: 'scene/sparse/0/points3D.ply', pointFormat: 'xyz_ply', photoCount: 2, maskCount: 2, maskRole: 'unknown',
+    exportSha256: 'b'.repeat(64), viewerCommit: 'c'.repeat(40), viewerVersion: '0.17.5' };
+  const proof = nativePhotoProof('sample_checked');
+  proof.sceneCompatibility = { ...proof.sceneCompatibility, cameras: 1, images: 2, points: 0 };
+  return { ...proof, sceneManifest: manifest, viewerUrl: 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(manifest.url) };
+}
+
+test('selected manifest totals and launch target follow the checked companion while native evidence stays zero', () => {
+  const proof = explicitManifestProof();
+  const item = row(0, { 7: proof });
+  assert.equal(render.canOpenIndividual(item, source), true);
+  assert.deepEqual(render.individualSummary(item, source).sceneStats, { cameraPoses: 2, cameraModels: 1, points: 350710 });
+  const entry = render.individualEntry(item, source, parent);
+  assert.equal(entry.viewerUrl, proof.viewerUrl);
+  assert.equal(entry.verification.sceneCompatibility.points, 0);
+  const html = render.catalogEntryPage(entry);
+  assert.match(html, /data-stat="points">350,710/);
+  assert.match(html, /Native 3D points/);
+  assert.match(html, /Scene manifest/);
+  assert.match(html, /not qualified as COLMAP feature masks/);
+  const stronger = { ...proof, level: 'scene_verified', delivery: 'browser_readable', sceneCompatibility: undefined,
+    sceneValidation: { ...verified.sceneValidation, cameras: 1, images: 2, points: 0 } };
+  assert.equal(render.canOpenIndividual(row(0, { 7: stronger }), source), true);
+  assert.equal(render.individualSummary(row(0, { 7: stronger }), source).sceneStats.points, 350710);
+});
+
+test('malformed or mismatched manifest evidence cannot keep a viewer action', () => {
+  for (const change of [
+    proof => { proof.viewerUrl = verified.viewerUrl; },
+    proof => { proof.sceneManifest.counts.images = 3; },
+    proof => { proof.sceneManifest.pointFormat = '__proto__'; },
+    proof => { proof.sceneManifest.sha256 = ''; },
+    proof => { proof.sceneCompatibility.points = 2; },
+    proof => { proof.sceneManifest.photoCount = 3; },
+    proof => { proof.sceneManifest.url = 'https://unrelated.test/manifest.json'; },
+  ]) {
+    const proof = explicitManifestProof();
+    change(proof);
+    assert.equal(render.canOpenIndividual(row(0, { 7: proof }), source), false);
+    assert.equal(render.individualSummary(row(0, { 7: proof }), source).sceneStats.points, proof.sceneCompatibility.points);
+  }
+  const proof = explicitManifestProof();
+  proof.sceneManifest.pointFormat = 'colmap_text';
+  proof.sceneManifest.pointSource = 'scene/sparse/0/points3D.txt';
+  proof.sceneManifest.counts.points = 0;
+  proof.sceneManifest.photoCount = 1;
+  proof.sceneManifest.maskCount = 1;
+  assert.equal(render.canOpenIndividual(row(0, { 7: proof }), source), true);
+  assert.equal(render.individualSummary(row(0, { 7: proof }), source).sceneStats.points, 0);
+});
+
+test('public manifest settings assets have their own static CORS rule', () => {
+  const headers = readFileSync('public/_headers', 'utf8');
+  assert.match(headers, /\/hub\/datasets\/individual\/manifests\/\*\.state\.json\r?\n\s+Access-Control-Allow-Origin: \*/);
+  assert.doesNotMatch(headers, /\/hub\/datasets\/individual\/manifests\/\*\r?\n\s+Access-Control-Allow-Origin: \*/);
+  assert.match(readFileSync('wrangler.jsonc', 'utf8'), /!\/hub\/datasets\/individual\/\*/);
+});
+
 test('statistics evidence names only the text files completely read in a mixed-format model', () => {
   const proof = nativePhotoProof('not_included');
   proof.sceneCompatibility = { ...proof.sceneCompatibility, cameras: 1, images: 12, points: 0,

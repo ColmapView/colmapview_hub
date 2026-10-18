@@ -13,7 +13,7 @@ export interface SceneStatistics { cameraPoses: number | null; cameraModels: num
 const statisticFields = [
   { key: 'cameraPoses', label: 'Camera poses', note: 'Registered camera poses in the selected reconstruction. Original photographs may be absent.' },
   { key: 'cameraModels', label: 'Camera models', note: 'Camera definitions in the selected reconstruction. Multiple poses can share one camera model.' },
-  { key: 'points', label: '3D points', note: '3D points in the selected reconstruction. Companion model files are counted separately.' },
+  { key: 'points', label: '3D points', note: '3D points in the selected scene. A checked manifest can explicitly select a companion XYZ cloud.' },
 ] as const;
 
 export function sceneStatistics(counts?: { images: number | null; cameras: number | null; points: number | null }): SceneStatistics {

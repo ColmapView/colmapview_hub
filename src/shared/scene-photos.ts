@@ -16,7 +16,7 @@ export const isPhotoStatus = (value: unknown): value is PhotoStatus => typeof va
 export const photoLabel = (status: PhotoStatus) => PHOTO_LABELS[status];
 
 export interface ScenePhotoAudit {
-  status: Exclude<PhotoStatus, 'complete_export_checked' | 'unresolved'>;
+  status: Exclude<PhotoStatus, 'unresolved'>;
   checkedAt: string;
   listingComplete: true;
   policy: string;

@@ -10,3 +10,6 @@
 
 /hub/datasets/*.manifest.json
   Access-Control-Allow-Origin: *
+
+/hub/datasets/individual/manifests/*.state.json
+  Access-Control-Allow-Origin: *
