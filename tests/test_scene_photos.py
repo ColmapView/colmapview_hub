@@ -1,10 +1,7 @@
 import copy
-import sys
 import unittest
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from scene_photos import apply_photo_evidence, photo_scene_reviews
+from scripts.catalog.scene_photos import apply_photo_evidence, photo_scene_reviews
 
 
 class ScenePhotoTests(unittest.TestCase):

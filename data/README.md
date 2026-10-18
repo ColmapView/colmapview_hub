@@ -4,7 +4,7 @@
 
 ## Photograph availability and path policies
 
-`scene-photos.json.gz` is a compact, curated projection of the October 17 per-scene image/path audit. It covers all 5,237 published scenes at their exact source revision and selected model file paths. `scripts/scene_photos.py` rejects revision/file drift, duplicate scenes, incomplete inventories, unsupported photo claims and invalid coverage counts. Full published coverage is required by this input; an unaudited new scene must receive an explicit availability review. Photo evidence never changes model launch eligibility or upgrades a bounded header check into a complete scene/export check. The three independently verified camera-and-photo exports keep their stronger proof.
+`scene-photos.json.gz` is a compact, curated projection of the October 17 per-scene image/path audit. It covers all 5,237 published scenes at their exact source revision and selected model file paths. `scripts/catalog/scene_photos.py` rejects revision/file drift, duplicate scenes, incomplete inventories, unsupported photo claims and invalid coverage counts. Full published coverage is required by this input; an unaudited new scene must receive an explicit availability review. Photo evidence never changes model launch eligibility or upgrades a bounded header check into a complete scene/export check. The three independently verified camera-and-photo exports keep their stronger proof.
 
 The underlying pass checked all 5,239 then-published scenes in 105 repositories, complete pinned inventory evidence, 339 complete camera/pose metadata pairs through the current native media binder, 22,417 CSV mapping targets, 2,982 Waymo V2 JSON mapping targets and 478 companion image ZIP indexes containing 61,459 image members. New production-origin browser reads covered 172 photo URLs and all 478 ZIP tails: 106 photos decoded, 66 were deferred by the pixel/byte bounds, and no attempted read or pixel decode failed. Same-pin browser receipts from earlier that day cover other existing samples. Complete model, all-photo and export checks remain separate. Raw receipts, source bytes and generated research reports stay in ignored local audit folders.
 
@@ -28,11 +28,11 @@ Import the existing local research files with:
 npm run catalog:import -- --viewer-root C:/Users/HEQ/Projects/colmap_webview/colmap-webview
 ```
 
-The importer reads the HF search inventory, broader public catalog and dataset loading notes specified in `scripts/import-catalog.mjs`. It records each input's SHA-256, row count and survey date. It performs no network requests and does not download images or dataset contents.
+The importer reads the HF search inventory, broader public catalog and dataset loading notes specified in `scripts/catalog/import-catalog.mjs`. It records each input's SHA-256, row count and survey date. It performs no network requests and does not download images or dataset contents.
 
 One source record in `catalog.json` represents an HF repository or a public scene/subset/variant. Published source records remain available through the collection browser and their original detail URLs. Search matches with no supported 3D evidence and inspection errors are excluded. Conversion candidates, fixtures and incomplete checks remain labeled. Additional audited sources are retained even when they were not in the browser-readable public catalog. Audits of another file in the same Zenodo collection are identified as collection-level evidence.
 
-The build excludes gated/access-required sources using both catalog and audit evidence. `scripts/catalog-publication.mjs` filters the public collection pages, catalog downloads and audit download; the individual index builder applies the same policy, with shared policy fixtures for both implementations. An access restriction in either input excludes the source even if the other input is stale. Generated pages, source assets, model IDs, search postings and facets are rebuilt without those identities. Removed detail URLs return 404. The Worker response cache uses the current catalog generation before looking up a cached page or search result.
+The build excludes gated/access-required sources using both catalog and audit evidence. `scripts/catalog/catalog-publication.mjs` filters the public collection pages, catalog downloads and audit download; the individual index builder applies the same policy, with shared policy fixtures for both implementations. An access restriction in either input excludes the source even if the other input is stale. Generated pages, source assets, model IDs, search postings and facets are rebuilt without those identities. Removed detail URLs return 404. The Worker response cache uses the current catalog generation before looking up a cached page or search result.
 
 Source IDs derive from stable source identities. Individual IDs hash the source identity, model kind, archive identity and model path, independently of revisions, counts and scan dates. Refreshing metadata preserves existing URLs. The normal build and deploy commands rebuild all catalog assets. Individual pagination and filters work without JavaScript; the browser enhancement requests one results page at a time from the same-origin read-only catalog endpoint.
 
@@ -48,9 +48,9 @@ The rules follow the [Creative Commons license descriptions](https://creativecom
 
 Run `npm run catalog:licenses` to refresh the committed snapshot from these offline rules, or use the normal catalog importer, which applies them last. The snapshot records the rule file's SHA-256 and category provenance. Builds reject stale classifications. Category filtering composes with the existing exact-license, dataset, evidence and delivery filters; individual model counts are preserved.
 
-`scene-contents.json.gz` records exact pinned scene identities, scoped mask inventories, companion model header evidence and optional preview provenance. `scripts/scene_contents.py` rejects source/model drift, guessed Gaussian PLY classifications, changed preview hashes and disallowed image terms. Builds copy only referenced, hash-named JPEGs from `data/scene-thumbnails/` to fixed same-origin assets. Scene cards list available data separately from full loading evidence. Empty COLMAP point sets do not claim a point cloud, and pose metadata never counts as photographs.
+`scene-contents.json.gz` records exact pinned scene identities, scoped mask inventories, companion model header evidence and optional preview provenance. `scripts/catalog/scene_contents.py` rejects source/model drift, guessed Gaussian PLY classifications, changed preview hashes and disallowed image terms. Builds copy only referenced, hash-named JPEGs from `data/scene-thumbnails/` to fixed same-origin assets. Scene cards list available data separately from full loading evidence. Empty COLMAP point sets do not claim a point cloud, and pose metadata never counts as photographs.
 
-Previews are 320 × 320 center-square crops of the first available registered photograph. Operator preparation runs separately from builds using `scripts/prepare_scene_contents.py --plan <reviewed-plan.json>` and Pillow; plans must use pinned public Hugging Face file URLs. Source photos and bounded ZIP members are read only during preparation. Source hashes, original paths, photographer attribution, image terms and crop disclosure follow the preview. MegaUnScene image terms and artists come from its pinned `images.csv` rather than inheriting the collection's CC BY license; unresolved first-image terms are skipped. Non-commercial and unknown source licenses never receive thumbnails. Model-only scenes stay published.
+Previews are 320 × 320 center-square crops of the first available registered photograph. Operator preparation runs separately from builds using `python -m scripts.audit.prepare_scene_contents --plan <reviewed-plan.json>` and Pillow; plans must use pinned public Hugging Face file URLs. Source photos and bounded ZIP members are read only during preparation. Source hashes, original paths, photographer attribution, image terms and crop disclosure follow the preview. MegaUnScene image terms and artists come from its pinned `images.csv` rather than inheriting the collection's CC BY license; unresolved first-image terms are skipped. Non-commercial and unknown source licenses never receive thumbnails. Model-only scenes stay published.
 
 Cards without a prepared, eligible thumbnail use a neutral placeholder. “No photo” applies only to established absence; “No preview” covers unverified photos, images requiring setup and unavailable licensed previews.
 
@@ -75,7 +75,7 @@ Each scene carries a dataset label, source collection, scene path, reported sour
 
 A co-located COLMAP camera/image/point file set identifies a scene. Reconstructions under the same scene's `sparse/0`, `sparse/1`, etc. are retained as variants inside one card. Camera train/validation/test metadata is grouped by scene folder, including conventional split folders when the layout establishes a shared scene. Companion assets are attached to their nearest established scene within the same archive. Repository-root reconstructions claim only conventional companions. Different captures and archive containers remain separate; copies across repositories have not been globally deduplicated.
 
-`scripts/scene_datasets.py` performs this projection without changing canonical research inputs. Detail pages show up to 32 source asset links, preserving primary native model files first. The total asset count and any truncation remain explicit; remaining files are available through the source scene folder. Photographs and masks need separate enumeration and loading checks. Scene boundaries are metadata evidence, not complete render certifications.
+`scripts/catalog/scene_datasets.py` performs this projection without changing canonical research inputs. Detail pages show up to 32 source asset links, preserving primary native model files first. The total asset count and any truncation remain explicit; remaining files are available through the source scene folder. Photographs and masks need separate enumeration and loading checks. Scene boundaries are metadata evidence, not complete render certifications.
 
 The NGS research inventory identifies **259 named scene datasets**. Its inventory has 260 COLMAP file sets plus one Gaussian-pair record: `objects/scan_20250410_110806` contains both `sparse/0` and `sparse/1` and the pair, which belong to one scene. All variants and Gaussian assets remain inside that scene. A pinned directory walk visited 783 model directories and deliberately omitted 518 photograph/mask/depth/video directories, bypassing the earlier 100,000-sibling cap. The source metadata records 260 COLMAP models and 518 companion PLY files. The walk establishes filenames and grouping; it does not qualify every model or image for loading.
 
@@ -85,15 +85,15 @@ The compressed canonical listing for each source stores tuples of `[kind, path, 
 
 The follow-up initially qualified **713,100 gated entries** as access required; the publication policy now removes all of them and their **255 source collection records** from the public Hub. Their audit evidence stays in the repository. A listed filename is not a readable payload. The checked `akashskypatel/NeurCross-Labels` airplane PLY returns HTTP 401 `GatedRepo`; the 112 gated sources with an exact recorded file candidate all return HTTP 401 anonymously. The viewer's private-repository sign-in does not establish gated-file support.
 
-Twenty-nine exact positive archive-header items (seven native file sets and 22 PLY files) supplement 29 canonical research listings. Source revisions and original tuples remain intact. The scene projection publishes identified scene anchors; standalone archive members remain research/source evidence and do not create cards. The preparation step reapplies these positive paths from the source audit. `python scripts/sampled_individuals.py` can apply the supplement without a new provider walk.
+Twenty-nine exact positive archive-header items (seven native file sets and 22 PLY files) supplement 29 canonical research listings. Source revisions and original tuples remain intact. The scene projection publishes identified scene anchors; standalone archive members remain research/source evidence and do not create cards. The preparation step reapplies these positive paths from the source audit. `python -m scripts.catalog.sampled_individuals` can apply the supplement without a new provider walk.
 
 Thirty-eight ungated research source listings remain incomplete (51 in the full research inventory), and uninspected/nested archives may contain additional scenes. The scene index separately counts incomplete sources that have identified scenes. No aggregate collection is silently counted as one scene when its scenes have not been identified. The public survey's already named scene/subset entries retain their identities. File-only detail URLs are removed from the scene namespace; retained primary scene IDs and collection URLs remain stable.
 
 To regenerate the canonical individual listings from the saved metadata, then rebuild:
 
 ```powershell
-python scripts/prepare_individual_datasets.py --metadata PATH_TO_FULL_AUDIT/metadata --old-inventory PATH_TO_HF_SCAN/all-candidates.json --refresh-model-source OpsiClear/NGS
-python scripts/prepare_public_individuals.py
+python -m scripts.audit.prepare_individual_datasets --metadata PATH_TO_FULL_AUDIT/metadata --old-inventory PATH_TO_HF_SCAN/all-candidates.json --refresh-model-source OpsiClear/NGS
+python -m scripts.audit.prepare_public_individuals
 npm run catalog:import -- --viewer-root PATH_TO_VIEWER
 npm run build:assets
 ```
@@ -136,17 +136,17 @@ The streaming reader retains record IDs but discards point objects and tracks be
 
 All 16 imported in a real Chromium viewer and submitted their complete point sets to WebGL. Every registered photo binding was checked; original RGB and mask pixels decoded at the calibration dimensions. Foreground overview captures and native camera projection checks establish the recorded scene association. The two blur-slam variants have identical camera, pose and PLY byte hashes; the second manifest explicitly binds the first representation's original photos. This also resolves its former association-review status. Mask roles remain unknown, so these receipts qualify COLMAP + images exports and mask display, not feature-mask exports.
 
-`scripts/verify_scene_manifest_exports.py` independently reads the downloaded viewer ZIPs with PyCOLMAP 4.0.3. It checks the complete model, all point coordinates and RGB bytes, generated untracked point IDs, original camera calibration, pose matrices, observation references, every original photograph hash, dimensions and orientation. It reads only an existing URL-hash cache and never fetches or publishes. The audit caught and fixed a PLY parser defect that turned integer color channels of `1` into `255`; the corrected exports preserve every source color channel.
+`scripts/audit/verify_scene_manifest_exports.py` independently reads the downloaded viewer ZIPs with PyCOLMAP 4.0.3. It checks the complete model, all point coordinates and RGB bytes, generated untracked point IDs, original camera calibration, pose matrices, observation references, every original photograph hash, dimensions and orientation. It reads only an existing URL-hash cache and never fetches or publishes. The audit caught and fixed a PLY parser defect that turned integer color channels of `1` into `255`; the corrected exports preserve every source color channel.
 
 To update coverage, prepare an explicit scene selection with exact native file receipts, the selected points receipt, registered photo/mask mappings and a saved viewer state. Perform anonymous browser imports and exports, then run the independent check in an environment containing NumPy, Pillow and PyCOLMAP:
 
 ```sh
-python scripts/verify_scene_manifest_exports.py --scenes data/scene-manifests.json --browser-reports PATH_TO_BROWSER_RECEIPTS --exports PATH_TO_VIEWER_ZIPS --cache PATH_TO_PINNED_SOURCE_CACHE --output .tmp/manifest-export-check.json
+python -m scripts.audit.verify_scene_manifest_exports --scenes data/scene-manifests.json --browser-reports PATH_TO_BROWSER_RECEIPTS --exports PATH_TO_VIEWER_ZIPS --cache PATH_TO_PINNED_SOURCE_CACHE --output .tmp/manifest-export-check.json
 ```
 
 The cache names each complete immutable source response `SHA256(source_url).bin`. Each ZIP is named with its `data-…` scene identity. Browser receipt logs start with `### Result` followed by JSON containing `id`, `status: "passed"`, `pointDrawCount`, `photoCount`, `maskCount`, and an empty `errors` array. Retain screenshots and detailed transport/renderer receipts locally. Camera/cloud alignment still needs review; the independent file checker cannot infer semantic alignment or mask roles.
 
-Copy only passing, selection-bound receipts into `scene-manifests.json`; `selection_digest()` in `scripts/scene_manifests.py` computes the binding. `npm run build:catalog` generates the manifests, settings, launch targets and statistics together. `python -m unittest discover -s tests -p "test_*.py"`, `npm run check` and `npm run test:browser` check the policy gates and public routes. The manifest/settings CORS rules must not overlap: duplicate wildcard CORS values are rejected by browsers. Changing a selection requires a fresh check; a nonempty tracked native cloud cannot be silently replaced by unrelated PLY vertex IDs. A complete comparison against the preceding catalog found only the intended 16 changes, with all 5,221 other scene records identical.
+Copy only passing, selection-bound receipts into `scene-manifests.json`; `selection_digest()` in `scripts/catalog/scene_manifests.py` computes the binding. `npm run build:catalog` generates the manifests, settings, launch targets and statistics together. `npm run test:python`, `npm run check` and `npm run test:browser` check the policy gates and public routes. The manifest/settings CORS rules must not overlap: duplicate wildcard CORS values are rejected by browsers. Changing a selection requires a fresh check; a nonempty tracked native cloud cannot be silently replaced by unrelated PLY vertex IDs. A complete comparison against the preceding catalog found only the intended 16 changes, with all 5,221 other scene records identical.
 
 ## Full inventory audit
 
@@ -163,23 +163,23 @@ The audit separates file listings, original format headers, source access, brows
 The audit receipt includes every excluded source's identity, so another refresh can start from the committed file rather than relying on `.tmp/`. A fresh output directory makes new requests; the same output directory resumes its existing dated receipts:
 
 ```powershell
-python scripts/dataset_audit.py --inventory data/dataset-audit.json --out .tmp/audit-refresh --phase metadata --use-existing-hf-auth
-python scripts/dataset_audit.py --inventory data/dataset-audit.json --out .tmp/audit-refresh --phase probe
-python scripts/dataset_audit.py --catalog data/catalog.json --out .tmp/audit-refresh --phase public
-node scripts/build-audit-browser-plan.mjs --dir .tmp/audit-refresh
+python -m scripts.audit.dataset_audit --inventory data/dataset-audit.json --out .tmp/audit-refresh --phase metadata --use-existing-hf-auth
+python -m scripts.audit.dataset_audit --inventory data/dataset-audit.json --out .tmp/audit-refresh --phase probe
+python -m scripts.audit.dataset_audit --catalog data/catalog.json --out .tmp/audit-refresh --phase public
+node scripts/audit/build-audit-browser-plan.mjs --dir .tmp/audit-refresh
 ```
 
 The optional existing HF token is used only on exact public metadata API endpoints, with redirects disabled. Asset probes remain anonymous. Private content and dataset scripts are never read or executed. Metadata responses, archive directories and decompression prefixes are bounded; rate-limit windows and request deadlines are respected. A negative archive conclusion requires a complete repository listing and all listed archives to have been inspected without unresolved nesting. Native-header evidence is representative, not every model's full parse or a render certification.
 
-For browser receipts, open an `@playwright/cli` session named `dataset-audit` at the production viewer origin from `.tmp/`, then run `node scripts/run-audit-browser.mjs --dir .tmp/audit-refresh --cli PATH_TO_INSTALLED_PLAYWRIGHT_CLI_JS`. It uses bounded browser prefix reads and exact archive tails. Optional UI sample receipts use `scripts/run-audit-samples.mjs` with a local `sample-plan.json`. Finish with `node scripts/finalize-dataset-audit.mjs --dir .tmp/audit-refresh --viewer-version VERSION`, then rerun the catalog import above. The importer reapplies the committed audit and manual reviews, preserving entry URLs and preventing older CSV claims from restoring unchecked viewer links.
+For browser receipts, open an `@playwright/cli` session named `dataset-audit` at the production viewer origin from `.tmp/`, then run `node scripts/audit/run-audit-browser.mjs --dir .tmp/audit-refresh --cli PATH_TO_INSTALLED_PLAYWRIGHT_CLI_JS`. It uses bounded browser prefix reads and exact archive tails. Optional UI sample receipts use `scripts/audit/run-audit-samples.mjs` with a local `sample-plan.json`. Finish with `node scripts/audit/finalize-dataset-audit.mjs --dir .tmp/audit-refresh --viewer-version VERSION`, then rerun the catalog import above. The importer reapplies the committed audit and manual reviews, preserving entry URLs and preventing older CSV claims from restoring unchecked viewer links.
 
 Raw HTTP caches, browser logs, screenshots and runtime files stay under `.tmp/`. The committed receipt contains public source identities, pinned revisions, checked URLs and qualified findings. Repository license metadata does not independently establish permissions for underlying assets; public catalog license evidence retains its original provenance.
 
 To merge the qualified follow-up receipts without confusing their scopes:
 
 ```powershell
-node scripts/refresh-dataset-evidence.mjs --receipts PATH_TO_BROWSER_AND_ACCESS_RECEIPTS --samples PATH_TO_BOUNDED_VIEWER_SAMPLES
-python scripts/sampled_individuals.py
+node scripts/audit/refresh-dataset-evidence.mjs --receipts PATH_TO_BROWSER_AND_ACCESS_RECEIPTS --samples PATH_TO_BOUNDED_VIEWER_SAMPLES
+python -m scripts.catalog.sampled_individuals
 npm run catalog:import -- --viewer-root PATH_TO_VIEWER
 npm run check
 npm run test:browser

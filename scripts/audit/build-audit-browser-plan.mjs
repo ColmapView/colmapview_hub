@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { publicUrl } from './catalog-import.mjs';
+import { publicUrl } from '../catalog/catalog-import.mjs';
 
 const { values } = parseArgs({ options: { dir: { type: 'string', default: '.tmp/full-audit' } } });
 const directory = resolve(values.dir);

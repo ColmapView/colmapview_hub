@@ -1,17 +1,15 @@
 import gzip
 import hashlib
 import json
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from prepare_individual_datasets import individual_records, group_components
-from build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, reviewed_scene_exclusions, tokens
-from scene_qualification import REQUIRED_CHECKS, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
-from sampled_individuals import supplement_rows
-from scene_datasets import MAX_SCENE_FILE_LINKS, scene_records
+from scripts.audit.prepare_individual_datasets import individual_records, group_components
+from scripts.catalog.build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, reviewed_scene_exclusions, tokens
+from scripts.catalog.scene_qualification import REQUIRED_CHECKS, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
+from scripts.catalog.sampled_individuals import supplement_rows
+from scripts.catalog.scene_datasets import MAX_SCENE_FILE_LINKS, scene_records
 
 
 class IndividualDatasetsTests(unittest.TestCase):

@@ -4,6 +4,7 @@ Only ZIP directory metadata is read. Individual scene entries already present in
 the public scene survey retain their identities and scope.
 """
 
+import argparse
 import hashlib
 import json
 import time
@@ -11,8 +12,8 @@ import zipfile
 from collections import Counter
 from pathlib import Path
 
-from dataset_audit import Network, RemoteZip, now
-from prepare_individual_datasets import individual_records, read, write_pack
+from .dataset_audit import Network, RemoteZip, now
+from .prepare_individual_datasets import individual_records, read, write_pack
 
 
 def prepare(root=Path('.')):
@@ -66,4 +67,6 @@ def prepare(root=Path('.')):
 
 
 if __name__ == '__main__':
-    prepare()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root', type=Path, default=Path('.'))
+    prepare(parser.parse_args().root)

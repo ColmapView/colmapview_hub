@@ -1,13 +1,11 @@
 import copy
 import hashlib
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
-from prepare_scene_contents import ply_content
+from scripts.catalog.scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
+from scripts.audit.prepare_scene_contents import ply_content
 
 
 class SceneContentsTests(unittest.TestCase):

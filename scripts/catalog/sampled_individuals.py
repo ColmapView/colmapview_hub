@@ -71,4 +71,4 @@ def update(root):
 
 
 if __name__ == '__main__':
-    update(Path(__file__).resolve().parents[1])
+    update(Path(__file__).resolve().parents[2])

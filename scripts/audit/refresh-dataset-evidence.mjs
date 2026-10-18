@@ -2,7 +2,7 @@
 import { readFile, writeFile, rename } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { formatName, requiredProbeUrls } from './dataset-audit-import.mjs';
+import { formatName, requiredProbeUrls } from '../catalog/dataset-audit-import.mjs';
 
 const { values } = parseArgs({ options: { receipts: { type: 'string' }, samples: { type: 'string' }, out: { type: 'string', default: 'data/dataset-audit.json' } } });
 if (!values.receipts || !values.samples) throw new Error('--receipts and --samples must name the public audit receipt directories');

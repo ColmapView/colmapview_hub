@@ -12,8 +12,8 @@ import posixpath
 import re
 from urllib.parse import quote
 
-from scene_contents import source_path
-from scene_qualification import scene_key
+from .scene_contents import source_path
+from .scene_qualification import scene_key
 
 ASSET_PREFIX = '/hub/datasets/individual/manifests/'
 ASSET_BASE = 'https://colmapview.opsiclear.com' + ASSET_PREFIX

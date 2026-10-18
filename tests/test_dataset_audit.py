@@ -1,6 +1,5 @@
 """Classifier regression checks use in-memory bytes, never public dataset downloads."""
 
-import importlib.util
 import io
 import json
 import struct
@@ -10,9 +9,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-spec = importlib.util.spec_from_file_location("dataset_audit", Path(__file__).resolve().parents[1]/"scripts/dataset_audit.py")
-audit = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(audit)
+from scripts.audit import dataset_audit as audit
 
 
 class MemoryNetwork:

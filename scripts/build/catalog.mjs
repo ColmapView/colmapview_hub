@@ -1,10 +1,12 @@
 import { readFile, readdir, mkdir, writeFile, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { catalogRenderer } from './catalog-renderer.mjs';
-import { publicUrl } from './catalog-import.mjs';
-import { publicationSnapshot } from './catalog-publication.mjs';
-import { applyLicenseCategories } from './license-categories.mjs';
-import './build-individual-catalog.mjs';
+import { catalogRenderer } from './renderer.mjs';
+import { publicUrl } from '../catalog/catalog-import.mjs';
+import { publicationSnapshot } from '../catalog/catalog-publication.mjs';
+import { applyLicenseCategories } from '../catalog/license-categories.mjs';
+import { runPython } from '../lib/python.mjs';
+
+runPython(['-m', 'scripts.catalog.build_individual_catalog']);
 
 const json = async path => JSON.parse(await readFile(path, 'utf8'));
 const sceneIndex = await json('public/hub/datasets/individual/index.json');

@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { makeDatasetAudit } from './dataset-audit-import.mjs';
+import { makeDatasetAudit } from '../catalog/dataset-audit-import.mjs';
 
 const { values } = parseArgs({ options: { dir: { type: 'string', default: '.tmp/full-audit' },
   'viewer-version': { type: 'string' }, 'allow-partial-browser': { type: 'boolean' } } });

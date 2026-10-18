@@ -5,21 +5,23 @@
   "type": "module",
   "scripts": {
     "dev": "npm run build:assets && node scripts/dev.mjs",
-    "build:client": "node scripts/build-client.mjs",
-    "build:catalog": "node scripts/build-catalog.mjs",
+    "build:client": "node scripts/build/client.mjs",
+    "build:catalog": "node scripts/build/catalog.mjs",
     "build:assets": "npm run build:client && npm run build:catalog",
-    "catalog:import": "node scripts/import-catalog.mjs",
-    "catalog:licenses": "node scripts/license-categories.mjs",
-    "test:catalog": "node --test tests/catalog.test.mjs tests/individual-catalog.test.mjs tests/native-text-counts.test.mjs",
-    "catalog:counts": "node scripts/audit-scene-counts.mjs",
+    "build": "npm run build:assets && wrangler deploy --dry-run --outdir .tmp/build",
+    "catalog:import": "node scripts/catalog/import-catalog.mjs",
+    "catalog:licenses": "node scripts/catalog/license-categories.mjs",
+    "catalog:counts": "node scripts/audit/audit-scene-counts.mjs",
     "types": "wrangler types --strict-vars=false",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "lint": "eslint .",
     "check:css": "node scripts/check-colmapview-css.mjs",
+    "check:code": "npm run typecheck && npm run lint && npm run check:css",
     "test": "vitest run",
+    "test:catalog": "node --test tests/catalog.test.mjs tests/individual-catalog.test.mjs tests/native-text-counts.test.mjs",
+    "test:python": "node scripts/run-python.mjs -m unittest discover -s tests -p \"test_*.py\"",
     "test:browser": "playwright test --workers=1",
-    "build": "npm run build:assets && wrangler deploy --dry-run --outdir .tmp/build",
-    "check": "npm run typecheck && npm run lint && npm run check:css && npm run test:catalog && npm test && npm run build",
+    "check": "npm run check:code && npm run test:catalog && npm run test:python && npm test && npm run build",
     "deploy": "npm run build:assets && wrangler deploy"
   },
   "devDependencies": {
@@ -29,9 +31,13 @@
     "@types/node": "^24.0.0",
     "esbuild": "0.28.2",
     "eslint": "10.12.0",
+    "globals": "17.13.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.71.2",
     "vitest": "4.1.11",
     "wrangler": "4.149.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

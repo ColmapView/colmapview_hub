@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Organize build, offline catalog and operator audit tools into task folders. Use Python package imports and one interpreter launcher for builds and regression checks; keep existing npm entry points.
+- Include Python tests in the shared local/CI check, lint JavaScript tooling, enforce application import boundaries and provide a fast `check:code` command.
+- Make search-index token ordering deterministic and add focused contributor, catalog, sharing and operations guides linked from a shorter README.
+
 ## 0.7.19 — 2026-10-18
 
 - Fill 731 missing camera-model, pose and point totals across 258 pinned native models, including all five Oxford Day and Night text exports. Keble College has 1,020 poses, one camera model and 1,667,969 points.

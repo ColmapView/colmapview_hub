@@ -5,7 +5,7 @@ import re
 from copy import deepcopy
 from pathlib import PurePosixPath
 
-from scene_qualification import scene_key
+from .scene_qualification import scene_key
 
 
 DATA_KINDS = {'images', 'cameras', 'point_cloud', 'splats', 'masks', 'meshes', 'geometry'}

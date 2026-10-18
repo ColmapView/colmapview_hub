@@ -1,13 +1,10 @@
 import copy
 import hashlib
 import json
-import sys
 import unittest
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from build_individual_catalog import hf_url
-from scene_manifests import (ASSET_BASE, CHECKS, apply_manifest_evidence, manifest_assets,
+from scripts.catalog.build_individual_catalog import hf_url
+from scripts.catalog.scene_manifests import (ASSET_BASE, CHECKS, apply_manifest_evidence, manifest_assets,
                              manifest_scene_reviews, selection_digest)
 
 

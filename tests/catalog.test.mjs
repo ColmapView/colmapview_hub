@@ -1,11 +1,11 @@
 import { strict as assert } from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { applyCatalogReviews, buildCatalog, parseCsv, publicUrl, sha256 } from '../scripts/catalog-import.mjs';
-import { catalogRenderer } from '../scripts/catalog-renderer.mjs';
-import { applyDatasetAudit, makeDatasetAudit, requiredProbeUrls, openingRequirement } from '../scripts/dataset-audit-import.mjs';
-import { isAccessRestricted, publicationSnapshot } from '../scripts/catalog-publication.mjs';
-import { applyLicenseCategories } from '../scripts/license-categories.mjs';
+import { applyCatalogReviews, buildCatalog, parseCsv, publicUrl, sha256 } from '../scripts/catalog/catalog-import.mjs';
+import { catalogRenderer } from '../scripts/build/renderer.mjs';
+import { applyDatasetAudit, makeDatasetAudit, requiredProbeUrls, openingRequirement } from '../scripts/catalog/dataset-audit-import.mjs';
+import { isAccessRestricted, publicationSnapshot } from '../scripts/catalog/catalog-publication.mjs';
+import { applyLicenseCategories } from '../scripts/catalog/license-categories.mjs';
 
 const render = await catalogRenderer();
 

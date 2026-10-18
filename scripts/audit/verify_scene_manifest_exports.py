@@ -18,7 +18,7 @@ import numpy as np
 from PIL import Image
 import pycolmap
 
-from scene_manifests import selection_digest
+from ..catalog.scene_manifests import selection_digest
 
 
 def file_hash(path):

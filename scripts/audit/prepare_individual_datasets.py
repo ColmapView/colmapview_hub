@@ -14,8 +14,8 @@ import urllib.parse
 from collections import Counter
 from pathlib import Path
 
-from dataset_audit import Network, model_sets, now
-from sampled_individuals import supplement_rows
+from .dataset_audit import Network, model_sets, now
+from ..catalog.sampled_individuals import supplement_rows
 
 ASSETS = {'.ply': 'ply', '.spz': 'spz', '.sog': 'sog', '.splat': 'splat', '.ksplat': 'ksplat',
           '.obj': 'obj', '.glb': 'glb', '.gltf': 'gltf', '.pcd': 'pcd', '.las': 'las',

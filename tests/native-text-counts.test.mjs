@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { Readable } from 'node:stream';
-import { nativeTextCounts } from '../scripts/native-text-counts.mjs';
+import { nativeTextCounts } from '../scripts/audit/native-text-counts.mjs';
 
 // Small parser contract doubles let the Hub's tests run without checking out
 // the viewer. The operator command also compares against its actual parsers.

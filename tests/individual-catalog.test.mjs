@@ -2,9 +2,9 @@ import { strict as assert } from 'node:assert';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { catalogRenderer } from '../scripts/catalog-renderer.mjs';
-import { applyIndividualListings } from '../scripts/individual-listings.mjs';
-import { applyDatasetLabels } from '../scripts/dataset-labels.mjs';
+import { catalogRenderer } from '../scripts/build/renderer.mjs';
+import { applyIndividualListings } from '../scripts/catalog/individual-listings.mjs';
+import { applyDatasetLabels } from '../scripts/catalog/dataset-labels.mjs';
 
 const render = await catalogRenderer();
 const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));

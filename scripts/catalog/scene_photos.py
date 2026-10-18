@@ -1,7 +1,7 @@
 """Pinned photo availability is evidence, never a model-compatibility gate."""
 
 from copy import deepcopy
-from scene_qualification import scene_key
+from .scene_qualification import scene_key
 
 
 PHOTO_STATES = {'sample_checked', 'partial', 'not_included', 'not_found',

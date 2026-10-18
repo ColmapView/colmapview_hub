@@ -17,11 +17,11 @@ import urllib.parse
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from scene_datasets import scene_records
-from scene_qualification import native_evidence, native_scene_reviews, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
-from scene_photos import apply_photo_evidence, photo_scene_reviews
-from scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
-from scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
+from .scene_datasets import scene_records
+from .scene_qualification import native_evidence, native_scene_reviews, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
+from .scene_photos import apply_photo_evidence, photo_scene_reviews
+from .scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
+from .scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
 
 PACK_SIZE = 2048
 FORMATS = {'colmap': 'COLMAP', 'cameras': 'COLMAP cameras and poses', 'ply': 'PLY (header unchecked)',
@@ -429,7 +429,7 @@ def build(root=Path('.')):
             for field, value in [('kind', kind_name), ('status', level), ('delivery', delivery), ('photos', photo_status),
                                  ('viewer', 'available' if proof and proof.get('viewerUrl') and not gated and not archive and not proof.get('opening') else '')]:
                 add_posting(facets[field], value, total)
-            for token in tokens(' '.join([path, dataset_label, entry['title'], entry['license'], format_name, kind_name])):
+            for token in sorted(tokens(' '.join([path, dataset_label, entry['title'], entry['license'], format_name, kind_name]))):
                 add_posting(postings, token, total)
             total += 1
             if len(pack) == PACK_SIZE:
