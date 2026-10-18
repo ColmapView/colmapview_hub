@@ -134,7 +134,8 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     timer = setTimeout(() => search(select ? 'push' : 'typing'), select ? 0 : 200);
   });
   form.addEventListener('submit', event => { event.preventDefault(); search(); });
-  form.addEventListener('reset', event => {
+  form.querySelector<HTMLAnchorElement>('#catalog-reset')!.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     for (const field of fields) field.value = '';
     search();

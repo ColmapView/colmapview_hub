@@ -30,7 +30,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''))
     + select('kind', 'Type', 'All scene types', values(Object.keys(index.kinds)))
     + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })))
-    + '<button type="submit" class="button button-primary">Search</button><button type="reset" class="button">Reset</button></div>'
+    + '<button type="submit" class="button button-primary">Search</button><a id="catalog-reset" class="button" href="/hub/datasets/">Reset</a></div>'
     + `<details class="catalog-advanced"${advanced ? ' open' : ''}><summary>More filters</summary><div class="catalog-secondary">`
     + select('provider', 'Source', 'All sources', [{ value: 'huggingface', label: 'Hugging Face' }, { value: 'public', label: 'Public sources' }])
     + select('license', 'License', 'All reported licenses', values(index.sources.map(source => source.license)))

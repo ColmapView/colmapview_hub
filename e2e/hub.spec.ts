@@ -237,7 +237,9 @@ test('preserves saved filters after their redundant controls are removed', async
   await page.getByRole('button', { name: 'Load more', exact: true }).click();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
   expect(new URL(page.url()).searchParams.get('delivery')).toBe('cors_headers_checked');
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  const resetResponse = page.waitForResponse(response => response.url().endsWith('/hub/datasets/api/entries'));
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
+  expect((await resetResponse).ok()).toBe(true);
   await expect(page.locator('#catalog-saved-filters')).toBeHidden();
   expect(new URL(page.url()).searchParams.has('viewer')).toBe(false);
   await page.goBack();
@@ -246,9 +248,15 @@ test('preserves saved filters after their redundant controls are removed', async
   const fallback = await browser.newContext({ javaScriptEnabled: false });
   try {
     const serverPage = await fallback.newPage();
-    await serverPage.goto(origin + path);
+    await serverPage.goto(origin + path.replace('?', '?q=large_overlap&'));
     await expect(serverPage.locator('#catalog-saved-filters')).toContainText('Model links only');
     await expect(serverPage.locator('#catalog-next')).toHaveAttribute('href', /delivery=cors_headers_checked&viewer=available&page=2/);
+    await expect(serverPage.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('large_overlap');
+    await serverPage.getByRole('link', { name: 'Reset', exact: true }).click();
+    await expect(serverPage).toHaveURL(origin + '/hub/datasets/');
+    await expect(serverPage.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
+    await expect(serverPage.locator('#catalog-saved-filters')).toBeHidden();
+    await expect(serverPage.locator('.dataset-card')).toHaveCount(24);
   } finally { await fallback.close(); }
 });
 
@@ -263,21 +271,21 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.getByRole('button', { name: 'Load more', exact: true }).click();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search datasets' }).fill('large_overlap basketball sparse_native');
   await expect(page.locator('.dataset-card')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.getByLabel('Type', { exact: true }).selectOption('COLMAP reconstruction');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await page.getByText('More filters', { exact: true }).click();
   await expect(page.locator('select[name="viewer"], select[name="delivery"]')).toHaveCount(0);
   await page.getByLabel('Evidence', { exact: true }).selectOption('Native COLMAP layout checked');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await expect(page.locator('.dataset-card').getByText('Model access and CORS headers checked', { exact: true })).toHaveCount(24);
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search datasets' }).fill('large_overlap basketball sparse_native');
   await page.getByRole('button', { name: /^Metadata for .*basketball.*sparse_native/ }).click();
   await page.getByRole('link', { name: 'Full metadata', exact: true }).click();

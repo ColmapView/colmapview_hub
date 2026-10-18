@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.18 — 2026-10-18
+
+- Make Reset clear the dataset search and all saved filters even when JavaScript is unavailable. Keep asynchronous resets and browser history when scripts run, with a standard link for opening the unfiltered catalog in another tab.
+
 ## 0.7.17 — 2026-10-18
 
 - Remove the redundant Delivery and Viewer link dropdowns. Every published scene has a viewer link, and current delivery groups match the Evidence filter.

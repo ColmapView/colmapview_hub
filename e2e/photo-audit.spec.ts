@@ -39,7 +39,7 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   await page.goForward();
   await expect(page.locator('#catalog-count')).toContainText('of 3,204 scene datasets');
   await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('not_found');
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await expect(page.locator('#catalog-count')).toContainText('of 5,237 scene datasets');
   expect(providerRequests).toEqual([]);
 });
