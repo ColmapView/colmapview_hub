@@ -115,6 +115,20 @@ test('unknown totals stay unknown, zero points stay zero and companion counts ca
   assert.deepEqual(stronger.sceneStats, { cameraPoses: 7, cameraModels: 3, points: 0 });
 });
 
+test('statistics evidence names only the text files completely read in a mixed-format model', () => {
+  const proof = nativePhotoProof('not_included');
+  proof.sceneCompatibility = { ...proof.sceneCompatibility, cameras: 1, images: 12, points: 0,
+    countAudit: { method: 'viewer_native_text_parse', checkedAt: '2026-10-18', viewerCommit: 'b'.repeat(40),
+      files: { points3d: { path: 'scene/points3D.txt', count: 0, bytes: 0, sha256: 'c'.repeat(64) } } } };
+  const entry = render.individualEntry(row(0, { 7: proof }), source, parent);
+  const html = render.catalogEntryPage(entry);
+  assert.match(html, /Complete text files \(points3D\.txt\) parsed/);
+  assert.doesNotMatch(html, /Complete camera, pose and point files parsed/);
+  assert.match(html, /data-stat="cameraPoses">12/);
+  assert.match(html, /data-stat="points">0/);
+  assert.match(html, /Not included by publisher/);
+});
+
 const squareThumbnail = { url: '/hub/datasets/individual/thumbnails/' + 'a'.repeat(64) + '.jpg', width: 320, height: 320,
   sourcePath: 'scene/images/a.jpg', sourceSha256: 'b'.repeat(64), datasetLicense: 'cc-by-4.0', license: 'cc-by-sa-4.0',
   licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', creditUrl: 'https://commons.wikimedia.org/wiki/File:a.jpg',

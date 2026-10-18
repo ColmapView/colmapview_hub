@@ -1,6 +1,6 @@
 {
   "name": "colmapview_hub",
-  "version": "0.7.18",
+  "version": "0.7.19",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
     "build:assets": "npm run build:client && npm run build:catalog",
     "catalog:import": "node scripts/import-catalog.mjs",
     "catalog:licenses": "node scripts/license-categories.mjs",
-    "test:catalog": "node --test tests/catalog.test.mjs tests/individual-catalog.test.mjs",
+    "test:catalog": "node --test tests/catalog.test.mjs tests/individual-catalog.test.mjs tests/native-text-counts.test.mjs",
+    "catalog:counts": "node scripts/audit-scene-counts.mjs",
     "types": "wrangler types --strict-vars=false",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "lint": "eslint .",

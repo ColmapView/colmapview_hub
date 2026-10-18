@@ -43,12 +43,17 @@ def native_scene_reviews(catalog, policy):
             count_audit = records.get('countAudit')
             if count_audit is not None:
                 if (not isinstance(count_audit, dict) or count_audit.get('method') != 'viewer_native_text_parse' or not count_audit.get('checkedAt')
-                        or not isinstance(count_audit.get('files'), dict)
+                        or not isinstance(count_audit.get('files'), dict) or not count_audit['files']
+                        or not set(count_audit['files']) <= {'cameras', 'images', 'points3d'}
                         or not re.fullmatch('[a-f0-9]{40}', count_audit.get('viewerCommit', ''))):
                     raise ValueError('Scene totals require a dated complete parse and viewer revision')
                 for role, count in (('cameras', cameras), ('images', poses), ('points3d', points)):
-                    evidence = count_audit.get('files', {}).get(role, {})
-                    if (not isinstance(evidence, dict) or count is None or not files[role].endswith('.txt')
+                    if role not in count_audit['files']:
+                        if count is not None and files[role].lower().endswith('.txt'):
+                            raise ValueError('Known text totals require evidence for each complete file')
+                        continue
+                    evidence = count_audit['files'][role]
+                    if (not isinstance(evidence, dict) or count is None or not files[role].lower().endswith('.txt')
                             or evidence.get('path') != files[role] or type(evidence.get('count')) is not int or evidence['count'] != count
                             or type(evidence.get('bytes')) is not int or evidence['bytes'] < 0
                             or not re.fullmatch('[a-f0-9]{64}', evidence.get('sha256', ''))):

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.19 — 2026-10-18
+
+- Fill 731 missing camera-model, pose and point totals across 258 pinned native models, including all five Oxford Day and Night text exports. Keble College has 1,020 poses, one camera model and 1,667,969 points.
+- Add a repeatable offline complete-file count audit using the committed viewer parsers with bounded batches, exact file hashes, duplicate-ID handling, image/observation framing and PhoMo schemas. Mixed binary/text models retain per-file evidence.
+- Keep scene identities, viewer links, licenses, photograph policies and qualification levels intact. Add regression coverage for complete statistics, mixed layouts and confirmed empty point sets.
+- All 5,237 published scenes now have model and pose/point totals. Remove point-cloud labels from 15 newly confirmed empty native point sets.
+
 ## 0.7.18 — 2026-10-18
 
 - Make Reset clear the dataset search and all saved filters even when JavaScript is unavailable. Keep asynchronous resets and browser history when scripts run, with a standard link for opening the unfiltered catalog in another tab.

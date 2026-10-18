@@ -15,6 +15,22 @@ from scene_datasets import MAX_SCENE_FILE_LINKS, scene_records
 
 
 class IndividualDatasetsTests(unittest.TestCase):
+    def test_catalog_native_totals_are_present_and_text_counts_have_exact_file_audits(self):
+        root = Path(__file__).resolve().parents[1]
+        catalog = json.loads((root / 'data/catalog.json').read_text(encoding='utf8'))
+        policy = json.loads(gzip.decompress((root / 'data/native-layouts.json.gz').read_bytes()))
+        reviews = native_scene_reviews(catalog, policy)
+        excluded = reviewed_scene_exclusions(catalog, json.loads((root / 'data/scene-exclusions.json').read_text(encoding='utf8')))
+        self.assertTrue(reviews)
+        for review in reviews.values():
+            if (review['sourceId'], 'colmap', review['path'], None) in excluded:
+                continue
+            for role, count_key in [('cameras', 'cameras'), ('images', 'images'), ('points3d', 'points')]:
+                with self.subTest(source=review['sourceId'], path=review['path'], role=role):
+                    self.assertIsNotNone(review[count_key])
+                    if review['files'][role].lower().endswith('.txt'):
+                        self.assertIn(role, review.get('countAudit', {}).get('files', {}))
+
     def test_scene_publication_matches_the_viewer_action_gates(self):
         cases = json.loads((Path(__file__).parent / 'fixtures/scene-publication.json').read_text(encoding='utf8'))
         verified = json.loads((Path(__file__).parent / 'fixtures/verified-scene-proof.json').read_text(encoding='utf8'))
@@ -126,6 +142,33 @@ class IndividualDatasetsTests(unittest.TestCase):
                                    ('points3d', 'path', 'other/points3D.txt'), ('points3d', 'sha256', 'bad')]:
             invalid = json.loads(json.dumps(policy))
             invalid['sources'][0]['models'][0][7]['countAudit']['files'][role][field] = value
+            with self.assertRaises(ValueError):
+                native_scene_reviews({'entries': [entry]}, invalid)
+        invalid = json.loads(json.dumps(policy))
+        invalid['sources'][0]['models'][0][7]['countAudit']['files'].pop('images')
+        with self.assertRaisesRegex(ValueError, 'each complete file'):
+            native_scene_reviews({'entries': [entry]}, invalid)
+
+    def test_mixed_binary_text_counts_are_scoped_to_individually_parsed_files(self):
+        entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface', 'access': 'public',
+                 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
+        files = {'cameras': 'scene/cameras.bin', 'images': 'scene/images.bin', 'points3d': 'scene/points3D.txt'}
+        audit = {'method': 'viewer_native_text_parse', 'checkedAt': '2026-10-18', 'viewerCommit': 'b' * 40,
+                 'files': {'points3d': {'path': files['points3d'], 'count': 0, 'bytes': 0, 'sha256': 'c' * 64}}}
+        model = ['scene', files, 1, 12, 0, 'not_checked', '2026-10-17',
+                 {'cameraRecordChecked': True, 'poseRecordChecked': True, 'countAudit': audit}]
+        policy = {'schemaVersion': 1, 'sources': [{'sourceId': entry['sourceId'], 'revision': 'a' * 40, 'models': [model]}]}
+        review = next(iter(native_scene_reviews({'entries': [entry]}, policy).values()))
+        proof, _ = native_evidence(entry, ['colmap', model[0], files, None], 'a' * 40, review, hf_url)
+        self.assertEqual(proof['sceneCompatibility']['points'], 0)
+        self.assertEqual(proof['sceneCompatibility']['images'], 12)
+        self.assertEqual(set(proof['sceneCompatibility']['countAudit']['files']), {'points3d'})
+        self.assertEqual(proof['photoAvailability'], 'not_checked')
+        self.assertNotIn('sceneValidation', proof)
+        for replacement in [{}, {'other': audit['files']['points3d']},
+                            {'cameras': {**audit['files']['points3d'], 'path': files['cameras'], 'count': 1}}]:
+            invalid = json.loads(json.dumps(policy))
+            invalid['sources'][0]['models'][0][7]['countAudit']['files'] = replacement
             with self.assertRaises(ValueError):
                 native_scene_reviews({'entries': [entry]}, invalid)
 

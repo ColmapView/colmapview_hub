@@ -25,7 +25,8 @@ export interface IndividualIndex {
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
   sceneCompatibility?: { status: 'native_headers_checked'; revision: string; cameraRecordChecked: boolean; poseRecordChecked: boolean;
     cameras: number | null; images: number | null; points: number | null;
-    countAudit?: { method: 'viewer_native_text_parse'; checkedAt: string; viewerCommit: string } };
+    countAudit?: { method: 'viewer_native_text_parse'; checkedAt: string; viewerCommit: string;
+      files: Partial<Record<'cameras' | 'images' | 'points3d', { path: string; count: number; bytes: number; sha256: string }>> } };
   sceneValidation?: { status: 'passed'; revision: string; cameras: number; images: number; points: number;
     photoCount: number; export: 'colmap_images'; exportSha256: string } };
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
@@ -168,7 +169,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
       ...(proof?.sceneCompatibility ? [{ label: 'Native layout check', value: proof.scope },
         ...Object.entries({ 'Camera definitions': proof.sceneCompatibility.cameras, 'Registered pose records': proof.sceneCompatibility.images,
           '3D points': proof.sceneCompatibility.points }).filter(([, value]) => value !== null).map(([label, value]) => ({ label, value: String(value) }))] : []),
-      ...(proof?.sceneCompatibility?.countAudit ? [{ label: 'Scene statistics check', value: `Complete camera, pose and point files parsed with ColmapView’s native text readers on ${proof.sceneCompatibility.countAudit.checkedAt}. Photograph availability is checked separately.` }] : []),
+      ...(proof?.sceneCompatibility?.countAudit ? [{ label: 'Scene statistics check', value: `Complete text files (${Object.values(proof.sceneCompatibility.countAudit.files).map(file => file!.path.split('/').at(-1)).join(', ')}) parsed with ColmapView’s native readers on ${proof.sceneCompatibility.countAudit.checkedAt}. Photograph availability is checked separately.` }] : []),
       ...(proof?.sceneValidation ? [{ label: 'Verified original photographs', value: String(proof.sceneValidation.photoCount) },
         { label: 'Verified camera models', value: String(proof.sceneValidation.cameras) },
         { label: 'COLMAP + images export SHA-256', value: proof.sceneValidation.exportSha256 },

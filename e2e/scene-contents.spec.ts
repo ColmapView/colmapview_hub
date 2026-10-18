@@ -47,15 +47,35 @@ test('cards show content roles and load licensed square photos from the Hub', as
   expect(providerRequests).toEqual([]);
 });
 
-test('scene statistics preserve unknown and confirmed zero point counts', async ({ page }) => {
+test('newly audited text statistics and confirmed zero point counts are retained', async ({ page }) => {
   await page.goto('/hub/datasets/entry/data-3a6fa2f8987b22f3d3d28276');
-  for (const field of ['cameraPoses', 'cameraModels', 'points']) {
-    await expect(page.locator(`[data-stat="${field}"]`)).toHaveText('Unknown');
+  for (const [field, value] of [['cameraPoses', '382'], ['cameraModels', '1'], ['points', '33,231']]) {
+    await expect(page.locator(`[data-stat="${field}"]`)).toHaveText(value);
   }
   await page.goto('/hub/datasets/entry/data-f85333e7c1adb523358813a8');
   await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('6');
   await expect(page.locator('[data-stat="cameraModels"]')).toHaveText('6');
   await expect(page.locator('[data-stat="points"]')).toHaveText('0');
+});
+
+test('Oxford text-model cards, details and API use their own audited totals and preserve the viewer target', async ({ page }) => {
+  const id = 'data-3687bfe0e161a673d58b8a1e';
+  await page.goto('/hub/datasets/?q=keble');
+  const card = page.locator(`[data-entry-id="${id}"]`);
+  await expect(card.locator('[data-stat="cameraPoses"]')).toHaveText('1,020');
+  await expect(card.locator('[data-stat="points"]')).toHaveText('1,667,969');
+  await expect(card.locator('[data-asset="images"]')).toHaveCount(0);
+  await card.getByRole('button', { name: /Metadata/ }).click();
+  await expect(card.locator('[data-stat="cameraModels"]')).toHaveText('1');
+  await card.getByRole('link', { name: 'Full metadata', exact: true }).click();
+  await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('1,020');
+  await expect(page.locator('[data-stat="points"]')).toHaveText('1,667,969');
+  await expect(page.locator('main')).toContainText('Complete text files (cameras.txt, images.txt, points3D.txt) parsed');
+  const data = await (await page.request.get('/hub/datasets/api/entries?q=keble')).json();
+  expect(data.entries.find((entry: { id: string }) => entry.id === id).sceneStats).toEqual({ cameraPoses: 1020, cameraModels: 1, points: 1667969 });
+  const open = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  expect(open.status()).toBe(302);
+  expect(new URL(open.headers().location).searchParams.get('url')).toBe('https://huggingface.co/datasets/active-vision-lab/oxford-day-and-night/resolve/cbd9537ca5f70efca53912fc08adbc189ea66da2/aria/keble-college/visual_reloc/colmap/text');
 });
 
 test('complete text-model counts and manifest photo requirements appear in the reported scene', async ({ page }) => {

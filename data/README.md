@@ -60,7 +60,7 @@ The main browser counts named scene datasets. A scene needs a reconstruction set
 
 The current projection publishes **5,237 named scenes from 105 collections**, including all 259 NGS scenes and 11 ArmGS captures. Native camera/model compatibility does not depend on photographs. `images.bin`/`images.txt` contains registered pose records; actual original image files and masks have separate availability and loading evidence.
 
-`native-layouts.json.gz` contains scoped compatibility inputs for 5,238 native scenes, grouped by source and pinned revision. Each tuple stores the scene path, exact required model files, camera/pose/point totals when available, photo evidence, check date and positive camera/pose sample flags. Samples from text models can establish records without establishing total counts; those totals stay null. Original bounded camera/image/point reads and their model CORS response headers passed. This does not establish all-camera validity, full parsing/rendering, all photographs or a complete export. Revision and required-path changes fail the build until rechecked. The file was normalized from the completed October 17 native scene preflight audit; original detailed runtime receipts remain local.
+`native-layouts.json.gz` contains scoped compatibility inputs for 5,238 native scenes, grouped by source and pinned revision. Each tuple stores the scene path, exact required model files, camera/pose/point totals when available, photo evidence, check date and positive camera/pose sample flags. Samples from text models establish records independently from their complete-file count audits. Original bounded camera/image/point reads and their model CORS response headers passed. This does not establish all-camera validity, full rendering, all photographs or a complete export. Revision and required-path changes fail the build until rechecked. The file was normalized from the completed October 17 native scene preflight audit; original detailed runtime receipts remain local.
 
 The three entries in `verified-scenes.json` retain stronger full camera-and-photo export evidence: example-colmap-glomap (2 photos), BMVS basketball (3 photos), and PanoWorld panorama_0000 (6 photos, no point cloud). Full export validation is an optional evidence tier. Its absence does not reject native model scenes. These exact source URLs loaded in deployed ColmapView 0.17.0 and exported all registered original photographs; independent PyCOLMAP, original-photo hashes, calibration and pose comparisons passed.
 
@@ -103,6 +103,21 @@ The public-archive command reads ZIP central directories with bounded anonymous 
 The offline build uses Python 3.11+ to create metadata packs, ID shards, delta-compressed search posting lists, filter facets and source metadata. The Worker reads only fixed keys through the same-origin `CATALOG_ASSETS` binding, bounded to 5 MiB per asset. It never fetches dataset URLs, enumerates R2 records or writes a catalog entry at runtime. Search accepts up to six words and renders 24 entries per page. The catalog uses the existing static-asset storage and has no database.
 
 The browse UI progressively appends the next 24 records with Load more. Metadata is rendered from the same escaped card template on the server and in the browser. `openUrl` points to a checked viewer URL or `/hub/datasets/open/data-…`; the latter resolves the exact individual record and redirects to its existing checked or eligible native-model link. Known failures, gated files and uninspected archives receive a metadata link. This routing changes neither compatibility evidence nor the source license. Public model redirects remain separate from private Hub record lookups.
+
+## Scene statistics audit
+
+Statistics belong to the selected exact model, not a collection sample, a companion PLY or a sibling binary/text export. Binary counts come from their native headers. Complete text-file audits use the viewer's committed parsers and count unique parsed camera, image and point IDs. Declared comment totals, the largest ID and the number of physical lines are not substitutes; image records have an observation line that can be empty.
+
+```powershell
+npm run catalog:counts -- --viewer-root PATH_TO_CLEAN_VIEWER --apply
+npm run build:assets
+```
+
+Only already reviewed, public, revision-pinned native source files with missing text totals are requested. Without `--apply`, policy data stays unchanged. `--source hf:owner/repo` narrows the audit, `--scratch PATH` selects local receipts/cache, and `--max-file-mib 1024` sets the complete-file download cap. Network errors, absent CORS headers, truncated responses, invalid UTF-8 or unsupported schemas leave the affected totals unknown and make the command exit nonzero. Rerunning resumes completed policy counts and checksum-validated local downloads. Builds and the Worker make no provider requests.
+
+The streaming reader retains record IDs but discards point objects and tracks between bounded native-parser batches. It reuses the original schema window, preserves image/observation framing, supports PhoMo text and deduplicates IDs exactly like the viewer. `--self-test` compares streaming identities with complete native parsing before any provider requests. The normal catalog checks cover chunk boundaries, CRLF, blank observation lines, duplicate IDs, mixed binary/text audits and confirmed empty point sets.
+
+`recordChecks.countAudit` records the exact viewer commit, check date and each completely parsed text file's path, byte length, SHA-256 and total. Mixed models can audit just the text role while retaining binary header evidence for other roles. Per-file evidence is revision- and path-bound and must match the saved totals. It does not upgrade model compatibility, photograph coverage, pixel validation or complete-export evidence. Unknown totals are retained when a complete read cannot be established.
 
 ## Full inventory audit
 
