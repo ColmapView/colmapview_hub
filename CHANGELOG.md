@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.14 — 2026-10-17
+
+- Establish complete camera, pose and point totals for all seven pinned scenes in `alexmkwizu/colmap-testing-dataset`.
+- Verify all 31 Kicker photo filenames and a full-resolution browser-decoded JPG. Record that the calibration-folder and parent-folder URLs still miss these sibling images, keeping the scene labeled as requiring image setup.
+
 ## 0.7.13 — 2026-10-17
 
 - Fill previously unknown camera, pose and point totals for 18 pinned blur-slam text reconstructions using complete native-parser reads, with exact file hashes and independent photo evidence.

@@ -73,6 +73,19 @@ test('complete text-model counts and manifest photo requirements appear in the r
   expect(await csv.text()).toContain('data/i2slam_trigsplat_gt/scene0736_00_manifest.json');
 });
 
+test('Kicker retains its complete counts and records the sibling photo loading gap', async ({ page }) => {
+  await page.goto('/hub/datasets/entry/data-ea3370325634b929035638c5');
+  await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('31');
+  await expect(page.locator('[data-stat="cameraModels"]')).toHaveText('1');
+  await expect(page.locator('[data-stat="points"]')).toHaveText('15,897');
+  await expect(page.locator('[data-asset="images"]')).toHaveText('Images · setup');
+  await expect(page.locator('main')).toContainText('31/31');
+  await expect(page.locator('main')).toContainText('kicker/images');
+  await expect(page.locator('main')).toContainText('6048 x 4032');
+  await expect(page.locator('main')).toContainText('Both the calibration-folder URL and the parent kicker URL');
+  await expect(page.locator('main')).toContainText('Photograph pixels decoded');
+});
+
 test('ZIP photo previews retain image credits and explicit loading requirements', async ({ page }) => {
   await page.goto('/hub/datasets/?photos=companion_archive');
   const first = page.locator('.dataset-card').first();
