@@ -41,7 +41,7 @@ export function individualSelection(sources: IndividualSource[], value: string):
   const first = selected[0];
   return { id: first.id, label: first.label, title: selected.length === 1 ? first.title : `${selected.length} public source entries`,
     count: selected.reduce((sum, source) => sum + source.count, 0), listingComplete: selected.every(source => source.listingComplete),
-    metadataUrl: selected.length === 1 ? `/hub/datasets/${first.id}` : `/hub/datasets/collections?provider=public&q=${encodeURIComponent(first.label)}` };
+    metadataUrl: selected.length === 1 ? `/hub/datasets/individual/sources/${first.id}.json` : '/hub/datasets/catalog.json' };
 }
 
 export function individualDatasetOptions(sources: IndividualSource[], selected: string): { value: string; label: string }[] {

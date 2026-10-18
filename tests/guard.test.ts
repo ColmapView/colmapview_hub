@@ -104,10 +104,10 @@ describe('lookup guard', () => {
       await request(path, init, ip, { ...guards.overrides, ...listings });
       expect(guards.calls, path).toEqual(expected);
     }
-    // While listings are off, '/' is the landing page, which calls no guard.
+    // While listings are off, '/' redirects to datasets without calling the guard.
     guards.calls.length = 0;
     await request('/', {}, ip, guards.overrides);
-    expect(guards.calls, 'landing page').toEqual([]);
+    expect(guards.calls, 'dataset redirect').toEqual([]);
   });
 
   it('groups IPv6 clients by their /64 network and IPv4-mapped clients with IPv4', async () => {

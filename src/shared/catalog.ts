@@ -66,7 +66,6 @@ export interface CatalogSnapshot {
   photoAudit?: { checkedAt: string; scenes: number; photos: Partial<Record<PhotoStatus, number>> };
 }
 export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail'> & { delivery?: string; hasViewer?: boolean; openUrl?: string };
-export const CATALOG_PAGE_SIZE = 24;
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
 export function isCatalogOpenUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
@@ -102,15 +101,6 @@ export function catalogSummary(entry: CatalogEntry): CatalogSummary {
     ...(entry.sceneStats ? { sceneStats: entry.sceneStats } : {}),
     ...(entry.thumbnail ? { thumbnail: entry.thumbnail } : {}),
     ...(entry.verification ? { delivery: entry.verification.delivery, hasViewer: Boolean(entry.viewerUrl) && canOpen } : {}) };
-}
-
-export function filterCatalog(entries: CatalogSummary[], filters: { query: string; provider: string; license: string; licenseCategory?: string; status: string; delivery?: string; viewer?: string }): CatalogSummary[] {
-  const words = filters.query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
-  return entries.filter(entry => (!filters.provider || entry.provider === filters.provider) && (!filters.license || entry.license === filters.license)
-    && (!filters.licenseCategory || licenseCategory(entry) === filters.licenseCategory)
-    && (!filters.status || entry.statusLabel === filters.status)
-    && (!filters.delivery || entry.delivery === filters.delivery) && (filters.viewer !== 'available' || entry.hasViewer === true)
-    && words.every(word => [entry.title, entry.dataset?.label || '', entry.dataset?.title || '', entry.itemKind || '', entry.description, entry.license, ...entry.formats].join(' ').toLocaleLowerCase().includes(word)));
 }
 
 export function isCatalogSummary(value: unknown): value is CatalogSummary {

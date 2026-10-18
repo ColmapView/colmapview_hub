@@ -38,10 +38,9 @@ const policyLinks = ([['About', 'about.html'], ['Privacy', 'privacy.html'], ['Te
 
 const header = (path: string) => [
   '<header class="site-header">',
-  `<a class="brand" href="${escapeHtml(path)}/">ColmapView <span>Hub</span></a>`,
+  `<a class="brand" href="${escapeHtml(path)}/datasets/">ColmapView <span>Hub</span></a>`,
   '<nav class="site-nav" aria-label="Main navigation">',
   `<a href="${escapeHtml(path)}/datasets/">Datasets</a>`,
-  `<a href="${escapeHtml(path)}/datasets/collections">Collections</a>`,
   `<a href="${VIEWER}/">Open viewer</a>`,
   '</nav>',
   '<label class="hub-theme"><span class="sr-only">Appearance</span><select id="hub-theme" aria-label="Appearance" disabled><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label>',
@@ -151,14 +150,6 @@ export function galleryPage(location: HubLocation, { links, cursor }: { links: L
 /** The Cache API key of a gallery page. Only the cursor picks a page, so any other query shares the first page's entry, which purges clear. */
 export function galleryKey(location: HubLocation, cursor?: string): string {
   return `${location.base}/${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`;
-}
-
-export function landingPage(location: HubLocation): string {
-  return page(location, 'Datasets and shared results', '<div class="hub-landing">' + intro('Explore in ColmapView.', 'Find a model, check its source and open it in the viewer.',
-    `<div class="actions"><a class="button button-primary" href="${location.path}/datasets/">Browse datasets</a><a class="button" href="${VIEWER}/">Open viewer</a></div>`)
-    + '<section class="hub-landing-panels"><div class="card"><h2>Public datasets</h2><p>Named scene datasets with related files kept together. Filter by format and license.</p>'
-    + `<a href="${location.path}/datasets/collections">Browse collections ↗</a></div><div class="card"><h2>Share a reconstruction</h2><p>Publish from ColmapView to create a Hub link for your result.</p>`
-    + `<a href="${VIEWER}/">Open ColmapView ↗</a></div></section></div>`);
 }
 
 export function notFoundPage(location: HubLocation): string {

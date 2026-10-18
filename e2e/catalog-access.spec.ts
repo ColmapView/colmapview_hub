@@ -1,4 +1,32 @@
 import { expect, test } from '@playwright/test';
+
+test('retired collection pages open the current scene browser and retain source identity', async ({ page }) => {
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  expect(index.sources.length).toBeGreaterThan(0);
+  for (const source of index.sources) {
+    const response = await page.request.get(`/hub/datasets/${source.id}`, { maxRedirects: 0 });
+    expect(response.status(), source.id).toBe(308);
+    const target = new URL(response.headers().location);
+    expect(target.pathname).toBe('/hub/datasets/');
+    expect(target.searchParams.get('dataset')).toBe(source.id);
+  }
+  const source = index.sources[0];
+  for (const path of ['/hub/datasets/collections', '/hub/datasets/collections.html', '/hub/datasets/collection-page-2',
+    '/hub/datasets/page-2.html', `/hub/datasets/${source.id}.html`, `/hub/datasets/${source.id}/`]) {
+    const response = await page.request.get(`${path}?licenseCategory=commercial&page=3`, { maxRedirects: 0 });
+    expect(response.status(), path).toBe(308);
+    const target = new URL(response.headers().location);
+    expect(target.searchParams.get('licenseCategory')).toBe('commercial');
+    expect(target.searchParams.has('page')).toBe(false);
+  }
+  await page.goto(`/hub/datasets/${source.id}`);
+  await expect(page.getByRole('heading', { name: 'Public datasets', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Collection', { exact: true })).toHaveValue(source.id);
+  await expect(page.locator('#dataset-selection')).toContainText(source.label);
+  await expect(page.locator('a[href*="/datasets/collections"], a[href*="/datasets/collection-page-"]')).toHaveCount(0);
+  expect((await page.request.get(`/hub/datasets/individual/sources/${source.id}.json`)).status()).toBe(200);
+  expect((await page.request.get('/hub/assets/catalog.js')).status()).toBe(404);
+});
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
@@ -128,7 +156,7 @@ test('complete-export evidence stays scoped while other model layouts remain loa
     expect(source.dataUrl).toBe(source.sourceUrl);
     await page.goto(`/hub/datasets/${source.id}`);
     await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Browse this dataset’s named scenes' })).toBeVisible();
+    await expect(page.getByLabel('Collection', { exact: true })).toHaveValue(source.id);
   }
 });
 

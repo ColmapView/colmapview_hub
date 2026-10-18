@@ -3,7 +3,7 @@ import type { CardRecord, LinkMetadata, LinkRecord, Ownership } from '../shared/
 import { clientIdentity, deriveLongId, deriveShortId, equalHashes, equalSecrets, hash } from './crypto';
 import { MAX_MISSES, REFUSAL_FLOOR_MS, VERIFIED_BOT_MAX_MISSES } from './guard';
 import { lookupTarget, missKey } from './ids';
-import { blockedPage, cardPage, errorPage, galleryKey, galleryPage, hubLocation, landingPage, managementPage, notFoundPage, unavailablePage } from './pages';
+import { blockedPage, cardPage, errorPage, galleryKey, galleryPage, hubLocation, managementPage, notFoundPage, unavailablePage } from './pages';
 import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
@@ -212,7 +212,7 @@ async function deleteLink(request: Request, env: Env, ctx: ExecutionContext, loc
 }
 
 async function home(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
-  if (!listingsEnabled(env)) return html(landingPage(location));
+  if (!listingsEnabled(env)) return redirect(`${location.base}/datasets/${url.search}`, 307);
   const check = await lookupGuard(request, env, location, false, MAX_MISSES);
   const refusal = await check(null);
   if (refusal) return refusal;
@@ -234,12 +234,11 @@ function decodeId(value: string): string {
 async function route(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
   if (url.origin !== location.origin || (url.pathname !== location.path && !url.pathname.startsWith(`${location.path}/`))) return failure(location, false, 404);
   const path = url.pathname.slice(location.path.length);
-  if (path === '') return redirect(`${location.base}/`, 307);
+  if (path === '') return redirect(`${location.base}${listingsEnabled(env) ? '/' : '/datasets/'}${url.search}`, 307);
   if (path === '/datasets/index.html') return redirect(`${location.base}/datasets/${url.search}`, 308);
-  if (path === '/datasets' || path === '/datasets/' || path.startsWith('/datasets/entry/') || path.startsWith('/datasets/open/') || path.startsWith('/datasets/api/')) {
+  if (path === '/datasets' || path.startsWith('/datasets/')) {
     return individualRoute(request, env, ctx, location, url);
   }
-  if (path.startsWith('/datasets/')) return failure(location, false, 404);
   if (path.startsWith('/api/')) {
     if (request.method === 'OPTIONS') return allowedOrigin(request, location)
       ? new Response(null, { status: 204, headers: { 'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' } })

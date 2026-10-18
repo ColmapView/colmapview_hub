@@ -1,12 +1,11 @@
-import { CATALOG_PAGE_SIZE, accessLabel, catalogSummary, datasetPath, datasetFilterValue, deliveryLabel, providerLabel } from '../shared/catalog';
+import { accessLabel, catalogSummary, datasetPath, datasetFilterValue, deliveryLabel, providerLabel } from '../shared/catalog';
 import type { CatalogEntry, CatalogFact, CatalogSnapshot, CatalogSummary } from '../shared/catalog';
-import { licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from '../shared/license-categories';
+import { licenseCategory, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from '../shared/license-categories';
 import { escapeHtml as escape, intro, page } from './pages';
 import { catalogCardHtml as catalogCard } from '../shared/catalog-card';
 import { photoLabel } from '../shared/scene-photos';
 import type { PhotoStatus } from '../shared/scene-photos';
 import { sceneContentsHtml, sceneStatisticsHtml, sceneThumbnailHtml } from '../shared/scene-contents';
-import { HUB_UI_VERSION } from '../shared/ui-version';
 export { catalogCard };
 import type { HubLocation } from './pages';
 
@@ -14,7 +13,7 @@ const location: HubLocation = { origin: 'https://colmapview.opsiclear.com', path
 const number = (value: number) => value.toLocaleString('en-US');
 const factList = (facts: CatalogFact[]) => `<dl class="dataset-facts">${facts.map(fact => `<div><dt>${escape(fact.label)}</dt><dd>${fact.url
   ? `<a href="${escape(fact.url)}" rel="noreferrer">${escape(fact.value)}</a>` : escape(fact.value)}</dd></div>`).join('')}</dl>`;
-const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Dataset: ${escape(entry.dataset.label)}</a>` : ''}`
+const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Collection: ${escape(entry.dataset.label)}</a>` : ''}`
   + `${entry.itemKind ? `<span class="dataset-tag">${escape(entry.itemKind)}</span>` : ''}<span class="dataset-tag">${escape(providerLabel(entry.provider))}</span>`
   + `<span class="dataset-tag dataset-license-category">License: ${LICENSE_CATEGORY_LABELS[licenseCategory(entry)]}</span>`
   + `<span class="dataset-tag">${escape(entry.statusLabel)}</span>${entry.photoStatus ? `<span class="dataset-tag">${escape(photoLabel(entry.photoStatus))}</span>` : ''}${entry.delivery ? `<span class="dataset-tag">${escape(deliveryLabel(entry.delivery))}</span>` : ''}${entry.testOrFixture ? '<span class="dataset-tag">Test / demo</span>' : ''}</p>`;
@@ -47,7 +46,7 @@ export function catalogEntryPage(entry: CatalogEntry): string {
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
     + sceneThumbnailHtml(entry) + sceneContentsHtml(entry.availableData) + sceneStatisticsHtml(entry.sceneStats)
     + `<div class="actions">${actions}${individualAction}</div>`
-    + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(catalogSummary(entry)))}">${escape(entry.dataset.label)}</a>. <a href="/hub/datasets/${entry.dataset.id}">Collection information</a>.</p>`
+    + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(catalogSummary(entry)))}">${escape(entry.dataset.label)}</a>.</p>`
       : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s named scenes</a>.</p>`)
     + (entry.verification ? '<section class="dataset-section"><h2>Loading status</h2>'
       + factList([{ label: 'Loading qualification', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },
@@ -71,39 +70,6 @@ export function catalogEntryPage(entry: CatalogEntry): string {
     + '<section class="dataset-section"><h2>Loading evidence</h2><p class="note">Checks cover the recorded files and samples. Inclusion does not certify every scene or image. Source access and license terms apply.</p>'
     + (audits || '<p>No additional dataset loading audit is recorded for this entry.</p>') + '</section>',
     social(`${location.origin}${datasetPath(entry)}`, entry.title, entry.description));
-}
-
-export function catalogIndexPage(snapshot: CatalogSnapshot, pageNumber = 1, collections = false): string {
-  const total = snapshot.entries.length;
-  const pages = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
-  if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pages) throw new Error('Invalid catalog page');
-  const selected = snapshot.entries.slice((pageNumber - 1) * CATALOG_PAGE_SIZE, pageNumber * CATALOG_PAGE_SIZE);
-  const options = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b, 'en')).map(value => `<option value="${escape(value)}">${escape(value)}</option>`).join('');
-  const pagePath = (value: number) => value <= 1 ? (collections ? '/hub/datasets/collections' : '/hub/datasets/') : `/hub/datasets/${collections ? 'collection-' : ''}page-${value}`;
-  const description = `${number(total)} source collections · Hugging Face and public datasets`;
-  return page(location, collections ? 'Dataset collections' : 'Public datasets', '<div class="catalog-index">' + intro(collections ? 'Dataset collections' : 'Public datasets', description)
-    + '<p class="catalog-hint">Hover for source and license details. <a href="/hub/datasets/">Browse named scene datasets</a>.</p>'
-    + `<form id="catalog-search" class="catalog-filters" role="search" data-page="${pageNumber}"${collections ? ' data-collections="true"' : ''}>`
-    + '<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" placeholder="Search collections…" disabled></label>'
-    + '<label>Source<select name="provider" aria-label="Source" disabled><option value="">All sources</option><option value="huggingface">Hugging Face</option><option value="public">Public sources</option></select></label>'
-    + `<label class="catalog-license-filter">License category<select name="licenseCategory" aria-label="License category" disabled><option value="">All licenses</option>${LICENSE_CATEGORIES.map(value => `<option value="${value}">${LICENSE_CATEGORY_LABELS[value]}</option>`).join('')}</select></label>`
-    + '<button type="submit" class="button button-primary" disabled>Search</button><button type="reset" class="button" disabled>Reset</button></div>'
-    + '<details class="catalog-advanced"><summary>More filters</summary><div class="catalog-secondary">'
-    + `<label>License<select name="license" aria-label="License" disabled><option value="">All reported licenses</option>${options(snapshot.entries.map(entry => entry.license))}</select></label>`
-    + `<label>Evidence<select name="status" aria-label="Evidence" disabled><option value="">All evidence levels</option>${options(snapshot.entries.map(entry => entry.statusLabel))}</select></label>`
-    + `<label>Delivery<select name="delivery" aria-label="Delivery" disabled><option value="">All delivery results</option>${[...new Set(snapshot.entries.map(entry => entry.verification?.delivery).filter((value): value is string => Boolean(value)))].sort().map(value => `<option value="${escape(value)}">${escape(deliveryLabel(value))}</option>`).join('')}</select></label>`
-    + '<label>Viewer link<select name="viewer" aria-label="Viewer link" disabled><option value="">All sources</option><option value="available">Checked sample link</option></select></label>'
-    + '</div></details></form><noscript><p class="note">Search requires JavaScript. Browse the dataset pages below.</p></noscript>'
-    + `<p id="catalog-count" class="catalog-count" role="status" tabindex="-1">${number(total)} entries · page ${pageNumber} of ${pages}</p>`
-    + '<p id="catalog-status" class="catalog-status" role="status"></p><button type="button" class="button" id="catalog-retry" hidden>Retry search</button>'
-    + `<div id="catalog-results" class="dataset-grid">${selected.map(entry => catalogCard(catalogSummary(entry))).join('')}</div>`
-    + '<nav class="catalog-pagination" aria-label="Dataset pages">'
-    + `<a class="button" id="catalog-prev" href="${pagePath(pageNumber - 1)}"${pageNumber === 1 ? ' hidden' : ''}>Previous</a>`
-    + `<span id="catalog-page">Page ${pageNumber} of ${pages}</span><button type="button" class="button" id="catalog-more" hidden>Load more</button>`
-    + `<a class="button" id="catalog-next" href="${pagePath(pageNumber + 1)}"${pageNumber === pages ? ' hidden' : ''}>Next</a></nav>`
-    + '<details class="catalog-notes"><summary>About this catalog</summary><div><p>Source metadata and sampled loading checks were recorded in October 2026. Collection checks cover the recorded sample; other models may need further checks.</p>'
-    + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a> · <a href="/hub/datasets/catalog.json" download>Download source metadata (JSON)</a></p></div></details></div>`,
-    social(`${location.base}/datasets/collections`, 'Dataset collections', description) + `<script type="module" src="/hub/assets/catalog.js?v=${HUB_UI_VERSION}"></script>`);
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {
@@ -139,7 +105,7 @@ export function catalogAuditPage(snapshot: CatalogSnapshot): string {
     + '<p>COLMAP checks inspect representative camera, pose and point headers. PLY checks inspect vertex properties and counts. SPZ checks inspect the compression wrapper and format header. SOG checks inspect metadata and referenced property filenames. ZIP checks inspect complete central directories within a 16 MiB metadata budget and sample contained model headers.</p>'
     + '<p>One source can contain many models and archives. Direct checks sample one COLMAP model or up to three 3D files. Large collections sample up to three ZIPs; smaller collections examine up to eight, stopping when a native sample is established or the time budget expires. A negative archive finding requires every listed archive to be inspected without unresolved nested archives. Incomplete listings, access errors and unknown schemas stay qualified.</p>'
     + '<p>Browser reads use anonymous requests from the production viewer origin. Archive checks include an exact tail range. A successful browser read establishes access to those bytes; a header check establishes sampled format evidence. Complete scene parsing, GPU rendering, every photograph and mask, and licensing of underlying assets require separate evidence.</p>'
-    + '<p>No dataset previews were generated. Reported licenses remain separate from technical compatibility.</p>'
+    + '<p>Current scene previews require eligible source and image licenses. A preview does not establish complete photograph coverage. Reported licenses remain separate from technical compatibility.</p>'
     + '<p><a href="/hub/datasets/dataset-audit.json" download>Download public audit records (JSON)</a></p></section>',
     social(`${location.base}/datasets/audit`, 'Dataset audit', `${number(audit.sourcesAudited)} sources assessed with separate format and delivery evidence.`));
 }

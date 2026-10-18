@@ -71,12 +71,10 @@ describe('verified bots', () => {
 });
 
 describe('listings flag', () => {
-  it('shows the landing page and refuses listings while off', async () => {
+  it('opens the dataset browser and refuses listings while off', async () => {
     const page = await request('/');
-    expect(page.status).toBe(200);
-    const html = await page.text();
-    expect(html).toContain('<h1>Explore in ColmapView.</h1>');
-    expect(html).toContain('<a class="button" href="https://colmapview.opsiclear.com/">Open viewer</a>');
+    expect(page.status).toBe(307);
+    expect(page.headers.get('Location')).toBe(`${origin}/hub/datasets/`);
     expect((await post(input({ listed: true }))).status).toBe(403);
   });
 

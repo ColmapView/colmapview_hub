@@ -40,10 +40,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const updateSelection = (source: IndividualSelection | null) => {
     selection.hidden = !source;
     if (!source) { selection.replaceChildren(); return; }
-    const metadata = document.createElement('a');
-    metadata.textContent = 'Collection metadata';
-    metadata.href = source.metadataUrl || `/hub/datasets/${source.id}`;
-    selection.replaceChildren(document.createTextNode(`Dataset: ${source.label} · ${source.count.toLocaleString()} scenes${source.listingComplete ? '' : ' · listing incomplete'}. `), metadata);
+    selection.textContent = `Collection: ${source.label} · ${source.count.toLocaleString()} scenes${source.listingComplete ? '' : ' · listing incomplete'}.`;
   };
   const load = async (values: URLSearchParams, options: { append?: boolean; focus?: boolean; history?: CatalogHistoryMode } = {}): Promise<void> => {
     const updateHistory = navigation.prepare(options.history);

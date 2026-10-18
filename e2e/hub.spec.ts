@@ -160,11 +160,11 @@ test('shows a private card with a viewer link and no Play 3D', async ({ page }) 
   } finally { await removeLink(page, link); }
 });
 
-// Whether listings are on decides what /hub/ shows, so this checks only what holds either way.
-test('shows the Hub home without a submission form or horizontal scroll', async ({ page }) => {
+test('opens datasets from the Hub home without an upload form or horizontal scroll', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   expect((await page.goto('/hub/'))!.status()).toBe(200);
-  await expect(page.locator('input, textarea, form')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/hub\/datasets\/$/);
+  await expect(page.locator('input[type="file"], textarea')).toHaveCount(0);
   expect(await noHorizontalScroll(page)).toBe(true);
 });
 
@@ -229,15 +229,13 @@ test('long titles stay within a narrow card and delete keys never enter public U
   } finally { expect((await removeLink(page, link)).status()).toBe(204); }
 });
 
-test('shows the landing page in the ColmapView frame', async ({ page }) => {
+test('opens the scene browser directly in the ColmapView frame', async ({ page }) => {
   await page.goto('/hub/');
-  await expect(page.getByRole('heading', { name: 'Explore in ColmapView.' })).toBeVisible();
-  await expect(page.getByText('Publish from ColmapView to create a Hub link for your result.')).toBeVisible();
+  await expect(page).toHaveURL(/\/hub\/datasets\/$/);
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
-  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link')).toHaveText(['Datasets', 'Collections', 'Open viewer']);
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link')).toHaveText(['Datasets', 'Open viewer']);
   await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Contact']);
-  await expect(page.locator('input,textarea,form')).toHaveCount(0);
-  await page.getByRole('link', { name: 'Browse datasets', exact: true }).click();
+  await expect(page.getByLabel('Collection', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Public datasets', exact: true })).toBeVisible();
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.getByRole('button', { name: 'Load more', exact: true }).click();

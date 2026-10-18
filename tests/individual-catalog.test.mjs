@@ -398,7 +398,7 @@ test('a public dataset label groups scenes from separate source records while re
   assert.equal(render.datasetFilterValue(selected.entries[0]), 'public:DTU');
   const selection = render.individualSelection(index.sources, 'public:DTU');
   assert.equal(selection.count, 2);
-  assert.ok(selection.metadataUrl.includes('/collections?'));
+  assert.equal(selection.metadataUrl, '/hub/datasets/catalog.json');
   assert.equal(render.individualDatasetOptions(index.sources, '').filter(option => option.value === 'public:DTU').length, 1);
   assert.match(render.catalogCard(selected.entries[0]), /dataset=public%3ADTU/);
 });

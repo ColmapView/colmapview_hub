@@ -30,13 +30,24 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
     return response;
   }
   if (path === '/datasets') return new Response(null, { status: 308, headers: { Location: `${location.base}/datasets/${url.search}` } });
+  const browse = (dataset?: string) => {
+    const target = new URL(`${location.base}/datasets/${url.search}`);
+    // Collection pages counted sources, not scenes; their page numbers cannot carry over.
+    target.searchParams.delete('page');
+    if (dataset) target.searchParams.set('dataset', dataset);
+    return new Response(null, { status: 308, headers: { Location: target.href } });
+  };
+  if (/^\/datasets\/(?:collections|(?:collection-)?page-\d+)(?:\.html)?\/?$/.test(path)) return browse();
+  const collection = /^\/datasets\/((?:hf|public)-[a-z0-9-]+-[a-f0-9]{12})(?:\.html)?\/?$/.exec(path);
   const entry = /^\/datasets\/entry\/(data-[a-f0-9]{24})$/.exec(path);
   const open = /^\/datasets\/open\/(data-[a-f0-9]{24})$/.exec(path);
-  if (path !== '/datasets/' && path !== '/datasets/api/entries' && !entry && !open) return fail(404, 'Dataset entry not found.');
-  const filters = entry || open ? new URLSearchParams() : individualFilters(url.searchParams);
+  if (path !== '/datasets/' && path !== '/datasets/api/entries' && !entry && !open && !collection) return fail(404, 'Dataset entry not found.');
+  const filters = entry || open || collection ? new URLSearchParams() : individualFilters(url.searchParams);
   // Read the current inventory before the response cache. Removed entries and
   // search results must not survive a catalog deployment in an older cache.
   const index = await individualIndex(env.CATALOG_ASSETS, location.origin);
+  if (collection) return index.sources.some(source => source.id === collection[1] && source.count > 0)
+    ? browse(collection[1]) : fail(404, 'Dataset entry not found.');
   if (open) {
     const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, open[1]);
     if (!model) return fail(404, 'Dataset entry not found.');

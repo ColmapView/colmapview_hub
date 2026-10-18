@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.12 — 2026-10-17
+
+- Open the scene browser directly from the Hub. Remove the separate landing page, collection browser, old pagination pages and collection detail HTML; redirect saved collection URLs to the matching scene filter.
+- Keep one asynchronous browser with a clearly labeled Collection filter. Preserve scene details, source metadata, manifests, share cards and management links.
+- Remove the retired collection search client and landing styles, and correct the audit page's preview wording.
+
 ## 0.7.11 — 2026-10-17
 
 - Replace storage-path headings with scene names and distinguishing context. Keep canonical paths and viewer destinations in metadata.

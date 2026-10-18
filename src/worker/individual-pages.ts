@@ -27,7 +27,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + '<p class="catalog-hint">Explore camera and reconstruction datasets. Original photographs are optional; each scene records its photo availability and loading evidence.</p>'
     + `<form id="individual-search" class="catalog-filters" role="search" action="/hub/datasets/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
     + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"></label>`
-    + select('dataset', 'Dataset', 'All datasets', individualDatasetOptions(index.sources, filters.get('dataset') || ''))
+    + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''))
     + select('kind', 'Type', 'All scene types', values(Object.keys(index.kinds)))
     + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })))
     + '<button type="submit" class="button button-primary">Search</button><button type="reset" class="button">Reset</button></div>'
@@ -40,7 +40,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + select('photos', 'Photographs', 'All photo availability', [{ value: 'available', label: 'Photos on current paths' },
       ...Object.keys(index.photos || {}).sort().map(value => ({ value, label: photoLabel(value as PhotoStatus) }))])
     + '</div></details></form>'
-    + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Dataset: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}. <a href="${escape(dataset.metadataUrl)}">Collection metadata</a>.` : ''}</p>`
+    + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
     + `<p id="catalog-count" class="catalog-count" role="status" tabindex="-1">${result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets'}</p>`
     + '<p id="catalog-status" class="catalog-status" role="status"></p>'
     + `<div id="catalog-results" class="dataset-grid">${result.entries.length ? result.entries.map(catalogCard).join('') : '<p>No datasets match these filters.</p>'}</div>`
@@ -51,7 +51,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<a class="button" id="catalog-next" href="${escape(individualBrowseUrl(filters, result.page + 1))}"${result.page === result.pages ? ' hidden' : ''}>Next</a></nav>`
     + '<details class="catalog-notes"><summary>About this catalog</summary><div>'
     + '<p>Each card identifies one named scene at a pinned source revision. Native camera/model layouts have bounded format and access checks. Original photographs may be available, partial, absent or unverified. Full loading, complete exports and mask support retain their separate evidence; a layout check does not establish them. Standalone geometry files do not create dataset cards.</p>'
-    + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/collections">Dataset collections</a> · <a href="/hub/datasets/audit">Audit and coverage</a></p>`
+    + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a></p>`
     + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Photo availability and path policies for every scene (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p>'
     + '<p><a href="/hub/datasets/individual/verified-scenes.json" download>Verified scene checks (JSON)</a> · <a href="/hub/datasets/individual/index.json" download>Labels and coverage (JSON)</a> · <a href="/hub/datasets/catalog.json" download>Source metadata (JSON)</a></p></div></details></div>',
     `<script type="module" src="/hub/assets/individual-catalog.js?v=${HUB_UI_VERSION}"></script>`);

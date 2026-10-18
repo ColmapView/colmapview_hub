@@ -68,7 +68,7 @@ test('license categories recognize explicit terms and keep ambiguous or mixed pe
   }
 });
 
-test('license category refresh preserves exact terms and identity, is repeatable, and reaches collection filtering', async () => {
+test('license category refresh preserves exact terms and identity, is repeatable, and reaches public metadata', async () => {
   const snapshot = catalog({ hfRows: [hf(), hf({ id: 'owner/nc', license: 'cc-by-nc-4.0' }), hf({ id: 'owner/custom', license: 'other' })] });
   const before = snapshot.entries.map(entry => [entry.id, entry.license, entry.viewerUrl]);
   await applyLicenseCategories(snapshot);
@@ -78,14 +78,12 @@ test('license category refresh preserves exact terms and identity, is repeatable
   await applyLicenseCategories(snapshot);
   assert.equal(JSON.stringify(snapshot), once);
   const summaries = snapshot.entries.map(render.catalogSummary);
-  const filters = { query: '', provider: '', license: '', status: '' };
   for (const licenseCategory of render.LICENSE_CATEGORIES) {
-    const result = render.filterCatalog(summaries, { ...filters, licenseCategory });
+    const result = summaries.filter(entry => entry.licenseCategory === licenseCategory);
     assert.equal(result.length, 1);
     assert.equal(result[0].licenseCategory, licenseCategory);
     assert.match(render.catalogEntryPage(snapshot.entries.find(entry => entry.id === result[0].id)), /License category/);
   }
-  assert.equal(render.filterCatalog(summaries, { ...filters, licenseCategory: 'commercial', license: 'cc-by-nc-4.0' }).length, 0);
   assert.equal(render.isCatalogSummary({ ...summaries[0], licenseCategory: 'anything' }), false);
   const olderSummary = { ...summaries.find(entry => entry.licenseCategory === 'commercial') };
   delete olderSummary.licenseCategory;
@@ -223,14 +221,6 @@ test('renders text-only entry pages with escaped metadata, source links, license
   assert.match(html, /twitter:card" content="summary"/);
 });
 
-test('filters by all query words, source, exact license and evidence level', () => {
-  const entries = catalog({ hfRows: [hf(), hf({ id: 'other/splat', license: 'apache-2.0', asset_kinds: 'Gaussian splat', status: 'direct_gaussian_splat' })] }).entries.map(render.catalogSummary);
-  const filters = { query: 'OWNER COLMAP', provider: 'huggingface', license: 'cc-by-4.0', status: 'Format identified' };
-  assert.equal(render.filterCatalog(entries, filters).length, 1);
-  assert.equal(render.filterCatalog(entries, { ...filters, provider: 'public' }).length, 0);
-  assert.equal(render.filterCatalog(entries, { ...filters, query: 'absent' }).length, 0);
-});
-
 test('format evidence alone cannot restore a viewer link; every required native file needs a browser read', () => {
   const paths = ['cameras.bin', 'images.bin', 'points3D.bin'];
   const probes = paths.map(path => ({ path, url: `https://example.org/${path}`, httpStatus: 206 }));
@@ -276,13 +266,10 @@ test('an asynchronous decoder rejection overrides a successful byte read or earl
   assert.match(entry.description, /failed decoding/);
 });
 
-test('delivery and checked-link filters distinguish transport from format evidence', () => {
+test('summary validation requires a boolean checked-link flag', () => {
   const base = render.catalogSummary(catalog().entries[0]);
-  const entries = [{ ...base, delivery: 'browser_readable', hasViewer: true }, { ...base, id: 'other', delivery: 'gated', hasViewer: false }];
-  const filters = { query: '', provider: '', license: '', status: '', delivery: 'gated' };
-  assert.equal(render.filterCatalog(entries, filters).length, 1);
-  assert.equal(render.filterCatalog(entries, { ...filters, viewer: 'available' }).length, 0);
-  assert.equal(render.filterCatalog(entries, { ...filters, delivery: '', viewer: 'available' }).length, 1);
+  assert.equal(render.isCatalogSummary({ ...base, hasViewer: true }), true);
+  assert.equal(render.isCatalogSummary({ ...base, hasViewer: false }), true);
   assert.equal(render.isCatalogSummary({ ...base, hasViewer: 'yes' }), false);
 });
 
@@ -361,11 +348,6 @@ test('the committed snapshot preserves every supplied public row and every audit
   }
   assert(snapshot.sources.every(source => /^[a-f0-9]{64}$/.test(source.sha256)));
   assert.equal(snapshot.sources.find(source => source.kind === 'license-categories').sha256, sha256((await readFile('src/shared/license-categories.ts', 'utf8')).replace(/\r\n/g, '\n')));
-  const first = render.catalogIndexPage(snapshot);
-  assert.match(first, /catalog-search/);
-  assert.match(first, /\/hub\/assets\/catalog.js/);
-  assert.match(first, /\/hub\/datasets\/page-2/);
-  assert.doesNotMatch(first, /<img|og:image/);
   const headers = await readFile('public/_headers', 'utf8');
   assert.match(headers, /\/hub\/datasets\/\*[\s\S]*Cache-Control: public, no-cache, must-revalidate, no-transform/);
   assert.match(headers, /Cloudflare-CDN-Cache-Control: no-store/);

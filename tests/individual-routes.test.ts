@@ -5,6 +5,47 @@ import { HUB_UI_VERSION } from '../src/shared/ui-version';
 
 beforeEach(resetState);
 
+it('redirects retired browse pages without reading metadata or private records', async () => {
+  const records = vi.spyOn(env.LINKS, 'get');
+  const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
+  for (const path of ['', '/', '/datasets/collections', '/datasets/collections.html', '/datasets/collections/',
+    '/datasets/collection-page-2', '/datasets/collection-page-2.html', '/datasets/page-3/']) {
+    const response = await request(`${path}?q=room&licenseCategory=commercial&page=4`, { method: 'HEAD' });
+    expect(response.status, path).toBe(path === '' || path === '/' ? 307 : 308);
+    const target = new URL(response.headers.get('Location')!);
+    expect(target.pathname).toBe('/hub/datasets/');
+    expect(target.searchParams.get('q')).toBe('room');
+    expect(target.searchParams.get('licenseCategory')).toBe('commercial');
+    expect(target.searchParams.get('page')).toBe(path === '' || path === '/' ? '4' : null);
+    expect(await response.text()).toBe('');
+  }
+  expect(assets).not.toHaveBeenCalled();
+  expect(records).not.toHaveBeenCalled();
+});
+
+it('redirects only current collection identities and preserves their scene filters', async () => {
+  const id = 'hf-kept-source-0123456789ab';
+  const removed = 'public-removed-source-0123456789ab';
+  const records = vi.spyOn(env.LINKS, 'get');
+  const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async () => Response.json({
+    schemaVersion: 1, generation: 'a'.repeat(64), total: 1, packSize: 2048, sources: [{ id, count: 1 }, { id: removed, count: 0 }],
+  }));
+  for (const suffix of ['', '/', '.html']) {
+    const response = await request(`/datasets/${id}${suffix}?q=room&dataset=another&page=5`);
+    expect(response.status).toBe(308);
+    const target = new URL(response.headers.get('Location')!);
+    expect(target.pathname).toBe('/hub/datasets/');
+    expect(target.searchParams.get('dataset')).toBe(id);
+    expect(target.searchParams.get('q')).toBe('room');
+    expect(target.searchParams.has('page')).toBe(false);
+  }
+  expect((await request(`/datasets/${removed}`)).status).toBe(404);
+  expect((await request('/datasets/hf-absent-source-0123456789ab')).status).toBe(404);
+  expect((await request(`/datasets/${id}`, { method: 'POST' })).status).toBe(405);
+  expect(assets).toHaveBeenCalledTimes(5);
+  expect(records).not.toHaveBeenCalled();
+});
+
 it('keeps public catalog misses separate from private share-link lookups and their cooldown', async () => {
   const records = vi.spyOn(env.LINKS, 'get');
   for (let attempt = 0; attempt < 5; attempt++) {
