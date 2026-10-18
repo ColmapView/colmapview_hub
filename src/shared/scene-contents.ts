@@ -8,6 +8,33 @@ export const SCENE_DATA_LABELS = {
 export type SceneDataKind = keyof typeof SCENE_DATA_LABELS;
 export type SceneDataStatus = 'checked' | 'listed' | 'needs_setup' | 'archive' | 'partial';
 export type SceneContents = Partial<Record<SceneDataKind, { status: SceneDataStatus; count?: number; samplePath?: string }>>;
+export interface SceneStatistics { cameraPoses: number | null; cameraModels: number | null; points: number | null }
+const statisticFields = [
+  { key: 'cameraPoses', label: 'Camera poses', note: 'Registered camera poses in the selected reconstruction. Original photographs may be absent.' },
+  { key: 'cameraModels', label: 'Camera models', note: 'Camera definitions in the selected reconstruction. Multiple poses can share one camera model.' },
+  { key: 'points', label: '3D points', note: '3D points in the selected reconstruction. Companion model files are counted separately.' },
+] as const;
+
+export function sceneStatistics(counts?: { images: number | null; cameras: number | null; points: number | null }): SceneStatistics {
+  const count = (value: unknown) => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : null;
+  return { cameraPoses: count(counts?.images), cameraModels: count(counts?.cameras), points: count(counts?.points) };
+}
+
+export function isSceneStatistics(value: unknown): value is SceneStatistics {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const item = value as Record<string, unknown>;
+  return statisticFields.every(({ key }) => Object.hasOwn(item, key)
+    && (item[key] === null || typeof item[key] === 'number' && Number.isSafeInteger(item[key]) && item[key] >= 0));
+}
+
+export function sceneStatisticsHtml(statistics?: SceneStatistics): string {
+  if (!statistics) return '';
+  return '<dl class="dataset-statistics" aria-label="Scene statistics">' + statisticFields.map(({ key, label, note }) => {
+    const value = statistics[key];
+    return `<div title="${note}"><dt>${label}</dt><dd data-stat="${key}">${value === null ? 'Unknown' : value.toLocaleString('en-US')}</dd></div>`;
+  }).join('') + '</dl>';
+}
+
 export interface SceneThumbnail {
   url: string; width: 320; height: 320; sourcePath: string; sourceArchive?: string;
   sourceSha256: string; datasetLicense: string; license: string; attribution: string; crop: 'center_square';

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.8 — 2026-10-17
+
+- Show camera pose, camera model and 3D point totals directly on every scene card and scene detail page. Counts describe the selected reconstruction; shared camera definitions, absent photographs and companion geometry remain separate.
+- Preserve confirmed zero point sets and display Unknown for totals that have not been established by the audit.
+
 ## 0.7.7 — 2026-10-17
 
 - Show available images, cameras, point clouds, splats, masks and other scene models beneath every scene card, distinguishing checked content, listed files, partial photos, required setup and separate image ZIPs.

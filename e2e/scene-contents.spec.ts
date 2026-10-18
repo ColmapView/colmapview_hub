@@ -8,6 +8,9 @@ test('cards show content roles and load licensed square photos from the Hub', as
   await expect(first.getByRole('list', { name: 'Available data' })).toBeVisible();
   await expect(first.locator('[data-asset="cameras"]')).toBeVisible();
   await expect(first.locator('[data-asset="images"]')).toBeVisible();
+  await expect(first.locator('[data-stat="cameraPoses"]')).toHaveText('227');
+  await expect(first.locator('[data-stat="cameraModels"]')).toHaveText('1');
+  await expect(first.locator('[data-stat="points"]')).toHaveText('23,659');
   const image = first.locator('.dataset-thumbnail');
   await expect(image).toBeVisible();
   await expect.poll(() => image.evaluate((element: HTMLImageElement) => [element.complete, element.naturalWidth, element.naturalHeight])).toEqual([true, 320, 320]);
@@ -20,6 +23,17 @@ test('cards show content roles and load licensed square photos from the Hub', as
   await page.getByRole('combobox', { name: 'License category', exact: true }).selectOption('non-commercial');
   await expect(page.locator('.dataset-thumbnail')).toHaveCount(0);
   expect(providerRequests).toEqual([]);
+});
+
+test('scene statistics preserve unknown and confirmed zero point counts', async ({ page }) => {
+  await page.goto('/hub/datasets/entry/data-3a6fa2f8987b22f3d3d28276');
+  for (const field of ['cameraPoses', 'cameraModels', 'points']) {
+    await expect(page.locator(`[data-stat="${field}"]`)).toHaveText('Unknown');
+  }
+  await page.goto('/hub/datasets/entry/data-f85333e7c1adb523358813a8');
+  await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('6');
+  await expect(page.locator('[data-stat="cameraModels"]')).toHaveText('6');
+  await expect(page.locator('[data-stat="points"]')).toHaveText('0');
 });
 
 test('ZIP photo previews retain image credits and explicit loading requirements', async ({ page }) => {

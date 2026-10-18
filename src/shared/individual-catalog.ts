@@ -3,7 +3,7 @@ import { licenseCategory } from './license-categories';
 import type { LicenseCategory } from './license-categories';
 import { photoLabel } from './scene-photos';
 import type { PhotoStatus } from './scene-photos';
-import { sceneDataText } from './scene-contents';
+import { sceneDataText, sceneStatistics } from './scene-contents';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -93,6 +93,7 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
     ...(proof?.photoAvailability ? { photoStatus: proof.photoAvailability } : {}),
     ...(proof?.availableData ? { availableData: proof.availableData } : {}),
     ...(proof?.thumbnail ? { thumbnail: proof.thumbnail } : {}),
+    sceneStats: sceneStatistics(proof?.sceneValidation ?? proof?.sceneCompatibility),
     ...(canOpenIndividual(row, source) ? { openUrl: `/hub/datasets/open/${id}` } : {}),
     description: gated ? 'The source lists this model, but its files require access and cannot be downloaded anonymously. File compatibility and complete loading remain unverified.'
       : proof?.summary || `${kindLabel} listed in ${source.title}${archive ? ` inside ${archive}; extract it before attempting to load this model` : ''}. This individual model has not passed a complete load check.`,

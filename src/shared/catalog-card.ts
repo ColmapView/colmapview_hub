@@ -3,7 +3,7 @@ import type { CatalogSummary } from './catalog';
 import { escapeHtml as escape } from './html';
 import { licenseCategory, LICENSE_CATEGORY_LABELS } from './license-categories';
 import { photoLabel } from './scene-photos';
-import { sceneContentsHtml, sceneDataText, sceneThumbnailHtml } from './scene-contents';
+import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml } from './scene-contents';
 
 export function catalogCardHtml(entry: CatalogSummary): string {
   const category = licenseCategory(entry);
@@ -23,6 +23,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + sceneThumbnailHtml(entry)
     + `<h2><a class="dataset-open" href="${escape(catalogOpenUrl(entry))}" aria-label="${escape(`${action}: ${entry.title}`)}">${escape(entry.title)}</a></h2>`
     + sceneContentsHtml(entry.availableData)
+    + sceneStatisticsHtml(entry.sceneStats)
     + (entry.photoStatus ? `<p class="dataset-photo-status" data-photo-status="${escape(entry.photoStatus)}">${escape(photoLabel(entry.photoStatus))}</p>` : '')
     + `<p class="dataset-card-footer"><span class="dataset-license-category" title="${LICENSE_CATEGORY_LABELS[category]}">${shortLicense}</span>`
     + `<span class="dataset-open-label">${canOpen ? entry.hasViewer ? 'Open ↗' : 'Try · unchecked ↗' : 'Source only'}</span></p>`

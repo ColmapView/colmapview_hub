@@ -2,8 +2,8 @@ import { licenseCategory } from './license-categories';
 import type { LicenseCategory } from './license-categories';
 import { isPhotoStatus } from './scene-photos';
 import type { PhotoStatus, ScenePhotoAudit } from './scene-photos';
-import { isSceneContents, isSceneThumbnail } from './scene-contents';
-import type { SceneContents, SceneThumbnail } from './scene-contents';
+import { isSceneContents, isSceneStatistics, isSceneThumbnail } from './scene-contents';
+import type { SceneContents, SceneStatistics, SceneThumbnail } from './scene-contents';
 export { classifyLicense, licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from './license-categories';
 
 export interface CatalogFact { label: string; value: string; url?: string }
@@ -50,6 +50,7 @@ export interface CatalogEntry {
   datasetLabel?: string;
   photoStatus?: PhotoStatus;
   availableData?: SceneContents;
+  sceneStats?: SceneStatistics;
   thumbnail?: SceneThumbnail;
 }
 export interface CatalogSnapshot {
@@ -64,7 +65,7 @@ export interface CatalogSnapshot {
   sceneSummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
   photoAudit?: { checkedAt: string; scenes: number; photos: Partial<Record<PhotoStatus, number>> };
 }
-export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'thumbnail'> & { delivery?: string; hasViewer?: boolean; openUrl?: string };
+export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail'> & { delivery?: string; hasViewer?: boolean; openUrl?: string };
 export const CATALOG_PAGE_SIZE = 24;
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
 export function isCatalogOpenUrl(value: unknown): value is string {
@@ -98,6 +99,7 @@ export function catalogSummary(entry: CatalogEntry): CatalogSummary {
     dataset: dataset || { id, label: datasetLabel(entry), title }, ...(itemKind ? { itemKind } : {}),
     ...(entry.photoStatus ? { photoStatus: entry.photoStatus } : {}),
     ...(entry.availableData ? { availableData: entry.availableData } : {}),
+    ...(entry.sceneStats ? { sceneStats: entry.sceneStats } : {}),
     ...(entry.thumbnail ? { thumbnail: entry.thumbnail } : {}),
     ...(entry.verification ? { delivery: entry.verification.delivery, hasViewer: Boolean(entry.viewerUrl) && canOpen } : {}) };
 }
@@ -125,6 +127,7 @@ export function isCatalogSummary(value: unknown): value is CatalogSummary {
     && (item.itemKind === undefined || typeof item.itemKind === 'string')
     && (item.photoStatus === undefined || isPhotoStatus(item.photoStatus))
     && (item.availableData === undefined || isSceneContents(item.availableData))
+    && (item.sceneStats === undefined || isSceneStatistics(item.sceneStats))
     && (item.thumbnail === undefined || isSceneThumbnail(item.thumbnail))
     && (dataset === undefined || Boolean(dataset && typeof dataset === 'object' && typeof dataset.id === 'string' && /^[a-z0-9-]{1,80}-[a-f0-9]{12}$/.test(dataset.id)
       && typeof dataset.label === 'string' && typeof dataset.title === 'string'))

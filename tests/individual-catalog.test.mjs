@@ -70,6 +70,45 @@ test('cards expose scene contents without treating pose metadata or unknown PLY 
   assert.doesNotMatch(render.catalogCard(modelOnly), /data-asset="(?:images|splats)"/);
 });
 
+test('scene cards show posed cameras, camera definitions and reconstruction points separately', () => {
+  const proof = { ...nativePhotoProof('not_included'), sceneCompatibility: {
+    ...nativePhotoProof('not_included').sceneCompatibility, cameras: 1, images: 227, points: 23659 } };
+  const summary = render.individualSummary(row(0, { 7: proof }), source);
+  assert.deepEqual(summary.sceneStats, { cameraPoses: 227, cameraModels: 1, points: 23659 });
+  const html = render.catalogCard(summary);
+  assert.match(html, /aria-label="Scene statistics"/);
+  assert.match(html, /Camera poses<\/dt><dd data-stat="cameraPoses">227/);
+  assert.match(html, /Camera models<\/dt><dd data-stat="cameraModels">1/);
+  assert.match(html, /3D points<\/dt><dd data-stat="points">23,659/);
+  assert.equal(render.isCatalogSummary(summary), true);
+  const entry = render.individualEntry(row(0, { 7: proof }), source, parent);
+  assert.deepEqual(render.catalogSummary(entry).sceneStats, summary.sceneStats);
+  assert.match(render.catalogEntryPage(entry), /data-stat="points">23,659/);
+});
+
+test('unknown totals stay unknown, zero points stay zero and companion counts cannot replace the reconstruction', () => {
+  const proof = nativePhotoProof('not_included');
+  proof.sceneCompatibility = { ...proof.sceneCompatibility, cameras: null, images: null, points: null };
+  proof.availableData = { cameras: { status: 'checked' }, point_cloud: { status: 'checked', count: 999 } };
+  const item = row(0, { 7: proof });
+  const summary = render.individualSummary(item, source);
+  assert.deepEqual(summary.sceneStats, { cameraPoses: null, cameraModels: null, points: null });
+  assert.equal((render.catalogCard(summary).match(/>Unknown<\/dd>/g) || []).length, 3);
+  assert.equal(render.isCatalogSummary(summary), true);
+  const model = render.individualEntry(item, source, { ...parent, sceneStats: { cameraPoses: 99, cameraModels: 99, points: 99 } });
+  assert.deepEqual(model.sceneStats, summary.sceneStats);
+  proof.sceneCompatibility.points = 0;
+  const zero = render.individualSummary(item, source);
+  assert.equal(zero.sceneStats.points, 0);
+  assert.match(render.catalogCard(zero), /data-stat="points">0<\/dd>/);
+  assert.equal(render.isCatalogSummary(zero), true);
+  for (const invalid of [-1, 1.5, '123', Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(render.isCatalogSummary({ ...summary, sceneStats: { ...summary.sceneStats, points: invalid } }), false);
+  }
+  const stronger = render.individualSummary(row(0, { 7: { ...proof, sceneValidation: { ...verified.sceneValidation, cameras: 3, images: 7, points: 0 } } }), source);
+  assert.deepEqual(stronger.sceneStats, { cameraPoses: 7, cameraModels: 3, points: 0 });
+});
+
 const squareThumbnail = { url: '/hub/datasets/individual/thumbnails/' + 'a'.repeat(64) + '.jpg', width: 320, height: 320,
   sourcePath: 'scene/images/a.jpg', sourceSha256: 'b'.repeat(64), datasetLicense: 'cc-by-4.0', license: 'cc-by-sa-4.0',
   licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', creditUrl: 'https://commons.wikimedia.org/wiki/File:a.jpg',
