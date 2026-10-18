@@ -20,10 +20,22 @@ test('cards show content roles and load licensed square photos from the Hub', as
   await expect(image).toBeVisible();
   await expect.poll(() => image.evaluate((element: HTMLImageElement) => [element.complete, element.naturalWidth, element.naturalHeight])).toEqual([true, 320, 320]);
   await expect(image).toHaveAttribute('src', /^\/hub\/datasets\/individual\/thumbnails\/[a-f0-9]{64}\.jpg$/);
-  await expect(first.locator('figcaption')).toContainText('square crop');
+  await expect(first.locator('.dataset-open')).toHaveText('scene0024_01 · i2slam_colmap');
+  await expect(first.locator('figcaption')).toHaveCount(0);
+  await expect(first.locator('.dataset-photo-credit')).not.toBeVisible();
+  const textStyle = (selector: string) => first.locator(selector).first().evaluate(element => {
+    const style = getComputedStyle(element);
+    return [style.fontSize, style.fontWeight, style.color];
+  });
+  const secondaryStyle = await textStyle('.dataset-label');
+  for (const selector of ['[data-asset="cameras"]', '[data-stat="cameraPoses"]', '[data-stat="points"]', '.dataset-statistics-compact dt']) {
+    expect(await textStyle(selector)).toEqual(secondaryStyle);
+  }
   await first.getByRole('button', { name: /Metadata/ }).click();
   await expect(first.locator('[data-stat="cameraModels"]')).toBeVisible();
   await expect(first.locator('[data-photo-status]')).toBeVisible();
+  await expect(first.locator('.dataset-photo-credit')).toBeVisible();
+  await expect(first.locator('.dataset-metadata-title')).toHaveText('data/i2slam_colmap/scene0024_01');
   await first.getByRole('button', { name: /Metadata/ }).click();
   await expect(first.locator('[data-stat="cameraModels"]')).not.toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
@@ -51,9 +63,10 @@ test('ZIP photo previews retain image credits and explicit loading requirements'
   const first = page.locator('.dataset-card').first();
   await expect(first.locator('[data-asset="images"]')).toHaveText('Images · ZIP');
   await expect(first.locator('.dataset-thumbnail')).toBeVisible();
-  await expect(first.locator('figcaption a').first()).toHaveAttribute('href', /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
-  await expect(first.locator('figcaption')).toContainText('cc-by-sa-4.0');
+  await expect(first.locator('figcaption')).toHaveCount(0);
   await first.getByRole('button', { name: /Metadata/ }).click();
+  await expect(first.locator('.dataset-photo-credit a').first()).toHaveAttribute('href', /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
+  await expect(first.locator('.dataset-photo-credit')).toContainText('cc-by-sa-4.0');
   await first.getByRole('link', { name: 'Full metadata', exact: true }).click();
   await expect(page.locator('main')).toContainText('Preview attribution');
   await expect(page.locator('main')).toContainText('current model link does not attach that ZIP');

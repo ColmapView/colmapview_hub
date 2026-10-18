@@ -126,7 +126,11 @@ test('square previews remain same-origin, attributed and commercially licensed a
   assert.match(html, /width="320" height="320" loading="lazy" decoding="async"/);
   assert.match(html, /Original photographer/);
   assert.match(html, /cc-by-sa-4.0/);
-  assert.match(html, /square crop/);
+  const visible = html.split('<div class="dataset-metadata"')[0];
+  assert.doesNotMatch(visible, /figcaption|square crop|Original photographer|cc-by-sa-4.0/);
+  assert.match(html, /dataset-photo-credit.*Original photographer.*cc-by-sa-4.0.*Cropped/);
+  const detail = render.catalogEntryPage(render.individualEntry(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source, parent));
+  assert.match(detail, /Center-square crop of the first available registered photograph/);
   for (const license of ['cc-by-nc-4.0', 'unknown']) {
     assert.doesNotMatch(render.catalogCard({ ...summary, license }), /class="dataset-thumbnail"/);
     assert.doesNotMatch(render.catalogCard({ ...summary, thumbnail: { ...squareThumbnail, license } }), /class="dataset-thumbnail"/);
@@ -136,6 +140,26 @@ test('square previews remain same-origin, attributed and commercially licensed a
     assert.equal(render.isCatalogSummary({ ...summary, thumbnail: { ...squareThumbnail, url } }), false);
   }
   assert.equal(render.isCatalogSummary({ ...summary, thumbnail: { ...squareThumbnail, creditUrl: 'javascript:alert(1)' } }), false);
+});
+
+test('card titles omit storage paths and retain scene names with model variants', () => {
+  const cases = [
+    ['data/i2slam_colmap/scene0024_01', 'scene0024_01 · i2slam_colmap'],
+    ['scene0000_00/sparse/init', 'scene0000_00 · init'],
+    ['scene0000_00/sparse/refined_aligned', 'scene0000_00 · refined_aligned'],
+    ['inputs/cone/Instance_1/joint/undistorted/readout', 'cone · Instance_1 · joint · undistorted · readout'],
+    ['courtyard/dslr_calibration_jpg', 'courtyard · dslr_calibration_jpg'],
+    ['scenes/1%2F15_Pylypa_Orlyka_Street,_Kyiv/0', '1/15_Pylypa_Orlyka_Street,_Kyiv · 0'],
+    ['reconstructions/ahunamons/reconstruction_roma_LunarLambert/final', 'ahunamons · reconstruction_roma_LunarLambert · final'],
+    ['scenes/malformed%ZZ/0', 'malformed%ZZ · 0'],
+  ];
+  for (const [title, expected] of cases) {
+    const entry = { ...render.individualSummary(row(), source), title };
+    const html = render.catalogCard(entry);
+    assert.ok(html.includes(`>${expected}</a></h2>`), title);
+    assert.ok(html.includes(`<p class="dataset-metadata-title">${title}</p>`), title);
+    assert.equal(entry.title, title);
+  }
 });
 
 test('a scene cannot inherit the collection thumbnail or its sibling asset list', () => {

@@ -101,15 +101,19 @@ export function sceneContentsHtml(contents?: SceneContents): string {
     }).join('') + '</ul>';
 }
 
-export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }): string {
+export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }, compact = false): string {
   const thumbnail = entry.thumbnail;
   if (!thumbnail || !isSceneThumbnail(thumbnail) || licenseCategory(entry) !== 'commercial'
       || classifyLicense(entry.license) !== 'commercial' || thumbnail.datasetLicense !== entry.license
       || !(classifyLicense(thumbnail.license) === 'commercial' || ['pd', 'cc0', 'cc-by-2.5', 'cc-by-sa-2.0', 'cc-by-sa-2.5',
         'cc-by-sa-3.0-pl', 'cc-by-sa-3.0-ro', 'cc-by-sa-3.0-es', 'cc-by-3.0-us', 'cc-by-2.5-hu'].includes(thumbnail.license))) return '';
+  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(thumbnail.url)}" width="320" height="320" loading="lazy" decoding="async" alt="${escape(`Scene photograph from ${entry.title}`)}">`
+    + (compact ? '' : `<figcaption>${sceneThumbnailCreditHtml(thumbnail)}</figcaption>`) + '</figure>';
+}
+
+export function sceneThumbnailCreditHtml(thumbnail: SceneThumbnail): string {
   const credit = thumbnail.creditUrl ? `<a href="${escape(thumbnail.creditUrl)}" rel="noreferrer">${escape(thumbnail.attribution)}</a>` : escape(thumbnail.attribution);
   const license = thumbnail.license === 'pd' ? 'Public domain' : thumbnail.license;
   const terms = thumbnail.licenseUrl ? `<a href="${escape(thumbnail.licenseUrl)}" rel="noreferrer">${escape(license)}</a>` : escape(license);
-  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(thumbnail.url)}" width="320" height="320" loading="lazy" decoding="async" alt="${escape(`Scene photograph from ${entry.title}, square crop`)}">`
-    + `<figcaption>${credit} · ${terms} · square crop</figcaption></figure>`;
+  return `${credit} · ${terms}`;
 }

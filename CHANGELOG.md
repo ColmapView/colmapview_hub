@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.11 — 2026-10-17
+
+- Replace storage-path headings with scene names and distinguishing context. Keep canonical paths and viewer destinations in metadata.
+- Use consistent secondary text for collection names, available data and camera/point counts. Move photo credits and license links into Info, and remove the crop label from the card.
+
 ## 0.7.10 — 2026-10-17
 
 - Keep scene metadata readable and scrollable on short desktop and mobile screens. Connect side panels to their cards so hovering into the details keeps them open, and avoid repeated layout measurements while a panel is already open.
