@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.10 — 2026-10-17
+
+- Keep scene metadata readable and scrollable on short desktop and mobile screens. Connect side panels to their cards so hovering into the details keeps them open, and avoid repeated layout measurements while a panel is already open.
+- Show actionable search-validation messages and retain retry guidance for temporary failures.
+- Use one shared UI version for browser assets, page templates and response caches, and update the catalog documentation for licensed previews.
+
 ## 0.7.9 — 2026-10-17
 
 - Simplify scene cards to a preview, title, collection name, compact available-data list and two main counters for posed cameras and 3D points.
