@@ -21,6 +21,11 @@ def source_path(value):
             and all(part not in ('', '.', '..') for part in value.split('/')))
 
 
+def is_metadata_sidecar(value):
+    return isinstance(value, str) and any(part.startswith('._') or part.casefold() in ('__macosx', '.ds_store')
+                                          for part in value.split('/'))
+
+
 def content_scene_reviews(catalog, policy, root):
     if (policy.get('schemaVersion') != 1 or policy.get('coverage') != 'all_published_scenes'
             or not isinstance(policy.get('sources'), list) or not policy.get('checkedAt')):
@@ -38,7 +43,7 @@ def content_scene_reviews(catalog, policy, root):
             for kind, evidence in scene['data'].items():
                 if (kind not in CONTENT_KINDS or not isinstance(evidence, dict)
                         or evidence.get('status') not in ('listed', 'header_checked')
-                        or not source_path(evidence.get('samplePath'))
+                        or not source_path(evidence.get('samplePath')) or is_metadata_sidecar(evidence.get('samplePath'))
                         or ('count' in evidence and (type(evidence['count']) is not int or evidence['count'] < 1))):
                     raise ValueError('Invalid content role evidence')
                 if kind in ('point_cloud', 'meshes') and evidence['status'] != 'header_checked':

@@ -4,11 +4,26 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.catalog.scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
-from scripts.audit.prepare_scene_contents import ply_content
+from scripts.catalog.scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews, is_metadata_sidecar
+from scripts.audit.prepare_scene_contents import ply_content, validate_asset_samples
 
 
 class SceneContentsTests(unittest.TestCase):
+    def test_metadata_sidecars_cannot_be_mask_samples_or_reused_preparation_inputs(self):
+        for path in ('scene/mask/._000.png', '__MACOSX/scene/mask/000.png', 'scene/.DS_Store'):
+            with self.subTest(path=path):
+                self.assertTrue(is_metadata_sidecar(path))
+                with self.assertRaisesRegex(ValueError, 'sidecars are not dataset assets'):
+                    validate_asset_samples({'data': {'masks': {'status': 'listed', 'count': 2, 'samplePath': path}}})
+                scene = {'kind': 'colmap', 'path': self.row[1], 'files': self.files,
+                         'data': {'masks': {'status': 'listed', 'count': 2, 'samplePath': path}}}
+                policy = {'schemaVersion': 1, 'coverage': 'all_published_scenes', 'checkedAt': '2026-10-18',
+                          'sources': [{'sourceId': self.entry['sourceId'], 'revision': 'a' * 40, 'scenes': [scene]}]}
+                with self.assertRaisesRegex(ValueError, 'Invalid content role evidence'):
+                    content_scene_reviews({'entries': [self.entry]}, policy, Path('.'))
+        self.assertFalse(is_metadata_sidecar('scene/mask/_000.png'))
+        validate_asset_samples({'data': {'masks': {'status': 'listed', 'count': 1, 'samplePath': 'scene/mask/000.png'}}})
+
     def test_reused_preview_must_match_the_manifest_bound_photo_and_commercial_terms(self):
         proof = {'photoAvailability': 'complete_export_checked', 'photoAudit': {'samplePath': 'scene/images/a.png'}}
         entry = {'licenseCategory': 'commercial', 'license': 'cc-by-4.0'}

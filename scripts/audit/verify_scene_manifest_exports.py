@@ -1,4 +1,4 @@
-"""Independently check camera + binary XYZ PLY manifest exports.
+"""Independently check binary native/XYZ PLY COLMAP + images exports.
 
 Run offline with numpy, Pillow and pycolmap. Source bytes must already be in the
 URL-hash cache; this verifier does not download anything or publish a policy.
@@ -6,6 +6,7 @@ Browser receipts and screenshots are collected separately with the real viewer.
 """
 
 import argparse
+from collections import Counter
 import hashlib
 import io
 import json
@@ -90,6 +91,37 @@ def verify_points(source, output, count):
             original._mmap.close()
 
 
+def native_component_delta(expected, actual):
+    """Accept original values or their exact viewer float32 representation."""
+    expected, actual = np.asarray(expected, dtype=np.float64), np.asarray(actual, dtype=np.float64)
+    if (expected.shape != actual.shape or not np.isfinite(expected).all() or not np.isfinite(actual).all()
+            or not np.logical_or(expected == actual, expected.astype(np.float32).astype(np.float64) == actual).all()):
+        raise ValueError('Native point component differs from its source or exact float32 rounding')
+    return float(np.max(np.abs(expected - actual))) if expected.size else 0.0
+
+
+def verify_native_points(original, selected):
+    if set(original.points3D) != set(selected.points3D):
+        raise ValueError('Native point IDs differ')
+    result = {'maxPointPositionDelta': 0.0, 'maxPointErrorDelta': 0.0, 'tracks': 0}
+    for point_id, point in original.points3D.items():
+        output = selected.points3D[point_id]
+        if not np.array_equal(point.color, output.color):
+            raise ValueError('Native point colors differ')
+        result['maxPointPositionDelta'] = max(result['maxPointPositionDelta'], native_component_delta(point.xyz, output.xyz))
+        result['maxPointErrorDelta'] = max(result['maxPointErrorDelta'], native_component_delta(point.error, output.error))
+        tracks = Counter((item.image_id, item.point2D_idx) for item in point.track.elements)
+        exported_tracks = Counter((item.image_id, item.point2D_idx) for item in output.track.elements)
+        if tracks != exported_tracks:
+            raise ValueError('Native point tracks differ')
+        for (image_id, index), count in exported_tracks.items():
+            if (image_id not in selected.images or not 0 <= index < len(selected.images[image_id].points2D)
+                    or selected.images[image_id].points2D[index].point3D_id != point_id):
+                raise ValueError('Native point track does not resolve to its exported observation')
+            result['tracks'] += count
+    return result
+
+
 def scene_id(scene):
     return 'data-' + hashlib.sha256('\0'.join([scene['sourceId'], scene['kind'], '', scene['path']]).encode()).hexdigest()[:24]
 
@@ -111,8 +143,9 @@ def verify_scene(scene, receipt, exports, cache, scratch):
     if (not receipt or receipt.get('errors') or receipt.get('pointDrawCount') != counts['points']
             or receipt.get('photoCount') != len(scene['photos']) or receipt.get('maskCount') != len(scene['masks'])):
         raise ValueError('Missing or mismatched complete browser import/renderer receipt: ' + identity)
-    if len(scene['photos']) != counts['images'] or scene['points']['format'] != 'xyz_ply':
-        raise ValueError('This export check requires all original photos and the selected XYZ PLY')
+    point_format = scene['points']['format']
+    if len(scene['photos']) != counts['images'] or point_format not in ('xyz_ply', 'colmap_binary'):
+        raise ValueError('This export check requires all original photos and binary native/XYZ PLY points')
     archive_path = exports / (identity + '.zip')
     source_files = {role: cached_source(scene, scene['modelFiles'][role], cache) for role in ('cameras', 'images')}
     source_cloud = cached_source(scene, scene['points'], cache)
@@ -128,12 +161,13 @@ def verify_scene(scene, receipt, exports, cache, scratch):
             if not scene['modelFiles'][role]['sourcePath'].endswith('.bin'):
                 raise ValueError('This verifier requires original binary cameras and poses')
             (native / (role + '.bin')).write_bytes(source.read_bytes())
-        (native / 'points3D.bin').write_bytes(bytes(8))
+        (native / 'points3D.bin').write_bytes(source_cloud.read_bytes() if point_format == 'colmap_binary' else bytes(8))
         original = pycolmap.Reconstruction(str(native))
         names = {image.name for image in original.images.values()}
         photo_cameras = {image.name: original.cameras[image.camera_id] for image in original.images.values()}
-        if names != {photo['name'] for photo in scene['photos']} or any(image.num_points3D for image in original.images.values()):
-            raise ValueError('Source names or existing observation references disagree with the companion selection')
+        if (names != {photo['name'] for photo in scene['photos']}
+                or point_format == 'xyz_ply' and any(image.num_points3D for image in original.images.values())):
+            raise ValueError('Source names or existing observation references disagree with the point selection')
         with zipfile.ZipFile(archive_path) as archive:
             if len(archive.namelist()) != len(set(archive.namelist())):
                 raise ValueError('Duplicate paths in exported scene')
@@ -157,10 +191,14 @@ def verify_scene(scene, receipt, exports, cache, scratch):
                     if (image.size != (photo['width'], photo['height']) or image.size != (calibration.width, calibration.height)
                             or image.getexif().get(274, 1) != 1):
                         raise ValueError('Photograph dimensions or orientation disagree with the calibration')
-        verify_points(source_cloud, exported / 'points3D.bin', counts['points'])
+        if point_format == 'xyz_ply':
+            verify_points(source_cloud, exported / 'points3D.bin', counts['points'])
         selected = pycolmap.Reconstruction(str(exported))
         if (selected.num_cameras(), selected.num_reg_images(), selected.num_points3D()) != (counts['cameras'], counts['images'], counts['points']):
             raise ValueError('Independent COLMAP counts differ')
+        if set(original.cameras) != set(selected.cameras) or set(original.images) != set(selected.images):
+            raise ValueError('Native camera or image IDs differ')
+        precision = verify_native_points(original, selected) if point_format == 'colmap_binary' else None
         for camera_id, camera in original.cameras.items():
             exported_camera = selected.cameras[camera_id]
             if (camera.model != exported_camera.model or camera.width != exported_camera.width or camera.height != exported_camera.height
@@ -173,7 +211,7 @@ def verify_scene(scene, receipt, exports, cache, scratch):
                     or len(image.points2D) != len(exported_image.points2D)
                     or any(a.point3D_id != b.point3D_id or not np.array_equal(a.xy, b.xy)
                            for a, b in zip(image.points2D, exported_image.points2D))
-                    or exported_image.num_points3D != 0):
+                    or exported_image.num_points3D != image.num_points3D):
                 raise ValueError('Exported pose or observation references differ')
         # Release C++ point maps before the next multi-million-point model.
         del original, selected
@@ -184,6 +222,7 @@ def verify_scene(scene, receipt, exports, cache, scratch):
                 raise ValueError('Mask dimensions differ')
     return {'id': identity, 'status': 'passed', 'counts': counts, 'photos': len(scene['photos']), 'masks': len(scene['masks']),
             'selectionSha256': selection_digest(scene), 'exportSha256': file_hash(archive_path),
+            **({'nativeExportPrecision': precision} if precision is not None else {}),
             'checks': {key: 'passed' for key in ('modelExport', 'independentColmapRead', 'cameraCalibration', 'cameraPoses',
                        'pointValues', 'originalPhotoHashes', 'photoDecode', 'maskDecode')}}
 

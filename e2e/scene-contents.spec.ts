@@ -1,5 +1,38 @@
 import { expect, test } from '@playwright/test';
 
+test('the Expo root entry binds its original model instead of selecting a nested sparse variant', async ({ page }) => {
+  const id = 'data-01385be0766a2831ee3918cf';
+  const source = 'https://huggingface.co/datasets/alandpn/expo_mcm-ufrn/resolve/3e142592fa3d276221c243a01fa6ee69217e23b5/';
+  const redirect = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  expect(redirect.status()).toBe(302);
+  const manifestUrl = new URL(new URL(redirect.headers().location).searchParams.get('url')!);
+  expect(manifestUrl.pathname).toMatch(/\/individual\/manifests\/[a-f0-9]{64}\.manifest\.json$/);
+  const response = await page.request.get(manifestUrl.pathname);
+  expect(response.ok()).toBe(true);
+  const manifest = await response.json();
+  expect(manifest.name).toBe('alandpn/expo_mcm-ufrn');
+  expect(manifest.files).toEqual({ cameras: source + 'cameras.bin', images: source + 'images.bin', points3D: source + 'points3D.bin' });
+  expect(Object.keys(manifest.imageNameToPath)).toHaveLength(81);
+  expect(manifest.imageNameToPath['frame_0001.jpg']).toBe(source + 'images/frame_0001.jpg');
+  const detail = await page.request.get('/hub/datasets/entry/' + id);
+  const html = await detail.text();
+  expect(html).toContain('data-stat="cameraPoses">81</dd>');
+  expect(html).toContain('data-stat="points">49,817</dd>');
+  expect(html).toContain('Scene manifest');
+});
+
+test('DTU mask inventories use real mask images and exclude macOS sidecars', async ({ page }) => {
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  const source = index.sources.find((item: { sourceId: string }) => item.sourceId === 'hf:Y1ue/DTU');
+  const data = await (await page.request.get('/hub/datasets/api/entries?dataset=' + source.id)).json();
+  const scene = data.entries.find((entry: { id: string }) => entry.id === 'data-500085ac2578d6ca24b978a8');
+  expect(scene.availableData.masks).toEqual({ status: 'listed', count: 64, samplePath: 'DTU/scan105/mask/000.png' });
+  for (const entry of data.entries) {
+    expect(entry.availableData?.masks?.samplePath ?? '').not.toContain('/._');
+    expect(entry.availableData?.masks?.samplePath ?? '').not.toContain('__MACOSX');
+  }
+});
+
 test('a scene manifest attaches the exact sibling-photo model and selected cloud, with readable saved settings', async ({ page }) => {
   const id = 'data-69b9f9cf0aaab1bc0ece0617';
   await page.goto('/hub/datasets/entry/' + id);

@@ -64,6 +64,38 @@ class SceneManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'selection-bound'):
             self.reviews()
 
+    def test_root_manifest_keeps_exact_native_files_when_nested_models_exist(self):
+        self.files = {'cameras': 'cameras.bin', 'images': 'images.bin', 'points3d': 'points3D.bin',
+                      'variant:sparse/0:cameras': 'sparse/0/cameras.bin',
+                      'variant:sparse/0:images': 'sparse/0/images.bin',
+                      'variant:sparse/0:points3d': 'sparse/0/points3D.bin'}
+        self.review.update(path='', files=self.files)
+        for role in ('cameras', 'images'):
+            self.review['modelFiles'][role]['sourcePath'] = self.files[role]
+        self.review['points'].update(sourcePath='points3D.bin', format='colmap_binary')
+        self.proof['sceneCompatibility']['points'] = 42
+        self.row = ['colmap', '', self.files, None]
+        self.bind()
+        self.reviews()
+        assets = manifest_assets(self.review, self.entry, hf_url)
+        manifest = json.loads(assets[self.review['selectionSha256'] + '.manifest.json'])
+        self.assertEqual(manifest['name'], 'owner/data')
+        for role, path in {'cameras': 'cameras.bin', 'images': 'images.bin', 'points3D': 'points3D.bin'}.items():
+            self.assertEqual(manifest['files'][role], f'https://huggingface.co/datasets/owner/data/resolve/{"a" * 40}/{path}')
+        updated, format_ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(format_, 'COLMAP')
+        self.assertEqual(updated['sceneCompatibility']['points'], 42)
+        self.assertEqual(updated['sceneManifest']['pointFormat'], 'colmap_binary')
+
+    def test_root_support_does_not_allow_unsafe_scene_or_model_paths(self):
+        original = copy.deepcopy(self.review)
+        for path in (None, '/scene', '../scene', 'scene/../other', 'scene//other', 'scene\\other'):
+            self.review = copy.deepcopy(original)
+            self.review['path'] = path
+            self.bind()
+            with self.subTest(path=path), self.assertRaises(ValueError):
+                self.reviews()
+
     def test_all_import_geometry_and_export_checks_are_required(self):
         for key in CHECKS:
             with self.subTest(key):

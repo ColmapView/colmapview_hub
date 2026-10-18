@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.22 — 2026-10-18
+
+- Bind the Expo root scene to its exact 81-camera, 49,817-point model and 81 original photographs through a checked manifest. The bare repository URL previously selected a different 148-camera nested reconstruction. Independent COLMAP export checks preserve calibration, poses, observation references, tracks, point IDs and colors, and every original photo hash; native point positions/errors retain the viewer's documented float32 precision.
+- Correct 11 DTU mask samples and counts using complete pinned folder listings. Exclude 485 macOS sidecars from those counts and reject filesystem metadata as future content/preparation samples.
+- Audit all 5,237 scene entries and 105 collections, including deployed API pagination, the viewer's actual path resolver, browser source reads and complete camera calibration parsing. Keep complete scene export proof distinct from bounded model/asset checks.
+
 ## 0.7.21 — 2026-10-18
 
 - Prevent intermittent Worker resource-limit errors during catalog browsing by publishing 24-scene metadata packs instead of parsing 2,048 unrelated scenes for a page or model. Keep existing index layouts readable and preserve scene identities, counts, evidence and launch targets.

@@ -26,6 +26,8 @@ import zlib
 from collections import Counter
 from pathlib import Path
 
+from ..catalog.scene_contents import is_metadata_sidecar
+
 
 MAX_PHOTO_BYTES = 24 * 1024 * 1024
 MAX_HEADER_BYTES = 65536
@@ -206,6 +208,15 @@ def square_preview(body):
     return output.getvalue(), original
 
 
+def validate_asset_samples(row):
+    samples = [item.get('samplePath') for item in row.get('data', {}).values()]
+    samples.extend(item.get('path') for item in row.get('probes', []))
+    if row.get('thumbnail'):
+        samples.append(row['thumbnail'].get('sourcePath'))
+    if any(is_metadata_sidecar(path) for path in samples):
+        raise ValueError('Filesystem metadata sidecars are not dataset assets; recount the scoped inventory')
+
+
 def prepare(plan, root, scratch, workers=6):
     network = Network(scratch / 'cache')
     image_dir = root / 'data/scene-thumbnails'
@@ -220,6 +231,7 @@ def prepare(plan, root, scratch, workers=6):
     output_lock = threading.Lock()
 
     def process(row):
+        validate_asset_samples(row)
         fingerprint = hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest()
         if fingerprint in previous:
             return previous[fingerprint]

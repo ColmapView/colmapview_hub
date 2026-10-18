@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-10-18T18:48:38.137559+00:00",
+  "checkedAt": "2026-10-18T22:53:14.253467+00:00",
   "scope": "Explicit native/XYZ scene manifests. All listed model bytes, every original photograph and COLMAP exports checked; masks have verified pixels but unknown semantic roles.",
   "scenes": [
     {
@@ -6050,6 +6050,765 @@
           "max": 0.9440643380146441
         },
         "renderSha256": "eae1725cf7a6004afabc18de610d7c1a785d71e58e00d6a0d893fe3138551061"
+      }
+    },
+    {
+      "sourceId": "hf:alandpn/expo_mcm-ufrn",
+      "revision": "3e142592fa3d276221c243a01fa6ee69217e23b5",
+      "kind": "colmap",
+      "path": "",
+      "files": {
+        "cameras": "cameras.bin",
+        "images": "images.bin",
+        "points3d": "points3D.bin",
+        "variant:sparse/0:cameras": "sparse/0/cameras.bin",
+        "variant:sparse/0:images": "sparse/0/images.bin",
+        "variant:sparse/0:points3d": "sparse/0/points3D.bin",
+        "variant:sparse/1:cameras": "sparse/1/cameras.bin",
+        "variant:sparse/1:images": "sparse/1/images.bin",
+        "variant:sparse/1:points3d": "sparse/1/points3D.bin"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "cameras.bin",
+          "sha256": "db4beb34c17ca77b21f31ce91c3995d7c0f1294b475176fd116ff9370e548c42",
+          "bytes": 4544
+        },
+        "images": {
+          "sourcePath": "images.bin",
+          "sha256": "9b0f0d6040aea6334b55685a0117e385d9a14ca5cc977530517917ad734f06c5",
+          "bytes": 13168031
+        }
+      },
+      "points": {
+        "sourcePath": "points3D.bin",
+        "sha256": "2c16f74822481b5a5f21fc1e2c642fbf6a7c85b25442d766124d225ff0ddc667",
+        "bytes": 5296067,
+        "format": "colmap_binary",
+        "count": 49817
+      },
+      "counts": {
+        "cameras": 81,
+        "images": 81,
+        "points": 49817
+      },
+      "photos": [
+        {
+          "sourcePath": "images/frame_0001.jpg",
+          "sha256": "3fdba37aa85473425d778e347376506f5a5f4599d73c818217cc7ec179daa9fb",
+          "bytes": 71642,
+          "name": "frame_0001.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0002.jpg",
+          "sha256": "57d6e6785c896a5069c655b74ec0a72b24eb344ef0b64960e806f94333b2afab",
+          "bytes": 90622,
+          "name": "frame_0002.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0003.jpg",
+          "sha256": "b8c113db353cc9fcdd6fd803b4b89ead8b74640ade52a401b996a76d4cd03a28",
+          "bytes": 164109,
+          "name": "frame_0003.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0004.jpg",
+          "sha256": "459102b617afd7ba7205e700974456347390279858e5579543ef0f509e185cd2",
+          "bytes": 110428,
+          "name": "frame_0004.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0005.jpg",
+          "sha256": "0bc4dce2b1a8a954f60b941cc24128c19a6b147fa0881176a81040cb9d128456",
+          "bytes": 84635,
+          "name": "frame_0005.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0006.jpg",
+          "sha256": "da750c9256083d9d88c810e629e0b0241e82652b14ebbb91ea35e46504c0c356",
+          "bytes": 63869,
+          "name": "frame_0006.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0007.jpg",
+          "sha256": "87296211e9cb06b77c009b64910a94f4887bb1af2b62d4f84254376f0cc47e7f",
+          "bytes": 52750,
+          "name": "frame_0007.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0008.jpg",
+          "sha256": "b0c5bdb58c4d6817fa461d3c7e72248d47ef31e6a4ef9db5684cd4ce5d062b1a",
+          "bytes": 43123,
+          "name": "frame_0008.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0009.jpg",
+          "sha256": "2cf42ef8209158764d6733409e6ed5268a23dacc545c624297b7c79b0e89331a",
+          "bytes": 35664,
+          "name": "frame_0009.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0010.jpg",
+          "sha256": "c87acbdf9ca83b5d83c46222f54047f8b9f69a6f371fe14ad22f3d6cef9eea3b",
+          "bytes": 31030,
+          "name": "frame_0010.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0011.jpg",
+          "sha256": "ddf803b91c28bb47a488293bad7b835d8d32730cfff1d7a2f8d25a69fbd1d551",
+          "bytes": 28618,
+          "name": "frame_0011.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0012.jpg",
+          "sha256": "8eb78c6dd7e0e6b3391adb14cd4862b718f56de4147410e7c87b8a158946cbf4",
+          "bytes": 26294,
+          "name": "frame_0012.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0013.jpg",
+          "sha256": "ced5b14b8b49419879d88f7d668af579ebdd96412ca6ffaf2ce8d61b5434f241",
+          "bytes": 27329,
+          "name": "frame_0013.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0014.jpg",
+          "sha256": "88e4fe10876e21ada4a07f5607ebae4098f9e0201f848add920eeb97b35f5363",
+          "bytes": 26779,
+          "name": "frame_0014.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0015.jpg",
+          "sha256": "77b3eece696425941aa44469453ee2b67bf68883facb21e826f0d2ce64188f8f",
+          "bytes": 26580,
+          "name": "frame_0015.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0016.jpg",
+          "sha256": "a8a946e94af58964639dd970adf6b394e78b43e40b84e8741d134dd8cefdb11c",
+          "bytes": 29618,
+          "name": "frame_0016.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0017.jpg",
+          "sha256": "7ea61c9e098e0f92344ceb635d9944211794e8e1ea2c66576735a5aa1a36fe3f",
+          "bytes": 27846,
+          "name": "frame_0017.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0018.jpg",
+          "sha256": "d0cc5322da349508cac9bf4db4e20cfff173e62de28ceb412fcae292b32e53a0",
+          "bytes": 28146,
+          "name": "frame_0018.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0019.jpg",
+          "sha256": "edb144e5a464c403b5cc5deddb7ae178e56d757b2e3af9ec9b0721c98cb60866",
+          "bytes": 28068,
+          "name": "frame_0019.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0020.jpg",
+          "sha256": "35112ddd1e0fd58b9d43cc7bd0e3f2217a605cb0c3eb0a55a38acb79c770b29c",
+          "bytes": 28572,
+          "name": "frame_0020.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0021.jpg",
+          "sha256": "9405b8fd2f75294bb3231b334e1135d3dc6592884d53cd8990672759cb02cea0",
+          "bytes": 28982,
+          "name": "frame_0021.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0022.jpg",
+          "sha256": "e9a041234997a61f6fea7954fb45c92450a1420aeef14c39dc5f00fd6c6a10ac",
+          "bytes": 29050,
+          "name": "frame_0022.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0023.jpg",
+          "sha256": "3936d769b24f0f07abb6cad7d7c515da386d05d8b9f790b9f1111d51299c8d57",
+          "bytes": 28140,
+          "name": "frame_0023.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0024.jpg",
+          "sha256": "fcd014ae312007951c94f77dd431836b73d76d5ed6cf036e69206c414ad21cd4",
+          "bytes": 27579,
+          "name": "frame_0024.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0025.jpg",
+          "sha256": "69c3f29114c43efd6ae08b02ad7ba214bd2c62259c1d4265b6cc4b0b7f9f5cb0",
+          "bytes": 27396,
+          "name": "frame_0025.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0026.jpg",
+          "sha256": "8313aa13b062a00a96ae4f41c5b4031cc60b6919b0130de8fcc779aae10017d4",
+          "bytes": 27821,
+          "name": "frame_0026.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0027.jpg",
+          "sha256": "a9b7c4bce52e1e94dd145668b90348ae5409b25a4baa5bdf9a173b1e18d7bd48",
+          "bytes": 28877,
+          "name": "frame_0027.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0028.jpg",
+          "sha256": "3c48e892feba6b1536919cc0510a29e8213e5cd56fd272372012308513012512",
+          "bytes": 28564,
+          "name": "frame_0028.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0029.jpg",
+          "sha256": "00c9e2af62c67cdc6d02bf761b1bf44f0196074368a8bec127ac1a6aa365de2e",
+          "bytes": 29079,
+          "name": "frame_0029.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0030.jpg",
+          "sha256": "e9483aa91056ded5f7c66ae0b9fc1a8cbe589359778342844639def6e7d0cc12",
+          "bytes": 29270,
+          "name": "frame_0030.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0031.jpg",
+          "sha256": "5382a55f427d91ae915b409abfaf3e574567dbefc2efa2530b3b6959b083c159",
+          "bytes": 27866,
+          "name": "frame_0031.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0032.jpg",
+          "sha256": "482cb309b8ad5051f7bfa9ff806452e8868f3a67321bb9b938d77dae6da5727e",
+          "bytes": 26929,
+          "name": "frame_0032.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0033.jpg",
+          "sha256": "f62427ec35b14a4781fe53a2350eb6ad6cf426a55cf5e1dd2fba18d87c83a8a4",
+          "bytes": 29800,
+          "name": "frame_0033.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0034.jpg",
+          "sha256": "f1e39d11ac32642f90735014733b879de7025e19e402f18da7087036d1417813",
+          "bytes": 29552,
+          "name": "frame_0034.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0035.jpg",
+          "sha256": "e1bb564fe5982d3e63d8fa2c269ae6aadccb1720e9a1cba40fbcf6b8776f2df9",
+          "bytes": 30251,
+          "name": "frame_0035.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0036.jpg",
+          "sha256": "4665761abb2eba5d82dd54770ec8f420e5c3d17e6db3e271209014c73461580b",
+          "bytes": 26945,
+          "name": "frame_0036.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0037.jpg",
+          "sha256": "4b003a10725b575b13ab91d5241cf0d7e585895eade13e64e71fa6a964f84821",
+          "bytes": 29341,
+          "name": "frame_0037.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0038.jpg",
+          "sha256": "312f2d28eed513cfe1251686c5a6ba6397ac2a653b5585053521b7438c1bfbd9",
+          "bytes": 29000,
+          "name": "frame_0038.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0039.jpg",
+          "sha256": "0e6cfd4247da943cc6b8843483b57a3e1ee77edc77748cb5a7425c99e67cebef",
+          "bytes": 29693,
+          "name": "frame_0039.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0040.jpg",
+          "sha256": "61165e376dffcae3678431686c144d82e961f21d1e2939766a86a8c4eb8c741c",
+          "bytes": 30221,
+          "name": "frame_0040.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0041.jpg",
+          "sha256": "1d3b98d3ccc4114c1a3ed927b20eee58852fb815ff076465d9245ab4d6501471",
+          "bytes": 28153,
+          "name": "frame_0041.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0042.jpg",
+          "sha256": "f510167ea1e45d6a01f63f3d1f5e23679a18b82715aff3113bf0c103a32d819f",
+          "bytes": 25726,
+          "name": "frame_0042.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0043.jpg",
+          "sha256": "e696997d46e2f4fe83b97255fab5b51cab5bd2d835803f1a65e3fdb41754f5b9",
+          "bytes": 26905,
+          "name": "frame_0043.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0044.jpg",
+          "sha256": "a7643fa939771cdb5739ab1bfff61b5f2566d3a12dd6098d0384695a480e63b3",
+          "bytes": 32172,
+          "name": "frame_0044.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0045.jpg",
+          "sha256": "41ef57fb2d2e23c284348dd83457b3dcc41974c17c518e9b5f034ff91f5e2f02",
+          "bytes": 32967,
+          "name": "frame_0045.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0046.jpg",
+          "sha256": "734906e31cc44a82fe127e24cbd77aa80387547f3e3d0d2e94de62a7b200276f",
+          "bytes": 33063,
+          "name": "frame_0046.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0047.jpg",
+          "sha256": "67c33663d15098aa35c666ad4fc793a250c0cc9105d15d53a56d94505ef72eea",
+          "bytes": 32071,
+          "name": "frame_0047.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0048.jpg",
+          "sha256": "ad40c9c66a3098dcaef575b157f2c76e17e76243eb83a2952b92a87ce609a990",
+          "bytes": 32417,
+          "name": "frame_0048.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0049.jpg",
+          "sha256": "2df69f9c898962a1d7c84cec52cc999ba4725a7578565f6e71f0b418a3efb2b5",
+          "bytes": 32337,
+          "name": "frame_0049.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0050.jpg",
+          "sha256": "ba6a74006b6e9b0520256cc1ba46c8ef5183eb296e09c899ad1f9ccd94c515ab",
+          "bytes": 33377,
+          "name": "frame_0050.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0051.jpg",
+          "sha256": "e731821b07f658c74d3ca919cf86ebe0f8722b4f6afc16666e8b9f2b44f74822",
+          "bytes": 31455,
+          "name": "frame_0051.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0052.jpg",
+          "sha256": "ef044df72164cc933e63c6d299a3da68e2f160164f50c01d9165e425e0a60f39",
+          "bytes": 32958,
+          "name": "frame_0052.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0053.jpg",
+          "sha256": "bc49802761fc521d1e18d23004723c9d57bf365731e75f46587ba930d47cdf3a",
+          "bytes": 33392,
+          "name": "frame_0053.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0054.jpg",
+          "sha256": "b009e7c853eab4db8afe47256d6ca60df4932bdfc24d5eba11f7e5d49a95f51e",
+          "bytes": 33493,
+          "name": "frame_0054.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0055.jpg",
+          "sha256": "de98cb749d6e89a187aa8cb80da2f94635b42c567a1a6b6aba6003e96c551145",
+          "bytes": 34535,
+          "name": "frame_0055.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0056.jpg",
+          "sha256": "d70fb08f569933ff5f7b9d31f58bc3aa57ce82d13c1f08820b8718aa642f3784",
+          "bytes": 33667,
+          "name": "frame_0056.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0057.jpg",
+          "sha256": "d71419319ae33da1d14b212724e1ef9ef262694ccc91db96059890c26bd816d5",
+          "bytes": 33531,
+          "name": "frame_0057.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0058.jpg",
+          "sha256": "70e6796aaaacf11e705561f5058dbbcb5ea599d2dd9a0db0d0e5bfd89a487e51",
+          "bytes": 34700,
+          "name": "frame_0058.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0059.jpg",
+          "sha256": "95fcd46f9a321b59239053f897a3140c432604ac1201dc5d5acc667e813b4ecd",
+          "bytes": 33772,
+          "name": "frame_0059.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0060.jpg",
+          "sha256": "f1a7a2306a561c5f3caf81203fa450d682ae90a80d6761ab7a8d387fc37bda8b",
+          "bytes": 35094,
+          "name": "frame_0060.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0061.jpg",
+          "sha256": "f20d5a3876c9ec166fd7d4d21e91654b46cc0512a8f3caf5d107ebc748331498",
+          "bytes": 34603,
+          "name": "frame_0061.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0062.jpg",
+          "sha256": "13e3c7d1efc35ed42c68cb93356ea02acead2c43c70d53f98a92caba6c08fe12",
+          "bytes": 33270,
+          "name": "frame_0062.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0063.jpg",
+          "sha256": "7a59ae9659040503be95b1f9ebea9aecf6ac43b62fece74d91be1c2d4262bb89",
+          "bytes": 33562,
+          "name": "frame_0063.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0064.jpg",
+          "sha256": "0a5607049c0d2b187561ac09528bd67d6081a88b50c2b84a22a3f2bc385f794f",
+          "bytes": 35526,
+          "name": "frame_0064.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0065.jpg",
+          "sha256": "015ae9ff213d39ad2d8617ee58caba3d76e7fe99a39e9a223c58f46d4ddc801d",
+          "bytes": 33445,
+          "name": "frame_0065.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0066.jpg",
+          "sha256": "735217f89d62ad966d694fb15177752ee2c82ed8c34b0e97d39920f0f01af5d9",
+          "bytes": 32273,
+          "name": "frame_0066.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0067.jpg",
+          "sha256": "5ec63da5a11f02caec5acd245d1dbb4be4f10a21f66f3371eaabe983c9f37e1f",
+          "bytes": 32495,
+          "name": "frame_0067.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0068.jpg",
+          "sha256": "ea65092251561f07c5ab266cce2dbe10015dda11e440c5d9ac5c3687fe088b13",
+          "bytes": 31408,
+          "name": "frame_0068.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0069.jpg",
+          "sha256": "cac69ce9d58093bb866a25d9cbaddae5dd62e2cc9d42dd4f64eee8a677c75a51",
+          "bytes": 29951,
+          "name": "frame_0069.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0070.jpg",
+          "sha256": "c9bbcd7a45861486891d4392a891ae99ef5c5ae063fda331a6edc2884e365fbf",
+          "bytes": 30725,
+          "name": "frame_0070.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0071.jpg",
+          "sha256": "ef471c2786643822d60139c80ee10b08800272f95390e704b7215497ae41fdd5",
+          "bytes": 31785,
+          "name": "frame_0071.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0072.jpg",
+          "sha256": "e1db3faa15d51e71d0a50605397aaa3921d47bd60668b33a56287ba1c951df0c",
+          "bytes": 31922,
+          "name": "frame_0072.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0073.jpg",
+          "sha256": "e79a267a7ac952ae30d7e72d994545ddb11d828cd9ed46ab3aa6aa8c9d0ed87d",
+          "bytes": 33570,
+          "name": "frame_0073.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0074.jpg",
+          "sha256": "05a2062bfb994c0ce0bad2b7bf5018773af2839d06a1e0e6700e0d99f9c80bbf",
+          "bytes": 33493,
+          "name": "frame_0074.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0075.jpg",
+          "sha256": "6a245d554f421a8fafa65e3e56b886d310757b150ff3af33b584250270cca864",
+          "bytes": 30298,
+          "name": "frame_0075.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0076.jpg",
+          "sha256": "2cc88f9474828bf19ab64ecd0aa9c44b5a91bb727e85e28b9e3b4f442634c609",
+          "bytes": 30114,
+          "name": "frame_0076.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0077.jpg",
+          "sha256": "28496115b3fb69fee4602305d71848e92fc841eb2f5ec553c053a11e3f748cb6",
+          "bytes": 31005,
+          "name": "frame_0077.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0078.jpg",
+          "sha256": "d88a0b612e791ab60fa63d14ea4f5550eaa8493efc760d8f4067d12a8a89556a",
+          "bytes": 28630,
+          "name": "frame_0078.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0079.jpg",
+          "sha256": "561271999ef91fabf454daada601749d052435c752abdcd1bf46df99d0077d6f",
+          "bytes": 30279,
+          "name": "frame_0079.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0080.jpg",
+          "sha256": "413a5a63dfc3a6f8566864acb9dd19fb7a72a2a8dc9e6fe260a50d12c04ec377",
+          "bytes": 28692,
+          "name": "frame_0080.jpg",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "sourcePath": "images/frame_0081.jpg",
+          "sha256": "468c7fb678a7caff60af10f8872c4c6684b8337443227f356b472809ddb860bc",
+          "bytes": 25026,
+          "name": "frame_0081.jpg",
+          "width": 720,
+          "height": 1280
+        }
+      ],
+      "masks": [],
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.17.5",
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1,
+            "thinning": 0,
+            "maxReprojectionError": null
+          },
+          "camera": {
+            "cameraFov": 60,
+            "cameraMode": "orbit",
+            "cameraScale": 0.23267952848152462
+          }
+        },
+        "viewState": {
+          "position": [
+            22.771583816396905,
+            15.997374661683223,
+            28.480342584004052
+          ],
+          "target": [
+            -0.49636903175555425,
+            0.4854060962482456,
+            5.21238973585159
+          ],
+          "quaternion": [
+            -0.20184808544201344,
+            0.37343844990838587,
+            0.08360821452912524,
+            0.9015601704804108
+          ],
+          "distance": 36.37879091260092
+        }
+      },
+      "viewerVersion": "0.17.5",
+      "viewerCommit": "4b44561e4533ef0bfbfb186c93c43020ce9e87b7",
+      "checkedAt": "2026-10-18T22:32:48.194Z",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "photoDecode": "passed",
+        "maskDecode": "passed",
+        "originalPhotoHashes": "passed"
+      },
+      "selectionSha256": "db072d3a20dfe9e33e63b9234c6e1e1f1cf9946d996f44f1293c682dadedd910",
+      "exportSha256": "2003c425687b40b7df37a93bdec60b0f239d1020b0ef8a7e5319e02e9acd80e6",
+      "renderSha256": "05f3744b8dd2c50f708652d64b3cff3f73121d9386d16cb69e7cc61c56112449",
+      "nativeExportPrecision": {
+        "precision": "Each exported point/observation component matches the source float64 or its exact float32 rounding.",
+        "maxPointPositionDelta": 1.6558184157133837e-06,
+        "maxPointErrorDelta": 1.19168737988673e-07,
+        "maxObservationPositionDelta": 0.0,
+        "observations": 548374,
+        "tracks": 344424
       }
     }
   ]

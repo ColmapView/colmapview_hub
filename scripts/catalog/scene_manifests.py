@@ -77,7 +77,8 @@ def manifest_scene_reviews(catalog, policy):
         revision = next((fact['value'] for fact in (entry or {}).get('facts', []) if fact['label'] == 'Pinned revision'), None)
         if (not entry or entry.get('provider') != 'huggingface' or entry.get('access') != 'public'
                 or revision != review.get('revision') or not re.fullmatch('[a-f0-9]{40}', revision or '')
-                or review.get('kind') != 'colmap' or review.get('archive') or not source_path(review.get('path'))):
+                or review.get('kind') != 'colmap' or review.get('archive')
+                or review.get('path') != '' and not source_path(review.get('path'))):
             raise ValueError('Scene manifest source, revision or native model identity changed')
         if (not review.get('checkedAt') or not re.fullmatch('[a-f0-9]{40}', review.get('viewerCommit', ''))
                 or not re.fullmatch(r'\d+\.\d+\.\d+', review.get('viewerVersion', ''))
@@ -157,7 +158,7 @@ def manifest_assets(review, entry, hf_url):
     for role in ('rigs', 'frames'):
         if role in review['files']:
             files[role] = url(review['files'][role])
-    manifest = {'version': 1, 'name': review['path'], 'baseUrl': ASSET_BASE, 'files': files,
+    manifest = {'version': 1, 'name': review['path'] or review['sourceId'].removeprefix('hf:'), 'baseUrl': ASSET_BASE, 'files': files,
                 'viewerStatePath': state_name, 'splats': [], 'skipImages': not bool(review['photos'])}
     if review['photos']:
         manifest['imageNameToPath'] = {item['name']: url(item['sourcePath']) for item in review['photos']}
