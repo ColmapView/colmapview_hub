@@ -229,6 +229,29 @@ test('long titles stay within a narrow card and delete keys never enter public U
   } finally { expect((await removeLink(page, link)).status()).toBe(204); }
 });
 
+test('preserves saved filters after their redundant controls are removed', async ({ page, browser }) => {
+  const path = '/hub/datasets/?delivery=cors_headers_checked&viewer=available';
+  await page.goto(path);
+  await expect(page.locator('select[name="delivery"],select[name="viewer"]')).toHaveCount(0);
+  await expect(page.locator('#catalog-saved-filters')).toContainText('Model links only');
+  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  expect(new URL(page.url()).searchParams.get('delivery')).toBe('cors_headers_checked');
+  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await expect(page.locator('#catalog-saved-filters')).toBeHidden();
+  expect(new URL(page.url()).searchParams.has('viewer')).toBe(false);
+  await page.goBack();
+  await expect(page.locator('#catalog-saved-filters')).toContainText('Model links only');
+  await expect(page.locator('input[name="delivery"]')).toHaveValue('cors_headers_checked');
+  const fallback = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const serverPage = await fallback.newPage();
+    await serverPage.goto(origin + path);
+    await expect(serverPage.locator('#catalog-saved-filters')).toContainText('Model links only');
+    await expect(serverPage.locator('#catalog-next')).toHaveAttribute('href', /delivery=cors_headers_checked&viewer=available&page=2/);
+  } finally { await fallback.close(); }
+});
+
 test('opens the scene browser directly in the ColmapView frame', async ({ page }) => {
   await page.goto('/hub/');
   await expect(page).toHaveURL(/\/hub\/datasets\/$/);
@@ -250,10 +273,10 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await page.getByText('More filters', { exact: true }).click();
-  await page.getByLabel('Viewer link', { exact: true }).selectOption('available');
+  await expect(page.locator('select[name="viewer"], select[name="delivery"]')).toHaveCount(0);
+  await page.getByLabel('Evidence', { exact: true }).selectOption('Native COLMAP layout checked');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await expect(page.locator('.dataset-card').getByText('Model access and CORS headers checked', { exact: true })).toHaveCount(24);
-  await expect(page.getByLabel('Delivery', { exact: true }).locator('option[value="gated"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search datasets' }).fill('large_overlap basketball sparse_native');
   await page.getByRole('button', { name: /^Metadata for .*basketball.*sparse_native/ }).click();

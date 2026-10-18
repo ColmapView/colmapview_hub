@@ -1,4 +1,5 @@
 import type { CatalogEntry, CatalogSummary, CatalogVerification } from './catalog';
+import { deliveryLabel } from './catalog';
 import { licenseCategory } from './license-categories';
 import type { LicenseCategory } from './license-categories';
 import { photoLabel } from './scene-photos';
@@ -34,6 +35,13 @@ export interface IndividualPage { entries: CatalogSummary[]; total: number; page
 export interface IndividualSelection { id: string; label: string; title: string; count: number; listingComplete: boolean; metadataUrl: string }
 export const matchesIndividualDataset = (source: IndividualSource, value: string) => !value || source.id === value
   || (source.provider === 'public' && value === `public:${source.label}`);
+
+/** Older filtered URLs remain usable after their redundant controls are retired. */
+export function savedFilterSummary(filters: URLSearchParams): string {
+  const delivery = filters.get('delivery');
+  const labels = [delivery ? `Delivery: ${deliveryLabel(delivery)}` : '', filters.get('viewer') === 'available' ? 'Model links only' : ''].filter(Boolean);
+  return labels.length ? `Saved filters: ${labels.join(' · ')}.` : '';
+}
 
 export function individualSelection(sources: IndividualSource[], value: string): IndividualSelection | null {
   if (!value) return null;

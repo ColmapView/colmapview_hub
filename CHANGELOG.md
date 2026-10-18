@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.17 — 2026-10-18
+
+- Remove the redundant Delivery and Viewer link dropdowns. Every published scene has a viewer link, and current delivery groups match the Evidence filter.
+- Preserve saved filter URLs and API behavior, including asynchronous pagination, Reset, browser history and server-rendered pages. Display saved criteria when an older link uses the retired controls.
+
 ## 0.7.16 — 2026-10-18
 
 - Record Kicker's complete streamed COLMAP and original-photo export: all 31 photographs match pinned publisher hashes, and calibration, poses, observations and points are unchanged.

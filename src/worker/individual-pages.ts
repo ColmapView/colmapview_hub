@@ -1,6 +1,5 @@
-import { deliveryLabel } from '../shared/catalog';
 import { LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from '../shared/license-categories';
-import { INDIVIDUAL_PAGE_SIZE, individualDatasetOptions, individualSelection } from '../shared/individual-catalog';
+import { INDIVIDUAL_PAGE_SIZE, individualDatasetOptions, individualSelection, savedFilterSummary } from '../shared/individual-catalog';
 import type { IndividualIndex, IndividualPage } from '../shared/individual-catalog';
 import { photoLabel } from '../shared/scene-photos';
 import type { PhotoStatus } from '../shared/scene-photos';
@@ -22,7 +21,8 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const values = (items: string[]) => [...new Set(items)].sort((a, b) => a.localeCompare(b, 'en')).map(value => ({ value, label: value }));
   const dataset = individualSelection(index.sources, filters.get('dataset') || '');
   const offset = (result.page - 1) * INDIVIDUAL_PAGE_SIZE;
-  const advanced = ['provider', 'license', 'status', 'delivery', 'viewer', 'photos'].some(field => filters.has(field));
+  const advanced = ['provider', 'license', 'status', 'photos'].some(field => filters.has(field));
+  const savedFilters = savedFilterSummary(filters);
   return page(location, 'Public datasets', '<div class="catalog-index">' + intro('Public datasets', `${number(index.total)} named scene datasets · ${number(index.sources.filter(source => source.count).length)} source collections`)
     + '<p class="catalog-hint">Explore camera and reconstruction datasets. Original photographs are optional; each scene records its photo availability and loading evidence.</p>'
     + `<form id="individual-search" class="catalog-filters" role="search" action="/hub/datasets/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
@@ -35,11 +35,11 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + select('provider', 'Source', 'All sources', [{ value: 'huggingface', label: 'Hugging Face' }, { value: 'public', label: 'Public sources' }])
     + select('license', 'License', 'All reported licenses', values(index.sources.map(source => source.license)))
     + select('status', 'Evidence', 'All evidence levels', values(Object.keys(index.levels)))
-    + select('delivery', 'Delivery', 'All delivery results', Object.keys(index.delivery).sort().map(value => ({ value, label: deliveryLabel(value) })))
-    + select('viewer', 'Viewer link', 'All scenes', [{ value: 'available', label: 'Model link available' }])
     + select('photos', 'Photographs', 'All photo availability', [{ value: 'available', label: 'Photos on current paths' },
       ...Object.keys(index.photos || {}).sort().map(value => ({ value, label: photoLabel(value as PhotoStatus) }))])
-    + '</div></details></form>'
+    + '</div></details>'
+    + ['delivery', 'viewer'].map(field => `<input type="hidden" name="${field}" value="${escape(filters.get(field) || '')}">`).join('') + '</form>'
+    + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
     + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
     + `<p id="catalog-count" class="catalog-count" role="status" tabindex="-1">${result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets'}</p>`
     + '<p id="catalog-status" class="catalog-status" role="status"></p>'

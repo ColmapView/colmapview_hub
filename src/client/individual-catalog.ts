@@ -1,5 +1,5 @@
 import { isCatalogSummary } from '../shared/catalog';
-import { INDIVIDUAL_PAGE_SIZE } from '../shared/individual-catalog';
+import { INDIVIDUAL_PAGE_SIZE, savedFilterSummary } from '../shared/individual-catalog';
 import type { IndividualPage, IndividualSelection } from '../shared/individual-catalog';
 import { catalogCardElement } from './catalog-card';
 import { catalogHistory } from './catalog-history';
@@ -15,6 +15,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const next = document.querySelector<HTMLAnchorElement>('#catalog-next')!;
   const more = document.querySelector<HTMLButtonElement>('#catalog-more')!;
   const selection = document.querySelector<HTMLElement>('#dataset-selection')!;
+  const savedFilters = document.querySelector<HTMLElement>('#catalog-saved-filters')!;
   const fields = [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[name],select[name]')];
   const navigation = catalogHistory(form);
   let pending: AbortController | undefined;
@@ -103,6 +104,8 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       previous.href = urlFor(previousQuery);
       more.hidden = lastPage >= data.pages;
       updateSelection(data.dataset);
+      savedFilters.textContent = savedFilterSummary(values);
+      savedFilters.hidden = !savedFilters.textContent;
       updateHistory(urlFor(committed));
       status.textContent = options.append ? `Loaded ${cards.length} more scenes.` : '';
       if (options.focus) (options.append ? cards[0]?.querySelector<HTMLElement>('a') : count)?.focus();
@@ -157,7 +160,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const values = new URLSearchParams(location.search);
     for (const field of fields) field.value = values.get(field.name) || '';
     const advanced = form.querySelector<HTMLDetailsElement>('.catalog-advanced');
-    if (advanced && ['provider', 'license', 'status', 'delivery', 'viewer', 'photos'].some(name => values.has(name))) advanced.open = true;
+    if (advanced && ['provider', 'license', 'status', 'photos'].some(name => values.has(name))) advanced.open = true;
     void load(values);
   });
 }
