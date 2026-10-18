@@ -28,15 +28,34 @@ export function initializeCatalogMetadata(): void {
       return;
     }
     // Measure the content rather than the previous viewport's height limit.
-    const height = Math.min(400, panel.scrollHeight + 2);
-    const above = Math.max(0, box.top - top - 12);
-    const below = Math.max(0, bottom - box.bottom - 12);
-    const flip = below < height && above > below;
-    card.dataset.metadataSide = flip ? 'above' : 'below';
-    panel.style.maxHeight = `${Math.min(400, Math.max(0, flip ? above : below))}px`;
+    let height = Math.min(400, panel.scrollHeight + 2, bottom - top - 24);
+    const viewportLeft = visualViewport?.offsetLeft || 0;
+    const viewportWidth = visualViewport?.width || innerWidth;
+    const width = Math.min(box.width, viewportWidth - 24);
+    let x = box.left;
+    let y = box.bottom - 1;
+    if (y + height > bottom - 12) {
+      y = box.top - height + 1;
+      if (y < top + 12) {
+        // Tall cards have no vertical gap. Prefer a side panel; on narrow
+        // screens use the space beside the info button so it stays clickable.
+        if (box.right + 8 + width <= viewportLeft + viewportWidth - 12) x = box.right + 8;
+        else if (box.left - 8 - width >= viewportLeft + 12) x = box.left - 8 - width;
+        else {
+          const button = card.querySelector('.dataset-info')!.getBoundingClientRect();
+          const above = Math.max(0, button.top - top - 12);
+          const below = Math.max(0, bottom - button.bottom - 20);
+          height = Math.min(height, Math.max(above, below));
+          y = below >= above ? button.bottom + 8 : button.top - height - 1;
+        }
+      }
+    }
+    x = Math.max(viewportLeft + 12, Math.min(x, viewportLeft + viewportWidth - width - 12));
+    y = Math.max(top + 12, Math.min(y, bottom - height - 12));
+    Object.assign(panel.style, { position: 'fixed', top: `${y}px`, left: `${x}px`, width: `${width}px`, maxHeight: `${height}px` });
   };
   const show = (card: HTMLElement) => {
-    if (card.dataset.metadataDismissed) return;
+    if (card.dataset.metadataDismissed || card.dataset.metadataOpen) return;
     card.dataset.metadataOpen = 'true';
     card.querySelector('.dataset-info')?.setAttribute('aria-expanded', 'true');
     position(card);

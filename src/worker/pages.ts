@@ -1,6 +1,7 @@
 import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, VIEWER_ORIGINS, waitText } from '../shared/model';
 import type { AssetSummary, CardRecord, ListedLink } from '../shared/model';
 import { escapeHtml } from '../shared/html';
+import { HUB_UI_VERSION } from '../shared/ui-version';
 export { escapeHtml } from '../shared/html';
 
 /** ColmapView's own pages; the Hub shares their header and footer. */
@@ -67,9 +68,9 @@ export function page(location: HubLocation, title: string, body: string, metadat
     metadata,
     `<link rel="icon" href="${asset('favicon.ico')}">`,
     `<link rel="stylesheet" href="${asset('colmapview.css')}">`,
-    `<script src="${asset('assets/theme.js')}?v=scene-ui-10"></script>`,
-    `<link rel="stylesheet" href="${asset('styles.css')}?v=scene-ui-10">`,
-    `<script type="module" src="${asset('assets/client.js')}?v=scene-ui-10"></script>`,
+    `<script src="${asset('assets/theme.js')}?v=${HUB_UI_VERSION}"></script>`,
+    `<link rel="stylesheet" href="${asset('styles.css')}?v=${HUB_UI_VERSION}">`,
+    `<script type="module" src="${asset('assets/client.js')}?v=${HUB_UI_VERSION}"></script>`,
     '</head><body>',
     '<a class="skip-link" href="#main">Skip to content</a>',
     header(location.path),

@@ -143,7 +143,6 @@ input::placeholder { color: var(--text-muted); }
 .dataset-metadata .note { font-size: 12px; }
 .dataset-metadata-links { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-3); }
 .dataset-metadata-links a { min-height: 24px; position: relative; z-index: 4; }
-.dataset-card[data-metadata-side="above"] .dataset-metadata { top: auto; bottom: calc(100% - 1px); }
 .dataset-card:not([data-metadata-dismissed])[data-metadata-open] .dataset-metadata,
 .dataset-card:not([data-metadata-dismissed]):focus-within .dataset-metadata { visibility: visible; opacity: 1; pointer-events: auto; }
 @media (hover: hover) { .dataset-card:not([data-metadata-dismissed]):hover .dataset-metadata { visibility: visible; opacity: 1; pointer-events: auto; } }

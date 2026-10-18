@@ -60,8 +60,11 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     let failure = options.append ? 'Could not load more scenes. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
     try {
       const response = await fetch(`/hub/datasets/api/entries${values.size ? `?${values}` : ''}`, { signal: controller.signal });
-      if (!response.ok) throw new Error('Dataset search is unavailable.');
-      const data: IndividualPage & { dataset: IndividualSelection | null } = await response.json();
+      const data: (IndividualPage & { dataset: IndividualSelection | null; error?: string }) | null = await response.json().catch(() => null);
+      if (!response.ok) {
+        if (response.status === 400 && typeof data?.error === 'string') failure = data.error;
+        throw new Error(failure);
+      }
       if (!data || !Array.isArray(data.entries) || data.entries.length > INDIVIDUAL_PAGE_SIZE || !data.entries.every(isCatalogSummary)
         || typeof data.generation !== 'string' || ![data.page, data.pages, data.total].every(Number.isSafeInteger)
         || data.page < 1 || data.pages < data.page || data.total < 0) {

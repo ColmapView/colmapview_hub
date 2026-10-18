@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { assets, base, create, input, ip, listings, request, resetState } from './helpers';
+import { HUB_UI_VERSION } from '../src/shared/ui-version';
 
 beforeEach(resetState);
 
@@ -40,7 +41,7 @@ describe('Hub pages', () => {
       expect(html).toContain('<a href="mailto:info@opsiclear.com">Contact</a>');
       expect(html).toContain('<p class="eyebrow">ColmapView Hub</p>');
       expect(html.indexOf('/hub/colmapview.css')).toBeLessThan(html.indexOf('/hub/styles.css'));
-      expect(html).toContain('/hub/assets/theme.js?v=scene-ui-10');
+      expect(html).toContain(`/hub/assets/theme.js?v=${HUB_UI_VERSION}`);
       expect(html).toContain('aria-label="Appearance"');
       expect(html).toContain('<link rel="icon" href="/hub/favicon.ico">');
       expect(html).toMatch(/<title>[^<]+ · ColmapView Hub<\/title>/);

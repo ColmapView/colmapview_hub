@@ -5,8 +5,8 @@ import { errorPage } from './pages';
 import type { HubLocation } from './pages';
 import { individualSelection } from '../shared/individual-catalog';
 import { isCatalogOpenUrl, datasetPath } from '../shared/catalog';
+import { HUB_UI_VERSION } from '../shared/ui-version';
 
-const UI_GENERATION = 'scene-ui-10';
 const REVALIDATE = 'public, no-cache, must-revalidate, no-transform';
 const respond = (request: Request, response: Response) => {
   const headers = new Headers(response.headers);
@@ -45,7 +45,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   }
   const cacheQuery = new URLSearchParams(filters);
   cacheQuery.set('_catalog', index.generation);
-  cacheQuery.set('_ui', UI_GENERATION);
+  cacheQuery.set('_ui', HUB_UI_VERSION);
   const key = new Request(`${location.origin}${url.pathname}?${cacheQuery}`);
   const cached = await caches.default.match(key);
   if (cached) return respond(request, cached);
