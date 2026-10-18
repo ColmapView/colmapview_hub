@@ -39,8 +39,8 @@ export function initializeCatalogMetadata(): void {
       if (y < top + 12) {
         // Tall cards have no vertical gap. Prefer a side panel; on narrow
         // screens use the space beside the info button so it stays clickable.
-        if (box.right + 8 + width <= viewportLeft + viewportWidth - 12) x = box.right + 8;
-        else if (box.left - 8 - width >= viewportLeft + 12) x = box.left - 8 - width;
+        if (box.right - 1 + width <= viewportLeft + viewportWidth - 12) x = box.right - 1;
+        else if (box.left + 1 - width >= viewportLeft + 12) x = box.left + 1 - width;
         else {
           const button = card.querySelector('.dataset-info')!.getBoundingClientRect();
           const above = Math.max(0, button.top - top - 12);
