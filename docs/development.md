@@ -66,6 +66,8 @@ The data pipeline is committed inputs → exact scene qualification → metadata
 
 Keep public routes, metadata schemas and scene identities stable when moving implementation files. The internal `individual` name remains in established source names and `/hub/datasets/individual/` asset URLs. It describes the scene projection; renaming a directory must not rename its public routes.
 
+Metadata packs contain 24 scene records, matching an unfiltered results page. Larger packs previously made an ordinary request decode several megabytes of unrelated evidence and intermittently exceed the Worker's resource limits. The reader accepts bounded positive pack sizes up to the legacy 2,048-record layout; record lookup and pagination use the index's declared size. Keep the pack reader bounded and verify pagination across packs when changing this layout.
+
 Search postings iterate sorted tokens so Python hash randomization cannot reorder index files between builds. The catalog generation includes the projection and policy source bytes to invalidate caches when those rules change.
 
 Evidence, photograph availability, licensing and complete export proof have separate meanings. Use the existing publication fixtures across JavaScript and Python when changing qualification rules. See [catalog behavior](catalog.md) and [input evidence](../data/README.md) before refreshing data.

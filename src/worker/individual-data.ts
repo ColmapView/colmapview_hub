@@ -36,7 +36,8 @@ export async function individualAsset<T>(assets: Assets, origin: string, path: s
 export async function individualIndex(assets: Assets, origin: string): Promise<IndividualIndex> {
   const index = await individualAsset<IndividualIndex>(assets, origin, 'index.json');
   if (!index || index.schemaVersion !== 1 || !Number.isSafeInteger(index.total) || index.total < 1 || index.total > 10000000
-    || index.packSize !== 2048 || !Array.isArray(index.sources) || index.sources.length > 10000) throw new Error('Invalid individual catalog index');
+    || !Number.isSafeInteger(index.packSize) || index.packSize < 1 || index.packSize > 2048
+    || !Array.isArray(index.sources) || index.sources.length > 10000) throw new Error('Invalid individual catalog index');
   return index;
 }
 

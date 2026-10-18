@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.7.21 — 2026-10-18
+
+- Prevent intermittent Worker resource-limit errors during catalog browsing by publishing 24-scene metadata packs instead of parsing 2,048 unrelated scenes for a page or model. Keep existing index layouts readable and preserve scene identities, counts, evidence and launch targets.
+- Cover small-pack pagination, final partial pages and invalid pack sizes with Worker regression tests. The audit caught HTTP 503 resource-limit responses on previously cold catalog API pages.
 
 - Organize build, offline catalog and operator audit tools into task folders. Use Python package imports and one interpreter launcher for builds and regression checks; keep existing npm entry points.
 - Include Python tests in the shared local/CI check, lint JavaScript tooling, enforce application import boundaries and provide a fast `check:code` command.

@@ -23,7 +23,9 @@ from .scene_photos import apply_photo_evidence, photo_scene_reviews
 from .scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
 from .scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
 
-PACK_SIZE = 2048
+# A normal results page must not parse thousands of unrelated scene records.
+# Keeping packs at page size also bounds filtered searches spanning many packs.
+PACK_SIZE = 24
 FORMATS = {'colmap': 'COLMAP', 'cameras': 'COLMAP cameras and poses', 'ply': 'PLY (header unchecked)',
            'spz': 'SPZ (header unchecked)', 'sog': 'SOG (header unchecked)', 'splat': 'SPLAT (header unchecked)',
            'ksplat': 'KSPLAT (header unchecked)', 'splat-scene': 'Gaussian components (headers unchecked)', 'camera-metadata': 'Camera metadata',

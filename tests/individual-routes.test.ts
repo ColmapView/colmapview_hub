@@ -191,3 +191,47 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   expect(write.status).toBe(405);
   expect(records).not.toHaveBeenCalled();
 });
+
+it('paginates across small metadata packs without reading unrelated scenes', async () => {
+  const source = { id: 'hf-owner-small-0123456789ab', sourceId: 'hf:owner/small', title: 'Small', label: 'Small',
+    provider: 'huggingface', access: 'public', license: 'cc0', start: 0, count: 27, listingComplete: true };
+  const rows = Array.from({ length: source.count }, (_, ordinal) => [
+    `data-${ordinal.toString(16).padStart(24, '0')}`, 0, 'colmap', `room-${ordinal}/sparse/0`, 'COLMAP', null, null, null,
+  ]);
+  const keys: string[] = [];
+  vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async input => {
+    const key = new URL(input instanceof Request ? input.url : String(input)).pathname.split('/individual/')[1];
+    keys.push(key);
+    if (key === 'index.json') return Response.json({ schemaVersion: 1, generation: 'small-packs', total: rows.length,
+      packSize: 4, sources: [source], facets: {} });
+    const pack = /^packs\/(\d+)\.json$/.exec(key);
+    return pack ? Response.json(rows.slice(Number(pack[1]) * 4, (Number(pack[1]) + 1) * 4)) : new Response(null, { status: 404 });
+  });
+  const cacheKeys = ['', 'page=2&'].map(query => new Request(`${base}/datasets/api/entries?${query}_catalog=small-packs&_ui=${HUB_UI_VERSION}`));
+  try {
+    const first = await request('/datasets/api/entries');
+    const firstPage = await first.json<{ entries: { id: string }[]; total: number; pages: number }>();
+    expect(firstPage.entries.map(entry => entry.id)).toEqual(rows.slice(0, 24).map(row => row[0]));
+    expect(firstPage.total).toBe(27);
+    expect(firstPage.pages).toBe(2);
+    expect(keys).toEqual(['index.json', ...Array.from({ length: 6 }, (_, pack) => `packs/${pack}.json`)]);
+    keys.length = 0;
+    const last = await request('/datasets/api/entries?page=2');
+    expect(last.status).toBe(200);
+    expect((await last.json<{ entries: { id: string }[] }>()).entries.map(entry => entry.id)).toEqual(rows.slice(24).map(row => row[0]));
+    expect(keys).toEqual(['index.json', 'packs/6.json']);
+  } finally {
+    for (const key of cacheKeys) await caches.default.delete(key);
+  }
+});
+
+it.each([0, -1, 1.5, 2049, '24'])('rejects invalid metadata pack size %s before reading records', async packSize => {
+  const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async () => Response.json({
+    schemaVersion: 1, generation: 'invalid-pack-size', total: 1, packSize, sources: [],
+  }));
+  const records = vi.spyOn(env.LINKS, 'get');
+  const response = await request('/datasets/api/entries');
+  expect(response.status).toBe(503);
+  expect(assets).toHaveBeenCalledTimes(1);
+  expect(records).not.toHaveBeenCalled();
+});
