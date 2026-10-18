@@ -27,11 +27,13 @@ export function isSceneStatistics(value: unknown): value is SceneStatistics {
     && (item[key] === null || typeof item[key] === 'number' && Number.isSafeInteger(item[key]) && item[key] >= 0));
 }
 
-export function sceneStatisticsHtml(statistics?: SceneStatistics): string {
+export function sceneStatisticsHtml(statistics?: SceneStatistics, compact = false): string {
   if (!statistics) return '';
-  return '<dl class="dataset-statistics" aria-label="Scene statistics">' + statisticFields.map(({ key, label, note }) => {
+  const fields = compact ? statisticFields.filter(field => field.key !== 'cameraModels') : statisticFields;
+  return `<dl class="dataset-statistics${compact ? ' dataset-statistics-compact' : ''}" aria-label="Scene statistics">` + fields.map(({ key, label, note }) => {
     const value = statistics[key];
-    return `<div title="${note}"><dt>${label}</dt><dd data-stat="${key}">${value === null ? 'Unknown' : value.toLocaleString('en-US')}</dd></div>`;
+    const title = compact ? key === 'cameraPoses' ? 'Cameras' : 'Points' : label;
+    return `<div title="${note}"><dt>${title}</dt><dd data-stat="${key}">${value === null ? 'Unknown' : value.toLocaleString('en-US')}</dd></div>`;
   }).join('') + '</dl>';
 }
 

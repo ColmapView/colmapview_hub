@@ -70,16 +70,20 @@ test('cards expose scene contents without treating pose metadata or unknown PLY 
   assert.doesNotMatch(render.catalogCard(modelOnly), /data-asset="(?:images|splats)"/);
 });
 
-test('scene cards show posed cameras, camera definitions and reconstruction points separately', () => {
+test('simple scene cards keep camera and point totals visible with model details in metadata', () => {
   const proof = { ...nativePhotoProof('not_included'), sceneCompatibility: {
     ...nativePhotoProof('not_included').sceneCompatibility, cameras: 1, images: 227, points: 23659 } };
   const summary = render.individualSummary(row(0, { 7: proof }), source);
   assert.deepEqual(summary.sceneStats, { cameraPoses: 227, cameraModels: 1, points: 23659 });
   const html = render.catalogCard(summary);
   assert.match(html, /aria-label="Scene statistics"/);
-  assert.match(html, /Camera poses<\/dt><dd data-stat="cameraPoses">227/);
+  assert.match(html, /Cameras<\/dt><dd data-stat="cameraPoses">227/);
   assert.match(html, /Camera models<\/dt><dd data-stat="cameraModels">1/);
-  assert.match(html, /3D points<\/dt><dd data-stat="points">23,659/);
+  assert.match(html, /Points<\/dt><dd data-stat="points">23,659/);
+  const visible = html.split('<div class="dataset-metadata"')[0];
+  assert.doesNotMatch(visible, /Camera models|dataset-card-footer|data-photo-status/);
+  assert.match(visible, /dataset-statistics-compact/);
+  assert.match(html, /data-photo-status="not_included">Photos not included/);
   assert.equal(render.isCatalogSummary(summary), true);
   const entry = render.individualEntry(row(0, { 7: proof }), source, parent);
   assert.deepEqual(render.catalogSummary(entry).sceneStats, summary.sceneStats);

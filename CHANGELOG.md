@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.9 — 2026-10-17
+
+- Simplify scene cards to a preview, title, collection name, compact available-data list and two main counters for posed cameras and 3D points.
+- Keep camera-model totals, photo-check wording, source licenses and loading evidence in the Info panel. Preserve visible photo attribution, zero/unknown counts and existing viewer links.
+
 ## 0.7.8 — 2026-10-17
 
 - Show camera pose, camera model and 3D point totals directly on every scene card and scene detail page. Counts describe the selected reconstruction; shared camera definitions, absent photographs and companion geometry remain separate.
