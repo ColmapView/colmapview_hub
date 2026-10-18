@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.13 — 2026-10-17
+
+- Fill previously unknown camera, pose and point totals for 18 pinned blur-slam text reconstructions using complete native-parser reads, with exact file hashes and independent photo evidence.
+- Record the publisher manifest linking `scene0736_00_gtpose_shared` to 737 sibling EVSSM-deblurred RGB images. All registered names are listed and a browser-decoded sample matches the camera dimensions; the existing model URL still needs explicit image setup.
+- Give cards without an eligible thumbnail a consistent placeholder, distinguishing missing photographs from an unavailable preview.
+
 ## 0.7.12 — 2026-10-17
 
 - Open the scene browser directly from the Hub. Remove the separate landing page, collection browser, old pagination pages and collection detail HTML; redirect saved collection URLs to the matching scene filter.

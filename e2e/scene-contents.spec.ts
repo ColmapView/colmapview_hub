@@ -58,6 +58,21 @@ test('scene statistics preserve unknown and confirmed zero point counts', async 
   await expect(page.locator('[data-stat="points"]')).toHaveText('0');
 });
 
+test('complete text-model counts and manifest photo requirements appear in the reported scene', async ({ page }) => {
+  await page.goto('/hub/datasets/entry/data-77e8433b8e133fba6007a66e');
+  await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('737');
+  await expect(page.locator('[data-stat="cameraModels"]')).toHaveText('1');
+  await expect(page.locator('[data-stat="points"]')).toHaveText('49,379');
+  await expect(page.locator('[data-asset="images"]')).toHaveText('Images · setup');
+  await expect(page.locator('main')).toContainText('Photo association manifest');
+  await expect(page.locator('main')).toContainText('EVSSM-deblurred');
+  await expect(page.locator('main')).toContainText('737/737');
+  await expect(page.locator('main')).toContainText('current viewer URL does not attach');
+  await expect(page.locator('main')).toContainText('Scene statistics check');
+  const csv = await page.request.get('/hub/datasets/individual/photo-audit.csv');
+  expect(await csv.text()).toContain('data/i2slam_trigsplat_gt/scene0736_00_manifest.json');
+});
+
 test('ZIP photo previews retain image credits and explicit loading requirements', async ({ page }) => {
   await page.goto('/hub/datasets/?photos=companion_archive');
   const first = page.locator('.dataset-card').first();
@@ -83,6 +98,11 @@ test('model-only ArmGS cards show masks and cameras without claiming photos', as
   await expect(first.locator('[data-asset="masks"]')).toBeVisible();
   await expect(first.locator('[data-asset="images"]')).toHaveCount(0);
   await expect(first.locator('.dataset-thumbnail')).toHaveCount(0);
+  const placeholder = first.getByRole('img', { name: /^No photo:/ });
+  await expect(placeholder).toBeVisible();
+  await expect(placeholder).toHaveText('No photo');
+  const bounds = await placeholder.boundingBox();
+  expect(Math.abs(bounds!.width - bounds!.height)).toBeLessThan(1);
   await first.getByRole('button', { name: /Metadata/ }).click();
   await expect(first.locator('[data-photo-status]')).toBeVisible();
   await expect(first.locator('[data-photo-status]')).toHaveText('Photos not included');

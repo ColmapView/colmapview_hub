@@ -7,7 +7,7 @@ test('photo evidence covers every published scene and keeps stronger export chec
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     total: number; generation: string; photos: Record<string, number> };
   expect(index.total).toBe(5237);
-  expect(index.photos).toEqual({ sample_checked: 1210, path_policy_required: 210, review_required: 42, not_found: 3204,
+  expect(index.photos).toEqual({ sample_checked: 1210, path_policy_required: 211, review_required: 41, not_found: 3204,
     not_included: 78, companion_archive: 478, partial: 12, complete_export_checked: 3 });
   expect(Object.values(index.photos).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const available = await (await page.request.get('/hub/datasets/api/entries?photos=available')).json() as {

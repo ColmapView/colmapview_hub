@@ -14,6 +14,12 @@ Photo policies keep exact model files separate from media scopes; honor `image_m
 
 Generated public output includes per-scene photo facts in the metadata packs, a `photos` search facet, `/hub/datasets/individual/photo-audit.csv` and `/hub/datasets/individual/photo-audit.json`. The Worker reads only fixed same-origin catalog assets; it performs no photo/source requests. Refreshing the canonical inventory requires checking photo reviews against the new pin, not copying an older source-wide sample to new scenes.
 
+The `scene0736_00_gtpose_shared/sparse/0` follow-up at revision `1e07d6d9f9f0ddd23c55eea3649107bc5a6bc698` establishes 1 camera definition, 737 poses and 49,379 points by parsing all three text model files. Eighteen text models in this repository now have complete-file counts; the original bounded header samples could not establish their totals. `native-layouts.json.gz` stores each count audit with the exact model paths, file sizes, SHA-256 hashes and viewer parser revision. Other uncounted text models retain Unknown; complete parsing of an oversized model is deferred. These checks establish model statistics, not complete rendering or photo exports.
+
+All 49,379 points in this ground-truth model have empty observation tracks. The viewer's default minimum track length of 2 hides them; set it to 0 to display these points. Empty tracks do not mean an empty point file.
+
+The publisher's `data/i2slam_trigsplat_gt/scene0736_00_manifest.json` identifies that exact model and `data/evssm_deblurred_i2slam/scene0736_00`. All 737 registered names appear in the pinned image directory; the first image passed a production-origin browser read and pixel decode at 1296 × 968, matching the shared camera. These are deblurred RGB images. The raw ScanNet directory mentioned by the manifest is not included in the selected scene. The current model URL discovers 0/737 photos because its scene scope excludes the sibling image directory. The photo review records the association manifest and required image root as `path_policy_required`; it does not silently substitute the processed images or claim a complete original-photo export.
+
 Import the existing local research files with:
 
 ```powershell
@@ -43,6 +49,8 @@ Run `npm run catalog:licenses` to refresh the committed snapshot from these offl
 `scene-contents.json.gz` records exact pinned scene identities, scoped mask inventories, companion model header evidence and optional preview provenance. `scripts/scene_contents.py` rejects source/model drift, guessed Gaussian PLY classifications, changed preview hashes and disallowed image terms. Builds copy only referenced, hash-named JPEGs from `data/scene-thumbnails/` to fixed same-origin assets. Scene cards list available data separately from full loading evidence. Empty COLMAP point sets do not claim a point cloud, and pose metadata never counts as photographs.
 
 Previews are 320 × 320 center-square crops of the first available registered photograph. Operator preparation runs separately from builds using `scripts/prepare_scene_contents.py --plan <reviewed-plan.json>` and Pillow; plans must use pinned public Hugging Face file URLs. Source photos and bounded ZIP members are read only during preparation. Source hashes, original paths, photographer attribution, image terms and crop disclosure follow the preview. MegaUnScene image terms and artists come from its pinned `images.csv` rather than inheriting the collection's CC BY license; unresolved first-image terms are skipped. Non-commercial and unknown source licenses never receive thumbnails. Model-only scenes stay published.
+
+Cards without a prepared, eligible thumbnail use a neutral placeholder. “No photo” applies only to established absence; “No preview” covers unverified photos, images requiring setup and unavailable licensed previews.
 
 ## Named scene datasets and labels
 

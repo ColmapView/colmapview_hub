@@ -26,6 +26,7 @@ export interface ScenePhotoAudit {
   mediaScope?: string;
   photoCollection?: string;
   mappingFile?: string;
+  associationFile?: string;
   mappingCheck?: { entries: number; matched: number; manifestAgrees?: number };
   nameCheck?: { registered: number; matched: number; missing: number; ambiguous: number };
   proposedNameCheck?: { registered: number; matched: number };

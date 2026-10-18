@@ -1,6 +1,7 @@
 import { escapeHtml as escape } from './html';
 import { classifyLicense, licenseCategory } from './license-categories';
 import type { LicenseCategory } from './license-categories';
+import type { PhotoStatus } from './scene-photos';
 
 export const SCENE_DATA_LABELS = {
   images: 'Images', cameras: 'Cameras', point_cloud: 'Point cloud', splats: 'Splats', masks: 'Masks', meshes: 'Meshes', geometry: '3D models',
@@ -116,4 +117,12 @@ export function sceneThumbnailCreditHtml(thumbnail: SceneThumbnail): string {
   const license = thumbnail.license === 'pd' ? 'Public domain' : thumbnail.license;
   const terms = thumbnail.licenseUrl ? `<a href="${escape(thumbnail.licenseUrl)}" rel="noreferrer">${escape(license)}</a>` : escape(license);
   return `${credit} · ${terms}`;
+}
+
+export function scenePlaceholderHtml(entry: { title: string; photoStatus?: PhotoStatus }): string {
+  const missing = entry.photoStatus === 'not_included' || entry.photoStatus === 'not_found';
+  const label = missing ? 'No photo' : 'No preview';
+  return `<figure class="dataset-preview dataset-preview-placeholder" role="img" aria-label="${escape(`${label}: ${entry.title}`)}">`
+    + '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="26" height="22" rx="2"/><circle cx="11" cy="12" r="2"/><path d="m4 24 8-8 6 6 4-4 7 7"/></svg>'
+    + `<span>${label}</span></figure>`;
 }

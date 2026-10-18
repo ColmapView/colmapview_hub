@@ -27,7 +27,7 @@ def photo_scene_reviews(catalog, policy):
                     or not audit.get('policy') or not scene.get('files') or audit.get('listingComplete') is not True):
                 raise ValueError('Photo evidence requires a complete pinned inventory, scope and status')
             if any(not isinstance(audit.get(field, ''), str) for field in
-                   ('summary', 'checkedAt', 'policy', 'sceneRoot', 'policyNote', 'mediaScope', 'photoCollection', 'mappingFile', 'samplePath')):
+                   ('summary', 'checkedAt', 'policy', 'sceneRoot', 'policyNote', 'mediaScope', 'photoCollection', 'mappingFile', 'associationFile', 'samplePath')):
                 raise ValueError('Photo descriptions and source paths must be strings')
             if status in SAMPLE_STATES and (not audit.get('samplePath') or audit.get('sampleBrowserRead') is not True
                                            or audit.get('samplePixels') not in ('decoded', 'deferred')):

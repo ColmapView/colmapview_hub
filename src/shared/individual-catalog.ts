@@ -23,7 +23,8 @@ export interface IndividualIndex {
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
   sceneCompatibility?: { status: 'native_headers_checked'; revision: string; cameraRecordChecked: boolean; poseRecordChecked: boolean;
-    cameras: number | null; images: number | null; points: number | null };
+    cameras: number | null; images: number | null; points: number | null;
+    countAudit?: { method: 'viewer_native_text_parse'; checkedAt: string; viewerCommit: string } };
   sceneValidation?: { status: 'passed'; revision: string; cameras: number; images: number; points: number;
     photoCount: number; export: 'colmap_images'; exportSha256: string } };
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
@@ -145,6 +146,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ...(proof.photoAudit.mediaScope !== undefined ? [{ label: 'Required photo scope', value: proof.photoAudit.mediaScope || '(repository root)' }] : []),
         ...(proof.photoAudit.photoCollection ? [{ label: 'Photo collection', value: proof.photoAudit.photoCollection }] : []),
         ...(proof.photoAudit.mappingFile ? [{ label: 'Image-name mapping', value: proof.photoAudit.mappingFile, url: file(proof.photoAudit.mappingFile) }] : []),
+        ...(proof.photoAudit.associationFile ? [{ label: 'Photo association manifest', value: proof.photoAudit.associationFile, url: file(proof.photoAudit.associationFile) }] : []),
         ...(proof.photoAudit.mappingCheck ? [{ label: 'Listed mapping targets', value: `${proof.photoAudit.mappingCheck.matched}/${proof.photoAudit.mappingCheck.entries}. Mapping coverage is separate from checking every registered name.` }] : []),
         ...(proof.photoAudit.nameCheck ? [{ label: 'Registered photo names matched', value: `${proof.photoAudit.nameCheck.matched}/${proof.photoAudit.nameCheck.registered} through the current loader; photograph bytes and complete export checked separately.` }] : []),
         ...(proof.photoAudit.proposedNameCheck ? [{ label: 'Photo names matched with proposed scope', value: `${proof.photoAudit.proposedNameCheck.matched}/${proof.photoAudit.proposedNameCheck.registered}. This media configuration is not applied by the current scene link.` }] : []),
@@ -158,6 +160,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
       ...(proof?.sceneCompatibility ? [{ label: 'Native layout check', value: proof.scope },
         ...Object.entries({ 'Camera definitions': proof.sceneCompatibility.cameras, 'Registered pose records': proof.sceneCompatibility.images,
           '3D points': proof.sceneCompatibility.points }).filter(([, value]) => value !== null).map(([label, value]) => ({ label, value: String(value) }))] : []),
+      ...(proof?.sceneCompatibility?.countAudit ? [{ label: 'Scene statistics check', value: `Complete camera, pose and point files parsed with ColmapView’s native text readers on ${proof.sceneCompatibility.countAudit.checkedAt}. Photograph availability is checked separately.` }] : []),
       ...(proof?.sceneValidation ? [{ label: 'Verified original photographs', value: String(proof.sceneValidation.photoCount) },
         { label: 'Verified camera models', value: String(proof.sceneValidation.cameras) },
         { label: 'COLMAP + images export SHA-256', value: proof.sceneValidation.exportSha256 },

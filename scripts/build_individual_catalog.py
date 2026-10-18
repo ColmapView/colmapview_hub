@@ -228,7 +228,8 @@ def build(root=Path('.')):
     verified_bytes = (root / 'data/verified-scenes.json').read_bytes()
     verified_scenes = verified_scene_reviews(catalog, json.loads(verified_bytes))
     native_bytes = (root / 'data/native-layouts.json.gz').read_bytes()
-    native_scenes = native_scene_reviews(catalog, json.loads(gzip.decompress(native_bytes)))
+    native_policy = json.loads(gzip.decompress(native_bytes))
+    native_scenes = native_scene_reviews(catalog, native_policy)
     photo_bytes = (root / 'data/scene-photos.json.gz').read_bytes()
     photo_policy = json.loads(gzip.decompress(photo_bytes))
     photo_reviews = photo_scene_reviews(catalog, photo_policy)
@@ -386,7 +387,8 @@ def build(root=Path('.')):
                 'mappingFile': photo_audit.get('mappingFile', ''), 'companionArchive': photo_audit.get('archive', {}).get('path', ''),
                 'samplePhoto': photo_audit.get('samplePath', ''), 'registeredNamesChecked': photo_audit.get('nameCheck', {}).get('registered', ''),
                 'matchedPhotoNames': photo_audit.get('nameCheck', {}).get('matched', ''), 'checkedAt': photo_audit.get('checkedAt', ''),
-                'notes': photo_audit.get('summary', '') + ' ' + photo_audit.get('policyNote', '')})
+                'notes': photo_audit.get('summary', '') + ' ' + photo_audit.get('policyNote', ''),
+                'associationFile': photo_audit.get('associationFile', '')})
             for field, value in [('kind', kind_name), ('status', level), ('delivery', delivery), ('photos', photo_status),
                                  ('viewer', 'available' if proof and proof.get('viewerUrl') and not gated and not archive and not proof.get('opening') else '')]:
                 add_posting(facets[field], value, total)
@@ -445,7 +447,7 @@ def build(root=Path('.')):
             key = hashlib.sha256((field + ':' + value).encode()).hexdigest()[:16]
             write(f'facets/{key}.json', {'postings': encoded(ordinals)})
             facet_manifest[field][value] = {'file': key, 'count': len(ordinals)}
-    checked_at = max([registry['checkedAt'], photo_policy.get('checkedAt', ''), content_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
+    checked_at = max([registry['checkedAt'], native_policy.get('checkedAt', ''), photo_policy.get('checkedAt', ''), content_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
     manifest = {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'total': total,
                 'packSize': PACK_SIZE, 'sources': sources, 'facets': facet_manifest, 'kinds': dict(counts),
                 'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos), 'contents': dict(contents),

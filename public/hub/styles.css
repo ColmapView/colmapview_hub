@@ -101,6 +101,8 @@ input::placeholder { color: var(--text-muted); }
 .dataset-card p { margin: 0; }
 .dataset-thumbnail { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 4px; background: var(--bg-tertiary); }
 .dataset-preview { margin: 0; max-width: 320px; }
+.dataset-preview-placeholder { display: grid; place-content: center; gap: var(--sp-2); width: 100%; aspect-ratio: 1; border-radius: 4px; background: var(--bg-tertiary); color: var(--text-muted); text-align: center; font-size: 12px; }
+.dataset-preview-placeholder svg { width: 32px; height: 32px; margin-inline: auto; }
 .dataset-preview figcaption { margin-top: 4px; color: var(--text-secondary); font-size: 10px; line-height: 1.4; }
 .dataset-preview figcaption a { position: relative; z-index: 2; }
 .dataset-contents { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0; list-style: none; }

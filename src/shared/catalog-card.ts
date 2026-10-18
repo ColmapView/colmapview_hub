@@ -4,7 +4,7 @@ import { escapeHtml as escape } from './html';
 import { licenseCategory, LICENSE_CATEGORY_LABELS } from './license-categories';
 import { photoLabel } from './scene-photos';
 import { catalogCardTitle } from './catalog-title';
-import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml } from './scene-contents';
+import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
 
 export function catalogCardHtml(entry: CatalogSummary): string {
   const category = licenseCategory(entry);
@@ -22,7 +22,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     ...(entry.sceneStats ? [['Camera models', entry.sceneStats.cameraModels === null ? 'Unknown' : entry.sceneStats.cameraModels.toLocaleString('en-US')]] : []),
   ];
   return `<article class="card dataset-card" data-dataset-card data-entry-id="${escape(entry.id)}">`
-    + preview
+    + (preview || scenePlaceholderHtml(entry))
     + '<div class="dataset-card-heading"><div>'
     + `<h2><a class="dataset-open" href="${escape(catalogOpenUrl(entry))}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
     + `<p class="dataset-label">${escape(entry.dataset?.label || providerLabel(entry.provider))}</p></div>`

@@ -37,7 +37,7 @@ test('photo availability is displayed separately without changing model actions'
 test('photo path rules preserve the model URL and expose checked source paths', () => {
   const audit = { status: 'path_policy_required', checkedAt: '2026-10-17', listingComplete: true,
     summary: 'Photos need their explicit mapping.', policy: 'authoritative_json_mapping_required', sceneRoot: 'colmap/scene',
-    mediaScope: 'cache/scene/images', mappingFile: 'colmap/scene/mapping.json', mappingCheck: { entries: 297, matched: 297 },
+    mediaScope: 'cache/scene/images', mappingFile: 'colmap/scene/mapping.json', associationFile: 'colmap/scene/manifest.json', mappingCheck: { entries: 297, matched: 297 },
     samplePath: 'cache/scene/images/FRONT/00000000.png', sampleBrowserRead: true, samplePixels: 'decoded',
     policyNote: 'Keep the exact frame mapping; do not infer zero padding.' };
   const item = row(0, { 7: { ...nativePhotoProof('path_policy_required'), photoAudit: audit } });
@@ -49,6 +49,8 @@ test('photo path rules preserve the model URL and expose checked source paths', 
   assert.match(html, /cache\/scene\/images/);
   assert.match(html, /297\/297/);
   assert.match(html, /colmap\/scene\/mapping\.json/);
+  assert.match(html, /Photo association manifest/);
+  assert.match(html, /colmap\/scene\/manifest\.json/);
   assert.doesNotMatch(html, /Photos checked.*all original photos/s);
 });
 
@@ -168,6 +170,20 @@ test('a scene cannot inherit the collection thumbnail or its sibling asset list'
   assert.equal(entry.thumbnail, undefined);
   assert.equal(entry.availableData, undefined);
   assert.doesNotMatch(render.catalogCard(render.catalogSummary(entry)), /dataset-thumbnail|data-asset="splats"/);
+  assert.match(render.catalogCard(render.catalogSummary(entry)), /dataset-preview-placeholder.*No photo:/);
+});
+
+test('placeholder cards distinguish absent photos from unavailable previews', () => {
+  const summary = render.individualSummary(row(), source);
+  for (const photoStatus of ['not_found', 'not_included', 'review_required', 'sample_checked', 'path_policy_required', undefined]) {
+    const html = render.catalogCard({ ...summary, photoStatus });
+    assert.match(html, /dataset-preview-placeholder/);
+    assert.ok(html.includes(['not_found', 'not_included'].includes(photoStatus) ? '<span>No photo</span>' : '<span>No preview</span>'));
+    assert.doesNotMatch(html, /<img|dataset-photo-credit|data-asset="images"/);
+  }
+  const licensed = { ...summary, photoStatus: 'sample_checked', thumbnail: squareThumbnail };
+  assert.doesNotMatch(render.catalogCard(licensed), /dataset-preview-placeholder/);
+  assert.match(render.catalogCard({ ...licensed, license: 'cc-by-nc-4.0' }), /dataset-preview-placeholder/);
 });
 const parent = { id: 'hf-owner-dataset-123456abcdef', sourceId: 'hf:owner/dataset', title: 'owner/dataset', provider: 'huggingface',
   sourceUrl: 'https://huggingface.co/datasets/owner/dataset', dataUrl: 'https://huggingface.co/datasets/owner/dataset/tree/abc/first/sparse/0',

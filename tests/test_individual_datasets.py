@@ -103,6 +103,32 @@ class IndividualDatasetsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'required file paths changed'):
             native_evidence(entry, row, 'a' * 40, review, hf_url)
 
+    def test_complete_text_counts_require_exact_files_and_do_not_promote_photo_evidence(self):
+        entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface', 'access': 'public',
+                 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
+        files = {role: f'scene/sparse/0/{name}.txt' for role, name in
+                 [('cameras', 'cameras'), ('images', 'images'), ('points3d', 'points3D')]}
+        counts = {'cameras': 1, 'images': 737, 'points3d': 0}
+        audit = {'method': 'viewer_native_text_parse', 'checkedAt': '2026-10-18', 'viewerCommit': 'b' * 40,
+                 'files': {role: {'path': path, 'count': counts[role], 'bytes': 100, 'sha256': 'c' * 64}
+                           for role, path in files.items()}}
+        model = ['scene/sparse/0', files, 1, 737, 0, 'not_checked', '2026-10-17',
+                 {'cameraRecordChecked': True, 'poseRecordChecked': True, 'countAudit': audit}]
+        policy = {'schemaVersion': 1, 'sources': [{'sourceId': entry['sourceId'], 'revision': 'a' * 40, 'models': [model]}]}
+        review = next(iter(native_scene_reviews({'entries': [entry]}, policy).values()))
+        proof, _ = native_evidence(entry, ['colmap', model[0], files, None], 'a' * 40, review, hf_url)
+        self.assertEqual(proof['sceneCompatibility']['images'], 737)
+        self.assertEqual(proof['sceneCompatibility']['points'], 0)
+        self.assertEqual(proof['sceneCompatibility']['countAudit'], audit)
+        self.assertEqual(proof['photoAvailability'], 'not_checked')
+        self.assertNotIn('sceneValidation', proof)
+        for role, field, value in [('images', 'count', 736), ('cameras', 'count', True),
+                                   ('points3d', 'path', 'other/points3D.txt'), ('points3d', 'sha256', 'bad')]:
+            invalid = json.loads(json.dumps(policy))
+            invalid['sources'][0]['models'][0][7]['countAudit']['files'][role][field] = value
+            with self.assertRaises(ValueError):
+                native_scene_reviews({'entries': [entry]}, invalid)
+
     def test_verified_camera_json_scene_can_export_without_a_point_cloud(self):
         entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface',
                  'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
