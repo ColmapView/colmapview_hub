@@ -35,7 +35,7 @@ npm run test:browser
 
 | Command | Scope |
 | --- | --- |
-| `npm run check:code` | TypeScript, JavaScript/TypeScript lint and pinned stylesheet |
+| `npm run check:code` | Worker, client and browser-test TypeScript; JavaScript/TypeScript lint; pinned stylesheet |
 | `npm run test:catalog` | JavaScript catalog policy, rendering, search and count regressions |
 | `npm run test:python` | Python scene projection and evidence validation |
 | `npm test` | Worker routes, R2 records and real SQLite Durable Object runtime |
@@ -43,6 +43,8 @@ npm run test:browser
 | `npm run test:browser` | Catalog, share-card, management, theme and static asset flows |
 
 The browser suite starts its own isolated local server and storage. Viewer frames are intercepted so the suite checks the integration contract without rendering complete remote datasets. Tests use public fixtures; keep raw audit receipts and runtime state under `.tmp/`.
+
+`typecheck` covers the Worker and runtime tests, the browser client, and the Playwright tests and configuration in separate TypeScript projects. The browser-test project extends the client configuration with Node types for the test runner.
 
 ## Dependency boundaries
 
@@ -52,7 +54,7 @@ The existing application layers have distinct jobs:
 - `src/worker/` owns HTTP routing, validation, R2 records and lookup protection. It may import shared code.
 - `src/shared/` owns models, pure catalog rules and HTML string helpers. It must work in both runtimes.
 
-ESLint rejects imports between client and Worker modules and server platform imports in shared code. Shared modules compile under both TypeScript configurations. Avoid adding barrel files or new abstractions solely to hide those boundaries.
+ESLint rejects imports between client and Worker modules and server platform imports in shared code. Shared modules compile under the Worker and client configurations. Avoid adding barrel files or new abstractions solely to hide those boundaries.
 
 Tooling is organized by task:
 
