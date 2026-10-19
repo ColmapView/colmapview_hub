@@ -68,6 +68,16 @@ test('duplicate response pages never append repeated cards', async ({ page }) =>
 
 for (const width of [1280, 390]) test(`returning from a viewer link restores the loaded feed and visible scene at ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 720 });
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('feed-return-navigation-fixture') !== '1') return;
+    const observer = new MutationObserver(() => {
+      if (document.querySelectorAll('.dataset-card').length !== 48) return;
+      observer.disconnect();
+      // Exercise a traversal event before restored layout reaches its first frame.
+      dispatchEvent(new PopStateEvent('popstate'));
+    });
+    observer.observe(document, { childList: true, subtree: true });
+  });
   await page.route('**/hub/datasets/open/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Viewer navigation fixture</h1>' }));
   await page.goto('/hub/datasets/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
@@ -80,6 +90,7 @@ for (const width of [1280, 390]) test(`returning from a viewer link restores the
   await expect(page.getByRole('heading', { name: 'Viewer navigation fixture' })).toBeVisible();
   const anchor = await page.evaluate(() => JSON.parse(sessionStorage.getItem('colmapview-scene-feed-v1') || '[]')[0]?.anchor);
   expect(anchor.id).toBe(identity);
+  await page.evaluate(() => sessionStorage.setItem('feed-return-navigation-fixture', '1'));
   await page.goBack();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
   expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(ids);

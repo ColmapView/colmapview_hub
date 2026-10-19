@@ -26,6 +26,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   let timer: ReturnType<typeof setTimeout> | undefined;
   let sequence = 0;
   let stopRestoring: (() => void) | undefined;
+  let restoring = false;
   let departing: HTMLElement | null = null;
   // The feed owns its return anchor; native scrollY restoration uses stale
   // estimated heights when content-visibility has deferred offscreen cards.
@@ -59,7 +60,9 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const key = () => location.pathname + location.search;
   let viewKey = key();
   const remember = () => {
-    if (!entries.length || entries.length !== loaded) return;
+    // popstate can arrive before the first restored frame. Do not replace the
+    // saved anchor with the new document's temporary position at the top.
+    if (restoring || !entries.length || entries.length !== loaded) return;
     const cards = [...results.querySelectorAll<HTMLElement>('[data-entry-id]')];
     const focused = document.activeElement?.closest<HTMLElement>('[data-entry-id]');
     const preferred = departing?.isConnected ? departing : focused;
@@ -92,6 +95,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     pending?.abort();
     const request = ++sequence;
     stopRestoring?.();
+    restoring = true;
     departing = null;
     committed = new URLSearchParams(saved.query);
     viewKey = key();
@@ -107,6 +111,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     busy = true;
     stopRestoring = restoreFeedPosition(results, saved.anchor, () => {
       if (request !== sequence) return;
+      restoring = false;
       busy = false;
       requestAnimationFrame(() => continueAutomatic());
     });
@@ -125,6 +130,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     pending = controller;
     const request = ++sequence;
     stopRestoring?.();
+    restoring = false;
     busy = true;
     if (!options.append) canAppend = false;
     more.disabled = true;
@@ -234,6 +240,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   };
   const search = (history: CatalogHistoryMode = 'push') => { clearTimeout(timer); void load(query(), { history }); };
   form.addEventListener('input', event => {
+    stopRestoring?.();
     clearTimeout(timer);
     pending?.abort();
     sequence++;
