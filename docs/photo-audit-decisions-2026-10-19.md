@@ -47,3 +47,11 @@ validated their original hashes and preserved every prior count. The separate
 Dynamic Maps file returns 896. These receipts are retained in
 [`native-count-replay.json.gz`](../data/native-count-replay.json.gz); the source
 files were not fetched again.
+
+Viewer 0.19.2 and Hub 0.8.3 are published. The release CI passed 317 viewer
+browser cases and 48 Hub browser cases. Live checks confirmed the catalog
+generation, 5,544 reusable decisions, 32 unresolved associations, manifest
+hashes/CORS/ETags, scene detail links and redirects, and the 320x234 full-frame
+preview. The [publication receipt](../data/photo-release-verification-2026-10-19.json)
+records the deployed commits and Worker version. These confirmed publication
+checks do not need another run for the same deployed artifacts.

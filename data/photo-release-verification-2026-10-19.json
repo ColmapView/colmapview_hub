@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-19T20:16:38.750Z",
+  "viewer": {
+    "ready": true,
+    "version": "0.19.2",
+    "sourceSha": "eb9b935b4a33d31539095948da24aa97741842b5",
+    "profile": "custom",
+    "checkedAt": "2026-10-19T20:14:20.886Z"
+  },
+  "hub": {
+    "version": "0.8.3",
+    "sourceCommit": "93f0e0529378807e4f33443f33c012543940bb6d",
+    "workerVersionId": "9358eccd-5a05-4e85-a15b-073b093ebcaf",
+    "generation": "5aa2e6b325eb22376ec0eb684324bbb979f0b48dc7b39ee344e8918c4904912a",
+    "scenes": 5576,
+    "repeatAudit": {
+      "skip_confirmed_facts": 5544,
+      "review_required": 32
+    },
+    "stylesEtag": "W/\"6098de214dddfe938d193204bee9a9c9\"",
+    "archiveScenes": 537,
+    "manifests": [
+      {
+        "id": "data-72628b131ed7a9985df55125",
+        "sha256": "48131fb88bd3ef61c95adbf22701346a820b55ef2d68a998209e9267504c9a5e",
+        "version": 2,
+        "cors": true,
+        "etag": "\"d08116f88b0321fe730336b526baf98d\"",
+        "detail": true,
+        "launchRedirect": true
+      },
+      {
+        "id": "data-a0abe901a34f3e442876a27e",
+        "sha256": "12a7d280a9f9214f114518de5495eaf62eb7eb234a0a95b1a618afcba9b6faa9",
+        "version": 2,
+        "cors": true,
+        "etag": "\"f2919d9298d0aa5eced72212bcad363b\"",
+        "detail": true,
+        "launchRedirect": true
+      },
+      {
+        "id": "data-053b8232e1af4b630ba067b2",
+        "sha256": "96cffc2ef510e29f5c7c0c517b8058e3cf2393a1897a55d04b682cc5541a696d",
+        "version": 1,
+        "cors": true,
+        "etag": "\"144d62590ba3b7fa0bdff28cb42ccdf3\"",
+        "detail": true,
+        "launchRedirect": true
+      },
+      {
+        "id": "data-c72f58aca8259819db8ab767",
+        "sha256": "9f0a06aa2a2769ae849d69e1501032b039bc2ce1fa48957b4894e4a2e5ed5ee5",
+        "version": 1,
+        "cors": true,
+        "etag": "\"852055d985b4baeae81a45a8842f5122\"",
+        "detail": true,
+        "launchRedirect": true
+      }
+    ],
+    "checkedAt": "2026-10-19T20:16:38.750Z",
+    "preview": {
+      "width": 320,
+      "height": 234,
+      "displayWidth": 265,
+      "displayHeight": 193.78125
+    }
+  },
+  "ci": {
+    "viewerRelease": "https://github.com/ColmapView/Colmapview.github.io/actions/runs/39311849382",
+    "hub": "https://github.com/ColmapView/colmapview_hub/actions/runs/39316159506",
+    "hubBrowserCases": 48,
+    "viewerBrowserCases": 317
+  },
+  "offlineRegression": {
+    "generation": "5aa2e6b325eb22376ec0eb684324bbb979f0b48dc7b39ee344e8918c4904912a",
+    "scenes": 5576,
+    "launchesAndSummariesChecked": 5576,
+    "preservedNativeCounts": 5575,
+    "preservedPhotoRoutes": 1246,
+    "preservedThumbnails": 2266,
+    "preservedFullExports": 3,
+    "oldManifestUrlsPreserved": 1501,
+    "manifestsValidatedWithViewer": 2018,
+    "companionArchiveRoutes": 516,
+    "sourceNetworkReads": 0,
+    "checkedAt": "2026-10-19T19:46:58.557Z"
+  },
+  "scope": "Live publication, four representative manifest hashes/CORS/ETags/detail links/redirects, audit totals and preview layout. Original source model/gallery checks retain their separate runtime receipts; confirmed source datasets were not rescanned for publication."
+}
