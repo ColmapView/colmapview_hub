@@ -8,7 +8,9 @@ import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
 import { individualRoute } from './individual-routes';
+import { accountRoute } from './auth/routes';
 export { LookupGuard } from './guard';
+export { AccountSession } from './auth/session';
 
 const UNAVAILABLE = 'The Hub is temporarily unavailable. Please try again.';
 type View = 'card' | 'preview' | 'manage';
@@ -279,6 +281,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, location
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    if (new URL(request.url).pathname.startsWith('/auth/')) return accountRoute(request, env);
     const arrived = Date.now();
     let location: HubLocation;
     try { location = hubLocation(env); }
