@@ -9,6 +9,7 @@
 - Record 5,544 reusable photo decisions and queue 32 unresolved associations. Key reuse to the exact source revision/content snapshot and selected files; expose the scope and next action in the audit CSV.
 - Confirm the absent TwinWorld test photographs and video-only delivery separately from path-mapping failures. Preserve existing model selections, original-photo exports and preview bytes.
 - Keep the streaming statistics audit consistent with camera-only text parsing; replay 232 cached pose files without new source requests or changes to their recorded counts.
+- Display full-frame preview thumbnails at their intrinsic aspect ratio.
 
 ## 0.8.2 — 2026-10-19
 

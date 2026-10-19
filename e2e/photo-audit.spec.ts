@@ -51,6 +51,21 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   expect(providerRequests).toEqual([]);
 });
 
+test('Dynamic Maps keeps all pose statistics and displays the complete photograph frame', async ({ page }) => {
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:dynamic-maps/hard-intersection-multimodal-sample');
+  const result = await (await page.request.get('/hub/datasets/api/entries?dataset=' + source.id)).json();
+  expect(result.total).toBe(1);
+  expect(result.entries[0].sceneStats).toMatchObject({ cameraPoses: 896, cameraModels: 32, points: 0 });
+  await page.goto('/hub/datasets/?dataset=' + source.id);
+  const thumbnail = page.locator('.dataset-thumbnail');
+  await expect(thumbnail).toBeVisible();
+  await expect(thumbnail).toHaveJSProperty('naturalWidth', 320);
+  await expect(thumbnail).toHaveJSProperty('naturalHeight', 234);
+  const box = (await thumbnail.boundingBox())!;
+  expect(Math.abs(box.width / box.height - 320 / 234)).toBeLessThan(0.01);
+});
+
 test('companion ZIP requirements remain explicit and Waymo mappings launch through pinned photo manifests', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     sources: { id: string; sourceId: string }[] };

@@ -99,7 +99,7 @@ input::placeholder { color: var(--text-muted); }
 .dataset-card { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; position: relative; padding: var(--sp-4); overflow-wrap: anywhere; }
 .dataset-card:hover, .dataset-card:focus-within { border-color: var(--border-light); background: var(--bg-tertiary); }
 .dataset-card p { margin: 0; }
-.dataset-thumbnail { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 4px; background: var(--bg-tertiary); }
+.dataset-thumbnail { display: block; width: 100%; height: auto; border-radius: 4px; background: var(--bg-tertiary); }
 .dataset-preview { margin: 0; max-width: 320px; }
 .dataset-preview-placeholder { display: grid; place-content: center; gap: var(--sp-2); width: 100%; aspect-ratio: 1; border-radius: 4px; background: var(--bg-tertiary); color: var(--text-muted); text-align: center; font-size: 12px; }
 .dataset-preview-placeholder svg { width: 32px; height: 32px; margin-inline: auto; }
