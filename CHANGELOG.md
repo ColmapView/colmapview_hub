@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.9.0 — 2026-10-19
+
+- Add Discover, collection-balanced Random and New to Hub feeds with stable seeded pagination and filter-preserving shuffle.
+- Preserve model-only and camera-only eligibility; rank existing model evidence, keeping unknown performance and popularity neutral.
+- Record first-catalogued dates independently of audit dates and preserve them across refreshes and reappearing scene identities.
+- Add a vertical scene stream with automatic loading, explicit retry/end states, data-type filtering and bounded return-navigation restoration.
+- Retain uncropped previews, statistics, metadata panels and server-rendered pagination without JavaScript.
+
 ## 0.8.3 — 2026-10-19
 
 - Attach 478 MegaUnScene ZIPs and 38 calibrated Fastmap TARs to their exact native models through viewer 0.19.2 companion manifests, retaining original source receipts and export tiers.

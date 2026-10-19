@@ -1,8 +1,9 @@
-import { INDIVIDUAL_PAGE_SIZE, individualEntry, individualSummary, individualTokens, matchesIndividualDataset } from '../shared/individual-catalog';
+import { INDIVIDUAL_PAGE_SIZE, canOpenIndividual, individualEntry, individualSummary, individualTokens, matchesIndividualDataset } from '../shared/individual-catalog';
 import type { IndividualIndex, IndividualPage, IndividualRecord, IndividualSource } from '../shared/individual-catalog';
 import type { CatalogEntry } from '../shared/catalog';
 import { licenseCategory } from '../shared/license-categories';
 import { InputError } from './validation';
+import { FEED_MODES, defaultFeedSeed, discoveryOrder, feedMode, isDiscoveryAsset } from '../shared/discovery';
 
 const ROOT = '/hub/datasets/individual/';
 const MAX_ASSET_BYTES = 5 * 1024 * 1024;
@@ -11,7 +12,7 @@ type Assets = Pick<Fetcher, 'fetch'>;
 /** Only operator-built, fixed same-origin asset keys are read. Submitted data URLs
  * never enter this reader, and the private share-link bucket is not involved. */
 export async function individualAsset<T>(assets: Assets, origin: string, path: string): Promise<T | null> {
-  if (!/^(?:index\.json|(?:packs\/\d+|ids\/[a-f0-9]{2}|tokens\/[a-f0-9]{3}|facets\/[a-f0-9]{16}|sources\/[a-z0-9-]+-[a-f0-9]{12})\.json)$/.test(path)) throw new Error('Invalid built catalog key');
+  if (!/^(?:(?:index|feed)\.json|(?:packs\/\d+|ids\/[a-f0-9]{2}|tokens\/[a-f0-9]{3}|facets\/[a-f0-9]{16}|sources\/[a-z0-9-]+-[a-f0-9]{12})\.json)$/.test(path)) throw new Error('Invalid built catalog key');
   const response = await assets.fetch(new Request(origin + ROOT + path));
   if (response.status === 404) return null;
   if (!response.ok || !response.body) throw new Error('Catalog metadata unavailable');
@@ -37,7 +38,8 @@ export async function individualIndex(assets: Assets, origin: string): Promise<I
   const index = await individualAsset<IndividualIndex>(assets, origin, 'index.json');
   if (!index || index.schemaVersion !== 1 || !Number.isSafeInteger(index.total) || index.total < 1 || index.total > 10000000
     || !Number.isSafeInteger(index.packSize) || index.packSize < 1 || index.packSize > 2048
-    || !Array.isArray(index.sources) || index.sources.length > 10000) throw new Error('Invalid individual catalog index');
+    || !Array.isArray(index.sources) || index.sources.length > 10000
+    || index.discovery && (index.discovery.schemaVersion !== 1 || index.discovery.file !== 'feed.json')) throw new Error('Invalid individual catalog index');
   return index;
 }
 
@@ -73,7 +75,7 @@ export function intersectPostings(left: Uint32Array, right: Uint32Array): Uint32
   return result.subarray(0, count);
 }
 
-export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'license', 'licenseCategory', 'kind', 'status', 'delivery', 'viewer', 'photos', 'page'] as const;
+export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'license', 'licenseCategory', 'kind', 'status', 'delivery', 'viewer', 'photos', 'data', 'sort', 'seed', 'page'] as const;
 export function individualFilters(input: URLSearchParams): URLSearchParams {
   const filters = new URLSearchParams();
   for (const key of INDIVIDUAL_FILTERS) {
@@ -84,6 +86,8 @@ export function individualFilters(input: URLSearchParams): URLSearchParams {
   }
   if (individualTokens(filters.get('q') || '').length > 6) throw new InputError('Use up to six search words.');
   if (filters.has('page') && (!/^\d{1,7}$/.test(filters.get('page')!) || Number(filters.get('page')) < 1)) throw new InputError('Invalid dataset page.');
+  if (filters.has('sort') && !FEED_MODES.some(mode => mode === filters.get('sort'))) throw new InputError('Invalid dataset feed.');
+  if (filters.has('seed') && !/^[a-f0-9]{8,32}$/.test(filters.get('seed')!)) throw new InputError('Invalid feed seed.');
   return filters;
 }
 
@@ -114,12 +118,13 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
     const encoded = mapping && Object.hasOwn(mapping, term) ? mapping[term] : undefined;
     return encoded === undefined ? new Uint32Array() : decodePostings(encoded, index.total);
   });
-  for (const field of ['kind', 'status', 'delivery', 'viewer', 'photos']) {
+  const feed = index.discovery ? { mode: feedMode(filters.get('sort')), seed: filters.get('seed') || defaultFeedSeed() } : undefined;
+  for (const field of ['kind', 'status', 'delivery', 'viewer', 'photos', 'data']) {
     const value = filters.get(field);
     if (!value) continue;
     const values = index.facets[field];
     const facet = values && Object.hasOwn(values, value) ? values[value] : undefined;
-    if (!facet) return { entries: [], total: 0, page: 1, pages: 1, generation: index.generation };
+    if (!facet) return { entries: [], total: 0, page: 1, pages: 1, generation: index.generation, ...(feed ? { feed } : {}) };
     const encoded = await individualAsset<{ postings: string }>(assets, origin, `facets/${facet.file}.json`);
     if (!encoded) throw new Error('Catalog facet missing');
     postings.push(decodePostings(encoded.postings, index.total));
@@ -132,10 +137,12 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
     && (!filters.get('licenseCategory') || licenseCategory(source) === filters.get('licenseCategory')) && source.count);
   const requested = Number(filters.get('page') || 1);
   let total = 0;
-  const selected: number[] = [];
+  let selected: number[] = [];
+  const matched: number[] = [];
   const requestedStart = (requested - 1) * INDIVIDUAL_PAGE_SIZE;
   if (!candidates) {
     for (const source of sources) {
+      if (feed) for (let offset = 0; offset < source.count; offset++) matched.push(source.start + offset);
       const start = Math.max(0, requestedStart - total);
       const end = Math.min(source.count, requestedStart + INDIVIDUAL_PAGE_SIZE - total);
       for (let offset = start; offset < end; offset++) selected.push(source.start + offset);
@@ -148,14 +155,21 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
       const source = sources[sourcePosition];
       if (!source) break;
       if (ordinal < source.start) continue;
+      if (feed) matched.push(ordinal);
       if (total >= requestedStart && selected.length < INDIVIDUAL_PAGE_SIZE) selected.push(ordinal);
       total++;
     }
   }
   const pages = Math.max(1, Math.ceil(total / INDIVIDUAL_PAGE_SIZE));
   if (requested > pages) throw new InputError('Dataset page does not exist.', 404);
+  if (feed && total) {
+    const asset = await individualAsset<unknown>(assets, origin, 'feed.json');
+    if (!isDiscoveryAsset(asset, index)) throw new Error('Discovery metadata does not match the current catalog');
+    selected = discoveryOrder(asset, sources, matched, feed, requestedStart + INDIVIDUAL_PAGE_SIZE).slice(requestedStart);
+  }
   const rows = await individualRecords(assets, origin, index, selected);
-  return { entries: rows.map(row => individualSummary(row, index.sources[row[1]])), total, page: requested, pages, generation: index.generation };
+  if (feed && rows.some(row => !canOpenIndividual(row, index.sources[row[1]]))) throw new Error('Discovery scene no longer qualifies for loading');
+  return { entries: rows.map(row => individualSummary(row, index.sources[row[1]])), total, page: requested, pages, generation: index.generation, ...(feed ? { feed } : {}) };
 }
 
 export async function readIndividual(assets: Assets, origin: string, index: IndividualIndex, id: string): Promise<CatalogEntry | null> {

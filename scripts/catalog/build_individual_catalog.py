@@ -25,6 +25,7 @@ from .scene_manifests import apply_manifest_evidence, manifest_assets, manifest_
 from .photo_routing import apply_routing, routing_asset, routing_coverage, routing_failures, routing_reviews
 from .archive_routing import archive_reviews, archive_asset, apply_archive_routing
 from .photo_decisions import decision_records, decision_coverage
+from .scene_discovery import HISTORY, load_history, discovery_row
 
 # A normal results page must not parse thousands of unrelated scene records.
 # Keeping packs at page size also bounds filtered searches spanning many packs.
@@ -225,6 +226,9 @@ def item_evidence(entry, row, revision, result):
 
 
 def build(root=Path('.')):
+    history_path = root / HISTORY
+    history_bytes = history_path.read_bytes() if history_path.exists() else b''
+    history = load_history(history_bytes)['firstSeen']
     catalog = read(root / 'data/catalog.json')
     registry_bytes = (root / 'data/individual-datasets.json').read_bytes()
     registry = json.loads(registry_bytes)
@@ -304,13 +308,15 @@ def build(root=Path('.')):
                                 + Path(__file__).with_name('photo_routing.py').read_bytes()
                                 + archive_bytes + decision_bytes
                                 + Path(__file__).with_name('archive_routing.py').read_bytes()
-                                + Path(__file__).with_name('photo_decisions.py').read_bytes()).hexdigest()
+                                + Path(__file__).with_name('photo_decisions.py').read_bytes()
+                                + history_bytes + Path(__file__).with_name('scene_discovery.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
     if (output / 'manifests').is_symlink():
         raise ValueError('Manifest output must be a regular generated directory')
     current = output / 'index.json'
     preview_files = {review['thumbnail']['file'] for review in content_reviews.values() if review.get('thumbnail')}
     if (current.exists() and read(current).get('generation') == generation
+            and (output / 'feed.json').is_file() and read(output / 'feed.json').get('generation') == generation
             and all((output / 'thumbnails' / name).is_file()
                     and hashlib.sha256((output / 'thumbnails' / name).read_bytes()).hexdigest() + '.jpg' == name for name in preview_files)
             and all((output / 'manifests' / name).is_file() and not (output / 'manifests' / name).is_symlink()
@@ -351,6 +357,7 @@ def build(root=Path('.')):
     contents = Counter()
     thumbnails = set()
     thumbnail_scenes = 0
+    discovery = []
     photo_rows = []
     routing_counts = Counter()
     decision_counts = Counter()
@@ -466,6 +473,9 @@ def build(root=Path('.')):
             level = 'Access required' if gated else proof.get('statusLabel', 'Files listed; load not checked') if proof else 'Extraction required; load unverified' if archive else 'Files listed; load not checked'
             delivery = 'gated' if gated else proof.get('delivery', 'not_tested') if proof else 'not_tested'
             item = [item_id, source_index, kind, path, format_name, archive, files, proof]
+            discovery.append(discovery_row(proof, history.get(item_id)))
+            for component in proof['availableData']:
+                add_posting(facets['data'], component, total)
             if kind != 'scene' and (kind, path, archive) in scene_details:
                 item.append(scene_details[(kind, path, archive)])
             pack.append(item)
@@ -560,9 +570,11 @@ def build(root=Path('.')):
                 'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos), 'contents': dict(contents),
                 'thumbnails': thumbnail_scenes,
                 'photoRouting': dict(routing_counts),
+                'discovery': {'schemaVersion': 1, 'file': 'feed.json'},
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
                 'unit': 'named_scene',
                 'scope': 'Named scenes with checked native camera/model layouts or stronger complete-scene evidence. Original photographs may be present, partial, absent or unverified. Full rendering and export checks are separate evidence tiers. Standalone geometry, inaccessible and known unsupported cases are excluded.'}
+    write('feed.json', {'schemaVersion': 1, 'generation': generation, 'rows': discovery})
     write('index.json', manifest)
     write('verified-scenes.json', {'schemaVersion': 1, 'generation': generation, 'scope': manifest['scope'], 'scenes': published_reviews})
     write('photo-audit.json', {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'scenes': total,

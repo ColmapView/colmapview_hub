@@ -1,5 +1,146 @@
 import { expect, test } from '@playwright/test';
 
+test('feed modes are seeded, paginated and balanced across source collections', async ({ page }) => {
+  for (const sort of ['discover', 'random', 'new']) {
+    const firstUrl = `/hub/datasets/api/entries?sort=${sort}&seed=12345678`;
+    const first = await (await page.request.get(firstUrl)).json();
+    const repeat = await (await page.request.get(firstUrl)).json();
+    const second = await (await page.request.get(firstUrl + '&page=2')).json();
+    expect(first.feed).toEqual({ mode: sort, seed: '12345678' });
+    expect(first.entries.map((entry: { id: string }) => entry.id)).toEqual(repeat.entries.map((entry: { id: string }) => entry.id));
+    const ids = [...first.entries, ...second.entries].map((entry: { id: string }) => entry.id);
+    expect(new Set(ids).size).toBe(48);
+    expect(new Set(first.entries.slice(0, 20).map((entry: { dataset: { id: string } }) => entry.dataset.id)).size).toBeGreaterThanOrEqual(10);
+    expect(first.entries.every((entry: { hasViewer: boolean }) => entry.hasViewer)).toBe(true);
+  }
+  const cameras = await (await page.request.get('/hub/datasets/api/entries?kind=Cameras+and+poses&data=cameras&sort=random&seed=12345678')).json();
+  expect(cameras.total).toBeGreaterThan(0);
+  expect(cameras.entries.every((entry: { sceneStats: { points: number } }) => entry.sceneStats.points === 0)).toBe(true);
+});
+
+test('scrolling appends scenes without duplicates and shuffle preserves active filters', async ({ page }) => {
+  await page.goto('/hub/datasets/?sort=random&seed=12345678&kind=COLMAP+reconstruction');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  const first = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
+  await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  const all = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
+  expect(all.slice(0, 24)).toEqual(first);
+  expect(new Set(all).size).toBe(48);
+  await page.locator('#catalog-shuffle').click();
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  await expect(page.getByLabel('Type', { exact: true })).toHaveValue('COLMAP reconstruction');
+  await expect(page.getByLabel('Feed', { exact: true })).toHaveValue('random');
+  expect(new URL(page.url()).searchParams.get('seed')).not.toBe('12345678');
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).not.toEqual(first);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+});
+
+test('failed automatic loading pauses until an explicit retry', async ({ page }) => {
+  let attempts = 0;
+  await page.route('**/hub/datasets/api/entries?**', async route => {
+    if (new URL(route.request().url()).searchParams.get('page') === '2' && ++attempts === 1) {
+      await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Temporary failure' }) });
+    } else await route.continue();
+  });
+  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  await expect(page.locator('#catalog-status')).toContainText('Could not load more');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  await page.waitForTimeout(300);
+  expect(attempts).toBe(1);
+  await page.getByRole('button', { name: 'Retry loading more', exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+});
+
+test('duplicate response pages never append repeated cards', async ({ page }) => {
+  const original = await (await page.request.get('/hub/datasets/api/entries?sort=random&seed=12345678')).json();
+  await page.route('**/hub/datasets/api/entries?**', async route => {
+    if (new URL(route.request().url()).searchParams.get('page') === '2') {
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...original, page: 2 }) });
+    } else await route.continue();
+  });
+  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  await expect(page.locator('#catalog-status')).toContainText('catalog changed');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+});
+
+test('returning from a viewer link restores the loaded feed and visible scene', async ({ page }) => {
+  await page.route('**/hub/datasets/open/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Viewer navigation fixture</h1>' }));
+  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  const ids = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
+  const card = page.locator('.dataset-card').nth(30);
+  await card.scrollIntoViewIfNeeded();
+  const identity = await card.getAttribute('data-entry-id');
+  await card.locator('.dataset-open').click();
+  await expect(page.getByRole('heading', { name: 'Viewer navigation fixture' })).toBeVisible();
+  await page.goBack();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(ids);
+  await expect(page.locator(`[data-entry-id="${identity}"]`)).toBeInViewport();
+  await page.reload();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  await expect(page.locator(`[data-entry-id="${identity}"]`)).toBeInViewport();
+});
+
+test('a catalog update restarts the feed instead of mixing generations', async ({ page }) => {
+  const url = '/hub/datasets/api/entries?sort=random&seed=12345678';
+  const first = await (await page.request.get(url)).json();
+  const next = await (await page.request.get(url + '&page=2')).json();
+  let refreshed = false;
+  await page.route('**/hub/datasets/api/entries?**', async route => {
+    const pageNumber = new URL(route.request().url()).searchParams.get('page');
+    if (pageNumber !== '2') refreshed = true;
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...(pageNumber === '2' ? next : first), generation: 'updated-catalog-fixture' }) });
+  });
+  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  await expect.poll(() => refreshed).toBe(true);
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id'))))
+    .toEqual(first.entries.map((entry: { id: string }) => entry.id));
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+});
+
+for (const malformed of ['short page', 'duplicate within page']) test(`rejects a ${malformed} without losing current cards`, async ({ page }) => {
+  const next = await (await page.request.get('/hub/datasets/api/entries?sort=random&seed=12345678&page=2')).json();
+  if (malformed === 'short page') next.entries.pop();
+  else next.entries[1] = next.entries[0];
+  await page.route('**/hub/datasets/api/entries?**', async route => {
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(next) });
+  });
+  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  await expect(page.locator('#catalog-status')).toContainText('incomplete metadata');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+});
+
+test('blocked storage and unavailable intersection observers retain manual pagination', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'IntersectionObserver', { value: undefined });
+    Object.defineProperty(window, 'sessionStorage', { get() { throw new Error('Storage blocked'); } });
+  });
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  expect(errors).toEqual([]);
+});
+
+test('a finite filtered feed stops automatically and retains source metadata panels', async ({ page }) => {
+  await page.goto('/hub/datasets/?q=large_overlap+basketball+sparse_native');
+  await expect(page.locator('.dataset-card')).toHaveCount(1);
+  await expect(page.locator('#catalog-end')).toBeVisible();
+  await expect(page.locator('#catalog-more')).toBeHidden();
+  await page.locator('.dataset-info').click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog')).toContainText('Dataset information');
+});
+
 test('retired collection pages open the current scene browser and retain source identity', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   expect(index.sources.length).toBeGreaterThan(0);

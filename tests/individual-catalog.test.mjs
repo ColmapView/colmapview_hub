@@ -9,6 +9,78 @@ import { applyDatasetLabels } from '../scripts/catalog/dataset-labels.mjs';
 const render = await catalogRenderer();
 const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));
 
+test('seeded discovery is a stable, complete permutation and pagination does not repeat scenes', () => {
+  const sources = Array.from({ length: 32 }, (_, i) => ({ id: `source-${i}`, provider: 'huggingface', start: i ? 300 + (i - 1) * 5 : 0, count: i ? 5 : 300 }));
+  const asset = { schemaVersion: 1, generation: 'catalog', rows: Array.from({ length: 455 }, () => [1, 0, 20000]) };
+  const candidates = asset.rows.map((_, i) => i);
+  for (const mode of ['discover', 'random', 'new']) {
+    const options = { mode, seed: '12345678' };
+    const all = render.discoveryOrder(asset, sources, candidates, options);
+    assert.equal(all.length, candidates.length);
+    assert.equal(new Set(all).size, all.length);
+    assert.deepEqual(render.discoveryOrder(asset, sources, candidates, options, 48), all.slice(0, 48));
+    assert.notDeepEqual(render.discoveryOrder(asset, sources, candidates, { ...options, seed: '87654321' }, 24), all.slice(0, 24));
+    const groups = all.slice(0, 20).map(i => i < 300 ? 0 : 1 + Math.floor((i - 300) / 5));
+    assert.ok(new Set(groups).size >= 10, `${mode} should balance a dominant collection`);
+    assert.ok(groups.every((group, i) => !i || group !== groups[i - 1]), `${mode} should separate collections`);
+  }
+});
+
+test('new scenes stay chronological, unknown dates stay last, and one-collection filters fully exhaust', () => {
+  const sources = [{ id: 'a', provider: 'huggingface', start: 0, count: 4 }, { id: 'b', provider: 'huggingface', start: 4, count: 2 }];
+  const asset = { generation: 'catalog', rows: [[1, 0, 20], [1, 0, 20], [1, 0, 20], [3, 1, 0], [3, 1, 10], [3, 1, 0]] };
+  const ordered = render.discoveryOrder(asset, sources, [0, 1, 2, 3, 4, 5], { mode: 'new', seed: '12345678' });
+  assert.deepEqual(ordered.map(i => asset.rows[i][2]), [20, 20, 20, 10, 0, 0]);
+  for (const mode of ['discover', 'random', 'new']) {
+    const only = render.discoveryOrder(asset, sources.slice(0, 1), [0, 1, 2, 3], { mode, seed: '12345678' });
+    assert.deepEqual([...only].sort(), [0, 1, 2, 3]);
+  }
+});
+
+test('discovery assets and feed inputs reject stale generations, bad tiers and unbounded seeds', () => {
+  const index = { total: 1, generation: 'current' };
+  const asset = { schemaVersion: 1, generation: 'current', rows: [[3, 0, 20000]] };
+  assert.equal(render.isDiscoveryAsset(asset, index), true);
+  for (const bad of [{ ...asset, generation: 'old' }, { ...asset, rows: [] }, { ...asset, rows: [[4, 0, 1]] },
+    { ...asset, rows: [[3, 2, 1]] }, { ...asset, rows: [[3, 0, -1]] }]) assert.equal(render.isDiscoveryAsset(bad, index), false);
+  for (const query of ['sort=trending', 'sort=constructor', 'seed=../../secret', 'seed=abc', `seed=${'a'.repeat(33)}`]) {
+    assert.throws(() => render.individualFilters(new URLSearchParams(query)), /Invalid/);
+  }
+});
+
+test('discovery search applies filters before ranking and keeps camera-only scenes eligible', async () => {
+  const sources = [{ ...source, count: 48 }, { ...source, id: 'hf-other-123456abcdef', label: 'Other', start: 48, count: 6 }];
+  const rows = Array.from({ length: 54 }, (_, i) => row(i, { 1: i < 48 ? 0 : 1, 2: 'cameras',
+    7: { ...nativePhotoProof('not_included'), sceneCompatibility: { ...nativePhotoProof('not_included').sceneCompatibility, points: 0 } } }));
+  const index = { schemaVersion: 1, generation: 'feed-fixture', total: rows.length, packSize: 24, sources,
+    discovery: { schemaVersion: 1, file: 'feed.json' }, facets: { data: { cameras: { file: 'a'.repeat(16) } } } };
+  const asset = { schemaVersion: 1, generation: index.generation, rows: rows.map(() => [2, 0, 20000]) };
+  const keys = [];
+  const binding = { fetch: async request => {
+    const key = new URL(request.url).pathname.split('/individual/')[1]; keys.push(key);
+    if (key === 'feed.json') return Response.json(asset);
+    if (key.startsWith('facets/')) return Response.json({ postings: Buffer.from([48, 1, 1, 1, 1, 1]).toString('base64') });
+    const pack = Number(key.match(/^packs\/(\d+)\.json$/)?.[1]);
+    return Number.isInteger(pack) ? Response.json(rows.slice(pack * 24, (pack + 1) * 24)) : new Response(null, { status: 404 });
+  } };
+  const filters = render.individualFilters(new URLSearchParams('sort=random&seed=12345678'));
+  const first = await render.searchIndividuals(binding, 'https://example.org', index, filters);
+  filters.set('page', '2');
+  const next = await render.searchIndividuals(binding, 'https://example.org', index, filters);
+  assert.equal(first.total, 54);
+  assert.equal(new Set([...first.entries, ...next.entries].map(entry => entry.id)).size, 48);
+  assert.ok(first.entries.every(entry => entry.hasViewer && entry.sceneStats.points === 0));
+  const filtered = await render.searchIndividuals(binding, 'https://example.org', index, new URLSearchParams('data=cameras&sort=random&seed=12345678'));
+  assert.equal(filtered.total, 6);
+  assert.ok(filtered.entries.every(entry => entry.dataset.id === sources[1].id));
+  assert.ok(keys.every(key => !key.startsWith('sources/')));
+  asset.generation = 'stale';
+  await assert.rejects(render.searchIndividuals(binding, 'https://example.org', index, filters), /does not match/);
+  asset.generation = index.generation;
+  rows.forEach(row => { row[7].opening = { status: 'load_failed' }; });
+  await assert.rejects(render.searchIndividuals(binding, 'https://example.org', index, filters), /no longer qualifies/);
+});
+
 test('companion archive manifests preserve native gates and keep sample evidence separate from exports', () => {
   const proof = nativePhotoProof('companion_archive');
   const sha256 = 'c'.repeat(64), url = `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${sha256}.manifest.json`;

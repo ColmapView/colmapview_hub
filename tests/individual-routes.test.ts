@@ -5,6 +5,55 @@ import { HUB_UI_VERSION } from '../src/shared/ui-version';
 
 beforeEach(resetState);
 
+it('rejects invalid feed modes and seeds before any public or private data read', async () => {
+  const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
+  const records = vi.spyOn(env.LINKS, 'get');
+  for (const query of ['sort=trending', 'sort=constructor', 'seed=short', 'seed=../private', `seed=${'a'.repeat(33)}`]) {
+    const response = await request(`/datasets/api/entries?${query}`);
+    expect(response.status).toBe(400);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+  }
+  expect(assets).not.toHaveBeenCalled();
+  expect(records).not.toHaveBeenCalled();
+});
+
+it('keeps seeded feed caches separate and retains deterministic pages without private lookups', async () => {
+  const source = { id: 'hf-feed-fixture-0123456789ab', sourceId: 'hf:owner/feed', title: 'Feed', label: 'Feed', provider: 'huggingface',
+    access: 'public', license: 'cc0', start: 0, count: 27, listingComplete: true };
+  const rows = Array.from({ length: source.count }, (_, ordinal) => [
+    `data-${ordinal.toString(16).padStart(24, '0')}`, 0, 'cameras', `scene-${ordinal}/sparse/0`, 'COLMAP', null, null,
+    { level: 'native_layout_checked', delivery: 'cors_headers_checked', viewerUrl: 'https://colmapview.opsiclear.com/?url=https%3A%2F%2Fexample.org%2Fscene',
+      sceneCompatibility: { status: 'native_headers_checked', cameraRecordChecked: true, poseRecordChecked: true, cameras: 1, images: 2, points: 0 } },
+  ]);
+  const records = vi.spyOn(env.LINKS, 'get');
+  vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async input => {
+    const key = new URL(input instanceof Request ? input.url : String(input)).pathname.split('/individual/')[1];
+    if (key === 'index.json') return Response.json({ schemaVersion: 1, generation: 'feed-cache', total: rows.length, packSize: 24,
+      sources: [source], facets: {}, discovery: { schemaVersion: 1, file: 'feed.json' } });
+    if (key === 'feed.json') return Response.json({ schemaVersion: 1, generation: 'feed-cache', rows: rows.map(() => [1, 0, 20000]) });
+    const number = Number(/^packs\/(\d+)\.json$/.exec(key)?.[1]);
+    return Number.isInteger(number) ? Response.json(rows.slice(number * 24, (number + 1) * 24)) : new Response(null, { status: 404 });
+  });
+  type Result = { entries: { id: string; hasViewer: boolean }[]; feed: { mode: string; seed: string } };
+  const queries = ['sort=random&seed=12345678', 'sort=random&seed=87654321', 'sort=random&seed=12345678&page=2'];
+  try {
+    const first = await request(`/datasets/api/entries?${queries[0]}`);
+    const etag = first.headers.get('ETag')!;
+    const original = await first.json<Result>();
+    const changed = await (await request(`/datasets/api/entries?${queries[1]}`)).json<Result>();
+    const second = await (await request(`/datasets/api/entries?${queries[2]}`)).json<Result>();
+    expect(original.feed).toEqual({ mode: 'random', seed: '12345678' });
+    expect(changed.feed.seed).toBe('87654321');
+    expect(original.entries).not.toEqual(changed.entries);
+    expect(new Set([...original.entries, ...second.entries].map(entry => entry.id)).size).toBe(27);
+    expect(original.entries.every(entry => entry.hasViewer)).toBe(true);
+    expect((await request(`/datasets/api/entries?${queries[0]}`, { headers: { 'If-None-Match': etag } })).status).toBe(304);
+    expect(records).not.toHaveBeenCalled();
+  } finally {
+    for (const query of queries) await caches.default.delete(new Request(`${base}/datasets/api/entries?${query}&_catalog=feed-cache&_ui=${HUB_UI_VERSION}`));
+  }
+});
+
 it('redirects retired browse pages without reading metadata or private records', async () => {
   const records = vi.spyOn(env.LINKS, 'get');
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');

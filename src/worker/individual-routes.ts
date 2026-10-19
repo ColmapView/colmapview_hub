@@ -6,6 +6,7 @@ import type { HubLocation } from './pages';
 import { individualSelection } from '../shared/individual-catalog';
 import { isCatalogOpenUrl, datasetPath } from '../shared/catalog';
 import { HUB_UI_VERSION } from '../shared/ui-version';
+import { defaultFeedSeed } from '../shared/discovery';
 
 const REVALIDATE = 'public, no-cache, must-revalidate, no-transform';
 const respond = (request: Request, response: Response) => {
@@ -46,6 +47,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   // Read the current inventory before the response cache. Removed entries and
   // search results must not survive a catalog deployment in an older cache.
   const index = await individualIndex(env.CATALOG_ASSETS, location.origin);
+  if (index.discovery && !entry && !open && !collection && !filters.has('seed')) filters.set('seed', defaultFeedSeed());
   if (collection) return index.sources.some(source => source.id === collection[1] && source.count > 0)
     ? browse(collection[1]) : fail(404, 'Dataset entry not found.');
   if (open) {

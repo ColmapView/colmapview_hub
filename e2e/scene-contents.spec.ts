@@ -78,8 +78,8 @@ test('a scene manifest attaches the exact sibling-photo model and selected cloud
 test('cards show content roles, load same-origin photos and open metadata only on activation', async ({ page }) => {
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com|wikimedia\.org/.test(request.url())) providerRequests.push(request.url()); });
-  await page.goto('/hub/datasets/?licenseCategory=commercial&photos=available&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9');
-  const first = page.locator('.dataset-card').first();
+  await page.goto('/hub/datasets/?q=scene0024_01&licenseCategory=commercial&photos=available&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9');
+  const first = page.locator('.dataset-card').filter({ has: page.getByRole('link', { name: 'Open in viewer: scene0024_01 · i2slam_colmap', exact: true }) });
   await expect(first.getByRole('list', { name: 'Available data' })).toBeVisible();
   await expect(first.locator('[data-asset="cameras"]')).toBeVisible();
   await expect(first.locator('[data-asset="images"]')).toBeVisible();
@@ -307,7 +307,7 @@ test('model-only ArmGS cards show masks and cameras without claiming photos', as
   await expect(placeholder).toBeVisible();
   await expect(placeholder).toHaveText('No photo');
   const bounds = await placeholder.boundingBox();
-  expect(Math.abs(bounds!.width - bounds!.height)).toBeLessThan(1);
+  expect(Math.abs(bounds!.width / bounds!.height - 16 / 9)).toBeLessThan(0.01);
   await first.getByRole('button', { name: /Metadata/ }).click();
   await expect(first.locator('[data-photo-status]')).toBeVisible();
   await expect(first.locator('[data-photo-status]')).toHaveText('Photos not included');

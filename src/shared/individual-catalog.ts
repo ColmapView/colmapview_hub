@@ -10,6 +10,7 @@ import type { SceneManifestEvidence } from './scene-manifests';
 import { isPhotoRoutingEvidence, photoRoutingUrlMatches } from './photo-routing';
 import type { PhotoRoutingEvidence } from './photo-routing';
 import { isArchiveRoutingEvidence, type ArchiveRoutingEvidence } from './archive-routing';
+import type { FeedSelection } from './discovery';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -26,6 +27,7 @@ export interface IndividualIndex {
   contents?: Record<string, number>;
   thumbnails?: number;
   photoRouting?: Record<string, number>;
+  discovery?: { schemaVersion: 1; file: 'feed.json' };
   incompleteCollections: number; scope: string;
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
@@ -41,7 +43,7 @@ export type IndividualProof = CatalogVerification & { statusLabel: string; viewe
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
   files: Record<string, string> | null, proof: IndividualProof | null,
   inventory?: { listedAssets: number; linkedAssets: number; linksTruncated: boolean }];
-export interface IndividualPage { entries: CatalogSummary[]; total: number; page: number; pages: number; generation: string }
+export interface IndividualPage { entries: CatalogSummary[]; total: number; page: number; pages: number; generation: string; feed?: FeedSelection }
 export interface IndividualSelection { id: string; label: string; title: string; count: number; listingComplete: boolean; metadataUrl: string }
 export const matchesIndividualDataset = (source: IndividualSource, value: string) => !value || source.id === value
   || (source.provider === 'public' && value === `public:${source.label}`);
