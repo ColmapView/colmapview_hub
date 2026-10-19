@@ -4,6 +4,8 @@
 
 ## Provisioning
 
+The checked-in production flag is enabled after the 2026-10-19 live rollout with Hub 0.8.2 and viewer 0.19.1. The [viewer validation record](https://github.com/ColmapView/Colmapview.github.io/blob/main/docs/account-sessions.md#live-checks--2026-10-19) separates real provider checks from automated fixtures and records disposable-resource cleanup. The steps below describe initial provisioning of a new environment, not a request to reconfigure an already verified deployment.
+
 1. Register the exact Google callback `https://colmapview.opsiclear.com/auth/google/callback` on the existing production Web client. Keep its JavaScript origin and existing Drive/Picker configuration. The frontend and backend Google client IDs must match. Declare `openid`, `drive.file`, and the optional `drive.install`; no broad Drive scope is needed.
 2. Register a confidential Hugging Face application with `https://colmapview.opsiclear.com/auth/hf/callback`. Permit `openid profile read-repos contribute-repos`. Keep existing public clients/callbacks for browser-only deployments. Confirm actual refresh-token issuance and renewal; the implementation also supports access-only connections, which expire without renewal.
 3. Set the public IDs in `AUTH_GOOGLE_CLIENT_ID` and `AUTH_HF_CLIENT_ID`. Generate a unique cryptographically random 32-byte base64url `AUTH_KEY` (43 characters). Install it and the corresponding `AUTH_GOOGLE_CLIENT_SECRET` and `AUTH_HF_CLIENT_SECRET` using Wrangler secrets. Never commit values, print them in test output, or expose them to frontend builds. Changing `AUTH_KEY` invalidates cookies and prevents decryption of existing records; treat rotation as forced reconnection.

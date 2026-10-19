@@ -11,7 +11,7 @@ npm run dev
 
 Open `http://localhost:5201/hub/`. `scripts/dev.mjs` seeds public fixture word lists in local R2 and starts Wrangler with local Durable Object state. It copies `.dev.vars.example` only when `.dev.vars` does not exist. Production credentials and private dictionaries are unnecessary.
 
-The same Worker can host the custom viewer's optional [account session service](account-sessions.md). It uses separate encrypted Durable Object records and starts disabled. Provider secrets belong only to the Worker, never the Hub client or viewer build.
+The same Worker hosts the custom viewer's optional [account session service](account-sessions.md). It uses separate encrypted Durable Object records. Capabilities depend on `AUTH_ENABLED`, the encryption key and each provider's credentials; follow the provisioning guide for a new environment. The public example contains local test keys and no provider secrets, so ordinary catalog development needs no Google or HF credentials. Real provider secrets belong only to the Worker, never the Hub client or viewer build.
 
 To connect a local viewer, run it with `VITE_HUB_BASE_URL=http://localhost:5201/hub`. A local Hub accepts loopback origins and viewer URLs.
 
