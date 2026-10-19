@@ -76,7 +76,6 @@
     "generation": "5aa2e6b325eb22376ec0eb684324bbb979f0b48dc7b39ee344e8918c4904912a",
     "scenes": 5576,
     "launchesAndSummariesChecked": 5576,
-    "preservedNativeCounts": 5575,
     "preservedPhotoRoutes": 1246,
     "preservedThumbnails": 2266,
     "preservedFullExports": 3,
@@ -84,7 +83,11 @@
     "manifestsValidatedWithViewer": 2018,
     "companionArchiveRoutes": 516,
     "sourceNetworkReads": 0,
-    "checkedAt": "2026-10-19T19:46:58.557Z"
+    "checkedAt": "2026-10-19T19:46:58.557Z",
+    "compatibilitySlotsCompared": 5575,
+    "preservedNativeCompatibilityRecords": 5534,
+    "preservedSceneManifestReceipts": 17,
+    "preservedCompletePhotoExportQualifications": 20
   },
   "scope": "Live publication, four representative manifest hashes/CORS/ETags/detail links/redirects, audit totals and preview layout. Original source model/gallery checks retain their separate runtime receipts; confirmed source datasets were not rescanned for publication."
 }
