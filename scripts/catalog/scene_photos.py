@@ -1,6 +1,7 @@
 """Pinned photo availability is evidence, never a model-compatibility gate."""
 
 from copy import deepcopy
+import re
 from .scene_qualification import scene_key
 
 
@@ -23,8 +24,16 @@ def photo_scene_reviews(catalog, policy):
         for scene in source['scenes']:
             audit = scene['audit']
             status = audit.get('status')
+            pending_inventory = (status == 'not_checked' and audit.get('listingComplete') is False
+                                 and audit.get('policy') == 'photo_inventory_pending' and not audit.get('samplePath'))
+            exact_sample = (status in SAMPLE_STATES and audit.get('policy') == 'exact_registered_sample'
+                            and isinstance(audit.get('sampleRegisteredName'), str) and bool(audit['sampleRegisteredName'])
+                            and re.fullmatch('[a-f0-9]{64}', audit.get('samplePrefixSha256', '')) is not None
+                            and (audit.get('sampleDimensionsMatch') is True
+                                 or status == 'path_policy_required' and audit.get('sampleDimensionsMatch') is False))
             if (status not in PHOTO_STATES or not audit.get('summary') or not audit.get('checkedAt')
-                    or not audit.get('policy') or not scene.get('files') or audit.get('listingComplete') is not True):
+                    or not audit.get('policy') or not scene.get('files')
+                    or audit.get('listingComplete') is not True and not pending_inventory and not exact_sample):
                 raise ValueError('Photo evidence requires a complete pinned inventory, scope and status')
             if any(not isinstance(audit.get(field, ''), str) for field in
                    ('summary', 'checkedAt', 'policy', 'sceneRoot', 'policyNote', 'mediaScope', 'photoCollection', 'mappingFile', 'associationFile', 'samplePath')):
@@ -67,7 +76,8 @@ def apply_photo_evidence(entry, row, revision, proof, review):
     else:
         result['photoAvailability'] = audit['status']
         if result.get('level') == 'native_layout_checked':
-            result['summary'] = 'Native camera, registered pose and point-file headers checked. ' + audit['summary']
+            result['summary'] = ('Native camera and registered pose headers checked; no native point file is supplied. ' if row[0] == 'cameras'
+                                 else 'Native camera, registered pose and point-file headers checked. ') + audit['summary']
     if ((entry.get('verification') or {}).get('sourceImages') or {}).get('status') == 'not_included' and audit['status'] != 'not_included':
         raise ValueError('Photo evidence conflicts with the publisher RGB exclusion')
     result['photoAudit'] = audit

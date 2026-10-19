@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-18",
+  "scope": "Reviewed source metadata additions and exact public scene targets; publication still requires the separate revision-bound scene receipts.",
+  "additions": [
+    {
+      "id": "hf-turandai-gaussian-surfels-dtu-53a58900b5a9",
+      "sourceId": "hf:turandai/gaussian-surfels-dtu",
+      "provider": "huggingface",
+      "title": "turandai/gaussian-surfels-dtu",
+      "sourceUrl": "https://huggingface.co/datasets/turandai/gaussian-surfels-dtu",
+      "dataUrl": "https://huggingface.co/datasets/turandai/gaussian-surfels-dtu/resolve/70ec15cd824556d17493e1c18e7e6c8b79f3ad94/scan24/cameras.npz",
+      "license": "Not specified",
+      "licenseCategory": "not-specified",
+      "access": "public",
+      "status": "audited_header_checked",
+      "statusLabel": "Camera model export checked",
+      "formats": [
+        "Camera metadata"
+      ],
+      "description": "Selected camera projection metadata imported and exported as COLMAP. Other scenes require separate checks.",
+      "checkedAt": "2026-10-19T03:50:00Z",
+      "testOrFixture": false,
+      "datasetLabel": "gaussian-surfels-dtu",
+      "facts": [
+        {
+          "label": "Repository",
+          "value": "turandai/gaussian-surfels-dtu"
+        },
+        {
+          "label": "Pinned revision",
+          "value": "70ec15cd824556d17493e1c18e7e6c8b79f3ad94"
+        },
+        {
+          "label": "Individual listing scope",
+          "value": "One selected checked scene; the collection listing is incomplete."
+        }
+      ],
+      "audits": [],
+      "verification": {
+        "level": "unverified",
+        "delivery": "browser_readable",
+        "checkedAt": "2026-10-19T03:50:00Z",
+        "summary": "Selected camera metadata passed a browser model export; exact scene evidence is recorded separately.",
+        "scope": "One selected scene at the pinned revision. The complete collection and original photo exports are not qualified.",
+        "viewerVersion": "0.17.7"
+      }
+    }
+  ],
+  "publicScenes": [
+    {
+      "sourceId": "public:[\"Instant-NGP Fox example\",\"fox\",\"JSON + JPEG\"]",
+      "revision": "abe236ee00cf90cfca6e36e65c00435d5b21f50a",
+      "loadUrl": "https://raw.githubusercontent.com/NVlabs/instant-ngp/abe236ee00cf90cfca6e36e65c00435d5b21f50a/data/nerf/fox/transforms.json"
+    },
+    {
+      "sourceId": "public:[\"OpenMVG SceauxCastle example\",\"SceauxCastle\",\"camera + RGB\"]",
+      "revision": "6887e7385400f4cca378507296ccc20c8a0837dd",
+      "loadUrl": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json"
+    },
+    {
+      "sourceId": "public:[\"OpenSfM Berlin example\",\"Berlin\",\"camera + RGB\"]",
+      "revision": "92381be43cd93ca91e7ef903733a0482440028dd",
+      "loadUrl": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json"
+    },
+    {
+      "sourceId": "public:[\"MegaScenes\",\"000000 Arc de Berà, component 0\",\"native complete sample\"]",
+      "revision": "f9490076ec6329c282caf45d056a35bc9a76b599e87e4f5c2b70a593896bcfa6",
+      "loadUrl": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4.manifest.json"
+    }
+  ]
+}

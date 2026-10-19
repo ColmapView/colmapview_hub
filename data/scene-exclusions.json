@@ -292,6 +292,10 @@
         {
           "kind": "colmap",
           "path": "clusters/train/dawn_ceres/00000042"
+        },
+        {
+          "kind": "colmap",
+          "path": "clusters/train/dawn_ceres/00000043"
         }
       ]
     },
@@ -393,6 +397,76 @@
           "bytes": 786432,
           "declaredImages": 1107,
           "completeImages": 5
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:gaojz/robust-e-nerf",
+      "revision": "3e6cb5222e2fc3906e152573338717f8818f593e",
+      "checkedAt": "2026-10-19T03:56:21.707733+00:00",
+      "viewerVersion": "0.17.7",
+      "reason": "pose_orthogonality_tolerance",
+      "summary": "Frame 84 has maximum rotation orthogonality error 2.8511653648468846e-5, above the released importer tolerance of 1e-5. The other 99 frames pass. Any bounded rotation correction requires an explicit importer policy and fresh calibration/pose verification.",
+      "scenes": [
+        {
+          "kind": "camera-scene",
+          "path": "mic/views"
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:maeyounes/SparseCraft-dataset",
+      "revision": "c5aa0ce39a8de84da66abc977dcd9f0191044c13",
+      "checkedAt": "2026-10-19T03:56:21.707733+00:00",
+      "viewerVersion": "0.17.7",
+      "reason": "unrepresentable_projection_skew",
+      "summary": "The selected cameras.npz fails the current pinhole projection check. Skew must not be silently discarded.",
+      "scenes": [
+        {
+          "kind": "camera-scene",
+          "path": "nvs/mvs_data/scan8"
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:OpenIllumination/OpenIllumination",
+      "revision": "006beced878d3fb7187ded8e20ee63d9c5020fcb",
+      "checkedAt": "2026-10-19T03:56:21.707733+00:00",
+      "viewerVersion": "0.17.7",
+      "reason": "unsupported_camera_dictionary",
+      "summary": "Source frames is a camera-keyed dictionary with per-frame camera_angle_x/calib_imgw. The array-based NeRF importer does not handle this schema; an explicit adapter is required.",
+      "scenes": [
+        {
+          "kind": "camera-scene",
+          "path": "OLAT/obj_01_egg/output"
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:wengflow/deblur-e-nerf",
+      "revision": "0ff395eb413a7e7aa2591ef7388691c60f6888ce",
+      "checkedAt": "2026-10-19T03:56:21.707733+00:00",
+      "viewerVersion": "0.17.7",
+      "reason": "pose_orthogonality_tolerance",
+      "summary": "Frame 84 has maximum rotation orthogonality error 2.8511653648468846e-5, above the released importer tolerance of 1e-5. The other 99 frames pass. Any bounded rotation correction requires an explicit importer policy and fresh calibration/pose verification.",
+      "scenes": [
+        {
+          "kind": "camera-scene",
+          "path": "mic/views"
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:wengflow/robust-e-nerf",
+      "revision": "6ea56563f3e0b175b93ee47478600dac0664df61",
+      "checkedAt": "2026-10-19T03:56:21.707733+00:00",
+      "viewerVersion": "0.17.7",
+      "reason": "pose_orthogonality_tolerance",
+      "summary": "Frame 84 has maximum rotation orthogonality error 2.8511653648468846e-5, above the released importer tolerance of 1e-5. The other 99 frames pass. Any bounded rotation correction requires an explicit importer policy and fresh calibration/pose verification.",
+      "scenes": [
+        {
+          "kind": "camera-scene",
+          "path": "mic/views"
         }
       ]
     }

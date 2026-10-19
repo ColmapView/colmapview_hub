@@ -78,7 +78,7 @@ test('a scene manifest attaches the exact sibling-photo model and selected cloud
 test('cards show content roles and load licensed square photos from the Hub', async ({ page }) => {
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com|wikimedia\.org/.test(request.url())) providerRequests.push(request.url()); });
-  await page.goto('/hub/datasets/?licenseCategory=commercial&photos=available');
+  await page.goto('/hub/datasets/?licenseCategory=commercial&photos=available&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9');
   const first = page.locator('.dataset-card').first();
   await expect(first.getByRole('list', { name: 'Available data' })).toBeVisible();
   await expect(first.locator('[data-asset="cameras"]')).toBeVisible();

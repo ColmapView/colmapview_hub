@@ -18,7 +18,7 @@ export const photoLabel = (status: PhotoStatus) => PHOTO_LABELS[status];
 export interface ScenePhotoAudit {
   status: Exclude<PhotoStatus, 'unresolved'>;
   checkedAt: string;
-  listingComplete: true;
+  listingComplete: boolean;
   policy: string;
   summary: string;
   sceneRoot: string;
@@ -34,4 +34,7 @@ export interface ScenePhotoAudit {
   samplePath?: string;
   sampleBrowserRead?: true;
   samplePixels?: 'decoded' | 'deferred';
+  sampleRegisteredName?: string;
+  samplePrefixSha256?: string;
+  sampleDimensionsMatch?: boolean;
 }

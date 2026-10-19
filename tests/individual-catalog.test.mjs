@@ -20,6 +20,20 @@ test('scene publication matches the viewer action gates', () => {
   }
 });
 
+test('model-only export details retain camera statistics and do not claim original-photo export', () => {
+  const proof = { ...parent.verification, ...verified, statusLabel: 'Camera model export checked', photoAvailability: 'not_checked', checkedAt: '2026-10-19',
+    summary: 'Cameras passed an independent model export check.', scope: 'The selected camera model only.',
+    sceneValidation: { ...verified.sceneValidation, export: 'colmap_model', photoCount: 0 } };
+  const item = row(0, { 2: 'camera-scene', 7: proof });
+  assert.equal(render.canOpenIndividual(item, source), true);
+  const summary = render.individualSummary(item, source);
+  assert.equal(summary.sceneStats.cameraPoses, proof.sceneValidation.images);
+  const entry = render.individualEntry(item, source, parent);
+  const html = render.catalogEntryPage(entry);
+  assert.match(html, /COLMAP model export SHA-256/);
+  assert.doesNotMatch(html, /Verified original photographs|COLMAP \+ images export SHA-256/);
+});
+
 test('photo availability is displayed separately without changing model actions', () => {
   for (const [status, label] of [['partial', 'Photos partially available'], ['path_policy_required', 'Photos need setup'],
     ['companion_archive', 'Photos in a separate ZIP'], ['not_found', 'No source photos found'], ['not_included', 'Photos not included']]) {

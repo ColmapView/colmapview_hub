@@ -18,7 +18,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from .scene_datasets import scene_records
-from .scene_qualification import native_evidence, native_scene_reviews, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
+from .scene_qualification import launch_manifest_asset, native_launch_manifest, native_evidence, native_scene_reviews, public_launch_manifest, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
 from .scene_photos import apply_photo_evidence, photo_scene_reviews
 from .scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
 from .scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
@@ -49,17 +49,17 @@ def can_open_scene(entry, row, proof):
     if proof.get('sampleScope') == 'companion_asset':
         return False
     compatibility = proof.get('sceneCompatibility') or {}
-    if (kind == 'colmap' and proof.get('level') == 'native_layout_checked' and proof.get('viewerUrl')
+    if (kind in ('colmap', 'cameras') and proof.get('level') == 'native_layout_checked' and proof.get('viewerUrl')
             and proof.get('delivery') in {'browser_readable', 'cors_headers_checked'}
             and compatibility.get('status') == 'native_headers_checked'
             and all(value is None or type(value) is int and value > 0
                     for value in (compatibility.get('cameras'), compatibility.get('images')))
             and compatibility.get('cameraRecordChecked') is True and compatibility.get('poseRecordChecked') is True):
-        return True
+        return kind != 'cameras' or compatibility.get('points') == 0
     validation = proof.get('sceneValidation') or {}
     return (kind in {'colmap', 'cameras', 'camera-scene', 'scene'} and proof.get('level') == 'scene_verified'
             and proof.get('delivery') == 'browser_readable' and bool(proof.get('viewerUrl'))
-            and validation.get('status') == 'passed' and validation.get('export') == 'colmap_images'
+            and validation.get('status') == 'passed' and validation.get('export') in ('colmap_images', 'colmap_model')
             and type(validation.get('cameras')) is int and validation['cameras'] > 0
             and type(validation.get('images')) is int and validation['images'] > 0)
 
@@ -252,6 +252,16 @@ def build(root=Path('.')):
     parents = {entry['sourceId']: entry for entry in catalog['entries']}
     for review in manifest_reviews.values():
         generated_manifests.update(manifest_assets(review, parents[review['sourceId']], hf_url))
+    for review in native_scenes.values():
+        manifest = native_launch_manifest(parents[review['sourceId']], review, hf_url)
+        if manifest:
+            name, body = launch_manifest_asset(manifest)
+            generated_manifests[name] = body
+    for review in verified_scenes.values():
+        manifest = public_launch_manifest(review) if parents[review['sourceId']]['provider'] == 'public' else None
+        if manifest:
+            name, body = launch_manifest_asset(manifest)
+            generated_manifests[name] = body
     matched_contents = set()
     matched_photos = set()
     matched_reviews = set()
@@ -347,7 +357,9 @@ def build(root=Path('.')):
         elif entry['provider'] == 'public' and any(fact['label'] == 'Collection' for fact in entry['facts']):
             # Existing public entries already identify a scene/subset/variant.
             # Retain that identity rather than treating the whole provider as one model.
-            rows = [['scene', entry['title'], None, None]]
+            review = verified_scenes.get(scene_key(entry['sourceId'], 'scene', entry['title']))
+            revision = next((fact['value'] for fact in entry['facts'] if fact['label'] == 'Pinned revision'), None)
+            rows = [['scene', entry['title'], review['files'] if review else None, None]]
         else:
             continue
         source = {'id': entry['id'], 'sourceId': entry['sourceId'], 'title': entry['title'], 'label': dataset_label,

@@ -24,6 +24,10 @@ class IndividualDatasetsTests(unittest.TestCase):
             if (review['sourceId'], 'colmap', review['path'], None) in excluded:
                 continue
             for role, count_key in [('cameras', 'cameras'), ('images', 'images'), ('points3d', 'points')]:
+                if role not in review['files']:
+                    self.assertEqual(role, 'points3d')
+                    self.assertEqual(review['points'], 0)
+                    continue
                 with self.subTest(source=review['sourceId'], path=review['path'], role=role):
                     self.assertIsNotNone(review[count_key])
                     if review['files'][role].lower().endswith('.txt'):

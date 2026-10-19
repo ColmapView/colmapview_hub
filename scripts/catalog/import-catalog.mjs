@@ -1,7 +1,7 @@
 import { readFile, mkdir, writeFile, rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { applyCatalogReviews, buildCatalog, parseCsv, sha256 } from './catalog-import.mjs';
+import { applyCatalogReviews, applySceneSourceOverrides, buildCatalog, parseCsv, sha256 } from './catalog-import.mjs';
 import { applyDatasetAudit } from './dataset-audit-import.mjs';
 import { applyIndividualListings } from './individual-listings.mjs';
 import { applyDatasetLabels } from './dataset-labels.mjs';
@@ -43,6 +43,11 @@ const labels = JSON.parse(labelBytes.toString('utf8'));
 applyDatasetLabels(snapshot, labels);
 snapshot.sources.push({ kind: 'dataset-labels', name: 'dataset-labels.json', checkedAt: '2026-10-16',
   sha256: sha256(labelBytes), rowCount: Object.keys(labels.labels).length });
+const overrideBytes = await readFile(new URL('../../data/scene-source-overrides.json', import.meta.url));
+const overrides = JSON.parse(overrideBytes.toString('utf8'));
+applySceneSourceOverrides(snapshot, overrides);
+snapshot.sources.push({ kind: 'scene-source-overrides', name: 'scene-source-overrides.json', checkedAt: overrides.checkedAt,
+  sha256: sha256(overrideBytes), rowCount: overrides.additions.length + overrides.publicScenes.length });
 try {
   const bytes = await readFile(new URL('../../data/individual-datasets.json', import.meta.url));
   const inventory = JSON.parse(bytes.toString('utf8'));

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scope": "Exact scenes checked in deployed ColmapView 0.17.0 on 2026-10-17. Original anonymous source URLs were imported in the browser and exported as complete COLMAP + original RGB ZIPs. Independent PyCOLMAP parsing and source comparisons confirmed camera calibration, poses and every registered photograph hash. Companion geometry, masks, siblings and other revisions are not qualified. Export checksums identify the reviewed downloads; runtime reports and ZIPs remain local.",
+  "scope": "Exact reviewed scenes and source snapshots. colmap_images receipts certify original RGB export; colmap_model receipts certify camera/model export only. Model-only metadata sources have complete original-file byte hashes, browser imports and independent calibration/pose comparisons. Photographs, missing frame references, masks and native point precision have separate scopes. Other scenes and revisions are not qualified.",
   "scenes": [
     {
       "sourceId": "hf:pablovela5620/example-colmap-glomap",
@@ -161,6 +161,1582 @@
         "cameraPoses": "passed"
       },
       "exportSha256": "53e303030721bfeace276b0bbe2785eaa385c7d21a17c39e5beb0e556343df6a"
+    },
+    {
+      "sourceId": "hf:777rain/nerf-synthetic",
+      "revision": "99008b471ddf27fc50fdb11d7a51614ca8563b03",
+      "kind": "camera-scene",
+      "path": "nerf_synthetic/lego",
+      "files": {
+        "metadata:nerf_synthetic/lego/transforms_test.json": "nerf_synthetic/lego/transforms_test.json",
+        "metadata:nerf_synthetic/lego/transforms_train.json": "nerf_synthetic/lego/transforms_train.json",
+        "metadata:nerf_synthetic/lego/transforms_val.json": "nerf_synthetic/lego/transforms_val.json"
+      },
+      "loadPath": "nerf_synthetic/lego/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/777rain/nerf-synthetic/resolve/99008b471ddf27fc50fdb11d7a51614ca8563b03/nerf_synthetic/lego/transforms_train.json",
+      "checkedAt": "2026-10-19T03:20:58.471Z",
+      "exportSha256": "ff0d17ec309745fe187a0a45ca2c52844eb28afc7021fa43879edd5cf50d159a",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2F777rain%2Fnerf-synthetic%2Fresolve%2F99008b471ddf27fc50fdb11d7a51614ca8563b03%2Fnerf_synthetic%2Flego%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "nerf_synthetic/lego/transforms_train.json",
+          "url": "https://huggingface.co/datasets/777rain/nerf-synthetic/resolve/99008b471ddf27fc50fdb11d7a51614ca8563b03/nerf_synthetic/lego/transforms_train.json",
+          "bytes": 87946,
+          "sha256": "82d46cfbd405d7da8562b6fa75b6fb0631a3f941adf66f0c023acb8bf9ea273a",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:ALC901/DL3DV-10K-3dgs",
+      "revision": "b70d68a6ab89117d12bb5287c96c21e33d89af8d",
+      "kind": "camera-scene",
+      "path": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539",
+      "files": {
+        "metadata:2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
+        "asset:2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/input.ply": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/input.ply",
+        "asset:2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/point_cloud/iteration_3000/point_cloud.ply": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/point_cloud/iteration_3000/point_cloud.ply"
+      },
+      "loadPath": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/ALC901/DL3DV-10K-3dgs/resolve/b70d68a6ab89117d12bb5287c96c21e33d89af8d/2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
+      "checkedAt": "2026-10-19T03:35:53.836Z",
+      "exportSha256": "8207d7348096da01d4b0edeb04b0a2ea193b94f30e3e3fff4ecc92c7c57bdac4",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FALC901%2FDL3DV-10K-3dgs%2Fresolve%2Fb70d68a6ab89117d12bb5287c96c21e33d89af8d%2F2K%2F001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 319,
+        "images": 319,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
+          "url": "https://huggingface.co/datasets/ALC901/DL3DV-10K-3dgs/resolve/b70d68a6ab89117d12bb5287c96c21e33d89af8d/2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
+          "bytes": 283611,
+          "sha256": "3b0b9f6d3dd4d3df43693b543184abeaead67a494dcbaf866fc673b0deb11ea0",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:anon211/embodied_gaussians",
+      "revision": "55db9200b47d20548587444f0dc12aebfc1cbdb0",
+      "kind": "camera-scene",
+      "path": "real/empty/static_scan",
+      "files": {
+        "metadata:real/empty/static_scan/transforms.json": "real/empty/static_scan/transforms.json"
+      },
+      "loadPath": "real/empty/static_scan/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/anon211/embodied_gaussians/resolve/55db9200b47d20548587444f0dc12aebfc1cbdb0/real/empty/static_scan/transforms.json",
+      "checkedAt": "2026-10-19T03:21:40.103Z",
+      "exportSha256": "fe4eeb12210557f9dab54948a6834eb51561538d1be048a9aefe2a8a8f926728",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fanon211%2Fembodied_gaussians%2Fresolve%2F55db9200b47d20548587444f0dc12aebfc1cbdb0%2Freal%2Fempty%2Fstatic_scan%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 5,
+        "images": 5,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "real/empty/static_scan/transforms.json",
+          "url": "https://huggingface.co/datasets/anon211/embodied_gaussians/resolve/55db9200b47d20548587444f0dc12aebfc1cbdb0/real/empty/static_scan/transforms.json",
+          "bytes": 11649,
+          "sha256": "34e96b53fab8d4485082ffa7e53687442ce7fbbd3d793ec61330c131c7a14e55",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission",
+      "revision": "d82d2dcfb9359ce8bc469172409c170d1a521831",
+      "kind": "camera-scene",
+      "path": "lego_6_views",
+      "files": {
+        "metadata:lego_6_views/transforms_test.json": "lego_6_views/transforms_test.json",
+        "metadata:lego_6_views/transforms_train.json": "lego_6_views/transforms_train.json",
+        "metadata:lego_6_views/transforms_train_blurry.json": "lego_6_views/transforms_train_blurry.json",
+        "asset:lego_6_views/points3d.ply": "lego_6_views/points3d.ply"
+      },
+      "loadPath": "lego_6_views/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission/resolve/d82d2dcfb9359ce8bc469172409c170d1a521831/lego_6_views/transforms_train.json",
+      "checkedAt": "2026-10-19T03:21:43.152Z",
+      "exportSha256": "ba3815c31ef96cee0fd4bf2132a49defa549db74d5349fd27e3de203d0660f6f",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FAnonymous-ACMMM-2025-Submission%2FAnonymous_ACMMM_2025_Submission%2Fresolve%2Fd82d2dcfb9359ce8bc469172409c170d1a521831%2Flego_6_views%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 210,
+        "images": 210,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "lego_6_views/transforms_train.json",
+          "url": "https://huggingface.co/datasets/Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission/resolve/d82d2dcfb9359ce8bc469172409c170d1a521831/lego_6_views/transforms_train.json",
+          "bytes": 183889,
+          "sha256": "aafa0529759bd77c3fc2b1f81d86d360007fb50f9e8ce1efa90db0fb43d1baa7",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:Cloth-splatters/cloth-splatting-folding-scenes",
+      "revision": "0742d32241a9701115b098e9732b3abc4c0322da",
+      "kind": "camera-scene",
+      "path": "TOWEL_00_00",
+      "files": {
+        "metadata:TOWEL_00_00/transforms_test.json": "TOWEL_00_00/transforms_test.json",
+        "metadata:TOWEL_00_00/transforms_train.json": "TOWEL_00_00/transforms_train.json"
+      },
+      "loadPath": "TOWEL_00_00/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/Cloth-splatters/cloth-splatting-folding-scenes/resolve/0742d32241a9701115b098e9732b3abc4c0322da/TOWEL_00_00/transforms_train.json",
+      "checkedAt": "2026-10-19T03:21:46.051Z",
+      "exportSha256": "50e34df559c18dfafcd672722483f9c5b125053bed02f61a83594e1d1edce88e",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FCloth-splatters%2Fcloth-splatting-folding-scenes%2Fresolve%2F0742d32241a9701115b098e9732b3abc4c0322da%2FTOWEL_00_00%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 92,
+        "images": 92,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "TOWEL_00_00/transforms_train.json",
+          "url": "https://huggingface.co/datasets/Cloth-splatters/cloth-splatting-folding-scenes/resolve/0742d32241a9701115b098e9732b3abc4c0322da/TOWEL_00_00/transforms_train.json",
+          "bytes": 84430,
+          "sha256": "f62126f11fcd6cb7e36dbf341eda258fcb0fcf48e478865bd31f22851bb40cfd",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:Falcary/great-e-nerf",
+      "revision": "40d832cfaa206a03ee91e1e5af0589d461dee1ee",
+      "kind": "camera-scene",
+      "path": "master/views",
+      "files": {
+        "metadata:master/views/transforms_test.json": "master/views/transforms_test.json",
+        "metadata:master/views/transforms_val.json": "master/views/transforms_val.json"
+      },
+      "loadPath": "master/views/transforms_val.json",
+      "loadUrl": "https://huggingface.co/datasets/Falcary/great-e-nerf/resolve/40d832cfaa206a03ee91e1e5af0589d461dee1ee/master/views/transforms_val.json",
+      "checkedAt": "2026-10-19T03:21:48.835Z",
+      "exportSha256": "0eb87b1af4de94e0a27b3764314aa63c5ef89d5e3650bc7321fb0eb178d0fdba",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FFalcary%2Fgreat-e-nerf%2Fresolve%2F40d832cfaa206a03ee91e1e5af0589d461dee1ee%2Fmaster%2Fviews%2Ftransforms_val.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "master/views/transforms_val.json",
+          "url": "https://huggingface.co/datasets/Falcary/great-e-nerf/resolve/40d832cfaa206a03ee91e1e5af0589d461dee1ee/master/views/transforms_val.json",
+          "bytes": 175231,
+          "sha256": "e0a0aebd974d3bd4fe74fa42934cf90780ae6f40f62fd8f8cc2e6734f40dde87",
+          "browserRead": true
+        }
+      ],
+      "frameCoverage": {
+        "metadataFrames": 200,
+        "missingRgbFrames": 100,
+        "listingUrl": "https://huggingface.co/api/datasets/Falcary/great-e-nerf/tree/40d832cfaa206a03ee91e1e5af0589d461dee1ee/master/views/val?recursive=false&expand=false&limit=1000",
+        "listingSha256": "68dc77f48fa337ab04294f8b4ce0c37990c8f5b983d76a2f1158119dd934cfc3",
+        "listingComplete": true,
+        "listingBrowserRead": true
+      }
+    },
+    {
+      "sourceId": "hf:HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting",
+      "revision": "46b23520acaaf5d58938fb19b50a3a62d12c55df",
+      "kind": "camera-scene",
+      "path": "dry_ice",
+      "files": {
+        "metadata:dry_ice/transforms_all.json": "dry_ice/transforms_all.json",
+        "metadata:dry_ice/transforms_test.json": "dry_ice/transforms_test.json",
+        "metadata:dry_ice/transforms_train.json": "dry_ice/transforms_train.json",
+        "asset:dry_ice/points3d.ply": "dry_ice/points3d.ply"
+      },
+      "loadPath": "dry_ice/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting/resolve/46b23520acaaf5d58938fb19b50a3a62d12c55df/dry_ice/transforms_train.json",
+      "checkedAt": "2026-10-19T03:22:53.202Z",
+      "exportSha256": "d21e99e767b38c1217ebc1e061955b4ec1b0d204af4c63a338cffe375cbb611a",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FHaoqinHong%2FPhysics-Informed-Deformable-Gaussian-Splatting%2Fresolve%2F46b23520acaaf5d58938fb19b50a3a62d12c55df%2Fdry_ice%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 97,
+        "images": 97,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "dry_ice/transforms_train.json",
+          "url": "https://huggingface.co/datasets/HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting/resolve/46b23520acaaf5d58938fb19b50a3a62d12c55df/dry_ice/transforms_train.json",
+          "bytes": 62819,
+          "sha256": "f5e4129f02588fba8a443cb3bc552de37882f7cee4a6b9d6d97db5d922f360e9",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:hobbyaih/360data1",
+      "revision": "5dca0d8034eb45bb34a7f0b3c40610402ce022f0",
+      "kind": "camera-scene",
+      "path": "USB/100109/start",
+      "files": {
+        "metadata:USB/100109/start/transforms_test.json": "USB/100109/start/transforms_test.json",
+        "metadata:USB/100109/start/transforms_train.json": "USB/100109/start/transforms_train.json"
+      },
+      "loadPath": "USB/100109/start/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/hobbyaih/360data1/resolve/5dca0d8034eb45bb34a7f0b3c40610402ce022f0/USB/100109/start/transforms_train.json",
+      "checkedAt": "2026-10-19T03:22:57.095Z",
+      "exportSha256": "3f98c6231add564024a9dd6adad2e0cc4d189e7ef4b139733f62e4486189fb0e",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fhobbyaih%2F360data1%2Fresolve%2F5dca0d8034eb45bb34a7f0b3c40610402ce022f0%2FUSB%2F100109%2Fstart%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "USB/100109/start/transforms_train.json",
+          "url": "https://huggingface.co/datasets/hobbyaih/360data1/resolve/5dca0d8034eb45bb34a7f0b3c40610402ce022f0/USB/100109/start/transforms_train.json",
+          "bytes": 91389,
+          "sha256": "cc05f890da26d896942508d98aa6a3f4b241780cfebdd91b6bc74edef26490bf",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:jayinnn/Skyfall-GS-datasets",
+      "revision": "82bcd8ae044afcf3182d335a47d0694ba2b4daa2",
+      "kind": "camera-scene",
+      "path": "datasets_JAX/JAX_004",
+      "files": {
+        "metadata:datasets_JAX/JAX_004/transforms_test.json": "datasets_JAX/JAX_004/transforms_test.json",
+        "metadata:datasets_JAX/JAX_004/transforms_train.json": "datasets_JAX/JAX_004/transforms_train.json",
+        "asset:datasets_JAX/JAX_004/points3D.ply": "datasets_JAX/JAX_004/points3D.ply"
+      },
+      "loadPath": "datasets_JAX/JAX_004/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/jayinnn/Skyfall-GS-datasets/resolve/82bcd8ae044afcf3182d335a47d0694ba2b4daa2/datasets_JAX/JAX_004/transforms_train.json",
+      "checkedAt": "2026-10-19T03:23:00.807Z",
+      "exportSha256": "fda7ac9f53753605b2878b0ab795292cb0cc15710389aff122aa2e67fea2c8ab",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fjayinnn%2FSkyfall-GS-datasets%2Fresolve%2F82bcd8ae044afcf3182d335a47d0694ba2b4daa2%2Fdatasets_JAX%2FJAX_004%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 9,
+        "images": 9,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "datasets_JAX/JAX_004/transforms_train.json",
+          "url": "https://huggingface.co/datasets/jayinnn/Skyfall-GS-datasets/resolve/82bcd8ae044afcf3182d335a47d0694ba2b4daa2/datasets_JAX/JAX_004/transforms_train.json",
+          "bytes": 6707,
+          "sha256": "fedf0bc7bbeb6552a5d969a25fda29b08e62984c28729292d9714edae298962e",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:Jiuhe131/refracgs_dataset",
+      "revision": "3229a3db46329ad18f21331e2015f24303f5cbd3",
+      "kind": "camera-scene",
+      "path": "refracgs_synthetic/toys_30view",
+      "files": {
+        "metadata:refracgs_synthetic/toys_30view/transforms_test.json": "refracgs_synthetic/toys_30view/transforms_test.json",
+        "metadata:refracgs_synthetic/toys_30view/transforms_train.json": "refracgs_synthetic/toys_30view/transforms_train.json",
+        "metadata:refracgs_synthetic/toys_30view/transforms_val.json": "refracgs_synthetic/toys_30view/transforms_val.json"
+      },
+      "loadPath": "refracgs_synthetic/toys_30view/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/Jiuhe131/refracgs_dataset/resolve/3229a3db46329ad18f21331e2015f24303f5cbd3/refracgs_synthetic/toys_30view/transforms_train.json",
+      "checkedAt": "2026-10-19T03:23:04.381Z",
+      "exportSha256": "fa930e3d3b38c18b5ee9d8836f81352af9f97a85e56b2a3dec4da617fedfa344",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FJiuhe131%2Frefracgs_dataset%2Fresolve%2F3229a3db46329ad18f21331e2015f24303f5cbd3%2Frefracgs_synthetic%2Ftoys_30view%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 24,
+        "images": 24,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "refracgs_synthetic/toys_30view/transforms_train.json",
+          "url": "https://huggingface.co/datasets/Jiuhe131/refracgs_dataset/resolve/3229a3db46329ad18f21331e2015f24303f5cbd3/refracgs_synthetic/toys_30view/transforms_train.json",
+          "bytes": 19999,
+          "sha256": "8dacffb73bea4493394bb6b7baa31674d43dd66db78c677cb26d97e682678a3f",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:KayZhu/ExtremeOcc-3D",
+      "revision": "c5e787ebea5feebe8a68c9a31b10785cc5fd9a69",
+      "kind": "camera-scene",
+      "path": "gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686",
+      "files": {
+        "metadata:gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686/transforms.json": "gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686/transforms.json",
+        "asset:gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686/mesh.ply": "gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686/mesh.ply"
+      },
+      "loadPath": "gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/KayZhu/ExtremeOcc-3D/resolve/c5e787ebea5feebe8a68c9a31b10785cc5fd9a69/gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686/transforms.json",
+      "checkedAt": "2026-10-19T03:36:03.125Z",
+      "exportSha256": "8eae79519e40e45117acce711f6a02a9ba832c4a3bf2d8150e0a6d8b99c813ae",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FKayZhu%2FExtremeOcc-3D%2Fresolve%2Fc5e787ebea5feebe8a68c9a31b10785cc5fd9a69%2Fgt_assets%2F0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 150,
+        "images": 150,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686/transforms.json",
+          "url": "https://huggingface.co/datasets/KayZhu/ExtremeOcc-3D/resolve/c5e787ebea5feebe8a68c9a31b10785cc5fd9a69/gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686/transforms.json",
+          "bytes": 132368,
+          "sha256": "c35e543a112b21014a055514d2db6d83df13d1debb0e8366aa004bbd00d179a2",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:kentaito321/Multi_View_Industrial_part_Dataset",
+      "revision": "91678202a574b70d92924fdbe0d1a1f550050b2b",
+      "kind": "camera-scene",
+      "path": "MVID/cap",
+      "files": {
+        "metadata:MVID/cap/transforms.json": "MVID/cap/transforms.json",
+        "metadata:MVID/cap/transforms_test.json": "MVID/cap/transforms_test.json",
+        "metadata:MVID/cap/transforms_train.json": "MVID/cap/transforms_train.json"
+      },
+      "loadPath": "MVID/cap/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/kentaito321/Multi_View_Industrial_part_Dataset/resolve/91678202a574b70d92924fdbe0d1a1f550050b2b/MVID/cap/transforms_train.json",
+      "checkedAt": "2026-10-19T03:24:04.881Z",
+      "exportSha256": "26f291b946bb5c4ebccf9983993b6e1faee2ed8626c07fff160fbbe4fedf9664",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fkentaito321%2FMulti_View_Industrial_part_Dataset%2Fresolve%2F91678202a574b70d92924fdbe0d1a1f550050b2b%2FMVID%2Fcap%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 360,
+        "images": 360,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "MVID/cap/transforms_train.json",
+          "url": "https://huggingface.co/datasets/kentaito321/Multi_View_Industrial_part_Dataset/resolve/91678202a574b70d92924fdbe0d1a1f550050b2b/MVID/cap/transforms_train.json",
+          "bytes": 302720,
+          "sha256": "bf59d20612aa5a7716204d3c1f2a3e02ef8545405567802b9aa441dde5b8ed2a",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:MikolajZ/eks_data",
+      "revision": "519715f0f7d9fbfaa3ec5768a0e53626a3a0a17a",
+      "kind": "camera-scene",
+      "path": "data/mic",
+      "files": {
+        "metadata:data/mic/transforms_test.json": "data/mic/transforms_test.json",
+        "metadata:data/mic/transforms_train.json": "data/mic/transforms_train.json",
+        "metadata:data/mic/transforms_val.json": "data/mic/transforms_val.json",
+        "asset:data/mic/sparse_pc.ply": "data/mic/sparse_pc.ply"
+      },
+      "loadPath": "data/mic/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/MikolajZ/eks_data/resolve/519715f0f7d9fbfaa3ec5768a0e53626a3a0a17a/data/mic/transforms_train.json",
+      "checkedAt": "2026-10-19T03:25:08.896Z",
+      "exportSha256": "8ac377e163c1cad5c67aad254876fd4cf6626af875c19c9b1473b73f2472b0be",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FMikolajZ%2Feks_data%2Fresolve%2F519715f0f7d9fbfaa3ec5768a0e53626a3a0a17a%2Fdata%2Fmic%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "data/mic/transforms_train.json",
+          "url": "https://huggingface.co/datasets/MikolajZ/eks_data/resolve/519715f0f7d9fbfaa3ec5768a0e53626a3a0a17a/data/mic/transforms_train.json",
+          "bytes": 87968,
+          "sha256": "2e3dd0c6a1f9c34fe0cdad9f423c56eaa794c102789ff31058ae396e9f882403",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:MikolajZ/eks_demo_data",
+      "revision": "e5d8c5be4b1019543be04c81ccf51f2cc01fc8fc",
+      "kind": "camera-scene",
+      "path": "data/ficus",
+      "files": {
+        "metadata:data/ficus/transforms_test.json": "data/ficus/transforms_test.json",
+        "metadata:data/ficus/transforms_train.json": "data/ficus/transforms_train.json",
+        "metadata:data/ficus/transforms_val.json": "data/ficus/transforms_val.json",
+        "asset:data/ficus/sparse_pc.ply": "data/ficus/sparse_pc.ply"
+      },
+      "loadPath": "data/ficus/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/MikolajZ/eks_demo_data/resolve/e5d8c5be4b1019543be04c81ccf51f2cc01fc8fc/data/ficus/transforms_train.json",
+      "checkedAt": "2026-10-19T03:25:12.580Z",
+      "exportSha256": "fc0f0614334928a482297bd38464d4f809d900e2139fae18ca87819b044a8de0",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FMikolajZ%2Feks_demo_data%2Fresolve%2Fe5d8c5be4b1019543be04c81ccf51f2cc01fc8fc%2Fdata%2Fficus%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "data/ficus/transforms_train.json",
+          "url": "https://huggingface.co/datasets/MikolajZ/eks_demo_data/resolve/e5d8c5be4b1019543be04c81ccf51f2cc01fc8fc/data/ficus/transforms_train.json",
+          "bytes": 88094,
+          "sha256": "27e6a11281fafb8fffdffa22d82317cdc772632deb0032d0a55a2f5c95006c95",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:MiniWan/dl3dv",
+      "revision": "012d19fdf9a99aa630d286bbfc379db45ffc930f",
+      "kind": "camera-scene",
+      "path": "",
+      "files": {
+        "metadata:transforms.json": "transforms.json"
+      },
+      "loadPath": "transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/MiniWan/dl3dv/resolve/012d19fdf9a99aa630d286bbfc379db45ffc930f/transforms.json",
+      "checkedAt": "2026-10-19T03:36:31.739Z",
+      "exportSha256": "bbf90d79da6e17892bad01d610d1514ba96fdd5dc677a6e123907292ba65a29d",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FMiniWan%2Fdl3dv%2Fresolve%2F012d19fdf9a99aa630d286bbfc379db45ffc930f%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 330,
+        "images": 330,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "transforms.json",
+          "url": "https://huggingface.co/datasets/MiniWan/dl3dv/resolve/012d19fdf9a99aa630d286bbfc379db45ffc930f/transforms.json",
+          "bytes": 293507,
+          "sha256": "8d858d772f162c0510f1848b1a99dced303c7da5caa11aa3c400bee191f05cec",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/metal/metal_01_compose_00296_52e5c2621d",
+      "files": {
+        "metadata:scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+        "asset:scenes/metal/metal_01_compose_00296_52e5c2621d/mesh_raw.ply": "scenes/metal/metal_01_compose_00296_52e5c2621d/mesh_raw.ply",
+        "asset:scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply": "scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply"
+      },
+      "loadPath": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+      "checkedAt": "2026-10-19T03:25:53.590Z",
+      "exportSha256": "8b619b4f216d2f733e664cfc3faf39f4aced62c580a2d600050aa114c6aee71c",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Fmetal%2Fmetal_01_compose_00296_52e5c2621d%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+          "bytes": 41568,
+          "sha256": "71f3ba52f8b0c83a5a146327df0525460b10bd03ee131465663b85b28f7c2f23",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:nonconformist/Blenderkit_retail_bench_mini",
+      "revision": "e39d16c22ff04caa0a4ddefb731431d9aea2a11e",
+      "kind": "camera-scene",
+      "path": "renders_cond/000381a5-e810-48ca-8b5c-a096db1e6a29",
+      "files": {
+        "metadata:renders_cond/000381a5-e810-48ca-8b5c-a096db1e6a29/transforms.json": "renders_cond/000381a5-e810-48ca-8b5c-a096db1e6a29/transforms.json"
+      },
+      "loadPath": "renders_cond/000381a5-e810-48ca-8b5c-a096db1e6a29/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/nonconformist/Blenderkit_retail_bench_mini/resolve/e39d16c22ff04caa0a4ddefb731431d9aea2a11e/renders_cond/000381a5-e810-48ca-8b5c-a096db1e6a29/transforms.json",
+      "checkedAt": "2026-10-19T03:25:57.055Z",
+      "exportSha256": "a7a43eb151477f7c889ecc3c63d62f2fb4ae180d6eac752cf46c321b8b80a316",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fnonconformist%2FBlenderkit_retail_bench_mini%2Fresolve%2Fe39d16c22ff04caa0a4ddefb731431d9aea2a11e%2Frenders_cond%2F000381a5-e810-48ca-8b5c-a096db1e6a29%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 1,
+        "images": 1,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "renders_cond/000381a5-e810-48ca-8b5c-a096db1e6a29/transforms.json",
+          "url": "https://huggingface.co/datasets/nonconformist/Blenderkit_retail_bench_mini/resolve/e39d16c22ff04caa0a4ddefb731431d9aea2a11e/renders_cond/000381a5-e810-48ca-8b5c-a096db1e6a29/transforms.json",
+          "bytes": 1710,
+          "sha256": "7541a599ba5e21759d0b02d49504c4f0e5f5a496df399963840bfdcd01b2daeb",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:pablovela5620/nerf-synthetic-mirror",
+      "revision": "23e7eaa65ff836405329c7b6b4a34afaeb3a70e2",
+      "kind": "camera-scene",
+      "path": "mic",
+      "files": {
+        "metadata:mic/transforms_test.json": "mic/transforms_test.json",
+        "metadata:mic/transforms_train.json": "mic/transforms_train.json",
+        "metadata:mic/transforms_val.json": "mic/transforms_val.json"
+      },
+      "loadPath": "mic/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/pablovela5620/nerf-synthetic-mirror/resolve/23e7eaa65ff836405329c7b6b4a34afaeb3a70e2/mic/transforms_train.json",
+      "checkedAt": "2026-10-19T03:27:00.710Z",
+      "exportSha256": "0cd0e354acebce390a2b7ec725e77a5f00ec9889b69fdbb73267d3cfb02ac135",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fpablovela5620%2Fnerf-synthetic-mirror%2Fresolve%2F23e7eaa65ff836405329c7b6b4a34afaeb3a70e2%2Fmic%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "mic/transforms_train.json",
+          "url": "https://huggingface.co/datasets/pablovela5620/nerf-synthetic-mirror/resolve/23e7eaa65ff836405329c7b6b4a34afaeb3a70e2/mic/transforms_train.json",
+          "bytes": 87968,
+          "sha256": "2e3dd0c6a1f9c34fe0cdad9f423c56eaa794c102789ff31058ae396e9f882403",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:phuckstnk63/nerf-synthetic",
+      "revision": "68ab61d46f109b192f9a519c4bc5a646e1669db0",
+      "kind": "camera-scene",
+      "path": "nerf_synthetic/lego",
+      "files": {
+        "metadata:nerf_synthetic/lego/transforms_test.json": "nerf_synthetic/lego/transforms_test.json",
+        "metadata:nerf_synthetic/lego/transforms_train.json": "nerf_synthetic/lego/transforms_train.json",
+        "metadata:nerf_synthetic/lego/transforms_val.json": "nerf_synthetic/lego/transforms_val.json"
+      },
+      "loadPath": "nerf_synthetic/lego/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/phuckstnk63/nerf-synthetic/resolve/68ab61d46f109b192f9a519c4bc5a646e1669db0/nerf_synthetic/lego/transforms_train.json",
+      "checkedAt": "2026-10-19T03:27:03.742Z",
+      "exportSha256": "7234f5f00218cc4b371c5d2609447e8cb57c1f707d4c74a689de4e12d60b1dee",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fphuckstnk63%2Fnerf-synthetic%2Fresolve%2F68ab61d46f109b192f9a519c4bc5a646e1669db0%2Fnerf_synthetic%2Flego%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "nerf_synthetic/lego/transforms_train.json",
+          "url": "https://huggingface.co/datasets/phuckstnk63/nerf-synthetic/resolve/68ab61d46f109b192f9a519c4bc5a646e1669db0/nerf_synthetic/lego/transforms_train.json",
+          "bytes": 87946,
+          "sha256": "82d46cfbd405d7da8562b6fa75b6fb0631a3f941adf66f0c023acb8bf9ea273a",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:pkupig/dadr_splatting-dataset",
+      "revision": "acdd4afd358ac84023fefef01dbeac24c7166b81",
+      "kind": "camera-scene",
+      "path": "",
+      "files": {
+        "metadata:transforms_test.json": "transforms_test.json",
+        "metadata:transforms_train.json": "transforms_train.json",
+        "asset:points3d.ply": "points3d.ply"
+      },
+      "loadPath": "transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/pkupig/dadr_splatting-dataset/resolve/acdd4afd358ac84023fefef01dbeac24c7166b81/transforms_train.json",
+      "checkedAt": "2026-10-19T03:27:06.613Z",
+      "exportSha256": "82c76f9d4ab851033d2da67e990a56581a676968898102aa1754834c8f0b38b9",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fpkupig%2Fdadr_splatting-dataset%2Fresolve%2Facdd4afd358ac84023fefef01dbeac24c7166b81%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 57,
+        "images": 57,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "transforms_train.json",
+          "url": "https://huggingface.co/datasets/pkupig/dadr_splatting-dataset/resolve/acdd4afd358ac84023fefef01dbeac24c7166b81/transforms_train.json",
+          "bytes": 49170,
+          "sha256": "b3411ff706ee1dcd444450c11cbef4e994e50c180b7e603bc7de2c95096e506a",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:SHlNDY/HDR-NSFF",
+      "revision": "dc317d044cbf7d4755bf8b29338bb6b51afe4f7d",
+      "kind": "camera-scene",
+      "path": "bag/dense",
+      "files": {
+        "metadata:bag/dense/poses_bounds.npy": "bag/dense/poses_bounds.npy"
+      },
+      "loadPath": "bag/dense/poses_bounds.npy",
+      "loadUrl": "https://huggingface.co/datasets/SHlNDY/HDR-NSFF/resolve/dc317d044cbf7d4755bf8b29338bb6b51afe4f7d/bag/dense/poses_bounds.npy",
+      "checkedAt": "2026-10-19T03:36:40.632Z",
+      "exportSha256": "3598f8440528366c5f1c57b8292bb147f9dc7e8e25557ff3d1e5b97fa8be8cac",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FSHlNDY%2FHDR-NSFF%2Fresolve%2Fdc317d044cbf7d4755bf8b29338bb6b51afe4f7d%2Fbag%2Fdense%2Fposes_bounds.npy",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 36,
+        "images": 36,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "bag/dense/poses_bounds.npy",
+          "url": "https://huggingface.co/datasets/SHlNDY/HDR-NSFF/resolve/dc317d044cbf7d4755bf8b29338bb6b51afe4f7d/bag/dense/poses_bounds.npy",
+          "bytes": 5024,
+          "sha256": "fc644779d049869accc3dd1b36863c2ee9c5d16299b8d42a35ba7d6c8691a765",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:SimeonOA/Botany-Bot",
+      "revision": "e0f1b57b89f8deb4dfee22c99c227798f9c7c541",
+      "kind": "camera-scene",
+      "path": "belize",
+      "files": {
+        "metadata:belize/transforms.json": "belize/transforms.json"
+      },
+      "loadPath": "belize/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/SimeonOA/Botany-Bot/resolve/e0f1b57b89f8deb4dfee22c99c227798f9c7c541/belize/transforms.json",
+      "checkedAt": "2026-10-19T03:27:53.416Z",
+      "exportSha256": "7c320b5743163c19b9eecfaaed6d25377a24502b46b76f3cdc98ee7a2767735e",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FSimeonOA%2FBotany-Bot%2Fresolve%2Fe0f1b57b89f8deb4dfee22c99c227798f9c7c541%2Fbelize%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 92,
+        "images": 92,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "belize/transforms.json",
+          "url": "https://huggingface.co/datasets/SimeonOA/Botany-Bot/resolve/e0f1b57b89f8deb4dfee22c99c227798f9c7c541/belize/transforms.json",
+          "bytes": 115002,
+          "sha256": "edd35a209d4a49394ff2b418de38be2dc9cde961093d567a21fb7aed110bfaf9",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:SimeonOA/GrowSplat-Dataset",
+      "revision": "b24983f7d984982b6cee2901d409cd7d01e5545b",
+      "kind": "camera-scene",
+      "path": "quinoa/20221031",
+      "files": {
+        "metadata:quinoa/20221031/transforms.json": "quinoa/20221031/transforms.json",
+        "asset:quinoa/20221031/67-1121-171436754-pointcloud_converted.ply": "quinoa/20221031/67-1121-171436754-pointcloud_converted.ply"
+      },
+      "loadPath": "quinoa/20221031/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/SimeonOA/GrowSplat-Dataset/resolve/b24983f7d984982b6cee2901d409cd7d01e5545b/quinoa/20221031/transforms.json",
+      "checkedAt": "2026-10-19T03:27:56.538Z",
+      "exportSha256": "fd29abc8ede6cedc4c7e746aa9decd7338f5092e4b1c267cf598de8669d4828d",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FSimeonOA%2FGrowSplat-Dataset%2Fresolve%2Fb24983f7d984982b6cee2901d409cd7d01e5545b%2Fquinoa%2F20221031%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 15,
+        "images": 15,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "quinoa/20221031/transforms.json",
+          "url": "https://huggingface.co/datasets/SimeonOA/GrowSplat-Dataset/resolve/b24983f7d984982b6cee2901d409cd7d01e5545b/quinoa/20221031/transforms.json",
+          "bytes": 18438,
+          "sha256": "9f17d73f7a8d7c168c42f7d4f39c2f42ff2eb69ae7c57fd7a693b54b7b00984b",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:suvadityamuk/gso-footwear-trellis2-latents",
+      "revision": "c41b36923b28cacee6f25705aa3559dc3e15b379",
+      "kind": "camera-scene",
+      "path": "renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a",
+      "files": {
+        "metadata:renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a/transforms.json": "renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a/transforms.json"
+      },
+      "loadPath": "renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/suvadityamuk/gso-footwear-trellis2-latents/resolve/c41b36923b28cacee6f25705aa3559dc3e15b379/renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a/transforms.json",
+      "checkedAt": "2026-10-19T03:36:54.965Z",
+      "exportSha256": "5ae0d3308183f9173850e3fe56c8b63bd797c0d46db70a91ca6fffae1f988eda",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fsuvadityamuk%2Fgso-footwear-trellis2-latents%2Fresolve%2Fc41b36923b28cacee6f25705aa3559dc3e15b379%2Frenders_cond%2F0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 16,
+        "images": 16,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a/transforms.json",
+          "url": "https://huggingface.co/datasets/suvadityamuk/gso-footwear-trellis2-latents/resolve/c41b36923b28cacee6f25705aa3559dc3e15b379/renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a/transforms.json",
+          "bytes": 14403,
+          "sha256": "d8047302aa2c091245739c34b8a5d03e134ff22b9cbc811f386ae68db3e711c9",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:Tenstorrent/tt-nerf-p150-white",
+      "revision": "6590c2059d653458fb44f66fad8681995e7bf3b8",
+      "kind": "camera-scene",
+      "path": "",
+      "files": {
+        "metadata:transforms_test.json": "transforms_test.json",
+        "metadata:transforms_train.json": "transforms_train.json"
+      },
+      "loadPath": "transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/Tenstorrent/tt-nerf-p150-white/resolve/6590c2059d653458fb44f66fad8681995e7bf3b8/transforms_train.json",
+      "checkedAt": "2026-10-19T03:28:35.534Z",
+      "exportSha256": "999d57f34cae79322cfb9522b84409f600a4ceb221279e2aa3d6e84264ed71ae",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FTenstorrent%2Ftt-nerf-p150-white%2Fresolve%2F6590c2059d653458fb44f66fad8681995e7bf3b8%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "transforms_train.json",
+          "url": "https://huggingface.co/datasets/Tenstorrent/tt-nerf-p150-white/resolve/6590c2059d653458fb44f66fad8681995e7bf3b8/transforms_train.json",
+          "bytes": 87946,
+          "sha256": "82d46cfbd405d7da8562b6fa75b6fb0631a3f941adf66f0c023acb8bf9ea273a",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:tiange/Cap3D",
+      "revision": "0f05a726ff7eb3db93444a4efc65f0552bce84a4",
+      "kind": "camera-scene",
+      "path": "RenderedImage_perobj_zips/example_zipfile",
+      "files": {
+        "metadata:RenderedImage_perobj_zips/example_zipfile/transforms_train.json": "RenderedImage_perobj_zips/example_zipfile/transforms_train.json"
+      },
+      "loadPath": "RenderedImage_perobj_zips/example_zipfile/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/tiange/Cap3D/resolve/0f05a726ff7eb3db93444a4efc65f0552bce84a4/RenderedImage_perobj_zips/example_zipfile/transforms_train.json",
+      "checkedAt": "2026-10-19T03:28:39.271Z",
+      "exportSha256": "858efeec72e6ee9a917ed966f9768cf02c6b883c7db6d9b51e2136386dee1445",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Ftiange%2FCap3D%2Fresolve%2F0f05a726ff7eb3db93444a4efc65f0552bce84a4%2FRenderedImage_perobj_zips%2Fexample_zipfile%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 20,
+        "images": 20,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "RenderedImage_perobj_zips/example_zipfile/transforms_train.json",
+          "url": "https://huggingface.co/datasets/tiange/Cap3D/resolve/0f05a726ff7eb3db93444a4efc65f0552bce84a4/RenderedImage_perobj_zips/example_zipfile/transforms_train.json",
+          "bytes": 17695,
+          "sha256": "11e4638709c8f72753e2c0cf3ead023e725a28d453bbdaf0a7fd9af9471ea3c1",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:turandai/gaussian-surfels-bmvs",
+      "revision": "f762bfce894e5bf9ad4f4a0813c2cece4db1ca51",
+      "kind": "camera-scene",
+      "path": "cow",
+      "files": {
+        "metadata:cow/cameras.npz": "cow/cameras.npz",
+        "asset:cow/gt_pts.ply": "cow/gt_pts.ply"
+      },
+      "loadPath": "cow/cameras.npz",
+      "loadUrl": "https://huggingface.co/datasets/turandai/gaussian-surfels-bmvs/resolve/f762bfce894e5bf9ad4f4a0813c2cece4db1ca51/cow/cameras.npz",
+      "checkedAt": "2026-10-19T03:37:00.621Z",
+      "exportSha256": "61cddd2db69a0cd77159dd627621fd861217680d330f86cfc0cd505e49031250",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fturandai%2Fgaussian-surfels-bmvs%2Fresolve%2Ff762bfce894e5bf9ad4f4a0813c2cece4db1ca51%2Fcow%2Fcameras.npz",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 64,
+        "images": 64,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "cow/cameras.npz",
+          "url": "https://huggingface.co/datasets/turandai/gaussian-surfels-bmvs/resolve/f762bfce894e5bf9ad4f4a0813c2cece4db1ca51/cow/cameras.npz",
+          "bytes": 40942,
+          "sha256": "13643d9db52dd42759058e218818f691b938cf886c99ed4f039e5950c761580d",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:turandai/gaussian-surfels-dtu",
+      "revision": "70ec15cd824556d17493e1c18e7e6c8b79f3ad94",
+      "kind": "camera-scene",
+      "path": "scan24",
+      "files": {
+        "metadata:scan24/cameras.npz": "scan24/cameras.npz"
+      },
+      "loadPath": "scan24/cameras.npz",
+      "loadUrl": "https://huggingface.co/datasets/turandai/gaussian-surfels-dtu/resolve/70ec15cd824556d17493e1c18e7e6c8b79f3ad94/scan24/cameras.npz",
+      "checkedAt": "2026-10-19T03:37:21.056Z",
+      "exportSha256": "83cc84b2dd6c5b57445fd9578cb9539466afbfa3a2b88fc1139e950e5974ea42",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fturandai%2Fgaussian-surfels-dtu%2Fresolve%2F70ec15cd824556d17493e1c18e7e6c8b79f3ad94%2Fscan24%2Fcameras.npz",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 49,
+        "images": 49,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scan24/cameras.npz",
+          "url": "https://huggingface.co/datasets/turandai/gaussian-surfels-dtu/resolve/70ec15cd824556d17493e1c18e7e6c8b79f3ad94/scan24/cameras.npz",
+          "bytes": 95354,
+          "sha256": "a2aca767d84999ea76e3c002de0e21fe189b9d28c43b211862a3e31339b72705",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:uild42/gate-gsplat-assets",
+      "revision": "d8bd431972fe4a763ff3e0e4de57f314f2fe7fdb",
+      "kind": "camera-scene",
+      "path": "left_scene/mocap_processed",
+      "files": {
+        "metadata:left_scene/mocap_processed/transforms.json": "left_scene/mocap_processed/transforms.json",
+        "asset:left_scene/mocap_processed/sparse_pc.ply": "left_scene/mocap_processed/sparse_pc.ply"
+      },
+      "loadPath": "left_scene/mocap_processed/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/uild42/gate-gsplat-assets/resolve/d8bd431972fe4a763ff3e0e4de57f314f2fe7fdb/left_scene/mocap_processed/transforms.json",
+      "checkedAt": "2026-10-19T03:30:25.805Z",
+      "exportSha256": "311b27c5d9cdc849245d9f89028a4448c2b2c04620305a9239b2aa36adf41439",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fuild42%2Fgate-gsplat-assets%2Fresolve%2Fd8bd431972fe4a763ff3e0e4de57f314f2fe7fdb%2Fleft_scene%2Fmocap_processed%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 242,
+        "images": 242,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "left_scene/mocap_processed/transforms.json",
+          "url": "https://huggingface.co/datasets/uild42/gate-gsplat-assets/resolve/d8bd431972fe4a763ff3e0e4de57f314f2fe7fdb/left_scene/mocap_processed/transforms.json",
+          "bytes": 184774,
+          "sha256": "200ef55218021bb2cfe069b9d0ab89972e533c470467becd4b9000fda763c57b",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:VAST-AI/AniGen-Sample-Dataset",
+      "revision": "03bb3593045f2ddec5988daead449dc40b68dd6d",
+      "kind": "camera-scene",
+      "path": "renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1",
+      "files": {
+        "metadata:renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1/transforms.json": "renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1/transforms.json",
+        "asset:renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1/mesh.ply": "renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1/mesh.ply"
+      },
+      "loadPath": "renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/VAST-AI/AniGen-Sample-Dataset/resolve/03bb3593045f2ddec5988daead449dc40b68dd6d/renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1/transforms.json",
+      "checkedAt": "2026-10-19T03:37:43.281Z",
+      "exportSha256": "2c696c07fa07d456fc6a64caa68fe0172b02d8909886cac9afcd44832dc5462f",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FVAST-AI%2FAniGen-Sample-Dataset%2Fresolve%2F03bb3593045f2ddec5988daead449dc40b68dd6d%2Frenders%2F32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 30,
+        "images": 30,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1/transforms.json",
+          "url": "https://huggingface.co/datasets/VAST-AI/AniGen-Sample-Dataset/resolve/03bb3593045f2ddec5988daead449dc40b68dd6d/renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1/transforms.json",
+          "bytes": 26880,
+          "sha256": "e00b8aebad31bcaeba6656b1f32d08a4a142b5dca10bf3ae71317510cf829d92",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:yaguchi27/EV_hw1_nerf_synthetic",
+      "revision": "d90a095eb104f0712de9f499e7bef48a95b78d3b",
+      "kind": "camera-scene",
+      "path": "lego",
+      "files": {
+        "metadata:lego/transforms_test.json": "lego/transforms_test.json",
+        "metadata:lego/transforms_train.json": "lego/transforms_train.json",
+        "metadata:lego/transforms_val.json": "lego/transforms_val.json",
+        "asset:lego/points3d.ply": "lego/points3d.ply"
+      },
+      "loadPath": "lego/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/yaguchi27/EV_hw1_nerf_synthetic/resolve/d90a095eb104f0712de9f499e7bef48a95b78d3b/lego/transforms_train.json",
+      "checkedAt": "2026-10-19T03:33:08.549Z",
+      "exportSha256": "3ffc9fdc60766642f75c597e63c16096d173c372516c19d32dc6728b53bc013b",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fyaguchi27%2FEV_hw1_nerf_synthetic%2Fresolve%2Fd90a095eb104f0712de9f499e7bef48a95b78d3b%2Flego%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "lego/transforms_train.json",
+          "url": "https://huggingface.co/datasets/yaguchi27/EV_hw1_nerf_synthetic/resolve/d90a095eb104f0712de9f499e7bef48a95b78d3b/lego/transforms_train.json",
+          "bytes": 87946,
+          "sha256": "82d46cfbd405d7da8562b6fa75b6fb0631a3f941adf66f0c023acb8bf9ea273a",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:yimingshao1/refracgs_dataset",
+      "revision": "dabe84bda9db45ac2a1549830dddc81754514190",
+      "kind": "camera-scene",
+      "path": "refracgs_synthetic/toys_30view",
+      "files": {
+        "metadata:refracgs_synthetic/toys_30view/transforms_test.json": "refracgs_synthetic/toys_30view/transforms_test.json",
+        "metadata:refracgs_synthetic/toys_30view/transforms_train.json": "refracgs_synthetic/toys_30view/transforms_train.json",
+        "metadata:refracgs_synthetic/toys_30view/transforms_val.json": "refracgs_synthetic/toys_30view/transforms_val.json"
+      },
+      "loadPath": "refracgs_synthetic/toys_30view/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/yimingshao1/refracgs_dataset/resolve/dabe84bda9db45ac2a1549830dddc81754514190/refracgs_synthetic/toys_30view/transforms_train.json",
+      "checkedAt": "2026-10-19T03:33:11.535Z",
+      "exportSha256": "cc3827e0b9ada7960356c01ed8f9be8012800e674fe8f1cc238cb64340fd04e4",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fyimingshao1%2Frefracgs_dataset%2Fresolve%2Fdabe84bda9db45ac2a1549830dddc81754514190%2Frefracgs_synthetic%2Ftoys_30view%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 24,
+        "images": 24,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "refracgs_synthetic/toys_30view/transforms_train.json",
+          "url": "https://huggingface.co/datasets/yimingshao1/refracgs_dataset/resolve/dabe84bda9db45ac2a1549830dddc81754514190/refracgs_synthetic/toys_30view/transforms_train.json",
+          "bytes": 19999,
+          "sha256": "8dacffb73bea4493394bb6b7baa31674d43dd66db78c677cb26d97e682678a3f",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:yinyue27/RefRef_additional",
+      "revision": "df1d9b23d06ae6906c0a59a7c96b0a005be7756f",
+      "kind": "camera-scene",
+      "path": "image_data/textured_cube_scene/single-convex/ball",
+      "files": {
+        "metadata:image_data/textured_cube_scene/single-convex/ball/transforms_test.json": "image_data/textured_cube_scene/single-convex/ball/transforms_test.json",
+        "metadata:image_data/textured_cube_scene/single-convex/ball/transforms_train.json": "image_data/textured_cube_scene/single-convex/ball/transforms_train.json",
+        "metadata:image_data/textured_cube_scene/single-convex/ball/transforms_val.json": "image_data/textured_cube_scene/single-convex/ball/transforms_val.json"
+      },
+      "loadPath": "image_data/textured_cube_scene/single-convex/ball/transforms_train.json",
+      "loadUrl": "https://huggingface.co/datasets/yinyue27/RefRef_additional/resolve/df1d9b23d06ae6906c0a59a7c96b0a005be7756f/image_data/textured_cube_scene/single-convex/ball/transforms_train.json",
+      "checkedAt": "2026-10-19T03:33:14.116Z",
+      "exportSha256": "147e23030dd11d1bf9bfb19f8ecb97762278a785e34bb849a4afa3c8881414b8",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fyinyue27%2FRefRef_additional%2Fresolve%2Fdf1d9b23d06ae6906c0a59a7c96b0a005be7756f%2Fimage_data%2Ftextured_cube_scene%2Fsingle-convex%2Fball%2Ftransforms_train.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 100,
+        "images": 100,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "image_data/textured_cube_scene/single-convex/ball/transforms_train.json",
+          "url": "https://huggingface.co/datasets/yinyue27/RefRef_additional/resolve/df1d9b23d06ae6906c0a59a7c96b0a005be7756f/image_data/textured_cube_scene/single-convex/ball/transforms_train.json",
+          "bytes": 100157,
+          "sha256": "1876d200ed5423ef4ed8dddd54b72a04fa4c01e54419de9eed15bd4b7f14fba7",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:Yuvan666/embodied_gaussians",
+      "revision": "1e70477be26cbe78c222931457134801eacafe2c",
+      "kind": "camera-scene",
+      "path": "real/empty/static_scan",
+      "files": {
+        "metadata:real/empty/static_scan/transforms.json": "real/empty/static_scan/transforms.json"
+      },
+      "loadPath": "real/empty/static_scan/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/Yuvan666/embodied_gaussians/resolve/1e70477be26cbe78c222931457134801eacafe2c/real/empty/static_scan/transforms.json",
+      "checkedAt": "2026-10-19T03:33:17.595Z",
+      "exportSha256": "a0e962eddd1234c7f8e0395997dae51bb7efafa86f52abbd7bf4135f3c756a9a",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FYuvan666%2Fembodied_gaussians%2Fresolve%2F1e70477be26cbe78c222931457134801eacafe2c%2Freal%2Fempty%2Fstatic_scan%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 5,
+        "images": 5,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "real/empty/static_scan/transforms.json",
+          "url": "https://huggingface.co/datasets/Yuvan666/embodied_gaussians/resolve/1e70477be26cbe78c222931457134801eacafe2c/real/empty/static_scan/transforms.json",
+          "bytes": 11649,
+          "sha256": "34e96b53fab8d4485082ffa7e53687442ce7fbbd3d793ec61330c131c7a14e55",
+          "browserRead": true
+        }
+      ]
+    },
+    {
+      "sourceId": "public:[\"Instant-NGP Fox example\",\"fox\",\"JSON + JPEG\"]",
+      "revision": "abe236ee00cf90cfca6e36e65c00435d5b21f50a",
+      "kind": "scene",
+      "path": "Instant-NGP Fox example — fox (JSON + JPEG)",
+      "files": {
+        "metadata": "https://raw.githubusercontent.com/NVlabs/instant-ngp/abe236ee00cf90cfca6e36e65c00435d5b21f50a/data/nerf/fox/transforms.json"
+      },
+      "loadPath": "https://raw.githubusercontent.com/NVlabs/instant-ngp/abe236ee00cf90cfca6e36e65c00435d5b21f50a/data/nerf/fox/transforms.json",
+      "loadUrl": "https://raw.githubusercontent.com/NVlabs/instant-ngp/abe236ee00cf90cfca6e36e65c00435d5b21f50a/data/nerf/fox/transforms.json",
+      "checkedAt": "2026-10-19T03:33:20.377Z",
+      "exportSha256": "175d0af0bbfa89b72b5cb35a800eb3778c95aacf8ea986fd488b7561383e8cfe",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fraw.githubusercontent.com%2FNVlabs%2Finstant-ngp%2Fabe236ee00cf90cfca6e36e65c00435d5b21f50a%2Fdata%2Fnerf%2Ffox%2Ftransforms.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 67,
+        "images": 67,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "https://raw.githubusercontent.com/NVlabs/instant-ngp/abe236ee00cf90cfca6e36e65c00435d5b21f50a/data/nerf/fox/transforms.json",
+          "url": "https://raw.githubusercontent.com/NVlabs/instant-ngp/abe236ee00cf90cfca6e36e65c00435d5b21f50a/data/nerf/fox/transforms.json",
+          "bytes": 42644,
+          "sha256": "6e39ab762afa7a4ec3febae8048f7e3fbfab62aeb50e58a66645956d8679192c",
+          "browserRead": true
+        }
+      ],
+      "sourceSnapshotSha256": "af17b8b886b219167f3509ecf9f130b55c882c0df26e758d01215bbf15c6ec49"
+    },
+    {
+      "sourceId": "public:[\"OpenMVG SceauxCastle example\",\"SceauxCastle\",\"camera + RGB\"]",
+      "revision": "6887e7385400f4cca378507296ccc20c8a0837dd",
+      "kind": "scene",
+      "path": "OpenMVG SceauxCastle example — SceauxCastle (camera + RGB)",
+      "files": {
+        "metadata": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json"
+      },
+      "loadPath": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json",
+      "loadUrl": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json",
+      "checkedAt": "2026-10-19T03:33:22.411Z",
+      "exportSha256": "a7ea8b8e5bda804673cf3d72f403a161f354552661e07908bb030cde4ff14dce",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fraw.githubusercontent.com%2FopenMVG%2FopenMVG%2F6887e7385400f4cca378507296ccc20c8a0837dd%2Fsrc%2Fsoftware%2FSfM%2Fpython%2Fsfm_viewer%2Fsample_data%2Fsfm_data.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 11,
+        "images": 11,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json",
+          "url": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json",
+          "bytes": 9876467,
+          "sha256": "885cb7e3e1379a469fc02e5cebbc440553272007ff2c0094b371bb5f6062b626",
+          "browserRead": true
+        }
+      ],
+      "sourceSnapshotSha256": "3834f5df90992277380c81db0e65ee76efa50fa7d008823e62a1f95b7e080a47"
+    },
+    {
+      "sourceId": "public:[\"OpenSfM Berlin example\",\"Berlin\",\"camera + RGB\"]",
+      "revision": "92381be43cd93ca91e7ef903733a0482440028dd",
+      "kind": "scene",
+      "path": "OpenSfM Berlin example — Berlin (camera + RGB)",
+      "files": {
+        "metadata": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json"
+      },
+      "loadPath": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
+      "loadUrl": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
+      "checkedAt": "2026-10-19T03:33:25.008Z",
+      "exportSha256": "1827e43222e1a9114b9db205c7c28de34a684f1345ef68c09234581fe09815b1",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmapillary%2FOpenSfM%2F92381be43cd93ca91e7ef903733a0482440028dd%2Fdata%2Fberlin%2Freconstruction_example.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 3,
+        "images": 3,
+        "points": 0
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
+          "url": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
+          "bytes": 477360,
+          "sha256": "7dfc2f48ffad36092e0f0b21d1e7275b8cf047a3183d874c460a52fa79469425",
+          "browserRead": true
+        }
+      ],
+      "sourceSnapshotSha256": "1d888f6e2c6fb9f46de758ae5a3a708bfeff9d4a28b80745a0e0ac6b7920375d"
+    },
+    {
+      "sourceId": "public:[\"MegaScenes\",\"000000 Arc de Berà, component 0\",\"native complete sample\"]",
+      "kind": "scene",
+      "path": "MegaScenes — 000000 Arc de Berà, component 0 (native complete sample)",
+      "files": {
+        "cameras": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/cameras.bin",
+        "images": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/images.bin",
+        "points3d": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/points3D.bin",
+        "manifest": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4.manifest.json"
+      },
+      "loadPath": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4.manifest.json",
+      "loadUrl": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4.manifest.json",
+      "launchManifest": {
+        "baseUrl": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/",
+        "files": {
+          "cameras": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/cameras.bin",
+          "images": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/images.bin",
+          "points3D": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/points3D.bin"
+        },
+        "imagesPath": "https://megascenes.s3.us-west-2.amazonaws.com/images/000/000/",
+        "splats": [],
+        "version": 1
+      },
+      "sourceFiles": [
+        {
+          "path": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/cameras.bin",
+          "url": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/cameras.bin",
+          "bytes": 456,
+          "sha256": "02424804ba92224e627018a226cc63543b26b2480b2d3f3d068f2f08aab38c47",
+          "browserRead": true
+        },
+        {
+          "path": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/images.bin",
+          "url": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/images.bin",
+          "bytes": 1902198,
+          "sha256": "9a17c526edbb31789bb322d8a50ba66996d9ce1bdc8ac62612744974c94d22e1",
+          "browserRead": true
+        },
+        {
+          "path": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/points3D.bin",
+          "url": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/points3D.bin",
+          "bytes": 200555,
+          "sha256": "083a3713038f45e9433b3fa8369bbadd9056f47171e44f683e1603a967e34fb6",
+          "browserRead": true
+        },
+        {
+          "path": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4.manifest.json",
+          "url": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4.manifest.json",
+          "bytes": 489,
+          "sha256": "4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4",
+          "browserRead": true
+        }
+      ],
+      "checkedAt": "2026-10-19T03:45:24.810Z",
+      "exportSha256": "1394f191abf14c9c43dfd184dce454fdb8db47a5151162a55da6fe3b629d2f73",
+      "revision": "f9490076ec6329c282caf45d056a35bc9a76b599e87e4f5c2b70a593896bcfa6",
+      "sourceSnapshotSha256": "f9490076ec6329c282caf45d056a35bc9a76b599e87e4f5c2b70a593896bcfa6",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fcolmapview.opsiclear.com%2Fhub%2Fdatasets%2Findividual%2Fmanifests%2F4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4.manifest.json",
+      "viewerVersion": "0.17.7",
+      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "export": "colmap_model",
+      "counts": {
+        "cameras": 8,
+        "images": 15,
+        "points": 2321
+      },
+      "photos": [],
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      }
     }
   ]
 }

@@ -26,7 +26,7 @@
       "kind": "audit-refresh",
       "name": "dataset-audit.json",
       "checkedAt": "2026-10-16",
-      "sha256": "20ad5d9cb07e48d62ca4639a0dfc2dc188bb2c611fe150d807849409508a607e",
+      "sha256": "44c376e3591c4aaf19bdbb3b3c70f19c3c2a7ed10a2916a6779a6c4567d014ef",
       "rowCount": 5697
     },
     {
@@ -44,18 +44,25 @@
       "rowCount": 7
     },
     {
+      "kind": "scene-source-overrides",
+      "name": "scene-source-overrides.json",
+      "checkedAt": "2026-10-18",
+      "sha256": "14114bd4139ab3d3438f3da8b52f627f690e80e5f728d51fc0e1153eee141a2f",
+      "rowCount": 5
+    },
+    {
       "kind": "individual-listings",
       "name": "individual-datasets.json",
       "checkedAt": "2026-10-16",
-      "sha256": "96225830853f642c08f7e6a1e0686fefba5568281b2827281078c3cbaf280eb2",
-      "rowCount": 2158069
+      "sha256": "ddc5dfe73db373d1220b96e258a4b0849159f55d42f9765adf99774dd4dd37e4",
+      "rowCount": 2158070
     },
     {
       "kind": "license-categories",
       "name": "src/shared/license-categories.ts",
       "checkedAt": "2026-10-16",
       "sha256": "fdef9ca0b8829e6c18f2ce98514636a4a26c8a77154a4154018d22f43696a3ba",
-      "rowCount": 2113
+      "rowCount": 2114
     }
   ],
   "entries": [
@@ -10502,7 +10509,7 @@
       "provider": "public",
       "title": "MegaScenes — 000000 Arc de Berà, component 0 (native complete sample)",
       "sourceUrl": "https://github.com/MegaScenes/dataset",
-      "dataUrl": "https://colmapview.opsiclear.com/hub/datasets/public-megascenes-000000-arc-de-bera-component-0-native-complete-99744eaac47a.manifest.json",
+      "dataUrl": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/4f7db460968f08953bc863ef5715199085648b16bfb5c751a9d881432e7f2dc4.manifest.json",
       "license": "Not specified",
       "access": "public",
       "status": "audited_header_checked",
@@ -10583,6 +10590,10 @@
         {
           "label": "Browser-tested file URLs (2026-10-14)",
           "value": "https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/cameras.bin | https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/images.bin | https://megascenes.s3.us-west-2.amazonaws.com/reconstruct/000/000/colmap/0/points3D.bin | https://megascenes.s3.us-west-2.amazonaws.com/images/000/000/commons/Arc_de_Ber%C3%A0/0/pictures/Arco_de_Bar%C3%A0.jpg"
+        },
+        {
+          "label": "Pinned revision",
+          "value": "f9490076ec6329c282caf45d056a35bc9a76b599e87e4f5c2b70a593896bcfa6"
         }
       ],
       "audits": [
@@ -73196,7 +73207,7 @@
         },
         {
           "label": "Complete COLMAP models listed",
-          "value": "71"
+          "value": "72"
         },
         {
           "label": "PLY files listed",
@@ -172377,7 +172388,7 @@
       "provider": "public",
       "title": "Instant-NGP Fox example — fox (JSON + JPEG)",
       "sourceUrl": "https://github.com/NVlabs/instant-ngp/tree/master/data/nerf/fox",
-      "dataUrl": "https://raw.githubusercontent.com/NVlabs/instant-ngp/master/data/nerf/fox/transforms.json",
+      "dataUrl": "https://raw.githubusercontent.com/NVlabs/instant-ngp/abe236ee00cf90cfca6e36e65c00435d5b21f50a/data/nerf/fox/transforms.json",
       "license": "Not specified",
       "access": "public",
       "status": "audited_conversion_needed",
@@ -172449,6 +172460,10 @@
         {
           "label": "Browser-tested file URLs (2026-10-14)",
           "value": "https://raw.githubusercontent.com/NVlabs/instant-ngp/master/data/nerf/fox/transforms.json"
+        },
+        {
+          "label": "Pinned revision",
+          "value": "abe236ee00cf90cfca6e36e65c00435d5b21f50a"
         }
       ],
       "audits": [
@@ -216698,7 +216713,7 @@
       "provider": "public",
       "title": "OpenMVG SceauxCastle example — SceauxCastle (camera + RGB)",
       "sourceUrl": "https://github.com/openMVG/openMVG/tree/develop/src/software/SfM/python/sfm_viewer/sample_data",
-      "dataUrl": "https://raw.githubusercontent.com/openMVG/openMVG/develop/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json",
+      "dataUrl": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json",
       "license": "not independently confirmed",
       "access": "public",
       "status": "audited_unverified",
@@ -216787,6 +216802,10 @@
         {
           "label": "Browser-tested file URLs (2026-10-14)",
           "value": "https://raw.githubusercontent.com/openMVG/openMVG/develop/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json"
+        },
+        {
+          "label": "Pinned revision",
+          "value": "6887e7385400f4cca378507296ccc20c8a0837dd"
         }
       ],
       "audits": [
@@ -216831,7 +216850,7 @@
       "provider": "public",
       "title": "OpenSfM Berlin example — Berlin (camera + RGB)",
       "sourceUrl": "https://github.com/mapillary/OpenSfM/tree/main/data/berlin",
-      "dataUrl": "https://raw.githubusercontent.com/mapillary/OpenSfM/main/data/berlin/reconstruction_example.json",
+      "dataUrl": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
       "license": "not independently confirmed",
       "access": "public",
       "status": "audited_unverified",
@@ -216916,6 +216935,10 @@
         {
           "label": "Browser-tested file URLs (2026-10-14)",
           "value": "https://raw.githubusercontent.com/mapillary/OpenSfM/main/data/berlin/reconstruction_example.json"
+        },
+        {
+          "label": "Pinned revision",
+          "value": "92381be43cd93ca91e7ef903733a0482440028dd"
         }
       ],
       "audits": [
@@ -300206,11 +300229,70 @@
       },
       "datasetLabel": "Spacecraft_Detection_Keypoint_and_Pose_Dataset",
       "licenseCategory": "commercial"
+    },
+    {
+      "id": "hf-turandai-gaussian-surfels-dtu-53a58900b5a9",
+      "sourceId": "hf:turandai/gaussian-surfels-dtu",
+      "provider": "huggingface",
+      "title": "turandai/gaussian-surfels-dtu",
+      "sourceUrl": "https://huggingface.co/datasets/turandai/gaussian-surfels-dtu",
+      "dataUrl": "https://huggingface.co/datasets/turandai/gaussian-surfels-dtu/resolve/70ec15cd824556d17493e1c18e7e6c8b79f3ad94/scan24/cameras.npz",
+      "license": "Not specified",
+      "licenseCategory": "not-specified",
+      "access": "public",
+      "status": "audited_header_checked",
+      "statusLabel": "Camera model export checked",
+      "formats": [
+        "Camera metadata"
+      ],
+      "description": "Selected camera projection metadata imported and exported as COLMAP. Other scenes require separate checks.",
+      "checkedAt": "2026-10-19T03:50:00Z",
+      "testOrFixture": false,
+      "datasetLabel": "gaussian-surfels-dtu",
+      "facts": [
+        {
+          "label": "Repository",
+          "value": "turandai/gaussian-surfels-dtu"
+        },
+        {
+          "label": "Pinned revision",
+          "value": "70ec15cd824556d17493e1c18e7e6c8b79f3ad94"
+        },
+        {
+          "label": "Individual model or scene entries listed",
+          "value": "1"
+        },
+        {
+          "label": "Individual listing scope",
+          "value": "Selected checked scan24 camera metadata; not a complete collection inventory."
+        },
+        {
+          "label": "Individual listing coverage",
+          "value": "Incomplete source listing; additional models may exist."
+        },
+        {
+          "label": "Complete COLMAP models listed",
+          "value": "0"
+        },
+        {
+          "label": "PLY files listed",
+          "value": "0"
+        }
+      ],
+      "audits": [],
+      "verification": {
+        "level": "unverified",
+        "delivery": "browser_readable",
+        "checkedAt": "2026-10-19T03:50:00Z",
+        "summary": "Selected camera metadata passed a browser model export; exact scene evidence is recorded separately.",
+        "scope": "One selected scene at the pinned revision. The complete collection and original photo exports are not qualified.",
+        "viewerVersion": "0.17.7"
+      }
     }
   ],
   "importSummary": {
     "hfCandidates": 5602,
-    "hfEntries": 2018,
+    "hfEntries": 2019,
     "publicEntries": 88,
     "additionalAuditEntries": 7,
     "auditRows": 293,
@@ -300254,8 +300336,8 @@
   },
   "individualSummary": {
     "checkedAt": "2026-10-16",
-    "entries": 2158157,
-    "sourceEntriesWithModels": 1086,
-    "incompleteCollections": 51
+    "entries": 2158158,
+    "sourceEntriesWithModels": 1087,
+    "incompleteCollections": 52
   }
 }

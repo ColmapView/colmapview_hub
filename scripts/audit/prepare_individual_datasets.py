@@ -20,7 +20,7 @@ from ..catalog.sampled_individuals import supplement_rows
 ASSETS = {'.ply': 'ply', '.spz': 'spz', '.sog': 'sog', '.splat': 'splat', '.ksplat': 'ksplat',
           '.obj': 'obj', '.glb': 'glb', '.gltf': 'gltf', '.pcd': 'pcd', '.las': 'las',
           '.laz': 'laz', '.off': 'off', '.stl': 'stl', '.usd': 'usd', '.usdz': 'usdz'}
-CAMERA = re.compile(r'(?:^|/)(?:transforms(?:_[^/]*)?\.json|poses_bounds\.npy|cameras(?:_[^/]*)?\.npz)$', re.I)
+CAMERA = re.compile(r'(?:^|/)(?:transforms(?:_[^/]*)?\.json|poses_bounds\.npy|cameras(?:_[^/]*)?\.npz|cameras\.json|reconstruction(?:_[^/]*)?\.json|sfm_data\.json|bundle\.out)$', re.I)
 MEDIA = re.compile(r'^(?:images?(?:_\d+)?|rgb|rgba|photos?|masks?|depth|depths|normal|normals|videos?|frames)$', re.I)
 
 

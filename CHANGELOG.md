@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.23 — 2026-10-18
+
+- Add 342 qualified scenes, bringing the Hub to 5,579 scenes across 147 collections. Support native camera/pose pairs without point files and independently checked camera-metadata model exports, with photo availability recorded separately.
+- Bind 237 newly checked native photo prefixes to exact model files. Add pinned public Fox, OpenMVG and OpenSfM examples and an explicit MegaScenes component manifest, including independently checked native point/observation/track export.
+- Recover the missing AstroVision point file and a DTU camera-NPZ source. Broaden camera-metadata filename discovery, retain partial-frame and media-setup labels, and add 16 licensed scene previews.
+- Preserve every previous scene record and saved manifest. Record all 439 earlier candidates in a coverage ledger, exclude six failed HF cases and retain 91 unqualified public research entries outside the supported catalog. Add policy regression cases and a repeatable offline camera-model export verifier.
+
 ## 0.7.22 — 2026-10-18
 
 - Bind the Expo root scene to its exact 81-camera, 49,817-point model and 81 original photographs through a checked manifest. The bare repository URL previously selected a different 148-camera nested reconstruction. Independent COLMAP export checks preserve calibration, poses, observation references, tracks, point IDs and colors, and every original photo hash; native point positions/errors retain the viewer's documented float32 precision.

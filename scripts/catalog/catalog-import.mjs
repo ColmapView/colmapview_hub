@@ -87,6 +87,44 @@ function stableId(sourceId) {
   return `${slug}-${sha256(sourceId).slice(0, 12)}`;
 }
 
+/** Retain explicitly reviewed source metadata that the older research filters omitted. */
+export function applySceneSourceOverrides(snapshot, policy) {
+  if (policy.schemaVersion !== 1 || !Array.isArray(policy.additions) || !Array.isArray(policy.publicScenes)) {
+    throw new Error('Invalid scene source overrides');
+  }
+  const seen = new Set();
+  for (const addition of policy.additions) {
+    const revision = addition.facts?.find(fact => fact.label === 'Pinned revision')?.value;
+    if (addition.provider !== 'huggingface' || !/^hf:[^/]+\/.+/.test(addition.sourceId) || seen.has(addition.sourceId)
+      || addition.id !== stableId(addition.sourceId) || addition.access !== 'public' || !/^[a-f0-9]{40}$/.test(revision || '')
+      || publicUrl(addition.sourceUrl) !== `https://huggingface.co/datasets/${addition.sourceId.slice(3)}`
+      || !publicUrl(addition.dataUrl) || !addition.title || !addition.license || !addition.description
+      || !Array.isArray(addition.formats) || !Array.isArray(addition.audits)
+      || ['viewerUrl', 'candidateViewerUrl', 'openUrl', 'modelManifest'].some(key => key in addition)) {
+      throw new Error('Invalid reviewed source addition');
+    }
+    seen.add(addition.sourceId);
+    const existing = snapshot.entries.find(entry => entry.sourceId === addition.sourceId);
+    if (existing) {
+      if (existing.id !== addition.id || existing.facts.find(fact => fact.label === 'Pinned revision')?.value !== revision) {
+        throw new Error(`Reviewed source addition changed; recheck ${addition.sourceId}`);
+      }
+    } else snapshot.entries.push(structuredClone(addition));
+  }
+  for (const selection of policy.publicScenes) {
+    const entry = snapshot.entries.find(entry => entry.sourceId === selection.sourceId);
+    if (!entry || entry.provider !== 'public' || seen.has(selection.sourceId)
+      || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(selection.revision || '') || !selection.loadUrl?.startsWith('https://')
+      || publicUrl(selection.loadUrl) !== selection.loadUrl) throw new Error('Invalid reviewed public scene source');
+    seen.add(selection.sourceId);
+    entry.dataUrl = selection.loadUrl;
+    entry.facts = entry.facts.filter(fact => fact.label !== 'Pinned revision');
+    entry.facts.push({ label: 'Pinned revision', value: selection.revision });
+  }
+  snapshot.importSummary.hfEntries = snapshot.entries.filter(entry => entry.provider === 'huggingface').length;
+  return snapshot;
+}
+
 function facts(row, labels) {
   return Object.entries(labels).flatMap(([key, label]) => {
     const value = row[key]?.trim();

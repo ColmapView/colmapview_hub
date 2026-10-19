@@ -1,13 +1,41 @@
 import { strict as assert } from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { applyCatalogReviews, buildCatalog, parseCsv, publicUrl, sha256 } from '../scripts/catalog/catalog-import.mjs';
+import { applyCatalogReviews, applySceneSourceOverrides, buildCatalog, parseCsv, publicUrl, sha256 } from '../scripts/catalog/catalog-import.mjs';
 import { catalogRenderer } from '../scripts/build/renderer.mjs';
 import { applyDatasetAudit, makeDatasetAudit, requiredProbeUrls, openingRequirement } from '../scripts/catalog/dataset-audit-import.mjs';
 import { isAccessRestricted, publicationSnapshot } from '../scripts/catalog/catalog-publication.mjs';
 import { applyLicenseCategories } from '../scripts/catalog/license-categories.mjs';
 
 const render = await catalogRenderer();
+
+test('reviewed source additions and public pins survive future catalog imports without adding source-wide viewer actions', async () => {
+  const policy = JSON.parse(await readFile('data/scene-source-overrides.json', 'utf8'));
+  const fresh = () => ({ entries: policy.publicScenes.map(item => ({ sourceId: item.sourceId, provider: 'public', facts: [] })), importSummary: { hfEntries: 0 } });
+  const snapshot = applySceneSourceOverrides(fresh(), policy);
+  assert.equal(snapshot.importSummary.hfEntries, policy.additions.length);
+  for (const addition of policy.additions) {
+    const entry = snapshot.entries.find(entry => entry.sourceId === addition.sourceId);
+    assert.deepEqual(entry, addition);
+    assert.notEqual(entry, addition);
+    assert.equal(entry.viewerUrl, undefined);
+    assert.equal(entry.modelManifest, undefined);
+  }
+  for (const item of policy.publicScenes) {
+    const entry = snapshot.entries.find(entry => entry.sourceId === item.sourceId);
+    assert.equal(entry.dataUrl, item.loadUrl);
+    assert.equal(entry.facts.find(fact => fact.label === 'Pinned revision').value, item.revision);
+  }
+  assert.equal(applySceneSourceOverrides(snapshot, policy).entries.length, snapshot.entries.length);
+  for (const mutate of [value => value.additions[0].id += '-changed', value => value.additions[0].viewerUrl = 'https://example.org/',
+    value => value.publicScenes.push(value.publicScenes[0]), value => value.publicScenes[0].loadUrl = 'http://example.org/model.json']) {
+    const invalid = structuredClone(policy);
+    mutate(invalid);
+    assert.throws(() => applySceneSourceOverrides(fresh(), invalid));
+  }
+  snapshot.entries.find(entry => entry.sourceId === policy.additions[0].sourceId).facts.find(fact => fact.label === 'Pinned revision').value = 'b'.repeat(40);
+  assert.throws(() => applySceneSourceOverrides(snapshot, policy), /recheck/);
+});
 
 test('both catalog builds share the access-restriction policy fixtures', async () => {
   const cases = JSON.parse(await readFile('tests/fixtures/catalog-publication.json', 'utf8'));

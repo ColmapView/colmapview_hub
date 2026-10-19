@@ -6259,13 +6259,13 @@
       "datasetId": "hf-travisdriver-astrovision-data-e96b9b03c2e5",
       "sourceId": "hf:travisdriver/astrovision-data",
       "file": "hf-travisdriver-astrovision-data-e96b9b03c2e5.json.gz",
-      "sha256": "d92c91f8f9be1fdf7e6bd2dd3fd077e255c058e8b7e5672c8942d75d9ae6020b",
+      "sha256": "01c0d78196031a99e231a1611996709aeca1d58ef7161388ee33109ac1c26d8f",
       "count": 72,
       "listingComplete": false,
       "revision": "43af772130675058f894824d50cbe2b390315061",
       "checkedAt": "2026-10-16",
       "scope": "Public repository sibling listing; capped listings remain incomplete.",
-      "looseColmapCount": 71,
+      "looseColmapCount": 72,
       "plyFileCount": 0
     },
     {
@@ -26208,13 +26208,26 @@
       "revision": null,
       "checkedAt": "2026-10-16",
       "scope": "Complete ZIP central directory; original files and format headers not read in this enumeration."
+    },
+    {
+      "datasetId": "hf-turandai-gaussian-surfels-dtu-53a58900b5a9",
+      "sourceId": "hf:turandai/gaussian-surfels-dtu",
+      "file": "hf-turandai-gaussian-surfels-dtu-53a58900b5a9.json.gz",
+      "sha256": "c416683b9a8a6f802824298a8d8538cc39f0b797b10be902824230f42ab60db0",
+      "count": 1,
+      "listingComplete": false,
+      "revision": "70ec15cd824556d17493e1c18e7e6c8b79f3ad94",
+      "checkedAt": "2026-10-19T03:50:00Z",
+      "scope": "Selected checked scan24 camera metadata; not a complete collection inventory.",
+      "looseColmapCount": 0,
+      "plyFileCount": 0
     }
   ],
   "scope": "Individual listed model folders and standalone 3D assets; no complete load certification. Archive and capped-listing coverage is recorded per collection.",
   "counts": {
-    "camera-metadata": 59093,
-    "cameras": 305,
-    "colmap": 7527,
+    "camera-metadata": 59094,
+    "cameras": 304,
+    "colmap": 7528,
     "glb": 477248,
     "gltf": 8380,
     "ksplat": 470,
@@ -26233,5 +26246,5 @@
     "usd": 26888,
     "usdz": 14434
   },
-  "individualEntries": 2158069
+  "individualEntries": 2158070
 }

@@ -31,7 +31,7 @@ export type IndividualProof = CatalogVerification & { statusLabel: string; viewe
     countAudit?: { method: 'viewer_native_text_parse'; checkedAt: string; viewerCommit: string;
       files: Partial<Record<'cameras' | 'images' | 'points3d', { path: string; count: number; bytes: number; sha256: string }>> } };
   sceneValidation?: { status: 'passed'; revision: string; cameras: number; images: number; points: number;
-    photoCount: number; export: 'colmap_images'; exportSha256: string } };
+    photoCount: number; export: 'colmap_images' | 'colmap_model'; exportSha256: string } };
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
   files: Record<string, string> | null, proof: IndividualProof | null,
   inventory?: { listedAssets: number; linkedAssets: number; linksTruncated: boolean }];
@@ -91,15 +91,16 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
   if (proof?.sampleScope === 'companion_asset') return false;
   const compatibility = proof?.sceneCompatibility;
   if (proof?.sceneManifest !== undefined && !hasCheckedSceneManifest(proof)) return false;
-  if (kind === 'colmap' && proof?.level === 'native_layout_checked' && proof.viewerUrl
+  if (['colmap', 'cameras'].includes(kind) && proof?.level === 'native_layout_checked' && proof.viewerUrl
     && ['browser_readable', 'cors_headers_checked'].includes(proof.delivery) && compatibility?.status === 'native_headers_checked'
     && [compatibility.cameras, compatibility.images].every(value => value === null || Number.isInteger(value) && value > 0)
-    && compatibility.cameraRecordChecked === true && compatibility.poseRecordChecked === true) return true;
+    && compatibility.cameraRecordChecked === true && compatibility.poseRecordChecked === true
+    && (kind !== 'cameras' || compatibility.points === 0)) return true;
   const validation = proof?.sceneValidation;
   return ['colmap', 'cameras', 'camera-scene', 'scene'].includes(kind) && proof?.level === 'scene_verified'
     && proof.delivery === 'browser_readable' && Boolean(proof.viewerUrl) && validation?.status === 'passed'
     && Number.isInteger(validation.cameras) && validation.cameras > 0
-    && validation.export === 'colmap_images' && Number.isInteger(validation.images) && validation.images > 0;
+    && ['colmap_images', 'colmap_model'].includes(validation.export) && Number.isInteger(validation.images) && validation.images > 0;
 }
 
 export function individualSummary(row: IndividualRecord, source: IndividualSource): CatalogSummary {
@@ -130,7 +131,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
   const revision = parent.facts.find(fact => fact.label === 'Pinned revision')?.value;
   const repo = parent.sourceId.slice(3);
   const tree = (value: string) => `https://huggingface.co/datasets/${encodePath(repo)}/tree/${revision}${value ? `/${encodePath(value)}` : ''}`;
-  const file = (value: string) => `https://huggingface.co/datasets/${encodePath(repo)}/resolve/${revision}/${encodePath(value)}`;
+  const file = (value: string) => parent.provider === 'public' ? value : `https://huggingface.co/datasets/${encodePath(repo)}/resolve/${revision}/${encodePath(value)}`;
   const folder = ['colmap', 'cameras', 'camera-scene', 'splat-scene'].includes(kind);
   const dataUrl = parent.provider === 'public' ? parent.dataUrl : archive ? file(archive) : folder ? tree(path) : file(path);
   const canOpen = canOpenIndividual(row, gated ? { ...source, access: 'gated' } : source);
@@ -190,9 +191,9 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ...Object.entries({ 'Camera definitions': proof.sceneCompatibility.cameras, 'Registered pose records': proof.sceneCompatibility.images,
           [proof.sceneManifest ? 'Native 3D points' : '3D points']: proof.sceneCompatibility.points }).filter(([, value]) => value !== null).map(([label, value]) => ({ label, value: String(value) }))] : []),
       ...(proof?.sceneCompatibility?.countAudit ? [{ label: 'Scene statistics check', value: `Complete text files (${Object.values(proof.sceneCompatibility.countAudit.files).map(file => file!.path.split('/').at(-1)).join(', ')}) parsed with ColmapView’s native readers on ${proof.sceneCompatibility.countAudit.checkedAt}. Photograph availability is checked separately.` }] : []),
-      ...(proof?.sceneValidation ? [{ label: 'Verified original photographs', value: String(proof.sceneValidation.photoCount) },
+      ...(proof?.sceneValidation ? [...(proof.sceneValidation.export === 'colmap_images' ? [{ label: 'Verified original photographs', value: String(proof.sceneValidation.photoCount) }] : []),
         { label: 'Verified camera models', value: String(proof.sceneValidation.cameras) },
-        { label: 'COLMAP + images export SHA-256', value: proof.sceneValidation.exportSha256 },
+        { label: proof.sceneValidation.export === 'colmap_images' ? 'COLMAP + images export SHA-256' : 'COLMAP model export SHA-256', value: proof.sceneValidation.exportSha256 },
         { label: 'Scene verified on', value: proof.checkedAt }] : []),
       ...(parent.verification?.sourceImages ? [{ label: 'Source RGB', value: parent.verification.sourceImages.summary, url: parent.verification.sourceImages.sourceUrl }] : []),
       ...(row[8] ? [{ label: 'Scene assets listed', value: String(row[8].listedAssets) },
