@@ -63,6 +63,11 @@ def content_scene_reviews(catalog, policy, root):
                         raise ValueError('Archived content needs an exact safe member and container format')
                 if kind == 'splats' and PurePosixPath(member or evidence['samplePath']).suffix.lower() == '.ply' and evidence['status'] != 'header_checked':
                     raise ValueError('A PLY extension does not establish Gaussian splats')
+                if 'encoding' in evidence or 'requiresConversion' in evidence:
+                    if (kind != 'splats' or evidence.get('encoding') != 'compressed_ply'
+                            or evidence.get('requiresConversion') is not True or evidence['status'] != 'header_checked'
+                            or not evidence['samplePath'].lower().endswith('.ply') or member is not None):
+                        raise ValueError('Compressed splats require checked encoding and explicit conversion')
             thumbnail = scene.get('thumbnail')
             if thumbnail:
                 if (parent['license'] != thumbnail.get('datasetLicense')
@@ -109,7 +114,8 @@ def apply_content_evidence(entry, row, revision, proof, review):
             data['images']['count'] = proof['sceneValidation']['photoCount']
     for kind, evidence in review['data'].items():
         if kind not in data or data[kind]['status'] != 'checked':
-            status = 'archive' if evidence.get('archiveMember') else 'checked' if evidence['status'] == 'header_checked' else 'listed'
+            status = ('archive' if evidence.get('archiveMember') else 'needs_setup' if evidence.get('requiresConversion')
+                      else 'checked' if evidence['status'] == 'header_checked' else 'listed')
             data[kind] = {**deepcopy(evidence), 'status': status}
     result['availableData'] = data
     return apply_thumbnail_evidence(entry, result, review.get('thumbnail'))
@@ -124,8 +130,12 @@ def apply_thumbnail_evidence(entry, proof, thumbnail):
         if state not in PHOTO_STATES or entry['license'] != thumbnail['datasetLicense']:
             raise ValueError('Preview conflicts with scene photo or license evidence')
         if thumbnail.get('sourceArchive'):
-            if thumbnail['sourceArchive'] != (audit.get('archive') or {}).get('path'):
+            archive = audit.get('archive') or {}
+            if thumbnail['sourceArchive'] != archive.get('path'):
                 raise ValueError('Preview archive does not match this scene')
+            if archive.get('format') == 'tar' and (thumbnail['sourcePath'] != archive['sample']['path']
+                                                 or thumbnail['sourceSha256'] != archive['sample']['sha256']):
+                raise ValueError('Preview TAR photograph does not match the reviewed member')
         elif thumbnail['sourcePath'] != audit.get('samplePath'):
             raise ValueError('Preview photograph does not match this scene')
         result['thumbnail'] = {**deepcopy(thumbnail), 'url': '/hub/datasets/individual/thumbnails/' + thumbnail['file']}

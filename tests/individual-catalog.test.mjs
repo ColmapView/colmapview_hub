@@ -36,7 +36,7 @@ test('model-only export details retain camera statistics and do not claim origin
 
 test('photo availability is displayed separately without changing model actions', () => {
   for (const [status, label] of [['partial', 'Photos partially available'], ['path_policy_required', 'Photos need setup'],
-    ['companion_archive', 'Photos in a separate ZIP'], ['not_found', 'No loose photos found'], ['not_included', 'Photos not included']]) {
+    ['companion_archive', 'Photos in a separate archive'], ['not_found', 'No loose photos found'], ['not_included', 'Photos not included']]) {
     const item = row(0, { 7: nativePhotoProof(status) });
     const summary = render.individualSummary(item, source);
     assert.equal(summary.photoStatus, status);
@@ -66,6 +66,44 @@ test('photo path rules preserve the model URL and expose checked source paths', 
   assert.match(html, /Photo association manifest/);
   assert.match(html, /colmap\/scene\/manifest\.json/);
   assert.doesNotMatch(html, /Photos checked.*all original photos/s);
+});
+
+test('sampled TAR photos and compressed splats retain their loading requirements', () => {
+  const proof = nativePhotoProof('companion_archive');
+  proof.photoAudit = { status: 'companion_archive', checkedAt: '2026-10-19', listingComplete: true,
+    policy: 'capture_prefix', sceneRoot: 'ground_truths/capture', summary: 'A matching TAR photograph was sampled.',
+    policyNote: 'Extract photos separately.', archive: { path: 'images/capture.tar', format: 'tar', photos: 2,
+      inventoryComplete: false, bytes: 4096, nameSampleMatched: true, browserRangeRead: true,
+      sample: { path: 'capture/photo.jpg', registeredName: 'photo.jpg', headerOffset: 512, dataOffset: 1024,
+        bytes: 1234, sha256: 'a'.repeat(64), pixels: 'decoded', dimensionsMatch: false } } };
+  proof.availableData = { cameras: { status: 'checked' }, images: { status: 'archive' },
+    splats: { status: 'needs_setup', samplePath: 'capture/gsplat.ply', encoding: 'compressed_ply', requiresConversion: true } };
+  const item = row(0, { 7: proof });
+  const summary = render.individualSummary(item, source);
+  assert.equal(render.isCatalogSummary(summary), true);
+  assert.equal(summary.hasViewer, true);
+  const entry = render.individualEntry(item, source, parent);
+  assert.equal(entry.viewerUrl, proof.viewerUrl);
+  const html = render.catalogEntryPage(entry);
+  assert.match(html, /Photos in a separate archive/);
+  assert.match(html, /At least 2 image members listed/);
+  assert.match(html, /capture\/photo\.jpg → photo\.jpg/);
+  assert.match(html, /camera dimensions differ/);
+  assert.match(html, /Convert it to standard Gaussian PLY/);
+  assert.doesNotMatch(html, /first registered name matched|separate ZIP/);
+  assert.equal(render.isCatalogSummary({ ...summary, availableData: { splats: { ...proof.availableData.splats, status: 'checked' } } }), false);
+});
+
+test('a bounded pose prefix is displayed separately from complete name coverage', () => {
+  const proof = nativePhotoProof('partial');
+  proof.photoAudit = { status: 'partial', checkedAt: '2026-10-19', listingComplete: true,
+    policy: 'exact_registered_sample', sceneRoot: 'scene', policyNote: 'Later photos exist.', summary: 'A later photo matched.',
+    nameCheck: { registered: 74, matched: 1, missing: 73, ambiguous: 0, scope: 'prefix', totalRegistered: 5493 } };
+  const html = render.catalogEntryPage(render.individualEntry(row(0, { 7: proof }), source, parent));
+  assert.match(html, /Sampled photo names matched/);
+  assert.match(html, /1\/74 inspected names from 5493 registered poses/);
+  assert.match(html, /does not establish complete coverage/);
+  assert.doesNotMatch(html, /1\/5493 through the current loader/);
 });
 
 test('cards expose scene contents without treating pose metadata or unknown PLY files as photos or splats', () => {
@@ -222,7 +260,7 @@ test('square previews remain same-origin and attributed for every source and ima
   assert.doesNotMatch(visible, /figcaption|square crop|Original photographer|cc-by-sa-4.0/);
   assert.match(html, /dataset-photo-credit.*Original photographer.*cc-by-sa-4.0.*Cropped/);
   const detail = render.catalogEntryPage(render.individualEntry(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source, parent));
-  assert.match(detail, /Center-square crop of the first available registered photograph/);
+  assert.match(detail, /Center-square crop of a checked registered photograph/);
   for (const license of ['cc-by-nc-4.0', 'unknown', 'other']) {
     assert.match(render.catalogCard({ ...summary, license, thumbnail: { ...squareThumbnail, datasetLicense: license, license } }), /class="dataset-thumbnail"/);
     assert.match(render.catalogCard({ ...summary, thumbnail: { ...squareThumbnail, license } }), /class="dataset-thumbnail"/);

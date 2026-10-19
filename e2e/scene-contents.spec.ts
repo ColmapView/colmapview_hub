@@ -256,7 +256,9 @@ test('Kicker retains counts, sibling photo policy and verified streamed-export e
 });
 
 test('ZIP photo previews retain image credits and explicit loading requirements', async ({ page }) => {
-  await page.goto('/hub/datasets/?photos=companion_archive');
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:cornell-vailab/megaunscene');
+  await page.goto('/hub/datasets/?photos=companion_archive&dataset=' + source.id);
   const first = page.locator('.dataset-card').first();
   await expect(first.locator('[data-asset="images"]')).toHaveText('Images · archive');
   await expect(first.locator('.dataset-thumbnail')).toBeVisible();
