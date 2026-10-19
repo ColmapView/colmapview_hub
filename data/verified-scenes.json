@@ -215,11 +215,11 @@
       },
       "loadPath": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
       "loadUrl": "https://huggingface.co/datasets/ALC901/DL3DV-10K-3dgs/resolve/b70d68a6ab89117d12bb5287c96c21e33d89af8d/2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
-      "checkedAt": "2026-10-19T03:35:53.836Z",
-      "exportSha256": "8207d7348096da01d4b0edeb04b0a2ea193b94f30e3e3fff4ecc92c7c57bdac4",
+      "checkedAt": "2026-10-19T19:05:14.872Z",
+      "exportSha256": "f18c5cbfac3fc2dd8db87b6f2e435ceda5a117fa557e6007be5c29bff12115a1",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FALC901%2FDL3DV-10K-3dgs%2Fresolve%2Fb70d68a6ab89117d12bb5287c96c21e33d89af8d%2F2K%2F001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539%2Ftransforms.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.2",
+      "viewerCommit": "b41b20e290cb5eee12694736e722f93a669a40e9",
       "export": "colmap_model",
       "counts": {
         "cameras": 319,
@@ -242,7 +242,18 @@
           "sha256": "3b0b9f6d3dd4d3df43693b543184abeaead67a494dcbaf866fc673b0deb11ea0",
           "browserRead": true
         }
-      ]
+      ],
+      "exportMethod": "committed importer model files, deterministic COLMAP model ZIP",
+      "resizePolicy": {
+        "factor": 8,
+        "height": 270,
+        "sourceHeight": 2160,
+        "sourceMetadataSha256": "3b0b9f6d3dd4d3df43693b543184abeaead67a494dcbaf866fc673b0deb11ea0",
+        "sourceWidth": 3840,
+        "viewerCommit": "b41b20e290cb5eee12694736e722f93a669a40e9",
+        "viewerVersion": "0.19.2",
+        "width": 480
+      }
     },
     {
       "sourceId": "hf:anon211/embodied_gaussians",

@@ -27,6 +27,17 @@ export async function nativeTextCounts(stream, role, parsers) {
     if (value.length > 32 * 1024 * 1024) throw new Error('COLMAP text line exceeds audit bound');
     if (role === 'images' && skipObservation) {
       skipObservation = false;
+      // Camera-only exports can omit observation rows. Use the viewer's header
+      // parsing and numeric-name rules, so a long numeric observation cannot
+      // masquerade as a pose. The fast rejection also avoids splitting it twice.
+      if (/[^\d.eE+\-\s]/.test(value)) {
+        const next = parser(schema + value + '\n', true);
+        const header = next.values().next().value;
+        if (header?.name && header.name.split(/\s+/).some(token => parsers.parseColmapNumberToken(token) === null)) {
+          merge(next);
+          skipObservation = true;
+        }
+      }
       return;
     }
     if (!value.trim() || value.trimStart().startsWith('#')) return;

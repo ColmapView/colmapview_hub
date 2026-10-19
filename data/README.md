@@ -238,7 +238,7 @@ The initial corresponding content/photo policies recovered 357 missing role labe
 
 ### Photo-routing manifest audit
 
-`photo-routing.json.gz` contains 1,246 revision-bound photo-routing reviews and 188 unresolved calibration/image-dimension findings. These are independent of the stronger `scene-manifests.json` export receipts. Publication validates each selection digest, exact model files, source revision, original launch, sample photo hash/dimensions, model response hashes and complete physical inventories. Existing hashed manifests and full-scene selections cannot be replaced by this tier. The build and Worker make no source requests.
+The initial `photo-routing.json.gz` cohort contains 1,246 revision-bound photo-routing reviews and 188 unresolved calibration/image-dimension findings. The continuation below adds Dynamic Maps as the 1,247th inventory route. These are independent of the stronger `scene-manifests.json` export receipts. Publication validates each selection digest, exact model files, source revision, original launch, sample photo hash/dimensions, model response hashes and complete physical inventories. Existing hashed manifests and full-scene selections cannot be replaced by this tier. The build and Worker make no source requests.
 
 An operator prepares an input JSON with `schemaVersion: 1` and `scenes`. Each scene has its exact source/kind/path/files/revision, original `sourceViewerUrl`, original scene `scope`, `registered` count (or null), checked `sample` (path/name/hash/width/height), complete inventory flag and physical media candidates. Keep `modelMediaCandidates` as well as `mediaCandidates`: the model's masks and neighboring model anchors must remain available when a sibling photo collection is selected. `photos` and `masks` preserve curated source roles. A reviewed `photoCollection` or `mediaDeclared` authorizes an explicit sibling association; it must not be inferred from a repeated basename alone.
 
@@ -251,3 +251,59 @@ node scripts/audit/audit-photo-routing.mjs --viewer-root PATH_TO_CLEAN_VIEWER --
 The audit refuses uncommitted viewer dependencies and makes no network requests. It uses the committed viewer's manifest schema, model-file selector and media binder, checking photo/mask paths and mask roles with no selection prompt **for the inspected records**. Source model/point parsing retains its prior evidence. It writes reviews and explicit failure reasons without changing the catalog. Review those outputs and encode the complete JSON as `photo-routing.json.gz` with deterministic gzip (`mtime=0`) before running the normal build/check/browser commands. Do not edit a reviewed selection and recompute its digest manually; rerun the audit. Changed original launch URLs, pins, files, sample bytes or statistics invalidate publication.
 
 The public `photo-audit.csv` has one row per published scene. `launchRouting` distinguishes full-scene, inventory and prefix manifests from native discovery, importer routes, companion archives and absent associations. It also exposes the manifest URL, listed photo count, declared mapping count, inspected/matched name counts, complete-name flag and remaining routing issue. Routing evidence establishes paths and a calibrated sample; it does not establish every photo's bytes, full projection/alignment, every mask's semantics or COLMAP + images export.
+## Reusable photo audit decisions
+
+See [the retained decisions and remaining cases](../docs/photo-audit-decisions-2026-10-19.md)
+and [`photo-loader-checks.json`](photo-loader-checks.json) for representative
+runtime receipts. The offline planner rejects an incomplete catalog snapshot.
+`photo-source-metadata.json.gz` retains ten publisher-document receipts and
+relevant factual fields for the unresolved associations. Their unchanged source
+references and counts do not need another fetch; camera/photo association and
+representation checks remain separate work.
+
+`photo-audit-decisions.json.gz` records the immutable source revision, exact model
+selection, decision, receipt digests, checked date, evidence scope and next action
+for each published entry. The decision digest binds those fields. Reuse applies
+only to the recorded facts: a sampled image or bounded name check never becomes
+a complete photograph, alignment or export check.
+
+Run `npm run catalog:photo-plan -- --output .tmp/photo-work.json` before preparing
+new source reads. It performs no network requests. Confirmed facts with the same
+revision and selected files are retained; new selections and unresolved
+associations are queued. A source revision or file-selection change invalidates
+reuse. New loader rules should first use the cached source/model receipts for
+offline regression checks, rather than downloading established samples again.
+The public photo-audit CSV includes the decision, reuse state, scope and next
+action for every entry.
+
+`native-count-replay.json.gz` records an offline replay of 232 complete cached
+pose-text files after fixing the streaming statistics counter for omitted
+observation rows. Every previous count is preserved, and the Dynamic Maps
+camera-only file counts 896 poses. Source hashes, revisions and the counter's
+normalized source hash bind the replay. It used zero source network requests.
+
+The October 19 continuation retains 5,544 confirmed decisions and queues 32
+unresolved associations. Git revisions and already verified public content
+snapshots retain their own identities. The retained facts include publisher omissions, complete scoped
+non-listings, video-only delivery, rejected calibration samples and partial
+photograph sets. Videos need frame extraction and association; resized or cropped
+images need a verified representation policy. These outcomes do not disqualify
+an otherwise usable camera/reconstruction model.
+
+`companion-media-routing.json.gz` applies version 2 manifests to 478 MegaUnScene
+ZIPs and 38 Fastmap TARs. Every route retains the exact native model, pinned
+archive size, capture-prefix mapping, original photograph/calibration receipts
+and a binding check against viewer 0.19.2. The viewer indexes members and reads
+images lazily with validated byte ranges; cancellation, replacement and reset
+close the owned readers. Twenty-one other Fastmap samples retain their recorded
+calibration mismatch and model-only launch. Archive sample checks do not certify
+all archive members or a full export.
+
+The Dynamic Maps camera-only export omits empty observation lines. The corrected
+reader preserves 896 poses instead of 448, and an explicit photo manifest binds
+all 896 names in sibling `images/`. Its new 320x234 preview retains the complete
+frame; existing preview bytes are preserved. ALC901's checked `images_8` import
+rescales focal lengths and principal points by 1/8 while preserving poses and
+distortion. All 319 resulting calibrations and poses passed PyCOLMAP 4.0.3, and a
+source photograph decoded in the browser. The existing model-only export tier
+remains separate from full original-photograph export.

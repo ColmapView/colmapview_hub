@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "viewerVersion": "0.19.2",
+  "scope": "Retained representative runtime receipts; do not repeat unchanged successful checks unless affected code or selected data changes.",
+  "regressionFix": "Companion archive transport outlives the initial URL-load claim; per-read cancellation and scene reset/replacement own its lifetime.",
+  "checks": [
+    {
+      "id": "data-72628b131ed7a9985df55125",
+      "sourceId": "hf:cornell-vailab/megaunscene",
+      "revision": "e057ebdf8cfc461381a3e8b2e9a94bbbbeb15340",
+      "modelPath": "scenes/Beijing_Drum_Tower/0/sparse",
+      "manifest": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/48131fb88bd3ef61c95adbf22701346a820b55ef2d68a998209e9267504c9a5e.manifest.json",
+      "viewerCommit": "eb9b935b4a33d31539095948da24aa97741842b5",
+      "method": "Chromium viewer model load and actual gallery photographs",
+      "counts": {
+        "cameraModels": 12,
+        "registeredPoses": 12,
+        "points": 10972
+      },
+      "gallerySample": [
+        {
+          "name": "commons/Beijing_Drum_Tower/0/pictures/2014.09.04.150518_Drum_Tower_Bejing.jpg",
+          "width": 256,
+          "height": 192
+        },
+        {
+          "name": "commons/Beijing_Drum_Tower/0/pictures/Beijing_Drum_Tower_6.jpg",
+          "width": 192,
+          "height": 256
+        },
+        {
+          "name": "commons/Beijing_Drum_Tower/0/pictures/Beijing_Drum_Tower_7.jpg",
+          "width": 192,
+          "height": 256
+        },
+        {
+          "name": "commons/Beijing_Drum_Tower/0/pictures/Beijing_Drum_Tower_8.jpg",
+          "width": 192,
+          "height": 256
+        }
+      ],
+      "checkedAt": "2026-10-19T19:30:14.898Z",
+      "scope": "Representative runtime check. Other photographs, projection/alignment and complete export remain separate checks."
+    },
+    {
+      "id": "data-a0abe901a34f3e442876a27e",
+      "sourceId": "hf:whc/fastmap_sfm",
+      "revision": "d8253c18abfd0fd73d95ec089d3f7ecdb0df2bf7",
+      "modelPath": "ground_truths/eth3d_dslr_lounge",
+      "manifest": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/12a7d280a9f9214f114518de5495eaf62eb7eb234a0a95b1a618afcba9b6faa9.manifest.json",
+      "viewerCommit": "eb9b935b4a33d31539095948da24aa97741842b5",
+      "method": "Chromium viewer model load and actual gallery photographs",
+      "counts": {
+        "cameraModels": 1,
+        "registeredPoses": 10,
+        "points": 1852
+      },
+      "gallerySample": [
+        {
+          "name": "dslr_images_undistorted/DSC_1095.JPG",
+          "width": 256,
+          "height": 171
+        },
+        {
+          "name": "dslr_images_undistorted/DSC_1096.JPG",
+          "width": 256,
+          "height": 171
+        },
+        {
+          "name": "dslr_images_undistorted/DSC_1097.JPG",
+          "width": 256,
+          "height": 171
+        },
+        {
+          "name": "dslr_images_undistorted/DSC_1098.JPG",
+          "width": 256,
+          "height": 171
+        }
+      ],
+      "checkedAt": "2026-10-19T19:29:58.842Z",
+      "scope": "Representative runtime check. Other photographs, projection/alignment and complete export remain separate checks."
+    },
+    {
+      "id": "data-053b8232e1af4b630ba067b2",
+      "sourceId": "hf:dynamic-maps/hard-intersection-multimodal-sample",
+      "revision": "5991f1eed036c34bb899627ff878d8c46cf03af1",
+      "modelPath": "calibration",
+      "manifest": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/96cffc2ef510e29f5c7c0c517b8058e3cf2393a1897a55d04b682cc5541a696d.manifest.json",
+      "viewerCommit": "eb9b935b4a33d31539095948da24aa97741842b5",
+      "method": "Chromium viewer model load and actual gallery photographs",
+      "counts": {
+        "cameraModels": 32,
+        "registeredPoses": 896,
+        "points": 0
+      },
+      "gallerySample": [
+        {
+          "name": "26047_Record004_260217_002048060_Camera_0.jpg",
+          "width": 213,
+          "height": 256
+        },
+        {
+          "name": "26047_Record004_260217_002048060_Camera_1.jpg",
+          "width": 213,
+          "height": 256
+        },
+        {
+          "name": "26047_Record004_260217_002048060_Camera_2.jpg",
+          "width": 213,
+          "height": 256
+        },
+        {
+          "name": "26047_Record004_260217_002048060_Camera_3.jpg",
+          "width": 213,
+          "height": 256
+        }
+      ],
+      "checkedAt": "2026-10-19T19:36:50.575Z",
+      "scope": "Representative runtime check. Other photographs, projection/alignment and complete export remain separate checks."
+    },
+    {
+      "sourceId": "hf:ALC901/DL3DV-10K-3dgs",
+      "revision": "b70d68a6ab89117d12bb5287c96c21e33d89af8d",
+      "viewerCommit": "b41b20e290cb5eee12694736e722f93a669a40e9",
+      "method": "Chromium viewer with 319 poses and gallery photograph; independent model-only export comparison",
+      "registeredPoses": 319,
+      "resizeFactor": 8,
+      "independentColmapRead": {
+        "status": "passed",
+        "engine": "pycolmap",
+        "version": "4.0.3",
+        "cameras": 319,
+        "images": 319,
+        "points": 0,
+        "allCalibrationsChecked": true,
+        "allPosesChecked": true,
+        "resizeFactor": 8,
+        "sourcePhotoBytes": "checked separately; no original-photo export qualification"
+      },
+      "exportSha256": "f18c5cbfac3fc2dd8db87b6f2e435ceda5a117fa557e6007be5c29bff12115a1",
+      "exportMethod": "committed importer model files, deterministic COLMAP model ZIP",
+      "photoSample": {
+        "url": "https://huggingface.co/datasets/ALC901/DL3DV-10K-3dgs/resolve/b70d68a6ab89117d12bb5287c96c21e33d89af8d/2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/images_8/frame_00001.png",
+        "httpStatus": 200,
+        "bytes": 219761,
+        "sha256": "7523d822174963579c319a0c96a8581435c26ebf78808c76d1b16cc937248167",
+        "width": 480,
+        "height": 270,
+        "pixel": [
+          120,
+          115,
+          102,
+          255
+        ],
+        "browserPixels": "decoded",
+        "corsRead": true,
+        "checkedAt": "2026-10-19T19:06:30.626Z"
+      },
+      "scope": "All model calibrations and poses compared. One photograph decoded; complete original-photo export is not qualified."
+    }
+  ],
+  "statisticsReplay": {
+    "checkedAt": "2026-10-19T19:51:35.124Z",
+    "viewerCommit": "eb9b935b4a33d31539095948da24aa97741842b5",
+    "checkedCachedPoseFiles": 232,
+    "bytesRead": 7650257880,
+    "sourceNetworkReads": 0,
+    "dynamicMapsPoses": 896,
+    "changed": [],
+    "uncached": [],
+    "schemaVersion": 1,
+    "auditCounterSha256": "0f8db792051bfe77182224a5a5da72e33ba06a62b593de52da3e2dcfac6c4d69",
+    "scope": "Cached immutable source files replayed after changing observation-row handling. Every prior count is preserved; no source network requests. Repeat only for changed source selections or affected reader logic."
+  }
+}

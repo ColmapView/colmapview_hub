@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.8.3 — 2026-10-19
+
+- Attach 478 MegaUnScene ZIPs and 38 calibrated Fastmap TARs to their exact native models through viewer 0.19.2 companion manifests, retaining original source receipts and export tiers.
+- Correct Dynamic Maps to 896 poses, bind all sibling photographs and add a full-frame preview. Verify ALC901's images_8 import and all 319 resized calibrations/poses independently.
+- Record 5,544 reusable photo decisions and queue 32 unresolved associations. Key reuse to the exact source revision/content snapshot and selected files; expose the scope and next action in the audit CSV.
+- Confirm the absent TwinWorld test photographs and video-only delivery separately from path-mapping failures. Preserve existing model selections, original-photo exports and preview bytes.
+- Keep the streaming statistics audit consistent with camera-only text parsing; replay 232 cached pose files without new source requests or changes to their recorded counts.
+
 ## 0.8.2 — 2026-10-19
 
 - Enable remembered connections after registering both production OAuth callbacks and verifying private Drive and R2 loads, HF publishing, and real Google/HF token renewal.

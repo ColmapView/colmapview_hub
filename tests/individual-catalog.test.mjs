@@ -9,6 +9,25 @@ import { applyDatasetLabels } from '../scripts/catalog/dataset-labels.mjs';
 const render = await catalogRenderer();
 const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));
 
+test('companion archive manifests preserve native gates and keep sample evidence separate from exports', () => {
+  const proof = nativePhotoProof('companion_archive');
+  const sha256 = 'c'.repeat(64), url = `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${sha256}.manifest.json`;
+  proof.viewerUrl = `https://colmapview.opsiclear.com/?url=${encodeURIComponent(url)}`;
+  proof.photoArchiveRouting = { sha256, url, archivePath: 'scene/images.zip', bytes: 8192, format: 'zip', photoLowerBound: 10,
+    sampleRegisteredName: 'a.png', sampleMemberPath: 'a.png', checkedAt: '2026-10-19', viewerVersion: '0.19.2', viewerCommit: 'b'.repeat(40) };
+  const record = row(0, { 7: proof });
+  assert.equal(render.canOpenIndividual(record, source), true);
+  const entry = render.individualEntry(record, source, parent);
+  const html = render.catalogEntryPage(entry);
+  assert.match(html, /at least 10 photographs/);
+  assert.doesNotMatch(html, /COLMAP \+ images export SHA-256/);
+  for (const mutated of [{ ...proof, viewerUrl: 'https://example.com/' }, { ...proof, photoAvailability: 'sample_checked' },
+    { ...proof, sceneValidation: verified.sceneValidation },
+    { ...proof, photoArchiveRouting: { ...proof.photoArchiveRouting, viewerVersion: '0.19.1' } }]) {
+    assert.equal(render.canOpenIndividual(row(0, { 7: mutated }), source), false);
+  }
+});
+
 test('scene publication matches the viewer action gates', () => {
   const cases = JSON.parse(readFileSync('tests/fixtures/scene-publication.json', 'utf8'));
   for (const item of cases) {
@@ -281,6 +300,16 @@ const squareThumbnail = { url: '/hub/datasets/individual/thumbnails/' + 'a'.repe
   sourcePath: 'scene/images/a.jpg', sourceSha256: 'b'.repeat(64), datasetLicense: 'cc-by-4.0', license: 'cc-by-sa-4.0',
   licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', creditUrl: 'https://commons.wikimedia.org/wiki/File:a.jpg',
   attribution: 'Original photographer', crop: 'center_square' };
+
+test('new full-frame previews retain their aspect ratio and legacy previews stay valid', () => {
+  const thumbnail = { ...squareThumbnail, width: 320, height: 234, originalWidth: 4112, originalHeight: 3008, crop: 'aspect_fit' };
+  const item = row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail } });
+  const summary = render.individualSummary(item, source);
+  assert.equal(render.isCatalogSummary(summary), true);
+  assert.match(render.catalogCard(summary), /width="320" height="234"/);
+  assert.match(render.catalogEntryPage(render.individualEntry(item, source, parent)), /Full-frame thumbnail/);
+  assert.equal(render.isCatalogSummary({ ...summary, thumbnail: { ...thumbnail, height: 320 } }), false);
+});
 
 test('square previews remain same-origin and attributed for every source and image license category', () => {
   const summary = render.individualSummary(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source);

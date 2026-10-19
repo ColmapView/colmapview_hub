@@ -259,7 +259,7 @@ test('Kicker retains counts, sibling photo policy and verified streamed-export e
   expect(Object.keys(manifest.imageNameToPath)).toHaveLength(31);
 });
 
-test('ZIP photo previews retain image credits and explicit loading requirements', async ({ page }) => {
+test('ZIP photo previews retain image credits and describe automatic archive loading', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:cornell-vailab/megaunscene');
   await page.goto('/hub/datasets/?photos=companion_archive&dataset=' + source.id);
@@ -272,7 +272,8 @@ test('ZIP photo previews retain image credits and explicit loading requirements'
   await expect(first.locator('.dataset-photo-credit')).toContainText('cc-by-sa-4.0');
   await first.getByRole('link', { name: 'Full metadata', exact: true }).click();
   await expect(page.locator('main')).toContainText('Preview attribution');
-  await expect(page.locator('main')).toContainText('current model link does not attach that ZIP');
+  await expect(page.locator('main')).toContainText('The launch manifest attaches both');
+  await expect(page.locator('main')).toContainText('Archive members are indexed and read lazily');
   await expect(page.getByRole('link', { name: 'Try in ColmapView', exact: true })).toBeVisible();
 });
 

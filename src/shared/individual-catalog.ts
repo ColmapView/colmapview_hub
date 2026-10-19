@@ -9,6 +9,7 @@ import { isSceneManifestEvidence, manifestViewerUrlMatches } from './scene-manif
 import type { SceneManifestEvidence } from './scene-manifests';
 import { isPhotoRoutingEvidence, photoRoutingUrlMatches } from './photo-routing';
 import type { PhotoRoutingEvidence } from './photo-routing';
+import { isArchiveRoutingEvidence, type ArchiveRoutingEvidence } from './archive-routing';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -30,6 +31,7 @@ export interface IndividualIndex {
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
   sceneManifest?: SceneManifestEvidence;
   photoRouting?: PhotoRoutingEvidence;
+  photoArchiveRouting?: ArchiveRoutingEvidence;
   sceneCompatibility?: { status: 'native_headers_checked'; revision: string; cameraRecordChecked: boolean; poseRecordChecked: boolean;
     cameras: number | null; images: number | null; points: number | null;
     countAudit?: { method: 'viewer_native_text_parse'; checkedAt: string; viewerCommit: string;
@@ -95,6 +97,9 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
   if (proof?.sampleScope === 'companion_asset') return false;
   const compatibility = proof?.sceneCompatibility;
   if (proof?.sceneManifest !== undefined && !hasCheckedSceneManifest(proof)) return false;
+  if (proof?.photoArchiveRouting !== undefined && (!isArchiveRoutingEvidence(proof.photoArchiveRouting)
+    || !photoRoutingUrlMatches(proof.viewerUrl, proof.photoArchiveRouting) || proof.photoRouting || proof.sceneManifest || proof.sceneValidation
+    || !['colmap', 'cameras'].includes(kind) || proof.photoAvailability !== 'companion_archive')) return false;
   if (proof?.photoRouting !== undefined && (!isPhotoRoutingEvidence(proof.photoRouting)
     || !photoRoutingUrlMatches(proof.viewerUrl, proof.photoRouting) || proof.sceneManifest || proof.sceneValidation
     || !['colmap', 'cameras'].includes(kind)
@@ -160,6 +165,11 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
+      ...(proof?.photoArchiveRouting && isArchiveRoutingEvidence(proof.photoArchiveRouting) ? [
+        { label: 'Archive photo manifest', value: `${proof.photoArchiveRouting.format.toUpperCase()}; at least ${proof.photoArchiveRouting.photoLowerBound.toLocaleString('en-US')} photographs recorded. Members load as needed.`, url: proof.photoArchiveRouting.url },
+        { label: 'Checked archive photograph', value: proof.photoArchiveRouting.sampleMemberPath },
+        { label: 'Archive binding scope', value: 'One registered sample and its calibration checked. Complete photo coverage and export are separate checks.' },
+      ] : []),
       ...(proof?.photoRouting && isPhotoRoutingEvidence(proof.photoRouting) ? [
         { label: 'Photo path manifest', value: `${proof.photoRouting.listedPhotos.toLocaleString('en-US')} photographs and ${proof.photoRouting.mappedNames.toLocaleString('en-US')} explicit name mappings at this revision`, url: proof.photoRouting.url },
         { label: 'Manifest photo bindings', value: `${proof.photoRouting.nameCheck.matched}/${proof.photoRouting.nameCheck.inspected} inspected registered names${proof.photoRouting.nameCheck.complete ? ' (all names inspected)' : ` from ${proof.photoRouting.nameCheck.registered ?? 'an unknown number of'} poses`}. Other photo bytes and full export checked separately.` },
@@ -179,7 +189,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
           label: `${kind.replaceAll('_', ' ')} sample`, value: evidence!.samplePath!, ...(parent.provider === 'public' ? {} : { url: file(evidence!.samplePath!) }),
         }, ...(evidence?.archiveMember ? [{ label: `${kind.replaceAll('_', ' ')} archive member`, value: evidence.archiveMember }] : []),
         ...(evidence?.requiresConversion ? [{ label: 'Splat loading', value: 'Compressed Gaussian PLY is supplied. Convert it to standard Gaussian PLY before importing; the current model link does not attach this asset.' }] : [])])] : []),
-      ...(summary.thumbnail ? [{ label: 'Preview attribution', value: `${summary.thumbnail.attribution} · ${summary.thumbnail.license}. Center-square crop of a checked registered photograph.` },
+      ...(summary.thumbnail ? [{ label: 'Preview attribution', value: `${summary.thumbnail.attribution} · ${summary.thumbnail.license}. ${summary.thumbnail.crop === 'aspect_fit' ? 'Full-frame thumbnail' : 'Center-square crop'} of a checked registered photograph.` },
         { label: 'Preview original', value: summary.thumbnail.sourcePath, ...(summary.thumbnail.sourceArchive ? {} : { url: file(summary.thumbnail.sourcePath) }) },
         ...(summary.thumbnail.sourceArchive ? [{ label: 'Preview source archive', value: summary.thumbnail.sourceArchive, url: file(summary.thumbnail.sourceArchive) }] : [])] : []),
       ...(proof?.photoAvailability ? [{ label: 'Original photographs', value: proof.photoAvailability === 'complete_export_checked'

@@ -12,15 +12,17 @@ function records(text, role, skipPoints) {
   for (let i = 0; i < lines.length; i++) {
     const match = lines[i].trim().match(/^(\d+) (?:camera|pose|point)(?: (.*))?$/);
     if (!match) continue;
-    result.set(Number(match[1]), { cameraId: Number(match[2]) || 1 });
+    const fields = (match[2] || '').split(' ');
+    result.set(Number(match[1]), { cameraId: Number(fields[0]) || 1, name: fields.slice(1).join(' ') });
     if (role === 'images') {
       assert.equal(skipPoints, true);
-      i++;
+      if (!/^\d+ pose \d+ \S+\.(?:jpg|png)$/.test(lines[i + 1] || '')) i++;
     }
   }
   return result;
 }
 const parsers = {
+  parseColmapNumberToken: token => token && Number.isFinite(Number(token)) ? Number(token) : null,
   parseCamerasText: text => records(text, 'cameras'),
   parseImagesText: (text, skip) => records(text, 'images', skip),
   parsePoints3DText: text => records(text, 'points3d'),
@@ -48,6 +50,13 @@ test('poses consume exactly one observation line, including blanks and comments'
 test('a skipped header does not consume the following valid pose', async () => {
   const result = await nativeTextCounts(stream('malformed\n8 pose 2\n\n'), 'images', parsers);
   assert.equal(result.count, 1);
+});
+
+test('camera-only headers without observation rows survive streaming, including replacement IDs', async () => {
+  const text = '# model\n1 pose 1 one.jpg\n2 pose 2 two.png\n\n3 pose 1 three.jpg\n1 pose 2 replacement.png';
+  const result = await nativeTextCounts(stream(text), 'images', parsers);
+  assert.equal(result.count, 3);
+  assert.deepEqual([...result.cameraReferences], [[1, 2], [2, 2], [3, 1]]);
 });
 
 test('the original schema window is reused, not comments appearing in a later batch', async () => {

@@ -7,12 +7,12 @@ test('photo evidence covers every published scene and keeps stronger export chec
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     total: number; generation: string; photos: Record<string, number> };
   expect(index.total).toBe(5576);
-  expect(index.photos).toEqual({ sample_checked: 1654, path_policy_required: 30, review_required: 87, not_found: 3145,
+  expect(index.photos).toEqual({ sample_checked: 1656, path_policy_required: 29, review_required: 32, not_found: 3199,
     not_included: 78, companion_archive: 537, partial: 25, complete_export_checked: 20 });
   expect(Object.values(index.photos).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const available = await (await page.request.get('/hub/datasets/api/entries?photos=available')).json() as {
     total: number; entries: { photoStatus: string }[] };
-  expect(available.total).toBe(1699);
+  expect(available.total).toBe(1701);
   expect(available.entries.every(entry => ['complete_export_checked', 'sample_checked', 'partial'].includes(entry.photoStatus))).toBe(true);
   const audit = await (await page.request.get('/hub/datasets/individual/photo-audit.json')).json();
   expect(audit).toMatchObject({ generation: index.generation, scenes: 5576, collections: 144, photos: index.photos });
@@ -20,9 +20,12 @@ test('photo evidence covers every published scene and keeps stronger export chec
   expect(csv.ok()).toBe(true);
   expect(await csv.text()).toContain('mappingFile,companionArchive,samplePhoto');
   expect(await csv.text()).toContain('launchRouting,photoManifest,listedPhotos,boundNamesChecked');
-  expect(audit.routing.photo_inventory_manifest).toBe(1246);
+  expect(audit.routing.photo_inventory_manifest).toBe(1247);
+  expect(audit.routing.photo_archive_manifest).toBe(516);
   expect(audit.routing.prefix_manifest).toBe(238);
   expect(audit.routing.full_scene_manifest).toBe(17);
+  expect(audit.repeatAudit).toEqual({ skip_confirmed_facts: 5544, review_required: 32 });
+  expect(await csv.text()).toContain('auditDecision,repeatAudit,decisionScope,nextAuditAction');
   expect(await csv.text()).not.toContain('Eiffel_Tower_Scene');
   await page.goto('/hub/datasets/audit');
   await expect(page.getByRole('heading', { name: 'Photograph availability' })).toBeVisible();
@@ -36,12 +39,12 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   await expect(page.locator('#catalog-count')).toContainText('of 78 scene datasets');
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos not included');
   await page.getByRole('combobox', { name: 'Photographs', exact: true }).selectOption('not_found');
-  await expect(page.locator('#catalog-count')).toContainText('of 3,145 scene datasets');
+  await expect(page.locator('#catalog-count')).toContainText('of 3,199 scene datasets');
   await page.goBack();
   await expect(page.locator('#catalog-count')).toContainText('of 78 scene datasets');
   await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('not_included');
   await page.goForward();
-  await expect(page.locator('#catalog-count')).toContainText('of 3,145 scene datasets');
+  await expect(page.locator('#catalog-count')).toContainText('of 3,199 scene datasets');
   await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('not_found');
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await expect(page.locator('#catalog-count')).toContainText('of 5,576 scene datasets');
@@ -59,8 +62,14 @@ test('companion ZIP requirements remain explicit and Waymo mappings launch throu
     entries: { id: string; openUrl: string; photoStatus: string }[] };
   await page.goto('/hub/datasets/entry/' + zipped.entries[0].id);
   await expect(page.locator('main')).toContainText('Separate image archive');
-  await expect(page.locator('main')).toContainText('current model link does not attach that ZIP');
-  expect((await page.request.get(zipped.entries[0].openUrl, { maxRedirects: 0 })).status()).toBe(302);
+  await expect(page.locator('main')).toContainText('Archive members are indexed and read lazily');
+  await expect(page.locator('main')).not.toContainText('current model link does not attach that ZIP');
+  const zipOpen = await page.request.get(zipped.entries[0].openUrl, { maxRedirects: 0 });
+  expect(zipOpen.status()).toBe(302);
+  const zipManifestUrl = new URL(new URL(zipOpen.headers().location).searchParams.get('url')!);
+  const zipManifest = await (await page.request.get(zipManifestUrl.pathname)).json();
+  expect(zipManifest.version).toBe(2);
+  expect(zipManifest.mediaArchives[0].url).toContain('/images.zip');
   const waymo = index.sources.find(source => source.sourceId === 'hf:Dororo99/Ours-V2_waymo_ArmGS')!;
   const mapping = await (await page.request.get('/hub/datasets/api/entries?dataset=' + waymo.id)).json() as {
     total: number; entries: { id: string; openUrl: string; photoStatus: string }[] };
@@ -85,7 +94,7 @@ test('companion ZIP requirements remain explicit and Waymo mappings launch throu
   expect(Object.values(manifest.imageNameToPath).every(path => images.has(path))).toBe(true);
 });
 
-test('separate TAR previews retain extraction, name and calibration limitations', async ({ page }) => {
+test('TAR manifests attach checked photographs and retain calibration limitations', async ({ page }) => {
   const providers: string[] = [];
   page.on('request', request => { if (/huggingface\.co|amazonaws\.com/.test(request.url())) providers.push(request.url()); });
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
@@ -98,11 +107,14 @@ test('separate TAR previews retain extraction, name and calibration limitations'
   await expect(card.locator('[data-photo-status]')).toHaveText('Photos in a separate archive');
   await card.getByRole('link', { name: 'Full metadata', exact: true }).click();
   await expect(page.locator('main')).toContainText('At least 1 image member listed');
-  await expect(page.locator('main')).toContainText('The current camera link does not attach this TAR');
-  await expect(page.locator('main')).toContainText('Remove the archive capture prefix m360_bicycle/');
+  await expect(page.locator('main')).toContainText('Archive members are indexed and read lazily');
   const open = await page.request.get('/hub/datasets/open/data-c11e028799bfa121d0f8ea13', { maxRedirects: 0 });
   expect(open.status()).toBe(302);
-  expect(new URL(open.headers().location).searchParams.get('url')).toContain('/ground_truths/m360_bicycle');
+  const manifestUrl = new URL(new URL(open.headers().location).searchParams.get('url')!);
+  const manifest = await (await page.request.get(manifestUrl.pathname)).json();
+  expect(manifest.version).toBe(2);
+  expect(manifest.files.cameras).toContain('/ground_truths/m360_bicycle/cameras.bin');
+  expect(manifest.mediaArchives[0].stripPrefix).toBe('m360_bicycle');
   await page.goto('/hub/datasets/entry/data-0c5127dab3fe12c39f4c4660');
   await expect(page.locator('main')).toContainText('camera dimensions differ');
   await expect(page.locator('main')).toContainText('extraction and renaming alone do not establish correct projection');

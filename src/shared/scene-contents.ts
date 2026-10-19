@@ -39,8 +39,9 @@ export function sceneStatisticsHtml(statistics?: SceneStatistics, compact = fals
 }
 
 export interface SceneThumbnail {
-  url: string; width: 320; height: 320; sourcePath: string; sourceArchive?: string;
-  sourceSha256: string; datasetLicense: string; license: string; attribution: string; crop: 'center_square';
+  url: string; width: number; height: number; sourcePath: string; sourceArchive?: string;
+  sourceSha256: string; datasetLicense: string; license: string; attribution: string; crop: 'center_square' | 'aspect_fit';
+  originalWidth?: number; originalHeight?: number;
   licenseUrl?: string; creditUrl?: string; registeredName?: string;
 }
 export const isThumbnailUrl = (value: unknown): value is string => typeof value === 'string'
@@ -56,7 +57,13 @@ const isCreditUrl = (value: unknown): value is string => {
 export function isSceneThumbnail(value: unknown): value is SceneThumbnail {
   if (!value || typeof value !== 'object') return false;
   const item = value as Record<string, unknown>;
-  return isThumbnailUrl(item.url) && item.width === 320 && item.height === 320 && item.crop === 'center_square'
+  const dimensions = [item.width, item.height, item.originalWidth, item.originalHeight];
+  const fitted = item.crop === 'aspect_fit' && dimensions.every(value => typeof value === 'number' && Number.isSafeInteger(value) && value > 0)
+    && Math.max(item.width as number, item.height as number) === 320
+    && Math.abs((item.width as number) * (item.originalHeight as number) - (item.height as number) * (item.originalWidth as number))
+      <= Math.max(item.originalWidth as number, item.originalHeight as number) / 2;
+  const geometry = item.crop === 'center_square' && item.width === 320 && item.height === 320 || fitted;
+  return isThumbnailUrl(item.url) && geometry
     && ['sourcePath', 'sourceSha256', 'datasetLicense', 'license', 'attribution'].every(key => typeof item[key] === 'string' && item[key])
     && /^[a-f0-9]{64}$/.test(String(item.sourceSha256))
     && (item.sourceArchive === undefined || typeof item.sourceArchive === 'string')
@@ -109,7 +116,7 @@ export function sceneContentsHtml(contents?: SceneContents): string {
 export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }, compact = false): string {
   const thumbnail = entry.thumbnail;
   if (!thumbnail || !isSceneThumbnail(thumbnail) || thumbnail.datasetLicense !== entry.license) return '';
-  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(thumbnail.url)}" width="320" height="320" loading="lazy" decoding="async" alt="${escape(`Scene photograph from ${entry.title}`)}">`
+  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(thumbnail.url)}" width="${thumbnail.width}" height="${thumbnail.height}" loading="lazy" decoding="async" alt="${escape(`Scene photograph from ${entry.title}`)}">`
     + (compact ? '' : `<figcaption>${sceneThumbnailCreditHtml(thumbnail)}</figcaption>`) + '</figure>';
 }
 

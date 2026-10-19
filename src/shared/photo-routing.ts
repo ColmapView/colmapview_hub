@@ -28,7 +28,7 @@ export function isPhotoRoutingEvidence(value: unknown): value is PhotoRoutingEvi
     && typeof item.checkedAt === 'string' && Number.isFinite(Date.parse(item.checkedAt));
 }
 
-export function photoRoutingUrlMatches(viewerUrl: string | undefined, evidence: PhotoRoutingEvidence): boolean {
+export function photoRoutingUrlMatches(viewerUrl: string | undefined, evidence: Pick<PhotoRoutingEvidence, 'url'>): boolean {
   try {
     const url = new URL(viewerUrl ?? '');
     return url.origin === 'https://colmapview.opsiclear.com' && url.pathname === '/' && !url.hash

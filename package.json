@@ -1,6 +1,6 @@
 {
   "name": "colmapview_hub",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "catalog:import": "node scripts/catalog/import-catalog.mjs",
     "catalog:licenses": "node scripts/catalog/license-categories.mjs",
     "catalog:counts": "node scripts/audit/audit-scene-counts.mjs",
+    "catalog:photo-plan": "node scripts/run-python.mjs -m scripts.audit.plan_photo_audit",
     "types": "wrangler types --strict-vars=false",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "lint": "eslint .",

@@ -33,7 +33,10 @@ def routing_reviews(catalog, policy):
     parents = {entry['sourceId']: entry for entry in catalog['entries']}
     reviews = {}
     for record in policy['scenes']:
-        item = {**record, 'viewerVersion': policy['viewerVersion'], 'viewerCommit': policy['viewerCommit'], 'checkedAt': policy['checkedAt']}
+        item = {**record, **{key: record.get(key, policy[key]) for key in ('viewerVersion', 'viewerCommit', 'checkedAt')}}
+        if (not re.fullmatch('[a-f0-9]{40}', item.get('viewerCommit', ''))
+                or not re.fullmatch(r'\d+\.\d+\.\d+', item.get('viewerVersion', '')) or not item.get('checkedAt')):
+            raise ValueError('Each photo routing receipt must retain its viewer build and audit date')
         if item.get('selectionSha256') != selection_digest(item):
             raise ValueError('Photo routing evidence must be selection-bound; rerun the audit after edits')
         parent = parents.get(item.get('sourceId'))
@@ -170,14 +173,17 @@ def routing_coverage(proof, kind, unresolved=''):
     target = parse_qs(urlsplit(proof.get('viewerUrl', '')).query).get('url', [''])[0]
     manifest = target if target.startswith(LAUNCH_ASSETS) else ''
     routing = proof.get('photoRouting', {})
+    archive = proof.get('photoArchiveRouting', {})
     status = ('full_scene_manifest' if proof.get('sceneManifest') else 'photo_inventory_manifest' if routing
+              else 'photo_archive_manifest' if archive
               else 'prefix_manifest' if manifest else 'companion_archive' if proof.get('photoAvailability') == 'companion_archive'
               else 'no_photo_association' if proof.get('photoAvailability') in ('not_found', 'not_included')
               else 'importer_route' if kind not in ('colmap', 'cameras') else 'native_discovery_or_review')
     return {'launchRouting': status, 'photoManifest': manifest, 'listedPhotos': routing.get('listedPhotos', ''),
         'boundNamesChecked': routing.get('nameCheck', {}).get('matched', ''), 'inspectedRegisteredNames': routing.get('nameCheck', {}).get('inspected', ''),
         'allNamesInspected': routing.get('nameCheck', {}).get('complete', ''), 'declaredMappingNames': routing.get('mappedNames', ''),
-        'routingCheckedAt': routing.get('checkedAt', ''), 'routingNote': unresolved}
+        'routingCheckedAt': routing.get('checkedAt', archive.get('checkedAt', '')), 'routingNote': unresolved,
+        'archivePhotoLowerBound': archive.get('photoLowerBound', ''), 'archiveMemberSample': archive.get('sampleMemberPath', '')}
 
 
 def routing_failures(catalog, policy):

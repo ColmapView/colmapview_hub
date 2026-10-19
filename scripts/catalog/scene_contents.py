@@ -33,6 +33,17 @@ def photo_source_path(value, entry):
     return url.scheme == 'https' and bool(url.hostname) and not (url.username or url.password or url.fragment)
 
 
+def valid_preview_geometry(thumbnail):
+    width, height = thumbnail.get('width'), thumbnail.get('height')
+    if thumbnail.get('crop') == 'center_square':
+        return width == height == 320
+    source_width, source_height = thumbnail.get('originalWidth'), thumbnail.get('originalHeight')
+    return (thumbnail.get('crop') == 'aspect_fit'
+            and all(type(value) is int and value > 0 for value in (width, height, source_width, source_height))
+            and max(width, height) == 320
+            and abs(width * source_height - height * source_width) <= max(source_width, source_height) / 2)
+
+
 def content_scene_reviews(catalog, policy, root):
     if (policy.get('schemaVersion') != 1 or policy.get('coverage') != 'all_published_scenes'
             or not isinstance(policy.get('sources'), list) or not policy.get('checkedAt')):
@@ -73,13 +84,12 @@ def content_scene_reviews(catalog, policy, root):
                 if (parent['license'] != thumbnail.get('datasetLicense')
                         or not isinstance(thumbnail.get('license'), str) or not thumbnail['license'].strip()
                         or not re.fullmatch(r'[a-f0-9]{64}\.jpg', thumbnail.get('file', ''))
-                        or thumbnail.get('width') != 320 or thumbnail.get('height') != 320
-                        or thumbnail.get('crop') != 'center_square' or not thumbnail.get('attribution')
+                        or not valid_preview_geometry(thumbnail) or not thumbnail.get('attribution')
                         or not re.fullmatch('[a-f0-9]{64}', thumbnail.get('sourceSha256', ''))
                         or not photo_source_path(thumbnail.get('sourcePath'), parent)
                         or is_metadata_sidecar(thumbnail.get('sourcePath'))
                         or (thumbnail.get('sourceArchive') and not source_path(thumbnail['sourceArchive']))):
-                    raise ValueError('Preview requires attributed source provenance and a fixed square crop')
+                    raise ValueError('Preview requires attributed source provenance and checked thumbnail geometry')
                 file = root / 'data/scene-thumbnails' / thumbnail['file']
                 if file.is_symlink():
                     raise ValueError('Preview must be a regular built asset')

@@ -36,7 +36,8 @@ await mkdir(resolve(scratch, 'cache'), { recursive: true });
 const bundle = resolve(scratch, 'native-parsers.mjs');
 await build({
   stdin: { contents: ['cameras', 'images', 'points3d'].map((file, n) =>
-    `export {${['parseCamerasText', 'parseImagesText', 'parsePoints3DText'][n]}} from ${JSON.stringify(resolve(viewer, 'src/parsers/' + file + '.ts'))};`).join('\n'),
+    `export {${['parseCamerasText', 'parseImagesText', 'parsePoints3DText'][n]}} from ${JSON.stringify(resolve(viewer, 'src/parsers/' + file + '.ts'))};`).join('\n')
+      + `\nexport {parseColmapNumberToken} from ${JSON.stringify(resolve(viewer, 'src/parsers/colmapTextTokens.ts'))};`,
   resolveDir: viewer, loader: 'ts' },
   bundle: true, platform: 'node', format: 'esm', outfile: bundle,
 });
@@ -50,6 +51,7 @@ const fixtures = {
   points3d: '# Number of points: 9999999\n1 0 1 2 3 4 5 0 1 0\n2 1 2 3 4 5 6 0\n1 2 3 4 5 6 7 0\n9007199254740992 0 0 0 1 2 3 0\n9007199254740993 0 0 0 1 2 3 0\n',
 };
 const photometric = [
+  ['images', '# camera-only, omitted observation rows\n1 1 0 0 0 0 0 0 1 one.jpg\n2 1 0 0 0 0 0 0 1 two.jpg\n3 1 0 0 0 0 0 0 1 three.jpg\n'],
   ['images', '# IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, SX, SY, SZ, CAMERA_ID, NAME, SCALE, BIAS\n# POINTS2D[] as (X, Y, INTENSITY, POINT3D_ID)\n1 1 0 0 0 0 0 0 1 0 0 1 photo.png 1 0\n\n'],
   ['points3d', '# POINT3D_ID, X, Y, Z, NX, NY, NZ, ALBEDO, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)\n1 0 0 0 0 0 1 0.5 100 100 100 0\n'],
   ['points3d', '# no totals\n' + '1 0 1 2 3 4 5 0\n'.repeat(2050) + '4000 1 2 3 4 5 6 0'],
