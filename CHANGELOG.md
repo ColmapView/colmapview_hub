@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.8.1 — 2026-10-19
+
+- Add pinned photo-inventory manifests for 1,246 native scenes, preserving all 255 existing manifest launches, model selections, statistics, previews and export qualifications.
+- Keep sibling photographs and model-side masks in independent scopes. Retain complete source name mappings and protect neighboring reconstructions, calibration variants and auxiliary image roles.
+- Check complete registered-name inventories for 425 scenes and bounded prefixes for 821 others through released viewer 0.17.7. Keep photo routing separate from complete scene/export evidence.
+- Include launch manifests and inspected-name coverage in every scene's photo-audit CSV row. Preserve earlier stronger checks and record 188 calibration/image-dimension mismatches without removing usable models.
+- Retain the account service's disabled activation setting from 0.8.0.
+
 ## 0.8.0 — 2026-10-19
 
 - Add an optional `/auth/*` session service for the custom viewer, separate from public Hub cards. Store browser-bound connection credentials encrypted in SQLite Durable Objects for at most 30 days.

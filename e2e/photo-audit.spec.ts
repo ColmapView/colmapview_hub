@@ -7,18 +7,22 @@ test('photo evidence covers every published scene and keeps stronger export chec
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     total: number; generation: string; photos: Record<string, number> };
   expect(index.total).toBe(5576);
-  expect(index.photos).toEqual({ sample_checked: 1537, path_policy_required: 150, review_required: 87, not_found: 3145,
-    not_included: 78, companion_archive: 537, partial: 22, complete_export_checked: 20 });
+  expect(index.photos).toEqual({ sample_checked: 1654, path_policy_required: 30, review_required: 87, not_found: 3145,
+    not_included: 78, companion_archive: 537, partial: 25, complete_export_checked: 20 });
   expect(Object.values(index.photos).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const available = await (await page.request.get('/hub/datasets/api/entries?photos=available')).json() as {
     total: number; entries: { photoStatus: string }[] };
-  expect(available.total).toBe(1579);
+  expect(available.total).toBe(1699);
   expect(available.entries.every(entry => ['complete_export_checked', 'sample_checked', 'partial'].includes(entry.photoStatus))).toBe(true);
   const audit = await (await page.request.get('/hub/datasets/individual/photo-audit.json')).json();
   expect(audit).toMatchObject({ generation: index.generation, scenes: 5576, collections: 144, photos: index.photos });
   const csv = await page.request.get('/hub/datasets/individual/photo-audit.csv');
   expect(csv.ok()).toBe(true);
   expect(await csv.text()).toContain('mappingFile,companionArchive,samplePhoto');
+  expect(await csv.text()).toContain('launchRouting,photoManifest,listedPhotos,boundNamesChecked');
+  expect(audit.routing.photo_inventory_manifest).toBe(1246);
+  expect(audit.routing.prefix_manifest).toBe(238);
+  expect(audit.routing.full_scene_manifest).toBe(17);
   expect(await csv.text()).not.toContain('Eiffel_Tower_Scene');
   await page.goto('/hub/datasets/audit');
   await expect(page.getByRole('heading', { name: 'Photograph availability' })).toBeVisible();
@@ -44,7 +48,7 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   expect(providerRequests).toEqual([]);
 });
 
-test('companion ZIP and Waymo JSON mapping requirements are visible without changing the model link', async ({ page }) => {
+test('companion ZIP requirements remain explicit and Waymo mappings launch through pinned photo manifests', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     sources: { id: string; sourceId: string }[] };
   const archiveSource = index.sources.find(source => source.sourceId === 'hf:cornell-vailab/megaunscene')!;
@@ -58,15 +62,27 @@ test('companion ZIP and Waymo JSON mapping requirements are visible without chan
   await expect(page.locator('main')).toContainText('current model link does not attach that ZIP');
   expect((await page.request.get(zipped.entries[0].openUrl, { maxRedirects: 0 })).status()).toBe(302);
   const waymo = index.sources.find(source => source.sourceId === 'hf:Dororo99/Ours-V2_waymo_ArmGS')!;
-  const mapping = await (await page.request.get('/hub/datasets/api/entries?photos=path_policy_required&dataset=' + waymo.id)).json() as {
+  const mapping = await (await page.request.get('/hub/datasets/api/entries?dataset=' + waymo.id)).json() as {
     total: number; entries: { id: string; openUrl: string; photoStatus: string }[] };
   expect(mapping.total).toBe(10);
-  expect(mapping.entries.every(entry => entry.photoStatus === 'path_policy_required')).toBe(true);
+  expect(mapping.entries.every(entry => entry.photoStatus === 'sample_checked')).toBe(true);
   await page.goto('/hub/datasets/entry/' + mapping.entries[0].id);
   await expect(page.locator('main')).toContainText('Image-name mapping');
   await expect(page.locator('main')).toContainText('mapping.json');
   await expect(page.locator('main')).toContainText('Six-digit COLMAP image names map explicitly to eight-digit cache PNG paths');
-  expect((await page.request.get(mapping.entries[0].openUrl, { maxRedirects: 0 })).status()).toBe(302);
+  const open = await page.request.get(mapping.entries[0].openUrl, { maxRedirects: 0 });
+  expect(open.status()).toBe(302);
+  const target = new URL(new URL(open.headers().location).searchParams.get('url')!);
+  expect(target.pathname).toMatch(/\/individual\/manifests\/[a-f0-9]{64}\.manifest\.json$/);
+  const response = await page.request.get(target.pathname);
+  expect(response.headers()['access-control-allow-origin']).toBe('*');
+  const manifest = await response.json();
+  expect(manifest.files.cameras).toContain('/colmap/');
+  expect(manifest.imageNameToPath['FRONT/000000.png']).toContain('/images/FRONT/00000000.png');
+  expect(Object.keys(manifest.imageNameToPath)).toHaveLength(297);
+  const images = new Set(manifest.images);
+  expect(manifest.images.length).toBeGreaterThanOrEqual(297);
+  expect(Object.values(manifest.imageNameToPath).every(path => images.has(path))).toBe(true);
 });
 
 test('separate TAR previews retain extraction, name and calibration limitations', async ({ page }) => {
@@ -94,8 +110,8 @@ test('separate TAR previews retain extraction, name and calibration limitations'
 });
 
 test('later TV photographs show partial sampled coverage without changing camera loading', async ({ page }) => {
-  for (const [id, count] of [['data-9f28674f0f884957979b0a58', '1/74 inspected names from 5493 registered poses'],
-    ['data-8110d379a298766a8274b55d', '1/21 inspected names from 1485 registered poses']]) {
+  for (const [id, count] of [['data-9f28674f0f884957979b0a58', '9/139 inspected names from 5493 registered poses'],
+    ['data-8110d379a298766a8274b55d', '1/30 inspected names from 1485 registered poses']]) {
     await page.goto('/hub/datasets/entry/' + id);
     await expect(page.locator('.dataset-thumbnail')).toBeVisible();
     await expect(page.locator('[data-asset="images"]')).toHaveText('Images · partial');

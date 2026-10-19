@@ -22,6 +22,7 @@ from .scene_qualification import launch_manifest_asset, native_launch_manifest, 
 from .scene_photos import apply_photo_evidence, photo_scene_reviews
 from .scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
 from .scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
+from .photo_routing import apply_routing, routing_asset, routing_coverage, routing_failures, routing_reviews
 
 # A normal results page must not parse thousands of unrelated scene records.
 # Keeping packs at page size also bounds filtered searches spanning many packs.
@@ -247,11 +248,22 @@ def build(root=Path('.')):
     manifest_bytes = (root / 'data/scene-manifests.json').read_bytes()
     manifest_policy = json.loads(manifest_bytes)
     manifest_reviews = manifest_scene_reviews(catalog, manifest_policy)
+    routing_bytes = (root / 'data/photo-routing.json.gz').read_bytes()
+    routing_policy = json.loads(gzip.decompress(routing_bytes))
+    photo_routing = routing_reviews(catalog, routing_policy)
+    unresolved_routing = routing_failures(catalog, routing_policy)
+    if set(photo_routing) & set(unresolved_routing):
+        raise ValueError('A scene cannot have both checked and unresolved photo routing')
+    matched_routing = set()
+    matched_unresolved = set()
     matched_manifests = set()
     generated_manifests = {}
     parents = {entry['sourceId']: entry for entry in catalog['entries']}
     for review in manifest_reviews.values():
         generated_manifests.update(manifest_assets(review, parents[review['sourceId']], hf_url))
+    for review in photo_routing.values():
+        name, body = routing_asset(review, parents[review['sourceId']], hf_url)
+        generated_manifests[name] = body
     for review in native_scenes.values():
         manifest = native_launch_manifest(parents[review['sourceId']], review, hf_url)
         if manifest:
@@ -269,12 +281,13 @@ def build(root=Path('.')):
     published_reviews = []
     excluded = {row['sourceId'] for row in [*catalog['entries'], *audit.values()] if is_access_restricted(row)}
     generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes
-                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + photo_bytes + content_bytes + manifest_bytes + Path(__file__).read_bytes()
+                                + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + photo_bytes + content_bytes + manifest_bytes + routing_bytes + Path(__file__).read_bytes()
                                 + Path(__file__).with_name('scene_qualification.py').read_bytes()
                                 + Path(__file__).with_name('scene_photos.py').read_bytes()
                                 + Path(__file__).with_name('scene_contents.py').read_bytes()
                                 + Path(__file__).with_name('scene_datasets.py').read_bytes()
-                                + Path(__file__).with_name('scene_manifests.py').read_bytes()).hexdigest()
+                                + Path(__file__).with_name('scene_manifests.py').read_bytes()
+                                + Path(__file__).with_name('photo_routing.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
     if (output / 'manifests').is_symlink():
         raise ValueError('Manifest output must be a regular generated directory')
@@ -322,6 +335,7 @@ def build(root=Path('.')):
     thumbnails = set()
     thumbnail_scenes = 0
     photo_rows = []
+    routing_counts = Counter()
 
     def add_posting(mapping, key, ordinal):
         if key not in mapping:
@@ -401,6 +415,17 @@ def build(root=Path('.')):
                     thumbnail = checked_photo_previews.get((entry['sourceId'], revision, first_photo['sourcePath'], first_photo['sha256']))
                     if thumbnail:
                         proof = apply_thumbnail_evidence(entry, proof, thumbnail)
+            routing_review = photo_routing.get(review_key)
+            if routing_review:
+                proof = apply_routing(entry, row, revision, proof, routing_review, hf_url)
+                matched_routing.add(review_key)
+            if review_key in unresolved_routing:
+                unresolved = unresolved_routing[review_key]
+                if files != unresolved['files'] or proof.get('viewerUrl') != unresolved['sourceViewerUrl']:
+                    raise ValueError('Unresolved photo routing belongs to a different model selection')
+                proof['photoAudit']['policyNote'] = (proof['photoAudit'].get('policyNote', '')
+                    + f" Photo-manifest audit ({routing_policy['checkedAt']}, viewer {routing_policy['viewerVersion']}): {unresolved['reason']}. The existing model launch is retained.")
+                matched_unresolved.add(review_key)
             contents.update(proof['availableData'].keys())
             if proof.get('thumbnail'):
                 thumbnails.add(proof['thumbnail']['url'].split('/')[-1])
@@ -439,7 +464,9 @@ def build(root=Path('.')):
                 'samplePhoto': photo_audit.get('samplePath', ''), 'registeredNamesChecked': photo_audit.get('nameCheck', {}).get('registered', ''),
                 'matchedPhotoNames': photo_audit.get('nameCheck', {}).get('matched', ''), 'checkedAt': photo_audit.get('checkedAt', ''),
                 'notes': photo_audit.get('summary', '') + ' ' + photo_audit.get('policyNote', ''),
-                'associationFile': photo_audit.get('associationFile', '')})
+                'associationFile': photo_audit.get('associationFile', ''),
+                **routing_coverage(proof, kind, unresolved_routing.get(review_key, {}).get('reason', ''))})
+            routing_counts[photo_rows[-1]['launchRouting']] += 1
             for field, value in [('kind', kind_name), ('status', level), ('delivery', delivery), ('photos', photo_status),
                                  ('viewer', 'available' if proof and proof.get('viewerUrl') and not gated and not archive and not proof.get('opening') else '')]:
                 add_posting(facets[field], value, total)
@@ -500,18 +527,21 @@ def build(root=Path('.')):
             facet_manifest[field][value] = {'file': key, 'count': len(ordinals)}
     if matched_manifests != set(manifest_reviews):
         raise ValueError('A scene manifest no longer matches a published scene; recheck its selection')
-    checked_at = max([registry['checkedAt'], native_policy.get('checkedAt', ''), photo_policy.get('checkedAt', ''), content_policy['checkedAt'], manifest_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
+    if matched_routing != set(photo_routing) or matched_unresolved != set(unresolved_routing):
+        raise ValueError('Photo routing no longer matches the published scenes; rerun the audit')
+    checked_at = max([registry['checkedAt'], native_policy.get('checkedAt', ''), photo_policy.get('checkedAt', ''), content_policy['checkedAt'], manifest_policy['checkedAt'], routing_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
     manifest = {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'total': total,
                 'packSize': PACK_SIZE, 'sources': sources, 'facets': facet_manifest, 'kinds': dict(counts),
                 'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos), 'contents': dict(contents),
                 'thumbnails': thumbnail_scenes,
+                'photoRouting': dict(routing_counts),
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
                 'unit': 'named_scene',
                 'scope': 'Named scenes with checked native camera/model layouts or stronger complete-scene evidence. Original photographs may be present, partial, absent or unverified. Full rendering and export checks are separate evidence tiers. Standalone geometry, inaccessible and known unsupported cases are excluded.'}
     write('index.json', manifest)
     write('verified-scenes.json', {'schemaVersion': 1, 'generation': generation, 'scope': manifest['scope'], 'scenes': published_reviews})
     write('photo-audit.json', {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'scenes': total,
-        'collections': len(sources), 'photos': dict(photos), 'scope': photo_policy.get('scope', ''),
+        'collections': len(sources), 'photos': dict(photos), 'routing': dict(routing_counts), 'scope': photo_policy.get('scope', ''),
         'limits': 'Pinned path inventories and photo samples are separate from full model, every-photo and export checks. Photos can require a mapping, collection choice or companion archive; their presence does not mean the current link attaches them.'})
     if photo_rows:
         with (output / 'photo-audit.csv').open('w', encoding='utf-8-sig', newline='') as stream:

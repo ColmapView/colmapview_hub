@@ -245,6 +245,8 @@ class IndividualDatasetsTests(unittest.TestCase):
             def save(name, value):
                 (data / name).write_text(json.dumps(value), encoding='utf8')
             save('scene-manifests.json', {'schemaVersion': 1, 'checkedAt': '2026-10-18', 'scenes': []})
+            (data / 'photo-routing.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'checkedAt': '2026-10-19',
+                'viewerVersion': '0.17.7', 'viewerCommit': 'a' * 40, 'scenes': []}).encode()))
             save('catalog.json', catalog)
             save('individual-datasets.json', {'sources': registered, 'checkedAt': '2026-10-16', 'scope': 'Fixture'})
             save('dataset-audit.json', audit)
@@ -350,6 +352,8 @@ class IndividualDatasetsTests(unittest.TestCase):
             def save(name, value):
                 (data / name).write_text(json.dumps(value), encoding='utf8')
             save('scene-manifests.json', {'schemaVersion': 1, 'checkedAt': '2026-10-18', 'scenes': []})
+            (data / 'photo-routing.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'checkedAt': '2026-10-19',
+                'viewerVersion': '0.17.7', 'viewerCommit': 'a' * 40, 'scenes': []}).encode()))
             save('catalog.json', {'entries': [entry]})
             save('individual-datasets.json', {'checkedAt': '2026-10-17', 'sources': [{'datasetId': entry['id'], 'sourceId': entry['sourceId'],
                  'count': len(rows), 'file': filename, 'sha256': hashlib.sha256(raw).hexdigest()}]})
