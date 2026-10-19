@@ -2,7 +2,7 @@
 
 The companion service for [ColmapView](https://github.com/ColmapView/Colmapview.github.io): a catalog of pinned public scene datasets and preview cards for links created by the viewer's upload flow.
 
-[Open the Hub](https://colmapview.opsiclear.com/hub/). A Cloudflare Worker owns `/hub`, `/hub/*`, `/s`, `/s/*` and the custom viewer's `/auth/*` connection service; the viewer is deployed separately. Catalog builds use committed evidence. The Worker reads bounded same-origin metadata and never downloads submitted dataset URLs. Optional remembered credentials use separate encrypted Durable Objects, not public card records.
+[Open the Hub](https://colmapview.opsiclear.com/hub/). A Cloudflare Worker owns `/hub`, `/hub/*`, `/s` and `/s/*`; the viewer is deployed separately. Catalog builds use committed evidence. The Worker reads bounded same-origin metadata and never downloads submitted dataset URLs. User provider tokens and bucket keys stay in the viewer tab. Legacy `/auth/*` routes only report the retired service; see [credential-service retirement](docs/account-sessions.md).
 
 Share links use `/s/RoughhewnBiplane` and open the saved ColmapView URL directly, including saved view settings. Existing `/hub/<id>` links continue to work. Non-navigation fetches retain social preview metadata; image previews and delete links keep their own routes. Private datasets still require access in the viewer. The creation API adds `shareUrl` for updated viewers and keeps its legacy `url` and `managementPath` fields compatible with older viewers.
 
@@ -35,7 +35,7 @@ CI runs `npm run check` and `npm run test:browser`. Individual suites and audit 
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/worker/` | Routes, validation, private records, lookup protection and isolated account sessions |
+| `src/worker/` | Routes, validation, private card records and lookup protection |
 | `src/client/` | Browser controls, asynchronous catalog browsing and theme |
 | `src/shared/` | Runtime-neutral models, catalog logic and HTML helpers |
 | `scripts/build/` | Deployable client and catalog asset builds |
@@ -54,4 +54,4 @@ CI runs `npm run check` and `npm run test:browser`. Individual suites and audit 
 - [Catalog inputs and refresh](data/README.md): qualification limits and operator commands.
 - [Share links and lookup protection](docs/sharing.md): records, IDs, management and privacy behavior.
 - [Production setup](docs/operations.md): bindings, secrets, deployment and post-deploy checks.
-- [Remembered connections](docs/account-sessions.md): provider provisioning, encrypted storage, expiry and rollback.
+- [Credential-service retirement](docs/account-sessions.md): compatibility responses, permanent saved-connection deletion and rollout checks.

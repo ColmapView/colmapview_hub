@@ -1,8 +1,2 @@
 # Local-only values. Production uses wrangler secret put; never commit real keys.
 HUB_KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-# Local connection tests use this public fixture key; never deploy it.
-# Google/HF remain unavailable without separately configured test-app secrets.
-# Test-only encryption key. Generate a different random key for every deployed environment.
-AUTH_KEY="BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-# AUTH_GOOGLE_CLIENT_SECRET=""
-# AUTH_HF_CLIENT_SECRET=""
