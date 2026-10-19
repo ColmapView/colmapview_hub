@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.2 — 2026-10-19
+
+- Restore the selected scene after deferred card layout settles, with explicit navigation anchors and manual history restoration. Cancel positioning as soon as the user interacts.
+
 ## 0.9.1 — 2026-10-19
 
 - Keep an open scene information panel connected while a pending search completes, retaining its links and restoring keyboard focus when the new results appear.

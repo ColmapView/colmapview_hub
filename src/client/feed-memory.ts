@@ -39,3 +39,46 @@ export function rememberFeed(value: FeedMemory): void {
     if (raw.length <= 1000000) sessionStorage.setItem(STORAGE, raw);
   } catch { /* Storage can be disabled or full; browsing remains available. */ }
 }
+
+/** Align the actual scene after deferred card layout and font loading settle.
+ * Stop immediately when the user scrolls or interacts with the page. */
+export function restoreFeedPosition(results: HTMLElement, anchor: FeedMemory['anchor'], done: () => void): () => void {
+  const target = anchor && [...results.querySelectorAll<HTMLElement>('[data-entry-id]')].find(card => card.dataset.entryId === anchor.id);
+  let frame = 0, attempts = 0, stable = 0, stopped = false, started = false;
+  const events = ['wheel', 'pointerdown', 'touchstart', 'keydown'] as const;
+  const overflowAnchor = results.style.overflowAnchor;
+  const visibility = target?.style.contentVisibility || '';
+  const finish = () => {
+    if (stopped) return;
+    stopped = true;
+    cancelAnimationFrame(frame);
+    clearTimeout(fallback);
+    for (const event of events) removeEventListener(event, finish);
+    results.style.overflowAnchor = overflowAnchor;
+    if (target) target.style.contentVisibility = visibility;
+    done();
+  };
+  const align = () => {
+    if (stopped) return;
+    if (!target?.isConnected || !anchor) { finish(); return; }
+    if (!attempts) target.scrollIntoView({ block: 'start' });
+    const delta = target.getBoundingClientRect().top - anchor.top;
+    if (Math.abs(delta) > 1) { scrollBy(0, delta); stable = 0; }
+    else stable++;
+    attempts++;
+    if (stable >= 3 || attempts >= 15) finish();
+    else frame = requestAnimationFrame(align);
+  };
+  const start = () => {
+    if (started || stopped) return;
+    started = true;
+    clearTimeout(fallback);
+    results.style.overflowAnchor = 'none';
+    if (target) target.style.contentVisibility = 'visible';
+    frame = requestAnimationFrame(align);
+  };
+  for (const event of events) addEventListener(event, finish, { once: true, passive: true });
+  const fallback = setTimeout(start, 1000);
+  void document.fonts.ready.then(start);
+  return finish;
+}

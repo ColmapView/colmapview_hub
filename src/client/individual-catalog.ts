@@ -4,7 +4,7 @@ import type { IndividualPage, IndividualSelection } from '../shared/individual-c
 import { catalogCardElement } from './catalog-card';
 import { catalogHistory } from './catalog-history';
 import type { CatalogHistoryMode } from './catalog-history';
-import { recallFeed, rememberFeed } from './feed-memory';
+import { recallFeed, rememberFeed, restoreFeedPosition } from './feed-memory';
 import { FEED_MODES } from '../shared/discovery';
 
 const form = document.querySelector<HTMLFormElement>('#individual-search');
@@ -25,6 +25,11 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   let pending: AbortController | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let sequence = 0;
+  let stopRestoring: (() => void) | undefined;
+  let departing: HTMLElement | null = null;
+  // The feed owns its return anchor; native scrollY restoration uses stale
+  // estimated heights when content-visibility has deferred offscreen cards.
+  history.scrollRestoration = 'manual';
   // The select named "dataset" shadows HTMLFormElement.dataset.
   let firstPage = Number(form.getAttribute('data-page')) || 1;
   let lastPage = firstPage;
@@ -56,7 +61,11 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const remember = () => {
     if (!entries.length || entries.length !== loaded) return;
     const cards = [...results.querySelectorAll<HTMLElement>('[data-entry-id]')];
-    const visible = Math.max(0, cards.findIndex(card => card.getBoundingClientRect().bottom > 0));
+    const focused = document.activeElement?.closest<HTMLElement>('[data-entry-id]');
+    const preferred = departing?.isConnected ? departing : focused;
+    const preferredIndex = preferred ? cards.indexOf(preferred) : -1;
+    const areas = cards.map(card => { const box = card.getBoundingClientRect(); return Math.max(0, Math.min(box.bottom, innerHeight) - Math.max(box.top, 0)); });
+    const visible = preferredIndex >= 0 && areas[preferredIndex] > 0 ? preferredIndex : Math.max(0, areas.indexOf(Math.max(...areas)));
     const start = Math.max(0, Math.floor(visible / INDIVIDUAL_PAGE_SIZE) * INDIVIDUAL_PAGE_SIZE - 96);
     const cached = entries.slice(start, start + 240);
     rememberFeed({ key: viewKey, query: committed.toString(), data: { entries: cached, page: firstPage + start / INDIVIDUAL_PAGE_SIZE,
@@ -82,6 +91,8 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (!saved) return false;
     pending?.abort();
     const request = ++sequence;
+    stopRestoring?.();
+    departing = null;
     committed = new URLSearchParams(saved.query);
     viewKey = key();
     firstPage = saved.data.page; lastPage = saved.lastPage;
@@ -94,14 +105,11 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     status.textContent = ''; canAppend = true; more.disabled = false; automaticPaused = false;
     updateNavigation();
     busy = true;
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+    stopRestoring = restoreFeedPosition(results, saved.anchor, () => {
       if (request !== sequence) return;
-      if (saved.anchor) {
-        const anchor = [...results.querySelectorAll<HTMLElement>('[data-entry-id]')].find(card => card.dataset.entryId === saved.anchor!.id);
-        if (anchor) scrollBy(0, anchor.getBoundingClientRect().top - saved.anchor.top);
-      }
       busy = false;
-    }));
+      requestAnimationFrame(() => continueAutomatic());
+    });
     return true;
   };
   const updateSelection = (source: IndividualSelection | null) => {
@@ -116,6 +124,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const controller = new AbortController();
     pending = controller;
     const request = ++sequence;
+    stopRestoring?.();
     busy = true;
     if (!options.append) canAppend = false;
     more.disabled = true;
@@ -198,6 +207,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       updateSelection(data.dataset);
       updateHistory(urlFor(committed));
       viewKey = key();
+      departing = null;
       automaticPaused = false;
       if (!options.append && !options.restoring) scrollTo(0, 0);
       status.textContent = options.append ? `Loaded ${cards.length} more scenes.` : '';
@@ -283,6 +293,11 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   });
   restore();
   addEventListener('pagehide', remember);
+  results.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0 || !(event.target instanceof Element)) return;
+    const link = event.target.closest<HTMLAnchorElement>('.dataset-open, .dataset-metadata-links a');
+    if (link && link.target !== '_blank') departing = link.closest<HTMLElement>('[data-entry-id]');
+  }, true);
   document.addEventListener('close', event => {
     if (event.target instanceof HTMLDialogElement && event.target.classList.contains('dataset-metadata')) continueAutomatic();
   }, true);

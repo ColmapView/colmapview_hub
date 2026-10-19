@@ -90,6 +90,8 @@ the visible scene anchor. It retains at most 240 contiguous scenes per saved vie
 three views and one million serialized characters, restoring the same scene and
 offset when returning from the viewer or reloading. Longer sessions restore a
 window around the visible scene with Previous navigation for earlier pages.
+The feed records the selected card, owns browser scroll restoration, waits for
+font and deferred card layout to settle, and cancels positioning on user input.
 Blocked storage does not prevent browsing. Nothing is uploaded or retained as a
 cross-session viewing profile, and an obsolete generation's cache is ignored.
 
