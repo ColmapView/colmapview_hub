@@ -264,12 +264,15 @@ test('ZIP photo previews retain image credits and describe automatic archive loa
   const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:cornell-vailab/megaunscene');
   await page.goto('/hub/datasets/?photos=companion_archive&dataset=' + source.id);
   const first = page.locator('.dataset-card').first();
+  const identity = await first.getAttribute('data-entry-id');
+  const summary = JSON.parse((await page.locator('#catalog-initial-data').textContent())!).entries
+    .find((entry: { id: string }) => entry.id === identity);
   await expect(first.locator('[data-asset="images"]')).toHaveText('Images · archive');
   await expect(first.locator('.dataset-thumbnail')).toBeVisible();
   await expect(first.locator('figcaption')).toHaveCount(0);
   await first.getByRole('button', { name: /Metadata/ }).click();
   await expect(first.locator('.dataset-photo-credit a').first()).toHaveAttribute('href', /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
-  await expect(first.locator('.dataset-photo-credit')).toContainText('cc-by-sa-4.0');
+  await expect(first.locator('.dataset-photo-credit')).toContainText(summary.thumbnail.license);
   await first.getByRole('link', { name: 'Full metadata', exact: true }).click();
   await expect(page.locator('main')).toContainText('Preview attribution');
   await expect(page.locator('main')).toContainText('The launch manifest attaches both');

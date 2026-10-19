@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.9.1 — 2026-10-19
+
+- Keep an open scene information panel connected while a pending search completes, retaining its links and restoring keyboard focus when the new results appear.
+- Verify photo credits against the selected scene's recorded license across different seeded orderings.
+
 ## 0.9.0 — 2026-10-19
 
 - Add Discover, collection-balanced Random and New to Hub feeds with stable seeded pagination and filter-preserving shuffle.

@@ -78,6 +78,8 @@ the feed never cycles silently. An automatic request failure pauses automatic
 loading until an explicit retry. Stale responses, duplicate cards, wrong page
 numbers and mismatched feed selections cannot append to the current ordering.
 A catalog-generation change starts a fresh first page rather than mixing versions.
+If a search completes while a scene information panel is open, defer replacing
+its cards until the panel closes so its links and keyboard interaction stay usable.
 
 Preview images are lazy loaded, uncropped and dimensioned. Offscreen cards defer
 layout with `content-visibility`; full 3D scenes are opened only through a viewer

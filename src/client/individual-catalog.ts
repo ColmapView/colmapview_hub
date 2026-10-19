@@ -146,6 +146,24 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
         refreshed.delete('page');
         return await load(refreshed);
       }
+      // A result may already be on screen when the user starts typing and opens
+      // its information panel. Keep that panel and its links connected while a
+      // replacement search completes; commit the new cards after it closes.
+      const panel = !options.append ? results.querySelector<HTMLDialogElement>('.dataset-metadata[open]') : null;
+      const panelEntry = panel?.closest<HTMLElement>('[data-entry-id]')?.dataset.entryId;
+      if (panel) {
+        await new Promise<void>(resolve => {
+          const finish = () => {
+            panel.removeEventListener('close', finish);
+            controller.signal.removeEventListener('abort', finish);
+            resolve();
+          };
+          panel.addEventListener('close', finish, { once: true });
+          controller.signal.addEventListener('abort', finish, { once: true });
+          if (!panel.open || controller.signal.aborted) finish();
+        });
+        if (controller.signal.aborted || sequence !== request) return;
+      }
       const cards = data.entries.map(catalogCardElement);
       if (data.feed) {
         if (options.append && (data.feed.seed !== committed.get('seed') || data.feed.mode !== (committed.get('sort') || 'discover'))) {
@@ -184,6 +202,10 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       if (!options.append && !options.restoring) scrollTo(0, 0);
       status.textContent = options.append ? `Loaded ${cards.length} more scenes.` : '';
       if (options.focus) (options.append ? cards[0]?.querySelector<HTMLElement>('a') : count)?.focus();
+      else if (panelEntry) {
+        const replacement = [...results.querySelectorAll<HTMLElement>('[data-entry-id]')].find(card => card.dataset.entryId === panelEntry);
+        (replacement?.querySelector<HTMLElement>('.dataset-info') || count).focus({ preventScroll: true });
+      }
     } catch {
       if (controller.signal.aborted || sequence !== request) return;
       status.textContent = failure;

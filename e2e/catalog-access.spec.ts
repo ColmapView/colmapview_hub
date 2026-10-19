@@ -105,6 +105,42 @@ test('a catalog update restarts the feed instead of mixing generations', async (
   expect(await page.evaluate(() => scrollY)).toBe(0);
 });
 
+for (const action of ['navigate', 'close']) test(`pending searches retain open metadata until ${action}`, async ({ page }) => {
+  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  const initial = JSON.parse((await page.locator('#catalog-initial-data').textContent())!);
+  const identity = initial.entries[0].id;
+  let releaseSearch: (() => void) | undefined;
+  const held = new Promise<void>(resolve => { releaseSearch = resolve; });
+  let requested = false;
+  await page.route('**/hub/datasets/api/entries?**', async route => {
+    requested = true;
+    await held;
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...initial,
+      entries: initial.entries.slice(0, 1), total: 1, pages: 1, page: 1, dataset: null }) });
+  });
+  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('pending');
+  const first = page.locator('.dataset-card').first();
+  await first.locator('.dataset-info').click();
+  await expect.poll(() => requested).toBe(true);
+  const completed = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('/hub/datasets/api/entries'));
+  releaseSearch!();
+  await (await completed).finished();
+  // Let the completed fetch reach the renderer while the dialog is still open.
+  await page.waitForTimeout(150);
+  const panel = page.getByRole('dialog');
+  await expect(panel).toBeVisible();
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  if (action === 'navigate') {
+    await panel.getByRole('link', { name: 'Full metadata', exact: true }).click();
+    expect(new URL(page.url()).pathname).toBe('/hub/datasets/entry/' + identity);
+  } else {
+    await panel.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(page.locator('.dataset-card')).toHaveCount(1);
+    await expect(page.locator('.dataset-card .dataset-info')).toBeFocused();
+    expect(new URL(page.url()).searchParams.get('q')).toBe('pending');
+  }
+});
+
 for (const malformed of ['short page', 'duplicate within page']) test(`rejects a ${malformed} without losing current cards`, async ({ page }) => {
   const next = await (await page.request.get('/hub/datasets/api/entries?sort=random&seed=12345678&page=2')).json();
   if (malformed === 'short page') next.entries.pop();
