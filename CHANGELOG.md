@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.24 — 2026-10-19
+
+- Open dataset metadata in a side panel only when the info button is activated. Remove hover and focus-triggered popups.
+- Add a persistent close button, backdrop dismissal, Escape handling and keyboard focus return. Keep the panel within the viewport with independently scrolling content on small screens.
+
 ## 0.7.23 — 2026-10-18
 
 - Add 342 qualified scenes, bringing the Hub to 5,579 scenes across 147 collections. Support native camera/pose pairs without point files and independently checked camera-metadata model exports, with photo availability recorded separately.

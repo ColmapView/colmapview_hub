@@ -96,7 +96,7 @@ test('simple scene cards keep camera and point totals visible with model details
   assert.match(html, /Cameras<\/dt><dd data-stat="cameraPoses">227/);
   assert.match(html, /Camera models<\/dt><dd data-stat="cameraModels">1/);
   assert.match(html, /Points<\/dt><dd data-stat="points">23,659/);
-  const visible = html.split('<div class="dataset-metadata"')[0];
+  const visible = html.split('<dialog class="dataset-metadata"')[0];
   assert.doesNotMatch(visible, /Camera models|dataset-card-footer|data-photo-status/);
   assert.match(visible, /dataset-statistics-compact/);
   assert.match(html, /data-photo-status="not_included">Photos not included/);
@@ -218,7 +218,7 @@ test('square previews remain same-origin, attributed and commercially licensed a
   assert.match(html, /width="320" height="320" loading="lazy" decoding="async"/);
   assert.match(html, /Original photographer/);
   assert.match(html, /cc-by-sa-4.0/);
-  const visible = html.split('<div class="dataset-metadata"')[0];
+  const visible = html.split('<dialog class="dataset-metadata"')[0];
   assert.doesNotMatch(visible, /figcaption|square crop|Original photographer|cc-by-sa-4.0/);
   assert.match(html, /dataset-photo-credit.*Original photographer.*cc-by-sa-4.0.*Cropped/);
   const detail = render.catalogEntryPage(render.individualEntry(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source, parent));

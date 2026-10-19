@@ -26,15 +26,17 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + '<div class="dataset-card-heading"><div>'
     + `<h2><a class="dataset-open" href="${escape(catalogOpenUrl(entry))}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
     + `<p class="dataset-label">${escape(entry.dataset?.label || providerLabel(entry.provider))}</p></div>`
-    + `<button type="button" class="dataset-info" aria-label="${escape(`Metadata for ${entry.title}`)}" aria-controls="${metadataId}" aria-expanded="false"><span aria-hidden="true">i</span></button></div>`
+    + `<button type="button" class="dataset-info" aria-label="${escape(`Metadata for ${entry.title}`)}" aria-haspopup="dialog" aria-controls="${metadataId}" aria-expanded="false"><span aria-hidden="true">i</span></button></div>`
     + sceneContentsHtml(entry.availableData)
     + sceneStatisticsHtml(entry.sceneStats, true)
     + (!canOpen ? '<p class="dataset-link-note">Source only</p>' : !entry.hasViewer ? '<p class="dataset-link-note">Try · unchecked ↗</p>' : '')
-    + `<div class="dataset-metadata" id="${metadataId}" role="region" aria-label="${escape(`Metadata for ${entry.title}`)}">`
+    + `<dialog class="dataset-metadata" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
+    + '<div class="dataset-metadata-header"><h2>Dataset information</h2><button type="button" class="dataset-metadata-close" autofocus>Close</button></div>'
+    + '<div class="dataset-metadata-content">'
     + `<p class="dataset-metadata-title">${escape(entry.title)}</p><dl>${facts.map(([label, value]) => `<div><dt>${label}</dt><dd${label === 'Photographs' && entry.photoStatus ? ` data-photo-status="${escape(entry.photoStatus)}"` : label === 'Camera models' ? ' data-stat="cameraModels"' : ''}>${escape(value)}</dd></div>`).join('')}</dl>`
     + (preview ? `<p class="dataset-photo-credit">Photo: ${sceneThumbnailCreditHtml(entry.thumbnail!)} · Cropped</p>` : '')
     + `<p class="note">${escape(entry.description)}</p>`
     + `<div class="dataset-metadata-links"><a href="${datasetPath(entry)}">Full metadata</a>`
     + (entry.dataset ? `<a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Related scenes</a>` : '')
-    + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></article>`;
+    + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></dialog></article>`;
 }
