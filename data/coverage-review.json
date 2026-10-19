@@ -5438,7 +5438,7 @@
       "path": "Bundler Kermit example — Kermit (camera + RGB)",
       "revision": null,
       "status": "qualification_pending",
-      "reason": "exact_scene_import_export_not_established",
+      "reason": "ordered_bundler_image_list_missing",
       "dataUrl": "https://raw.githubusercontent.com/snavely/bundler_sfm/master/examples/kermit/results.example/bundle.out",
       "browserChecks": [
         {
@@ -5448,7 +5448,7 @@
         }
       ],
       "counts": null,
-      "notes": "Do not publish a collection ZIP as several named scenes without selecting the exact scene. Establish a current source-route import and independent camera/model export; archive members, custom calibration schemas and original photos need their own receipts."
+      "notes": "The released viewer cannot associate bundle cameras with photographs because the selected Bundler source supplies no checked ordered list.txt or images.txt. A filename sort is not an authoritative camera/image mapping. Supply and verify the original ordered list before qualifying a COLMAP model export."
     },
     {
       "sourceId": "public:[\"CV course Ellipse\",\"Hagenberg Ellipse\",\"camera + RGB\"]",
