@@ -205,8 +205,6 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
     data = result['availableData']
     if review['counts']['points']:
         data['point_cloud'] = {'status': 'checked', 'count': review['counts']['points'], 'samplePath': points['sourcePath']}
-    else:
-        data.pop('point_cloud', None)
     if review['photos']:
         complete = len(review['photos']) == review['counts']['images']
         result['photoAvailability'] = 'complete_export_checked' if complete else 'partial'
@@ -223,7 +221,6 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
                           'missing': review['counts']['images'] - len(review['photos']), 'ambiguous': 0},
             'samplePath': review['photos'][0]['sourcePath'], 'sampleBrowserRead': True, 'samplePixels': 'decoded'}
     else:
-        data.pop('images', None)
         if result.get('photoAvailability') in ('complete_export_checked', 'sample_checked', 'partial', 'path_policy_required'):
             result['photoAvailability'] = 'path_policy_required'
             data['images'] = {'status': 'needs_setup'}
@@ -233,10 +230,11 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
                     'policyNote': 'The current manifest intentionally leaves known source photographs unbound.',
                     'nameCheck': {'registered': review['counts']['images'], 'matched': 0,
                                   'missing': review['counts']['images'], 'ambiguous': 0}})
+        elif result.get('photoAvailability') != 'companion_archive':
+            data.pop('images', None)
     if review['masks']:
         data['masks'] = {'status': 'checked', 'count': len(review['masks']), 'samplePath': review['masks'][0]['sourcePath']}
-    else:
-        data.pop('masks', None)
-    # This generator selects native/XYZ geometry, not unrelated training outputs.
-    data.pop('splats', None)
+    # Available data describes the scene inventory. An intentionally narrow
+    # manifest must not erase separately checked companion assets. Its selected
+    # points/media remain recorded independently in sceneManifest above.
     return result, 'COLMAP + XYZ PLY' if points and points['format'] == 'xyz_ply' else 'COLMAP'

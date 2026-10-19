@@ -7,6 +7,7 @@ import { applyLicenseCategories } from '../catalog/license-categories.mjs';
 import { runPython } from '../lib/python.mjs';
 
 runPython(['-m', 'scripts.catalog.build_individual_catalog']);
+runPython(['-m', 'scripts.catalog.component_audit']);
 
 const json = async path => JSON.parse(await readFile(path, 'utf8'));
 const sceneIndex = await json('public/hub/datasets/individual/index.json');

@@ -137,7 +137,7 @@ test('complete-export evidence stays scoped while other model layouts remain loa
   expect(sortScenes(published.scenes)).toEqual(sortScenes(policy.scenes));
   const response = await page.request.get('/hub/datasets/api/entries?status=Cameras%20%2B%20photos%20verified');
   const data = await response.json() as { total: number; entries: { id: string; statusLabel: string; delivery: string; hasViewer: boolean }[] };
-  expect(index.total).toBe(5579);
+  expect(index.total).toBe(5576);
   const completePhotoExports = policy.scenes.filter(scene => scene.export !== 'colmap_model');
   expect(completePhotoExports).toHaveLength(3);
   expect(data.total).toBe(completePhotoExports.length);

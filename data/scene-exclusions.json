@@ -469,6 +469,48 @@
           "path": "mic/views"
         }
       ]
+    },
+    {
+      "sourceId": "hf:opsiclear-admin/colmapview-e2e-large-ply-20260928",
+      "revision": "b630b92b6bbabd5697b9eb08c108340d33fad3cd",
+      "checkedAt": "2026-10-19T13:38:54.557542+00:00",
+      "viewerVersion": "0.17.7",
+      "reason": "public_model_access_unavailable",
+      "summary": "The anonymous pinned repository listing and required original camera file both return HTTP 401. Historical model evidence is retained, but public browser access can no longer be verified.",
+      "scenes": [
+        {
+          "kind": "colmap",
+          "path": "sparse/0"
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:opsiclear-admin/imp360_bicycle",
+      "revision": "2a6a0107a0c969a0c2719a3b986645c876597612",
+      "checkedAt": "2026-10-19T13:38:54.557542+00:00",
+      "viewerVersion": "0.17.7",
+      "reason": "public_model_access_unavailable",
+      "summary": "The anonymous pinned repository listing and required original camera file both return HTTP 401. Historical model evidence is retained, but public browser access can no longer be verified.",
+      "scenes": [
+        {
+          "kind": "colmap",
+          "path": "sparse/0"
+        }
+      ]
+    },
+    {
+      "sourceId": "hf:opsiclear-admin/test",
+      "revision": "8ccc3044d3abda3e57f40b2250c52b88422ab527",
+      "checkedAt": "2026-10-19T13:38:54.557542+00:00",
+      "viewerVersion": "0.17.7",
+      "reason": "public_model_access_unavailable",
+      "summary": "The anonymous pinned repository listing and required original camera file both return HTTP 401. Historical model evidence is retained, but public browser access can no longer be verified.",
+      "scenes": [
+        {
+          "kind": "colmap",
+          "path": "sparse/0"
+        }
+      ]
     }
   ]
 }

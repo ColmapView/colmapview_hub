@@ -74,6 +74,25 @@ class SceneContentsTests(unittest.TestCase):
         self.assertIn('masks', data)
         self.assertNotIn('images', data)
 
+    def test_archived_components_remain_distinct_from_attached_scene_assets(self):
+        evidence = {'status': 'header_checked', 'samplePath': '3dgs/scene.zip',
+                    'archiveMember': 'scene/000001.ply', 'archiveFormat': 'zip'}
+        self.review['data']['splats'] = evidence
+        data = self.apply()['availableData']
+        self.assertEqual(data['splats'], {**evidence, 'status': 'archive'})
+        scene = {key: self.review[key] for key in ('kind', 'path', 'files', 'data')}
+        policy = {'schemaVersion': 1, 'coverage': 'all_published_scenes', 'checkedAt': '2026-10-19',
+                  'sources': [{'sourceId': self.entry['sourceId'], 'revision': 'a' * 40, 'scenes': [scene]}]}
+        content_scene_reviews({'entries': [self.entry]}, policy, Path('.'))
+        evidence['status'] = 'listed'
+        with self.assertRaisesRegex(ValueError, 'PLY extension'):
+            content_scene_reviews({'entries': [self.entry]}, policy, Path('.'))
+        evidence['status'] = 'header_checked'
+        for member in ('../other.ply', '/other.ply', '__MACOSX/._a.ply'):
+            evidence['archiveMember'] = member
+            with self.subTest(member=member), self.assertRaisesRegex(ValueError, 'safe member'):
+                content_scene_reviews({'entries': [self.entry]}, policy, Path('.'))
+
     def test_content_cannot_follow_a_changed_model_identity(self):
         self.row[2] = {**self.files, 'images': 'other/images.bin'}
         with self.assertRaisesRegex(ValueError, 'model files changed'):

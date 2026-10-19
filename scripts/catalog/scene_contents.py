@@ -55,7 +55,13 @@ def content_scene_reviews(catalog, policy, root):
                     raise ValueError('Invalid content role evidence')
                 if kind in ('point_cloud', 'meshes') and evidence['status'] != 'header_checked':
                     raise ValueError('Specific PLY contents require header evidence')
-                if kind == 'splats' and PurePosixPath(evidence['samplePath']).suffix.lower() == '.ply' and evidence['status'] != 'header_checked':
+                member = evidence.get('archiveMember')
+                archive_format = evidence.get('archiveFormat')
+                if member is not None or archive_format is not None:
+                    if (not source_path(member) or is_metadata_sidecar(member) or archive_format not in ('zip', 'tar.zst')
+                            or not evidence['samplePath'].lower().endswith('.' + archive_format)):
+                        raise ValueError('Archived content needs an exact safe member and container format')
+                if kind == 'splats' and PurePosixPath(member or evidence['samplePath']).suffix.lower() == '.ply' and evidence['status'] != 'header_checked':
                     raise ValueError('A PLY extension does not establish Gaussian splats')
             thumbnail = scene.get('thumbnail')
             if thumbnail:
@@ -103,7 +109,8 @@ def apply_content_evidence(entry, row, revision, proof, review):
             data['images']['count'] = proof['sceneValidation']['photoCount']
     for kind, evidence in review['data'].items():
         if kind not in data or data[kind]['status'] != 'checked':
-            data[kind] = {**deepcopy(evidence), 'status': 'checked' if evidence['status'] == 'header_checked' else 'listed'}
+            status = 'archive' if evidence.get('archiveMember') else 'checked' if evidence['status'] == 'header_checked' else 'listed'
+            data[kind] = {**deepcopy(evidence), 'status': status}
     result['availableData'] = data
     return apply_thumbnail_evidence(entry, result, review.get('thumbnail'))
 

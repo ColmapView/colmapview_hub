@@ -4,7 +4,7 @@ export const PHOTO_LABELS = {
   partial: 'Photos partially available',
   path_policy_required: 'Photos need setup',
   companion_archive: 'Photos in a separate ZIP',
-  not_found: 'No source photos found',
+  not_found: 'No loose photos found',
   not_included: 'Photos not included',
   review_required: 'Photo association needs review',
   not_checked: 'Photos not checked',

@@ -161,9 +161,9 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
           ? [{ label: 'Mask export', value: 'Masks display in the viewer. Their role is unverified, so they are not qualified as COLMAP feature masks.' }] : []),
       ] : []),
       ...(summary.availableData ? [{ label: 'Available data', value: sceneDataText(summary.availableData) },
-        ...Object.entries(summary.availableData).filter(([, evidence]) => evidence?.samplePath).map(([kind, evidence]) => ({
+        ...Object.entries(summary.availableData).filter(([, evidence]) => evidence?.samplePath).flatMap(([kind, evidence]) => [{
           label: `${kind.replaceAll('_', ' ')} sample`, value: evidence!.samplePath!, ...(parent.provider === 'public' ? {} : { url: file(evidence!.samplePath!) }),
-        }))] : []),
+        }, ...(evidence?.archiveMember ? [{ label: `${kind.replaceAll('_', ' ')} archive member`, value: evidence.archiveMember }] : [])])] : []),
       ...(summary.thumbnail ? [{ label: 'Preview attribution', value: `${summary.thumbnail.attribution} · ${summary.thumbnail.license}. Center-square crop of the first available registered photograph.` },
         { label: 'Preview original', value: summary.thumbnail.sourcePath, ...(summary.thumbnail.sourceArchive ? {} : { url: file(summary.thumbnail.sourcePath) }) },
         ...(summary.thumbnail.sourceArchive ? [{ label: 'Preview source archive', value: summary.thumbnail.sourceArchive, url: file(summary.thumbnail.sourceArchive) }] : [])] : []),

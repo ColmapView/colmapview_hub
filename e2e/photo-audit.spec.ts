@@ -6,16 +6,16 @@ const sceneId = (source: string, path: string) => 'data-' + createHash('sha256')
 test('photo evidence covers every published scene and keeps stronger export checks separate', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     total: number; generation: string; photos: Record<string, number> };
-  expect(index.total).toBe(5579);
-  expect(index.photos).toEqual({ sample_checked: 1529, path_policy_required: 149, review_required: 104, not_found: 3204,
-    not_included: 78, companion_archive: 478, partial: 14, complete_export_checked: 20, not_checked: 3 });
+  expect(index.total).toBe(5576);
+  expect(index.photos).toEqual({ sample_checked: 1537, path_policy_required: 150, review_required: 89, not_found: 3204,
+    not_included: 78, companion_archive: 478, partial: 20, complete_export_checked: 20 });
   expect(Object.values(index.photos).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const available = await (await page.request.get('/hub/datasets/api/entries?photos=available')).json() as {
     total: number; entries: { photoStatus: string }[] };
-  expect(available.total).toBe(1563);
+  expect(available.total).toBe(1577);
   expect(available.entries.every(entry => ['complete_export_checked', 'sample_checked', 'partial'].includes(entry.photoStatus))).toBe(true);
   const audit = await (await page.request.get('/hub/datasets/individual/photo-audit.json')).json();
-  expect(audit).toMatchObject({ generation: index.generation, scenes: 5579, collections: 147, photos: index.photos });
+  expect(audit).toMatchObject({ generation: index.generation, scenes: 5576, collections: 144, photos: index.photos });
   const csv = await page.request.get('/hub/datasets/individual/photo-audit.csv');
   expect(csv.ok()).toBe(true);
   expect(await csv.text()).toContain('mappingFile,companionArchive,samplePhoto');
@@ -40,7 +40,7 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   await expect(page.locator('#catalog-count')).toContainText('of 3,204 scene datasets');
   await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('not_found');
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
-  await expect(page.locator('#catalog-count')).toContainText('of 5,579 scene datasets');
+  await expect(page.locator('#catalog-count')).toContainText('of 5,576 scene datasets');
   expect(providerRequests).toEqual([]);
 });
 

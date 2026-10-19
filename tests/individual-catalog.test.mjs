@@ -36,7 +36,7 @@ test('model-only export details retain camera statistics and do not claim origin
 
 test('photo availability is displayed separately without changing model actions', () => {
   for (const [status, label] of [['partial', 'Photos partially available'], ['path_policy_required', 'Photos need setup'],
-    ['companion_archive', 'Photos in a separate ZIP'], ['not_found', 'No source photos found'], ['not_included', 'Photos not included']]) {
+    ['companion_archive', 'Photos in a separate ZIP'], ['not_found', 'No loose photos found'], ['not_included', 'Photos not included']]) {
     const item = row(0, { 7: nativePhotoProof(status) });
     const summary = render.individualSummary(item, source);
     assert.equal(summary.photoStatus, status);

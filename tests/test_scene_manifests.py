@@ -146,6 +146,31 @@ class SceneManifestTests(unittest.TestCase):
         self.assertEqual(updated['photoAvailability'], 'path_policy_required')
         self.assertEqual(updated['availableData']['images']['status'], 'needs_setup')
 
+    def test_manifest_selection_preserves_separately_checked_scene_components(self):
+        self.review.update(photos=[], masks=[], points=None)
+        self.review['counts']['points'] = 0
+        self.bind()
+        self.reviews()
+        companions = {
+            'point_cloud': {'status': 'checked', 'count': 17, 'samplePath': 'scene/input.ply'},
+            'splats': {'status': 'checked', 'samplePath': 'scene/point_cloud/iteration_30000/point_cloud.ply'},
+            'masks': {'status': 'listed', 'count': 4, 'samplePath': 'scene/masks/a.png'},
+            'meshes': {'status': 'checked', 'samplePath': 'scene/mesh.ply'},
+        }
+        self.proof['availableData'].update(copy.deepcopy(companions))
+        self.proof['photoAvailability'] = 'companion_archive'
+        self.proof['availableData']['images'] = {'status': 'archive'}
+        original = copy.deepcopy(self.proof)
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(updated['sceneManifest']['counts']['points'], 0)
+        self.assertEqual(updated['sceneManifest']['photoCount'], 0)
+        self.assertEqual(updated['sceneManifest']['maskCount'], 0)
+        self.assertEqual(updated['photoAvailability'], 'companion_archive')
+        self.assertEqual(updated['availableData']['images'], {'status': 'archive'})
+        for kind, evidence in companions.items():
+            self.assertEqual(updated['availableData'][kind], evidence)
+        self.assertEqual(self.proof, original)
+
     def test_native_points_and_partial_photos_keep_their_original_meaning(self):
         self.review['points'].update(sourcePath=self.files['points3d'], format='colmap_text')
         self.review['counts']['images'] = 2

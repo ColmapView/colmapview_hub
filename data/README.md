@@ -229,3 +229,9 @@ npm run test:browser
 ```
 
 The merge requires complete browser/access receipt sets, exact source/revision and file matches, and decoder validation for passed Gaussian/SPZ/SOG samples. Controlled native manifests remain `modelFileImport` evidence; controlled extracted members remain `extractedMemberImport` evidence. Neither can promote a live ordinary source URL to a passing import. Public archive download links remain available for extraction when anonymous byte access is established; they are separate from viewer actions.
+
+### Missing component audit — October 19, 2026
+
+`scene-component-audit.json.gz` records all 25,204 initially missing role checks for 5,579 scenes and 147 source collections, including pinned scope receipts, candidate paths, header checks and decoded browser photo samples. It is an operator-curated, dated snapshot. `python -m scripts.catalog.component_audit` exports it as `public/hub/datasets/individual/component-audit.csv` and copies the full compressed evidence. Normal builds run that offline export; they do not refresh source data. The CSV contains candidate counts and a few examples, while the JSON retains full candidate paths. See [the methodology, corrections and remaining findings](../docs/scene-component-audit-2026-10-19.md).
+
+The corresponding content/photo policies recover 357 missing role labels across 275 scenes, including 18 matching browser-decoded photographs and their previews. Archive member evidence records `archiveMember` and `archiveFormat`; it proves component presence without promoting an archive to a combined scene import. Three newly inaccessible public models are retained as failures in `scene-exclusions.json`. The current public catalog has 5,576 scenes, 144 collections and 2,205 previews. Its 20 complete photo-export qualifications, existing model selections and selected-scene statistics remain unchanged.

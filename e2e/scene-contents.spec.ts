@@ -258,7 +258,7 @@ test('Kicker retains counts, sibling photo policy and verified streamed-export e
 test('ZIP photo previews retain image credits and explicit loading requirements', async ({ page }) => {
   await page.goto('/hub/datasets/?photos=companion_archive');
   const first = page.locator('.dataset-card').first();
-  await expect(first.locator('[data-asset="images"]')).toHaveText('Images · ZIP');
+  await expect(first.locator('[data-asset="images"]')).toHaveText('Images · archive');
   await expect(first.locator('.dataset-thumbnail')).toBeVisible();
   await expect(first.locator('figcaption')).toHaveCount(0);
   await first.getByRole('button', { name: /Metadata/ }).click();
@@ -268,6 +268,22 @@ test('ZIP photo previews retain image credits and explicit loading requirements'
   await expect(page.locator('main')).toContainText('Preview attribution');
   await expect(page.locator('main')).toContainText('current model link does not attach that ZIP');
   await expect(page.getByRole('link', { name: 'Try in ColmapView', exact: true })).toBeVisible();
+});
+
+test('recovered archived components stay separate from selected camera-only scene counts', async ({ page }) => {
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:nyuvideolab/danceNet3D');
+  const result = await (await page.request.get('/hub/datasets/api/entries?dataset=' + source.id)).json();
+  const entry = result.entries[0];
+  expect(entry.availableData.splats).toMatchObject({ status: 'archive', archiveFormat: 'zip' });
+  expect(entry.availableData.masks).toMatchObject({ status: 'archive', archiveFormat: 'tar.zst' });
+  expect(entry.sceneStats.points).toBe(0);
+  await page.goto('/hub/datasets/entry/' + entry.id);
+  await expect(page.locator('[data-asset="splats"]')).toHaveText('Splats · archive');
+  await expect(page.locator('[data-asset="masks"]')).toHaveText('Masks · archive');
+  await expect(page.locator('main')).toContainText('splats archive member');
+  await expect(page.locator('main')).toContainText(entry.availableData.splats.archiveMember);
+  expect((await page.request.get(entry.openUrl, { maxRedirects: 0 })).status()).toBe(302);
 });
 
 test('model-only ArmGS cards show masks and cameras without claiming photos', async ({ page }) => {
