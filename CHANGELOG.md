@@ -3,7 +3,7 @@
 ## 0.7.25 — 2026-10-19
 
 - Generate scene previews across every license category, including non-commercial and unspecified terms. Preserve reported source/image licenses, attribution and source hashes.
-- Add 1,167 missing previews, bringing photo coverage to all 2,189 scenes with established photographs. Preserve the 1,022 existing preview records and every scene's model/photo loading evidence.
+- Add 1,167 missing scene previews, bringing published coverage to all 2,190 scenes with established photographs. Preserve the 1,023 existing published previews and every scene's model/photo loading evidence.
 - Add resumable offline preparation for direct public images, companion ZIP members and larger source photos.
 
 ## 0.7.24 — 2026-10-19
