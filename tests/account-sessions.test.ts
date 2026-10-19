@@ -5,6 +5,7 @@ import worker from '../src/worker/index';
 import { randomValue, seal, sessionId, unseal } from '../src/worker/auth/crypto';
 import { providerScopes } from '../src/worker/auth/providers';
 import { accountValue, type AccountTokens } from '../src/worker/auth/model';
+import { identityToken } from './auth-fixtures';
 
 const origin = 'https://colmapview.opsiclear.com';
 async function call(path: string, body?: object, cookie?: string, headers: HeadersInit = {}) {
@@ -37,6 +38,37 @@ async function seedTokens(stub: ReturnType<typeof env.ACCOUNT_SESSIONS.getByName
 }
 
 describe('remembered account sessions', () => {
+  for (const provider of ['google', 'hf'] as const) {
+    it(`completes ${provider} authorization through the Worker callback and restores from its signed browser cookie`, async () => {
+      const started = await call(`${provider}/connect`, { returnTo: '/?url=https%3A%2F%2Fexample.test%2Fscene.zip', mode: provider === 'google' ? 'redirect' : 'popup',
+        ...(provider === 'google' ? { loginHint: '123456789' } : {}) });
+      expect(started.status).toBe(200);
+      const cookie = started.headers.get('Set-Cookie')!.split(';')[0];
+      const { url, transactionId } = await started.json<{ url: string; transactionId: string }>();
+      const identity = await identityToken(provider, new URL(url).searchParams.get('nonce')!);
+      vi.mocked(fetch).mockImplementation(async input => {
+        const target = String(input);
+        if (target.endsWith('/token')) return Response.json({ access_token: 'callback-access', refresh_token: 'callback-refresh',
+          token_type: 'Bearer', expires_in: 3600, scope: providerScopes(provider, 'view'), id_token: identity.jwt });
+        if (target.endsWith('/certs') || target.endsWith('/jwks')) return Response.json({ keys: [identity.jwk] });
+        if (target.endsWith('/userinfo')) return Response.json({ sub: '123456789', preferred_username: 'fixture-owner' });
+        throw new Error('Unexpected provider endpoint');
+      });
+      const callback = await call(`${provider}/callback?state=${transactionId}&code=fixture-code`, undefined, cookie);
+      expect(callback.status).toBe(provider === 'google' ? 303 : 200);
+      expect(callback.headers.get('Cache-Control')).toBe('no-store');
+      expect((callback.headers.get('Location') ?? '') + await callback.text()).not.toMatch(/callback-access|callback-refresh|fixture-code/);
+      if (provider === 'google') expect(new URL(callback.headers.get('Location')!).searchParams.get('url')).toBe('https://example.test/scene.zip');
+      const restored = await call(`${provider}/token`, { purpose: 'view' }, cookie);
+      expect(restored.status).toBe(200);
+      expect(await restored.json()).toMatchObject({ accessToken: 'callback-access', accountId: '123456789', renewable: true });
+      expect(await (await call('session', undefined, cookie)).json()).toMatchObject({ accounts: [{ provider, purpose: 'view', accountId: '123456789' }] });
+      expect((await call(`${provider}/callback?state=${transactionId}&code=fixture-code`, undefined, cookie)).status).toBe(400);
+      await call(`${provider}/cancel`, { transactionId }, cookie);
+      expect((await call(`${provider}/token`, {}, cookie)).status).toBe(401);
+    });
+  }
+
   it('checks capabilities without creating a cookie or making external requests', async () => {
     const result = await call('session');
     expect(result.status).toBe(200);
