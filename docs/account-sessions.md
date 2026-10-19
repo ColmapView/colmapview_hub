@@ -14,6 +14,8 @@
 
 ## API boundaries
 
+Provider token requests use `client_secret_post`, supported by both providers. Production checks on 2026-10-19 verified Google and HF refresh-token issuance and renewal. HF renewal rejected Basic authentication even with the public client ID in the form. The bounded provider fetch uses `redirect: 'manual'` and rejects every 3xx response; workerd rejects the `error` redirect mode. Provider bodies, credentials and callback URLs must never enter logs.
+
 - `GET /auth/session`: capabilities and noncredential connection metadata; no anonymous state creation.
 - `POST /auth/{google|hf}/connect`: browser-bound PKCE authorization URL and transaction ID; popup or full-page return.
 - `GET /auth/{google|hf}/callback`: single-use state/code validation and verified identity; a same-origin notification or redirect contains status only.

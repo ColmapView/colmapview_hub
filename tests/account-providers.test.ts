@@ -13,7 +13,9 @@ describe('provider authorization adapters', () => {
   for (const provider of ['google', 'hf'] as const) {
     it(`exchanges and verifies ${provider} identity without storing a personal profile`, async () => {
       const identity = await identityToken(provider, 'fixture-nonce');
-      vi.mocked(fetch).mockImplementation(async input => {
+      vi.mocked(fetch).mockImplementation(async (input, init) => {
+        // Exercise workerd's real Request validation before the network fixture.
+        new Request(input, init);
         const url = String(input);
         if (url.endsWith('/token')) return Response.json({ access_token: 'fixture-access', refresh_token: 'fixture-refresh',
           token_type: 'Bearer', expires_in: 3600, scope: providerScopes(provider, 'view'), id_token: identity.jwt });
@@ -32,6 +34,15 @@ describe('provider authorization adapters', () => {
       expect(String(request[0])).not.toMatch(/fixture-code|fixture-secret/);
     });
 
+    it(`refuses redirects from the ${provider} token endpoint`, async () => {
+      vi.mocked(fetch).mockImplementation(async () => new Response(null, {
+        status: 302, headers: { Location: 'https://untrusted.example/token' },
+      }));
+      await expect(exchangeAccountCode(transaction(provider), '?state=fixture-state&code=fixture-code', env)).rejects.toMatchObject({ status: 503 });
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(fetch).mock.calls[0][1]?.redirect).toBe('manual');
+    });
+
     it(`rejects an invalid ${provider} nonce or signature before accepting credentials`, async () => {
       const identity = await identityToken(provider, 'different-nonce');
       vi.mocked(fetch).mockImplementation(async input => String(input).endsWith('/token')
@@ -48,12 +59,20 @@ describe('provider authorization adapters', () => {
     it(`renews ${provider} tokens and keeps rotated refresh credentials on the server`, async () => {
       const previous: AccountTokens = { accessToken: 'old-access', refreshToken: 'old-refresh', subject: '123456789',
         scope: providerScopes(provider, 'view'), expiresAt: Date.now() - 1, ...(provider === 'hf' ? { username: 'fixture-owner' } : {}) };
-      vi.mocked(fetch).mockImplementation(async () => Response.json({ access_token: 'new-access', refresh_token: 'new-refresh', token_type: 'Bearer', expires_in: 3600 }));
+      vi.mocked(fetch).mockImplementation(async (_input, init) => {
+        // HF refreshes require form credentials; its discovery document permits client_secret_post.
+        if (provider === 'hf' && new URLSearchParams(String(init?.body)).get('client_id') !== env.AUTH_HF_CLIENT_ID) {
+          return Response.json({ error: 'invalid_client' }, { status: 401 });
+        }
+        return Response.json({ access_token: 'new-access', refresh_token: 'new-refresh', token_type: 'Bearer', expires_in: 3600 });
+      });
       const renewed = await refreshAccount(provider, 'view', previous, env);
       expect(renewed).toMatchObject({ accessToken: 'new-access', refreshToken: 'new-refresh', subject: previous.subject, scope: previous.scope });
       const parameters = new URLSearchParams(String(vi.mocked(fetch).mock.calls[0][1]?.body));
       expect(parameters.get('grant_type')).toBe('refresh_token');
       expect(parameters.get('refresh_token')).toBe('old-refresh');
+      expect(parameters.has('client_secret')).toBe(true);
+      expect(new Headers(vi.mocked(fetch).mock.calls[0][1]?.headers).has('Authorization')).toBe(false);
       vi.mocked(fetch).mockImplementation(async () => Response.json({ error: 'invalid_grant' }, { status: 400 }));
       await expect(refreshAccount(provider, 'view', previous, env)).rejects.toMatchObject({ status: 401 });
     });

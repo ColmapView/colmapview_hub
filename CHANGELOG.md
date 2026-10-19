@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.8.2 — 2026-10-19
+
+- Enable remembered connections after registering both production OAuth callbacks and verifying private Drive and R2 loads, HF publishing, and real Google/HF token renewal.
+- Reject authorization-provider redirects explicitly using workerd's supported manual mode. Validate real Worker request options in provider tests.
+- Use the providers' supported form authentication for code exchange and renewal, fixing HF refresh rejection with Basic authentication.
+
 ## 0.8.1 — 2026-10-19
 
 - Add pinned photo-inventory manifests for 1,246 native scenes, preserving all 255 existing manifest launches, model selections, statistics, previews and export qualifications.
