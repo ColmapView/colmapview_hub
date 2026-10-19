@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.3 — 2026-10-19
+
+- Use a full-width responsive scene grid with up to four columns, retaining uncropped previews, ranked suggestions, automatic loading and return navigation.
+
 ## 0.9.2 — 2026-10-19
 
 - Restore the selected scene after deferred card layout settles, with explicit navigation anchors and manual history restoration. Cancel positioning as soon as the user interacts.

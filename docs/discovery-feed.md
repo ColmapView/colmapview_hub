@@ -1,6 +1,8 @@
 # Scene discovery feed
 
-The Hub presents one card per qualified named scene in a vertical feed. Dataset
+The Hub presents one card per qualified named scene in a full-width responsive
+grid: three columns on desktop, four on wide screens, two on tablets and one on
+phones. Automatic scrolling retains the same ranked ordering across rows. Dataset
 payloads remain in their original locations; scrolling reads public catalog
 metadata and local preview assets only. Existing launch manifests, evidence,
 licensing, statistics, photograph paths and access checks retain their meanings.
