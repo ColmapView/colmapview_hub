@@ -89,7 +89,7 @@
     "HUB_LISTINGS_ENABLED": "false",
     "AUTH_ENABLED": "false",
     "AUTH_GOOGLE_CLIENT_ID": "425433759789-mhpo5d6im8gvjofhnhti1k7ujfd68gg9.apps.googleusercontent.com",
-    "AUTH_HF_CLIENT_ID": ""
+    "AUTH_HF_CLIENT_ID": "f6c65e64-d374-4e4e-9bad-006d53681ed5"
   },
   "secrets": {
     "required": ["HUB_KEY"]
