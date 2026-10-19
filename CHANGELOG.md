@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.9.3 — 2026-10-19
+
+- Retire server-side OAuth exchange, remembered bucket signing and encrypted account-session storage. Browser connections use provider-native authentication and direct bucket signing.
+- Prepare migration `v4-remove-account-sessions` to permanently remove saved connections when deployed. Legacy auth endpoints report disabled capabilities or 410, without reading credentials or contacting providers.
+- Document the deletion, unused-secret cleanup and production verification; include browser tests in the normal TypeScript checks.
+
 ## 0.9.2 — 2026-10-19
 
 - Restore the selected scene after deferred card layout settles, with explicit navigation anchors and manual history restoration. Cancel positioning as soon as the user interacts.
