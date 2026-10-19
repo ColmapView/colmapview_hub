@@ -7,13 +7,15 @@ Share links use `/s/<id>` and browser navigations open the saved viewer URL dire
 ## What is stored
 
 One JSON object per link in a private R2 bucket:
-- the viewer URL, including its camera and settings fragment;
+- the viewer URL, including any permitted display fragment;
 - the title, description, optional license name and URL, and an asset summary;
 - a base64 JPEG preview;
 - the creation time and ownership hashes;
 - `access: "private"`, on private links only.
 
 The viewer crops its preview to fill 600 × 315 and keeps it under 64 KiB. The Hub rejects JPEGs that carry EXIF (APP1) or comment segments. `og:image` is an ordinary public HTTPS JPEG endpoint, cached for five minutes.
+
+New cards use an explicit dataset URL in the viewer's `url` query parameter. Creation rejects credential parameters in the viewer, source and license URLs, including duplicate `url` values. Combined `#d=` source fragments are rejected because they can hide credentials inside encoded or compressed data. Display-only camera fragments remain supported. Previously stored records are still read compatibly.
 
 The asset summary counts images, points, masks and Gaussian splats; cards show the nonzero counts. Records are read tolerantly: a page needs only a title, an http(s) viewer URL and a preview, so records written by older Hubs keep rendering.
 

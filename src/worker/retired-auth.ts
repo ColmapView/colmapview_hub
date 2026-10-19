@@ -16,6 +16,6 @@ export function retiredAuthRoute(request: Request): Response {
   }
   return Response.json(sessionCheck
     ? { capabilities: { google: false, hf: false, bucket: false }, accounts: [], bucket: null, expiresAt: 0 }
-    : { error: 'Connections now stay in your browser. Reconnect in ColmapView.' },
+    : { error: 'Reload ColmapView, then reconnect. Connections now stay in your browser.' },
   { status: sessionCheck ? 200 : 410, headers });
 }
