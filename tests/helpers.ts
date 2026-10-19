@@ -20,7 +20,7 @@ export const assets: AssetSummary = { format: 'zip', imageFormat: 'jpeg', colmap
   images: 83, masks: 82, splats: 1, viewerSettings: true, preview: false };
 /** Turns gallery listings on for one request. */
 export const listings: Partial<Env> = { HUB_LISTINGS_ENABLED: 'true' };
-export interface LinkResult { id: string; url: string; managementPath: string }
+export interface LinkResult { id: string; url: string; shareUrl: string; managementPath: string }
 /** What a viewer sends. Viewers before access-aware links omit `access`. */
 export type LinkPayload = Omit<CreateLinkInput, 'access' | 'listed'> & { access?: LinkAccess; listed?: boolean };
 

@@ -1,4 +1,4 @@
-import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, VIEWER_ORIGINS, waitText } from '../shared/model';
+import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, SHARE_PATH, VIEWER_ORIGINS, waitText } from '../shared/model';
 import type { AssetSummary, CardRecord, ListedLink } from '../shared/model';
 import { escapeHtml } from '../shared/html';
 import { HUB_UI_VERSION } from '../shared/ui-version';
@@ -108,7 +108,7 @@ function socialMetadata(pageUrl: string, title: string, description: string): st
 }
 
 export function cardPage(location: HubLocation, record: CardRecord): string {
-  const pageUrl = `${location.base}/${record.id}`;
+  const pageUrl = `${location.origin}${SHARE_PATH}/${record.id}`;
   const assets = assetLine(record.assets);
   const licenseName = record.license?.name || record.license?.id;
   const license = licenseName ? `License: ${record.license?.url
@@ -137,7 +137,7 @@ export function managementPage(location: HubLocation, record: CardRecord): strin
 export function galleryPage(location: HubLocation, { links, cursor }: { links: ListedLink[]; cursor?: string }): string {
   const cards = links.map(link => {
     const assets = assetLine(link.assets);
-    return `<a class="card gallery-card" href="${location.path}/${link.id}">`
+    return `<a class="card gallery-card" href="${SHARE_PATH}/${link.id}">`
       + `<img src="${location.path}/${link.id}/preview.jpg" width="${PREVIEW_WIDTH}" height="${PREVIEW_HEIGHT}" loading="lazy" alt="">`
       + `<span class="gallery-title">${escapeHtml(link.title)}</span>${assets ? `<span class="meta">${escapeHtml(assets)}</span>` : ''}</a>`;
   }).join('');

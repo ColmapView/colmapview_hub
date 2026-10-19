@@ -15,6 +15,14 @@
     {
       "pattern": "colmapview.opsiclear.com/hub/*",
       "zone_name": "opsiclear.com"
+    },
+    {
+      "pattern": "colmapview.opsiclear.com/s",
+      "zone_name": "opsiclear.com"
+    },
+    {
+      "pattern": "colmapview.opsiclear.com/s/*",
+      "zone_name": "opsiclear.com"
     }
   ],
   "assets": {
@@ -23,7 +31,7 @@
     // Static files in public/hub/ are served at /hub/… without the Worker. Wrangler's warning that the routes "will attempt
     // to serve Assets on a configured path" is expected for this /hub/* → public/hub/* mapping. Setting run_worker_first
     // back to true would route static files through the Worker again.
-    "run_worker_first": ["/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/datasets/individual/*", "!/hub/datasets/*.manifest.json", "!/hub/datasets/audit*", "!/hub/datasets/catalog*", "!/hub/datasets/dataset-audit.json"]
+    "run_worker_first": ["/s", "/s/*", "/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/datasets/individual/*", "!/hub/datasets/*.manifest.json", "!/hub/datasets/audit*", "!/hub/datasets/catalog*", "!/hub/datasets/dataset-audit.json"]
   },
   "r2_buckets": [
     {

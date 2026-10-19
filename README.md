@@ -2,9 +2,9 @@
 
 The companion service for [ColmapView](https://github.com/ColmapView/Colmapview.github.io): a catalog of pinned public scene datasets and preview cards for links created by the viewer's upload flow.
 
-[Open the Hub](https://colmapview.opsiclear.com/hub/). A Cloudflare Worker owns `/hub` and `/hub/*`; the viewer is deployed separately. Catalog builds use committed evidence. The Worker reads bounded same-origin metadata and never downloads submitted dataset URLs.
+[Open the Hub](https://colmapview.opsiclear.com/hub/). A Cloudflare Worker owns `/hub`, `/hub/*`, `/s` and `/s/*`; the viewer is deployed separately. Catalog builds use committed evidence. The Worker reads bounded same-origin metadata and never downloads submitted dataset URLs.
 
-Opening a share link such as `/hub/RoughhewnBiplane` redirects browser navigations directly to its saved ColmapView URL, including saved view settings. Non-navigation fetches retain social preview metadata; image previews and delete links keep their own routes. Private datasets still require access in the viewer.
+Share links use `/s/RoughhewnBiplane` and open the saved ColmapView URL directly, including saved view settings. Existing `/hub/<id>` links continue to work. Non-navigation fetches retain social preview metadata; image previews and delete links keep their own routes. Private datasets still require access in the viewer. The creation API adds `shareUrl` for updated viewers and keeps its legacy `url` and `managementPath` fields compatible with older viewers.
 
 ## Development
 

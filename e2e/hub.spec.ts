@@ -27,7 +27,7 @@ test.afterAll(async () => {
   if (viewerServer) await new Promise<void>((resolve, reject) => viewerServer.close(error => error ? reject(error) : resolve()));
 });
 
-interface Link { id: string; url: string; owner: string }
+interface Link { id: string; url: string; shareUrl: string; owner: string }
 
 async function createLink(page: Page, overrides: Record<string, unknown> = {}): Promise<Link> {
   const owner = randomBytes(32).toString('base64url');
@@ -41,7 +41,7 @@ async function createLink(page: Page, overrides: Record<string, unknown> = {}): 
     ...overrides,
   } });
   expect(response.status()).toBe(201);
-  return { ...await response.json() as { id: string; url: string }, owner };
+  return { ...await response.json() as { id: string; url: string; shareUrl: string }, owner };
 }
 
 const removeLink = (page: Page, link: Link) =>
@@ -66,13 +66,13 @@ for (const width of [1280, 360]) {
     const viewerUrl = `${viewerOrigin}/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43`;
     const link = await createLink(page, { viewerUrl });
     try {
-      const redirected = page.waitForResponse(response => response.url() === link.url);
-      await page.goto(link.url);
+      const redirected = page.waitForResponse(response => response.url() === link.shareUrl);
+      await page.goto(link.shareUrl);
       expect((await redirected).status()).toBe(307);
       await expect(page).toHaveURL(viewerUrl);
       await expect(page.getByRole('heading', { name: 'Viewer fixture', exact: true })).toBeVisible();
       await expect(page.locator('iframe, #player')).toHaveCount(0);
-      const metadata = await page.request.get(link.url);
+      const metadata = await page.request.get(link.shareUrl);
       expect(metadata.status()).toBe(200);
       expect(await metadata.text()).toContain('<meta name="twitter:card" content="summary_large_image">');
     } finally { await removeLink(page, link); }
@@ -171,7 +171,7 @@ test('opens a private Drive result directly so the viewer can request access', a
   const viewerUrl = `${viewerOrigin}/?url=https://drive.google.com/file/d/private-fixture/view`;
   const link = await createLink(page, { access: 'private', viewerUrl });
   try {
-    await page.goto(link.url);
+    await page.goto(link.shareUrl);
     await expect(page).toHaveURL(viewerUrl);
     await expect(page.getByRole('heading', { name: 'Viewer fixture' })).toBeVisible();
     await expect(page.locator('iframe, #player')).toHaveCount(0);

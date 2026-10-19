@@ -66,7 +66,7 @@ describe('unlisted records and social cards', () => {
     const card = await request(`/${link.id}`);
     const html = await card.text();
     expect(html).toContain('name="twitter:card" content="summary_large_image"');
-    expect(html).toContain(`property="og:image" content="${link.url}/preview.jpg"`);
+    expect(html).toContain(`property="og:image" content="${link.shareUrl}/preview.jpg"`);
     expect(html).toContain('#camera=43');
     expect(html).toContain('CC BY 4.0');
     expect(html).not.toContain('ownerHash');
@@ -159,7 +159,8 @@ describe('unlisted records and social cards', () => {
     await env.LINKS.put(recordKey(legacyId), JSON.stringify({ ...record, id: legacyId }));
     expect((await request(`/${legacyId}`)).status).toBe(200);
     expect((await request(`/${legacyId}/preview.jpg`, { method: 'HEAD' })).status).toBe(200);
-    expect(await create(input({ access: 'private' }))).toEqual({ id: legacyId, url: `${base}/${legacyId}`, managementPath: `/hub/manage/${legacyId}` });
+    expect(await create(input({ access: 'private' }))).toEqual({ id: legacyId, url: `${base}/${legacyId}`,
+      shareUrl: `https://colmapview.opsiclear.com/s/${legacyId}`, managementPath: `/hub/manage/${legacyId}` });
     expect((await request(`/api/links/${legacyId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } })).status).toBe(204);
   });
 

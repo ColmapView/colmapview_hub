@@ -1,4 +1,4 @@
-import { ID_PATTERN, isListedId, LOOPBACK_HOSTS, SECRET_PATTERN, VIEWER_ORIGINS } from '../shared/model';
+import { ID_PATTERN, isListedId, LOOPBACK_HOSTS, SECRET_PATTERN, SHARE_PATH, VIEWER_ORIGINS } from '../shared/model';
 import type { CardRecord, LinkMetadata, LinkRecord, Ownership } from '../shared/model';
 import { clientIdentity, deriveLongId, deriveShortId, equalHashes, equalSecrets, hash } from './crypto';
 import { MAX_MISSES, REFUSAL_FLOOR_MS, VERIFIED_BOT_MAX_MISSES } from './guard';
@@ -129,7 +129,9 @@ async function createLink(request: Request, env: Env, ctx: ExecutionContext, loc
   const metadata: LinkMetadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
     ...(input.license ? { license: input.license } : {}), ...(input.assets ? { assets: input.assets } : {}) };
   const fingerprint = await hash(metadataFingerprint(metadata));
-  const created = (id: string) => json({ id, url: `${location.base}/${id}`, managementPath: `${location.path}/manage/${id}` }, 201);
+  // Existing viewers validate url under /hub; newer viewers prefer the additive shareUrl field.
+  const created = (id: string) => json({ id, url: `${location.base}/${id}`, shareUrl: `${location.origin}${SHARE_PATH}/${id}`,
+    managementPath: `${location.path}/manage/${id}` }, 201);
   /** The same owner retrying: identical content replays, changed content is refused. */
   const replay = (id: string, record: Ownership) => equalHashes(record.fingerprint, fingerprint)
     ? created(id) : json({ error: 'This draft changed. Create a new link instead.' }, 409);
@@ -181,7 +183,8 @@ async function lookup(request: Request, env: Env, location: HubLocation, url: UR
   const navigation = request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate';
   const vary = { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' };
   if (view === 'card' && navigation) return new Response(null, { status: 307, headers: { Location: record.viewerUrl, ...vary } });
-  if (target?.redirect) return redirect(`${location.base}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${url.search}`, 308);
+  const linkBase = url.pathname.startsWith(`${SHARE_PATH}/`) ? `${location.origin}${SHARE_PATH}` : location.base;
+  if (target?.redirect) return redirect(`${linkBase}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${url.search}`, 308);
   if (view === 'preview') return new Response(base64Bytes(record.thumbnailBase64), { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=300' } });
   return view === 'manage' ? html(managementPage(location, record)) : html(cardPage(location, record), 200, vary);
 }
@@ -237,6 +240,15 @@ function decodeId(value: string): string {
 }
 
 async function route(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
+  if (url.origin === location.origin && (url.pathname === SHARE_PATH || url.pathname.startsWith(`${SHARE_PATH}/`))) {
+    if (!['GET', 'HEAD'].includes(request.method)) return failure(location, false, 404);
+    if (url.pathname === SHARE_PATH || url.pathname === `${SHARE_PATH}/`) return redirect(`${location.base}/datasets/`, 307);
+    const parts = url.pathname.slice(SHARE_PATH.length + 1).split('/').map(decodeId);
+    if (parts.length === 2 && parts[1] === '') return redirect(`${location.origin}${url.pathname.slice(0, -1)}${url.search}`, 308);
+    if (parts.length === 1) return lookup(request, env, location, url, parts[0], 'card');
+    if (parts.length === 2 && parts[1] === 'preview.jpg') return lookup(request, env, location, url, parts[0], 'preview');
+    return miss(request, env, location, parts[0]);
+  }
   if (url.origin !== location.origin || (url.pathname !== location.path && !url.pathname.startsWith(`${location.path}/`))) return failure(location, false, 404);
   const path = url.pathname.slice(location.path.length);
   if (path === '') return redirect(`${location.base}${listingsEnabled(env) ? '/' : '/datasets/'}${url.search}`, 307);

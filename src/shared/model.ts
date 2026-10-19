@@ -14,6 +14,7 @@ export const VIEWER_ORIGINS: readonly string[] = ['https://colmapview.opsiclear.
 export const LOOPBACK_HOSTS: readonly string[] = ['localhost', '127.0.0.1'];
 /** A management secret: 32 random bytes in base64url. */
 export const SECRET_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+export const SHARE_PATH = '/s';
 /** The cooldown text a refused client sees, for example "Try again in 1 minute". */
 export const waitText = (minutes: number) => `Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
 

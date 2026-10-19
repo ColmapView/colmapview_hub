@@ -9,8 +9,9 @@ const viewerUrl = 'https://colmapview.opsiclear.com/?url=https://drive.google.co
 describe('direct share links', () => {
   it.each(['public', 'private'] as const)('opens a %s dataset directly, preserving its saved URL and view', async access => {
     const link = await create(input({ viewerUrl, access }));
-    for (const method of ['GET', 'HEAD']) {
-      const response = await request(`/${link.id}?url=https://unrelated.example/`, { method, headers: navigation });
+    expect(link.shareUrl).toBe(`https://colmapview.opsiclear.com/s/${link.id}`);
+    for (const [prefix, method] of [['', 'GET'], ['', 'HEAD'], ['/../s', 'GET'], ['/../s', 'HEAD']]) {
+      const response = await request(`${prefix}/${link.id}?url=https://unrelated.example/`, { method, headers: navigation });
       expect(response.status).toBe(307);
       expect(response.headers.get('Location')).toBe(viewerUrl);
       expect(response.headers.get('Cache-Control')).toBe('no-store');
@@ -21,7 +22,7 @@ describe('direct share links', () => {
 
   it('resolves a differently cased short link without an intermediate card or canonical hop', async () => {
     const link = await create(input({ viewerUrl }));
-    const response = await request(`/${link.id.toLowerCase()}`, { headers: navigation });
+    const response = await request(`/../s/${link.id.toLowerCase()}`, { headers: navigation });
     expect(response.status).toBe(307);
     expect(response.headers.get('Location')).toBe(viewerUrl);
   });
@@ -33,14 +34,48 @@ describe('direct share links', () => {
 
   it('keeps social metadata, image previews and management independent of navigation redirects', async () => {
     const link = await create(input({ viewerUrl }));
-    const metadata = await request(`/${link.id}`);
+    const metadata = await request(`/../s/${link.id}`);
     expect(metadata.status).toBe(200);
     expect(metadata.headers.get('Vary')).toBe('Sec-Fetch-Dest, Sec-Fetch-Mode');
-    expect(await metadata.text()).toContain('<meta name="twitter:card" content="summary_large_image">');
-    expect((await request(`/${link.id}/preview.jpg`, { headers: navigation })).headers.get('Content-Type')).toBe('image/jpeg');
+    const html = await metadata.text();
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image">');
+    expect(html).toContain(`https://colmapview.opsiclear.com/s/${link.id}/preview.jpg`);
+    expect((await request(`/../s/${link.id}/preview.jpg`, { headers: navigation })).headers.get('Content-Type')).toBe('image/jpeg');
     const manage = await request(`/manage/${link.id}`, { headers: navigation });
     expect(manage.status).toBe(200);
     expect(await manage.text()).toContain('id="delete-link"');
+  });
+
+  it('preserves the short namespace during canonicalization and keeps legacy addresses readable', async () => {
+    const link = await create(input({ viewerUrl }));
+    const canonical = await request(`/../s/${link.id.toLowerCase()}?from=chat`);
+    expect(canonical.status).toBe(308);
+    expect(canonical.headers.get('Location')).toBe(`${link.shareUrl}?from=chat`);
+    expect((await request(`/../s/${link.id}/`)).headers.get('Location')).toBe(link.shareUrl);
+    expect((await request(`/${link.id}`)).status).toBe(200);
+    expect((await request(`/${link.id}/preview.jpg`)).status).toBe(200);
+  });
+
+  it('counts a missing name once across both namespaces and shares their cooldown', async () => {
+    const link = await create(input({ viewerUrl }));
+    expect((await request('/MissingOne')).status).toBe(404);
+    expect((await request('/../s/missingone', { method: 'HEAD' })).status).toBe(404);
+    expect((await request('/../s/MissingTwo/preview.jpg')).status).toBe(404);
+    expect((await request(`/../s/${link.id}`, { headers: navigation })).status).toBe(307);
+    expect((await request('/MissingThree')).status).toBe(429);
+    expect((await request(`/../s/${link.id}`, { headers: navigation })).status).toBe(429);
+    expect((await request(`/${link.id}`, { headers: navigation })).status).toBe(429);
+  });
+
+  it('rejects cross-site embeds and prefetches on short links before spending misses', async () => {
+    const link = await create(input({ viewerUrl }));
+    for (const id of ['MissingOne', 'MissingTwo', 'MissingThree', link.id]) {
+      for (const headers of [
+        new Headers({ 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'image' }),
+        new Headers({ 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'document', 'Sec-Purpose': 'prefetch' }),
+      ]) expect((await request(`/../s/${id}`, { headers })).status).toBe(404);
+    }
+    expect((await request(`/../s/${link.id}`, { headers: navigation })).status).toBe(307);
   });
 
   it('applies the existing miss cooldown before redirecting an otherwise valid dataset', async () => {

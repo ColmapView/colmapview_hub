@@ -2,7 +2,7 @@
 
 A small companion to [ColmapView](https://github.com/ColmapView/Colmapview.github.io). It saves a viewer link, its metadata and a thumbnail for every upload made from ColmapView, and shows them as a card. Data anyone can open without signing in gets a short name such as `HappyTree`, unless it is listed in the gallery; a listed link gets a long `-L` name such as `HappyTree-Lq3ZfK0aB7xLmP2Ws`. Everything else gets an unguessable name such as `HappyTree-q3ZfK0aB7xLmP2Ws`. There is no standalone submission or dataset upload form on the Hub.
 
-Cards provide an X/Twitter large-image preview. Public cards have a Play 3D button that loads the viewer only on a click; private cards link to the viewer instead, because signing in inside an iframe is unreliable. The gallery of listed results is off unless `HUB_LISTINGS_ENABLED` is `true`; while it is off, `/hub/` opens the dataset browser directly.
+Share links use `/s/<id>` and browser navigations open the saved viewer URL directly. Existing `/hub/<id>` links resolve the same record and keep working. Non-navigation requests provide an X/Twitter large-image preview, with JPEGs at `/s/<id>/preview.jpg`; legacy preview addresses still work. Creation responses include the new `shareUrl` alongside the legacy `url` and `managementPath`, so updated viewers can prefer the shorter address while older versions keep publishing normally. The gallery of listed results is off unless `HUB_LISTINGS_ENABLED` is `true`; while it is off, `/hub/` opens the dataset browser directly.
 
 ## What is stored
 
