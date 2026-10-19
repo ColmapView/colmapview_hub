@@ -1,6 +1,6 @@
 {
   "name": "colmapview_hub",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,7 +18,7 @@
     "check:css": "node scripts/check-colmapview-css.mjs",
     "check:code": "npm run typecheck && npm run lint && npm run check:css",
     "test": "vitest run",
-    "test:catalog": "node --test tests/catalog.test.mjs tests/individual-catalog.test.mjs tests/native-text-counts.test.mjs",
+    "test:catalog": "node --test tests/catalog.test.mjs tests/individual-catalog.test.mjs tests/native-text-counts.test.mjs tests/photo-routing-records.test.mjs",
     "test:python": "node scripts/run-python.mjs -m unittest discover -s tests -p \"test_*.py\"",
     "test:browser": "playwright test --workers=1",
     "check": "npm run check:code && npm run test:catalog && npm run test:python && npm test && npm run build",

@@ -224,11 +224,11 @@ test('complete text-model counts and manifest photo requirements appear in the r
   await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('737');
   await expect(page.locator('[data-stat="cameraModels"]')).toHaveText('1');
   await expect(page.locator('[data-stat="points"]')).toHaveText('49,379');
-  await expect(page.locator('[data-asset="images"]')).toHaveText('Images · setup');
+  await expect(page.locator('[data-asset="images"]')).toHaveText('Images');
   await expect(page.locator('main')).toContainText('Photo association manifest');
   await expect(page.locator('main')).toContainText('EVSSM-deblurred');
   await expect(page.locator('main')).toContainText('737/737');
-  await expect(page.locator('main')).toContainText('current viewer URL does not attach');
+  await expect(page.locator('main')).toContainText('The launch manifest declares');
   await expect(page.locator('main')).toContainText('Scene statistics check');
   const csv = await page.request.get('/hub/datasets/individual/photo-audit.csv');
   expect(await csv.text()).toContain('data/i2slam_trigsplat_gt/scene0736_00_manifest.json');
@@ -252,7 +252,11 @@ test('Kicker retains counts, sibling photo policy and verified streamed-export e
   await expect(page.locator('main')).not.toContainText('All photos verified in export');
   const open = await page.request.get('/hub/datasets/open/data-ea3370325634b929035638c5', { maxRedirects: 0 });
   expect(open.status()).toBe(302);
-  expect(new URL(open.headers().location).searchParams.get('url')).toBe('https://huggingface.co/datasets/alexmkwizu/colmap-testing-dataset/resolve/511152c3b9cd20ecda698e1ed1559c341ee777ab/kicker/dslr_calibration_jpg');
+  const target = new URL(new URL(open.headers().location).searchParams.get('url')!);
+  const manifest = await (await page.request.get(target.pathname)).json();
+  const model = 'https://huggingface.co/datasets/alexmkwizu/colmap-testing-dataset/resolve/511152c3b9cd20ecda698e1ed1559c341ee777ab/kicker/dslr_calibration_jpg/';
+  expect(manifest.files).toEqual({ cameras: model + 'cameras.txt', images: model + 'images.txt', points3D: model + 'points3D.txt' });
+  expect(Object.keys(manifest.imageNameToPath)).toHaveLength(31);
 });
 
 test('ZIP photo previews retain image credits and explicit loading requirements', async ({ page }) => {

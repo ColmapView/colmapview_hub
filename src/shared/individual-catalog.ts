@@ -7,6 +7,8 @@ import type { PhotoStatus } from './scene-photos';
 import { sceneDataText, sceneStatistics } from './scene-contents';
 import { isSceneManifestEvidence, manifestViewerUrlMatches } from './scene-manifests';
 import type { SceneManifestEvidence } from './scene-manifests';
+import { isPhotoRoutingEvidence, photoRoutingUrlMatches } from './photo-routing';
+import type { PhotoRoutingEvidence } from './photo-routing';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -22,10 +24,12 @@ export interface IndividualIndex {
   photos?: Partial<Record<PhotoStatus, number>>;
   contents?: Record<string, number>;
   thumbnails?: number;
+  photoRouting?: Record<string, number>;
   incompleteCollections: number; scope: string;
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
   sceneManifest?: SceneManifestEvidence;
+  photoRouting?: PhotoRoutingEvidence;
   sceneCompatibility?: { status: 'native_headers_checked'; revision: string; cameraRecordChecked: boolean; poseRecordChecked: boolean;
     cameras: number | null; images: number | null; points: number | null;
     countAudit?: { method: 'viewer_native_text_parse'; checkedAt: string; viewerCommit: string;
@@ -91,6 +95,10 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
   if (proof?.sampleScope === 'companion_asset') return false;
   const compatibility = proof?.sceneCompatibility;
   if (proof?.sceneManifest !== undefined && !hasCheckedSceneManifest(proof)) return false;
+  if (proof?.photoRouting !== undefined && (!isPhotoRoutingEvidence(proof.photoRouting)
+    || !photoRoutingUrlMatches(proof.viewerUrl, proof.photoRouting) || proof.sceneManifest || proof.sceneValidation
+    || !['colmap', 'cameras'].includes(kind)
+    || compatibility?.images != null && compatibility.images !== proof.photoRouting.nameCheck.registered)) return false;
   if (['colmap', 'cameras'].includes(kind) && proof?.level === 'native_layout_checked' && proof.viewerUrl
     && ['browser_readable', 'cors_headers_checked'].includes(proof.delivery) && compatibility?.status === 'native_headers_checked'
     && [compatibility.cameras, compatibility.images].every(value => value === null || Number.isInteger(value) && value > 0)
@@ -152,6 +160,12 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
+      ...(proof?.photoRouting && isPhotoRoutingEvidence(proof.photoRouting) ? [
+        { label: 'Photo path manifest', value: `${proof.photoRouting.listedPhotos.toLocaleString('en-US')} photographs and ${proof.photoRouting.mappedNames.toLocaleString('en-US')} explicit name mappings at this revision`, url: proof.photoRouting.url },
+        { label: 'Manifest photo bindings', value: `${proof.photoRouting.nameCheck.matched}/${proof.photoRouting.nameCheck.inspected} inspected registered names${proof.photoRouting.nameCheck.complete ? ' (all names inspected)' : ` from ${proof.photoRouting.nameCheck.registered ?? 'an unknown number of'} poses`}. Other photo bytes and full export checked separately.` },
+        { label: 'Photo manifest viewer build', value: `${proof.photoRouting.viewerVersion} (${proof.photoRouting.viewerCommit})` },
+        { label: 'Photo route checked on', value: proof.photoRouting.checkedAt },
+      ] : []),
       ...(proof?.sceneManifest && isSceneManifestEvidence(proof.sceneManifest) ? [
         { label: 'Scene manifest', value: 'Explicit v1 model and media selection', url: proof.sceneManifest.url },
         ...(proof.sceneManifest.pointSource ? [{ label: 'Selected point cloud', value: proof.sceneManifest.pointSource, url: file(proof.sceneManifest.pointSource) }] : []),

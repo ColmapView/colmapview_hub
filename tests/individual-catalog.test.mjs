@@ -68,6 +68,40 @@ test('photo path rules preserve the model URL and expose checked source paths', 
   assert.doesNotMatch(html, /Photos checked.*all original photos/s);
 });
 
+function routedPhotoProof() {
+  const proof = nativePhotoProof('sample_checked');
+  const sha256 = 'a'.repeat(64);
+  const photoRouting = { url: `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${sha256}.manifest.json`, sha256,
+    listedPhotos: 10, mappedNames: 1, nameCheck: { inspected: 1, matched: 1, ambiguous: 0, registered: proof.sceneCompatibility.images, complete: false },
+    checkedAt: '2026-10-19', viewerVersion: '0.17.7', viewerCommit: 'b'.repeat(40) };
+  return { ...proof, photoRouting, viewerUrl: 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(photoRouting.url) };
+}
+
+test('photo routing manifests retain native statistics and independent export qualification', () => {
+  const proof = routedPhotoProof(), record = row(0, { 7: proof });
+  assert.equal(render.canOpenIndividual(record, source), true);
+  const summary = render.individualSummary(record, source);
+  assert.equal(summary.sceneStats.cameraPoses, proof.sceneCompatibility.images);
+  assert.equal(summary.sceneStats.points, proof.sceneCompatibility.points);
+  const html = render.catalogEntryPage(render.individualEntry(record, source, parent));
+  assert.match(html, /Photo path manifest/);
+  assert.match(html, /1\/1 inspected registered names/);
+  assert.doesNotMatch(html, /Selected scene export SHA-256/);
+});
+
+test('photo manifests cannot inherit a different URL, registered count or full-export evidence', () => {
+  for (const change of [proof => { proof.viewerUrl += '&other=1'; },
+    proof => { proof.photoRouting.url = 'https://other.test/manifest.json'; },
+    proof => { proof.photoRouting.nameCheck.registered++; },
+    proof => { proof.photoRouting.nameCheck.complete = true; },
+    proof => { proof.photoRouting.mappedNames = 0; },
+    proof => { proof.photoRouting.nameCheck.ambiguous = 1; },
+    proof => { proof.sceneValidation = verified.sceneValidation; }]) {
+    const proof = routedPhotoProof(); change(proof);
+    assert.equal(render.canOpenIndividual(row(0, { 7: proof }), source), false);
+  }
+});
+
 test('sampled TAR photos and compressed splats retain their loading requirements', () => {
   const proof = nativePhotoProof('companion_archive');
   proof.photoAudit = { status: 'companion_archive', checkedAt: '2026-10-19', listingComplete: true,

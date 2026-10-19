@@ -52,7 +52,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + '<details class="catalog-notes"><summary>About this catalog</summary><div>'
     + '<p>Each card identifies one named scene at a pinned source revision. Native camera/model layouts have bounded format and access checks. Original photographs may be available, partial, absent or unverified. Full loading, complete exports and mask support retain their separate evidence; a layout check does not establish them. Standalone geometry files do not create dataset cards.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a></p>`
-    + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Photo availability and path policies for every scene (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p>'
+    + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Photo availability, launch manifests and path policies for every scene (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p>'
     + '<p><a href="/hub/datasets/individual/component-audit.csv" download>Missing component audit — October 19, 2026 (CSV)</a> · <a href="/hub/datasets/individual/component-audit.json.gz" download>Full evidence (JSON.gz)</a></p>'
     + '<p><a href="/hub/datasets/individual/verified-scenes.json" download>Verified scene checks (JSON)</a> · <a href="/hub/datasets/individual/index.json" download>Labels and coverage (JSON)</a> · <a href="/hub/datasets/catalog.json" download>Source metadata (JSON)</a></p></div></details></div>',
     `<script type="module" src="/hub/assets/individual-catalog.js?v=${HUB_UI_VERSION}"></script>`);
