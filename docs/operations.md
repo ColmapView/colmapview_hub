@@ -15,6 +15,7 @@ npx wrangler r2 object put colmapview-hub/internal/wordlists-v1.json --remote --
 5. Run the checks, then `npm run deploy`.
    - Migration `v2` replaces the `ClientGuard` class with `LookupGuard` and deletes the old per-client storage, so active cooldowns reset once.
    - After deploying, check that `/hub/styles.css` returns 200 with an `ETag` and `X-Content-Type-Options: nosniff`, and that `/hub/<id>`, `/hub/<id>/preview.jpg`, `/hub/manage/<id>` and `/hub/api/links` still reach the Worker.
+   - A browser navigation to `/hub/<id>` returns a 307 redirect to the stored viewer URL. Non-navigation metadata requests return the social preview page. Both use the same lookup and cooldown checks.
    - Check the viewer root and that `/hub/` opens `/hub/datasets/` when listings are off. Old collection URLs should redirect to the matching scene filter.
    - Deploy the Hub before releasing a viewer that sends `access`.
 

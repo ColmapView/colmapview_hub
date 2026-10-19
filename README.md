@@ -4,6 +4,8 @@ The companion service for [ColmapView](https://github.com/ColmapView/Colmapview.
 
 [Open the Hub](https://colmapview.opsiclear.com/hub/). A Cloudflare Worker owns `/hub` and `/hub/*`; the viewer is deployed separately. Catalog builds use committed evidence. The Worker reads bounded same-origin metadata and never downloads submitted dataset URLs.
 
+Opening a share link such as `/hub/RoughhewnBiplane` redirects browser navigations directly to its saved ColmapView URL, including saved view settings. Non-navigation fetches retain social preview metadata; image previews and delete links keep their own routes. Private datasets still require access in the viewer.
+
 ## Development
 
 Use Node.js 24 with npm, and Python 3.11 or later. Run commands from this repository's root.

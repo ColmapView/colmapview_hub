@@ -1,8 +1,32 @@
 import { expect, test, type Page } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
+import { createServer, type Server } from 'node:http';
 import { preview } from '../tests/fixtures/preview';
 
 const origin = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB_E2E_PORT || '5201'}`;
+let viewerServer: Server;
+let viewerOrigin: string;
+
+test.beforeAll(async () => {
+  // Browser routing mocks do not intercept the document reached through an HTTP redirect.
+  // A real loopback server verifies that handoff without contacting a deployed viewer.
+  viewerServer = createServer((_, response) => {
+    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    response.end('<!doctype html><title>Viewer fixture</title><h1>Viewer fixture</h1>');
+  });
+  await new Promise<void>((resolve, reject) => {
+    viewerServer.once('error', reject);
+    viewerServer.listen(0, '127.0.0.1', resolve);
+  });
+  const address = viewerServer.address();
+  if (!address || typeof address === 'string') throw new Error('Viewer fixture did not start.');
+  viewerOrigin = `http://127.0.0.1:${address.port}`;
+});
+
+test.afterAll(async () => {
+  if (viewerServer) await new Promise<void>((resolve, reject) => viewerServer.close(error => error ? reject(error) : resolve()));
+});
+
 interface Link { id: string; url: string; owner: string }
 
 async function createLink(page: Page, overrides: Record<string, unknown> = {}): Promise<Link> {
@@ -37,27 +61,20 @@ function contrast(foreground: string, background: string): number {
 const noHorizontalScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 
 for (const width of [1280, 360]) {
-  test(`shows and plays a result at ${width}px`, async ({ page }, testInfo) => {
+  test(`opens a shared result directly in the viewer at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    const link = await createLink(page);
+    const viewerUrl = `${viewerOrigin}/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43`;
+    const link = await createLink(page, { viewerUrl });
     try {
+      const redirected = page.waitForResponse(response => response.url() === link.url);
       await page.goto(link.url);
-      await expect(page.getByRole('heading', { name: 'Example reconstruction', exact: true })).toBeVisible();
-      await expect(page.locator('.meta')).toHaveText('83 images · 83,749 points · 82 masks · 1 splat · License: CC BY 4.0');
-      await expect(page.getByRole('link', { name: 'CC BY 4.0' })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by/4.0/');
-      await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
-      expect(await page.locator('#player img').evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([600, 315]);
-      expect(await noHorizontalScroll(page)).toBe(true);
-      await page.screenshot({ path: testInfo.outputPath(`card-${width}.png`), fullPage: true });
-      await page.route('https://colmapview.opsiclear.com/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Interactive viewer fixture</h1>' }));
-      await page.getByRole('button', { name: 'Play 3D', exact: true }).click();
-      const frame = page.locator('iframe');
-      await expect(frame).toBeFocused();
-      const [height, viewport] = await frame.evaluate(element => [element.getBoundingClientRect().height, innerHeight]);
-      expect(Math.abs(height - viewport * 0.7)).toBeLessThanOrEqual(3);
-      const embed = new URL((await frame.getAttribute('src'))!);
-      expect(embed.searchParams.get('embed')).toBe('1');
-      expect(embed.hash).toBe('#camera=43');
+      expect((await redirected).status()).toBe(307);
+      await expect(page).toHaveURL(viewerUrl);
+      await expect(page.getByRole('heading', { name: 'Viewer fixture', exact: true })).toBeVisible();
+      await expect(page.locator('iframe, #player')).toHaveCount(0);
+      const metadata = await page.request.get(link.url);
+      expect(metadata.status()).toBe(200);
+      expect(await metadata.text()).toContain('<meta name="twitter:card" content="summary_large_image">');
     } finally { await removeLink(page, link); }
   });
 }
@@ -150,13 +167,14 @@ test('explains a failed deletion and lets the owner try again', async ({ page })
   } finally { await removeLink(page, link); }
 });
 
-test('shows a private card with a viewer link and no Play 3D', async ({ page }) => {
-  const link = await createLink(page, { access: 'private' });
+test('opens a private Drive result directly so the viewer can request access', async ({ page }) => {
+  const viewerUrl = `${viewerOrigin}/?url=https://drive.google.com/file/d/private-fixture/view`;
+  const link = await createLink(page, { access: 'private', viewerUrl });
   try {
     await page.goto(link.url);
-    await expect(page.getByRole('button', { name: 'Play 3D' })).toHaveCount(0);
-    await expect(page.getByText('Viewers need access to open this dataset.')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Open in ColmapView' })).toHaveAttribute('target', '_blank');
+    await expect(page).toHaveURL(viewerUrl);
+    await expect(page.getByRole('heading', { name: 'Viewer fixture' })).toBeVisible();
+    await expect(page.locator('iframe, #player')).toHaveCount(0);
   } finally { await removeLink(page, link); }
 });
 
@@ -174,7 +192,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
     await page.addInitScript(() => localStorage.setItem('colmap-viewer-theme', 'system'));
     const link = await createLink(page);
     try {
-      for (const path of [new URL(link.url).pathname, `/hub/manage/${link.id}#${link.owner}`]) {
+      for (const path of ['/hub/datasets/', `/hub/manage/${link.id}#${link.owner}`]) {
         await page.goto(path);
         const fonts = await page.evaluate(async () => {
           await document.fonts.ready;
@@ -186,12 +204,12 @@ for (const colorScheme of ['dark', 'light'] as const) {
         const [foreground, background] = await page.locator('.button-primary, .button-danger')
           .evaluate(element => [getComputedStyle(element).color, getComputedStyle(element).backgroundColor]);
         expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
-        for (const target of await page.locator('.site-nav a, .footer-links a, .brand, .button').all()) {
+        for (const target of await page.locator('.site-nav a, .footer-links a, .brand, .button').filter({ visible: true }).all()) {
           expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(32);
         }
       }
       await page.setViewportSize({ width: 360, height: 800 });
-      await page.goto(link.url);
+      await page.goto(`/hub/manage/${link.id}#${link.owner}`);
       expect(await noHorizontalScroll(page)).toBe(true);
     } finally { await removeLink(page, link); }
   });
@@ -202,8 +220,8 @@ test('gives the primary and danger buttons the type of link buttons', async ({ p
   const type = (selector: string) => page.locator(selector).evaluate(element =>
     [getComputedStyle(element).fontFamily, getComputedStyle(element).fontSize, getComputedStyle(element).fontWeight]);
   try {
-    await page.goto(link.url);
-    const linkType = await type('a.button');
+    await page.goto('/hub/datasets/');
+    const linkType = await type('#catalog-reset');
     expect(await type('.button-primary')).toEqual(linkType);
     await page.goto(`/hub/manage/${link.id}#${link.owner}`);
     expect(await type('.button-danger')).toEqual(linkType);
@@ -219,12 +237,12 @@ test('serves static files without the Worker, with nosniff and revalidation', as
   }
 });
 
-test('long titles stay within a narrow card and delete keys never enter public URLs', async ({ page }) => {
+test('long titles stay within a narrow management page and delete keys never enter public URLs', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   const link = await createLink(page, { title: 'A'.repeat(120), viewerUrl: 'https://colmapview.github.io/latest/?url=https%3A%2F%2Fdata.example%2Fmanifest.json' });
   try {
     expect(new URL(link.url).hash).toBe('');
-    await page.goto(link.url);
+    await page.goto(`/hub/manage/${link.id}#${link.owner}`);
     expect(await noHorizontalScroll(page)).toBe(true);
   } finally { expect((await removeLink(page, link)).status()).toBe(204); }
 });

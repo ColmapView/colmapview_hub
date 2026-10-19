@@ -176,9 +176,14 @@ async function lookup(request: Request, env: Env, location: HubLocation, url: UR
   const refusal = await check(record ? null : await hash(missKey(id)));
   if (refusal) return refusal;
   if (!record) return failure(location, false, 404);
+  // Open browser navigations directly; non-navigation fetches still provide social preview metadata.
+  // This runs after the same lookup guard as previews and management pages.
+  const navigation = request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate';
+  const vary = { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' };
+  if (view === 'card' && navigation) return new Response(null, { status: 307, headers: { Location: record.viewerUrl, ...vary } });
   if (target?.redirect) return redirect(`${location.base}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${url.search}`, 308);
   if (view === 'preview') return new Response(base64Bytes(record.thumbnailBase64), { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=300' } });
-  return html(view === 'manage' ? managementPage(location, record) : cardPage(location, record));
+  return view === 'manage' ? html(managementPage(location, record)) : html(cardPage(location, record), 200, vary);
 }
 
 /** A path no record can answer still counts as a miss, so probing sub-paths gains nothing. */
