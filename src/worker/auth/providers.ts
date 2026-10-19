@@ -19,7 +19,7 @@ export function providerConfiguration(provider: AccountProvider, env: Env) {
     userinfo_endpoint: 'https://huggingface.co/oauth/userinfo', id_token_signing_alg_values_supported: ['RS256'],
   };
   return { server, client: { client_id: clientId, id_token_signed_response_alg: 'RS256' } satisfies oauth.Client,
-    authenticate: google ? oauth.ClientSecretPost(secret) : oauth.ClientSecretBasic(secret) };
+    authenticate: oauth.ClientSecretPost(secret) };
 }
 
 export function providerScopes(provider: AccountProvider, purpose: AccountPurpose): string {
@@ -36,7 +36,12 @@ const providerFetch: typeof fetch = async (input, init) => {
   ]);
   if (!allowed.has(url.href)) throw new AccountError(503, 'Unexpected authorization endpoint.');
   const signal = init?.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(15_000)]) : AbortSignal.timeout(15_000);
-  const response = await fetch(url, { ...init, signal, redirect: 'error' });
+  // workerd supports follow/manual only. Never follow a provider redirect with OAuth credentials.
+  const response = await fetch(url, { ...init, signal, redirect: 'manual' });
+  if (response.status >= 300 && response.status < 400) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new AccountError(503, 'Could not connect to the authorization provider. Try again later.');
+  }
   const reader = response.body?.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;

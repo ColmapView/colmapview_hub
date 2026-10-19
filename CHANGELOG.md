@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.8.1 — 2026-10-19
+
+- Enable remembered connections after registering both production OAuth callbacks and verifying private Drive and R2 loads, HF publishing, and real Google/HF token renewal.
+- Reject authorization-provider redirects explicitly using workerd's supported manual mode. Validate real Worker request options in provider tests.
+- Use the providers' supported form authentication for code exchange and renewal, fixing HF refresh rejection with Basic authentication.
+
 ## 0.8.0 — 2026-10-19
 
 - Add an optional `/auth/*` session service for the custom viewer, separate from public Hub cards. Store browser-bound connection credentials encrypted in SQLite Durable Objects for at most 30 days.
