@@ -43,6 +43,13 @@
       "bucket_name": "colmapview-hub"
     }
   ],
+  "ratelimits": [
+    {
+      "name": "AUTH_CONNECT_LIMITER",
+      "namespace_id": "2026101901",
+      "simple": { "limit": 20, "period": 60 }
+    }
+  ],
   "durable_objects": {
     "bindings": [
       {

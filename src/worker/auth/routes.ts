@@ -115,6 +115,10 @@ async function route(request: Request, env: Env): Promise<Response> {
       returnTo: returnPath(body.returnTo, origin), mode: body.mode === 'redirect' ? 'redirect' : 'popup',
       ...(provider === 'google' && typeof body.loginHint === 'string' && /^[A-Za-z0-9_-]{1,255}$/.test(body.loginHint) ? { loginHint: body.loginHint } : {}),
     } : null;
+    // Bound new connection state before the first durable write. Cloudflare supplies this header at the edge.
+    // Keep normal token renewal and object signing outside this limit, including large multipart transfers.
+    const { success } = await env.AUTH_CONNECT_LIMITER.limit({ key: `account-connect:${request.headers.get('CF-Connecting-IP') ?? 'unknown'}` });
+    if (!success) throw new AccountError(429, 'Too many connection attempts. Wait a minute and try again.');
     const seconds = accountValue(await session.initialize());
     if (bucket) accountValue(await session.rememberBucket(bucket));
     else if (transaction) accountValue(await session.begin(transaction));
@@ -158,5 +162,6 @@ export async function accountRoute(request: Request, env: Env): Promise<Response
     response = json({ error: error instanceof AccountError ? error.message : 'Could not complete this connection. Try again.',
       status: error instanceof AccountError ? error.status : 503 }, error instanceof AccountError ? error.status : 503);
   }
+  if (response.status === 429) response.headers.set('Retry-After', '60');
   return protect(request, response);
 }

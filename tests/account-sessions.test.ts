@@ -8,13 +8,14 @@ import { accountValue, type AccountTokens } from '../src/worker/auth/model';
 import { identityToken } from './auth-fixtures';
 
 const origin = 'https://colmapview.opsiclear.com';
-async function call(path: string, body?: object, cookie?: string, headers: HeadersInit = {}) {
+const unlimitedConnections = { limit: async () => ({ success: true }) };
+async function call(path: string, body?: object, cookie?: string, headers: HeadersInit = {}, limiter = unlimitedConnections) {
   const merged = new Headers(headers);
   if (cookie) merged.set('Cookie', cookie);
   if (body) { merged.set('Origin', origin); merged.set('X-ColmapView-Session', '1'); merged.set('Content-Type', 'application/json'); }
   const ctx = createExecutionContext();
   const result = await worker.fetch(new Request(`${origin}/auth/${path}`, { method: body ? 'POST' : 'GET', headers: merged,
-    ...(body ? { body: JSON.stringify(body) } : {}) }), env, ctx);
+    ...(body ? { body: JSON.stringify(body) } : {}) }), { ...env, AUTH_CONNECT_LIMITER: limiter }, ctx);
   await waitOnExecutionContext(ctx);
   return result;
 }
@@ -38,6 +39,36 @@ async function seedTokens(stub: ReturnType<typeof env.ACCOUNT_SESSIONS.getByName
 }
 
 describe('remembered account sessions', () => {
+  it('limits OAuth and bucket connection starts without creating cookies or blocking restoration', async () => {
+    const limit = vi.fn(async () => ({ success: false }));
+    const limiter = { limit };
+    for (const [path, body] of [['google/connect', { returnTo: '/' }], ['hf/connect', { returnTo: '/' }], ['bucket/connect', bucket]] as const) {
+      const result = await call(path, body, undefined, { 'CF-Connecting-IP': '192.0.2.1' }, limiter);
+      expect(result.status).toBe(429);
+      expect(result.headers.has('Set-Cookie')).toBe(false);
+      expect(result.headers.get('Retry-After')).toBe('60');
+      expect(result.headers.get('Cache-Control')).toBe('no-store');
+    }
+    expect(limit).toHaveBeenCalledTimes(3);
+    expect(limit).toHaveBeenCalledWith({ key: 'account-connect:192.0.2.1' });
+    const restored = await call('session', undefined, undefined, {}, limiter);
+    expect(restored.status).toBe(200);
+    expect(limit).toHaveBeenCalledTimes(3);
+    const { cookie } = await connectedBucket();
+    expect((await call('bucket/sign', { url: 'https://s3.example/bucket/model.zip', method: 'GET' }, cookie, {}, limiter)).status).toBe(200);
+    expect((await call('all/disconnect', {}, cookie, {}, limiter)).status).toBe(200);
+    expect(limit).toHaveBeenCalledTimes(3);
+  });
+
+  it('fails closed if connection limiting is unavailable and validates credentials before consuming a limit', async () => {
+    const limit = vi.fn(async () => { throw new Error('fixture limiter unavailable'); });
+    expect((await call('bucket/connect', { ...bucket, remember: false }, undefined, {}, { limit })).status).toBe(400);
+    expect(limit).not.toHaveBeenCalled();
+    const result = await call('google/connect', { returnTo: '/' }, undefined, {}, { limit });
+    expect(result.status).toBe(503);
+    expect(result.headers.has('Set-Cookie')).toBe(false);
+  });
+
   for (const provider of ['google', 'hf'] as const) {
     it(`completes ${provider} authorization through the Worker callback and restores from its signed browser cookie`, async () => {
       const started = await call(`${provider}/connect`, { returnTo: '/?url=https%3A%2F%2Fexample.test%2Fscene.zip', mode: provider === 'google' ? 'redirect' : 'popup',
