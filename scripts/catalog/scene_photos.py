@@ -3,6 +3,7 @@
 from copy import deepcopy
 import re
 from .scene_qualification import scene_key
+from .scene_contents import is_metadata_sidecar, source_path
 
 
 PHOTO_STATES = {'sample_checked', 'partial', 'not_included', 'not_found',
@@ -53,11 +54,32 @@ def photo_scene_reviews(catalog, policy):
                 if field == 'nameCheck' and any(type(check.get(key, 0)) is not int or not 0 <= check.get(key, 0) <= total
                                                 for key in ('missing', 'ambiguous')):
                     raise ValueError('Invalid photo diagnostic counts')
+                if 'scope' in check or 'totalRegistered' in check:
+                    if (field != 'nameCheck' or check.get('scope') != 'prefix'
+                            or type(check.get('totalRegistered')) is not int or check['totalRegistered'] < total):
+                        raise ValueError('Sampled photo names require explicit prefix and total registered counts')
             if status == 'companion_archive':
                 archive = audit.get('archive') or {}
-                if (not archive.get('path') or type(archive.get('photos')) is not int or archive['photos'] < 1
+                archive_format = archive.get('format', 'zip')
+                if (not source_path(archive.get('path')) or is_metadata_sidecar(archive['path'])
+                        or archive_format not in ('zip', 'tar') or not archive['path'].lower().endswith('.' + archive_format)
+                        or type(archive.get('photos')) is not int or archive['photos'] < 1
                         or archive.get('nameSampleMatched') is not True or archive.get('browserRangeRead') is not True):
-                    raise ValueError('Companion image evidence requires an indexed ZIP and browser range check')
+                    raise ValueError('Companion image evidence requires an indexed archive and browser range check')
+                if archive_format == 'tar':
+                    sample = archive.get('sample') or {}
+                    start, data_start, size, total = (sample.get('headerOffset'), sample.get('dataOffset'),
+                                                     sample.get('bytes'), archive.get('bytes'))
+                    if (any(type(value) is not int for value in (start, data_start, size, total))
+                            or start < 0 or start % 512 or data_start % 512
+                            or not 512 <= data_start - start <= 1024 * 1024
+                            or not 0 < size <= 64 * 1024 * 1024 or data_start + size > total
+                            or type(archive.get('inventoryComplete')) is not bool
+                            or not source_path(sample.get('path')) or is_metadata_sidecar(sample['path'])
+                            or not isinstance(sample.get('registeredName'), str) or not sample['registeredName']
+                            or re.fullmatch('[a-f0-9]{64}', sample.get('sha256', '')) is None
+                            or sample.get('pixels') != 'decoded' or type(sample.get('dimensionsMatch')) is not bool):
+                        raise ValueError('TAR photos require exact sampled member bounds, bytes and decoded pixels')
             key = scene_key(source['sourceId'], scene['kind'], scene['path'], scene.get('archive'))
             if key in reviews:
                 raise ValueError('Duplicate scene photo evidence')

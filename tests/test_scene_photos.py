@@ -51,13 +51,42 @@ class ScenePhotoTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'coverage counts'):
             self.review()
 
+    def test_bounded_name_checks_cannot_claim_the_complete_registered_set(self):
+        self.audit['nameCheck'] = {'registered': 74, 'matched': 1, 'missing': 73, 'ambiguous': 0,
+                                   'scope': 'prefix', 'totalRegistered': 5493}
+        self.assertEqual(self.review()['audit']['nameCheck']['totalRegistered'], 5493)
+        self.audit['nameCheck']['totalRegistered'] = 73
+        with self.assertRaisesRegex(ValueError, 'explicit prefix'):
+            self.review()
+
     def test_companion_zip_requires_browser_range_and_name_evidence(self):
         self.audit.update({'status': 'companion_archive', 'archive': {'path': 'scene/images.zip', 'photos': 48,
             'nameSampleMatched': True, 'browserRangeRead': True}})
         self.review()
         self.audit['archive']['browserRangeRead'] = False
-        with self.assertRaisesRegex(ValueError, 'indexed ZIP'):
+        with self.assertRaisesRegex(ValueError, 'indexed archive'):
             self.review()
+
+    def test_tar_samples_preserve_lower_bound_counts_and_exact_member_provenance(self):
+        sample = {'path': 'capture/a.jpg', 'registeredName': 'a.jpg', 'headerOffset': 512,
+                  'dataOffset': 1024, 'bytes': 1234, 'sha256': 'a' * 64, 'pixels': 'decoded', 'dimensionsMatch': True}
+        archive = {'path': 'images/capture.tar', 'format': 'tar', 'photos': 2, 'bytes': 4096,
+                   'inventoryComplete': False, 'sample': sample, 'nameSampleMatched': True, 'browserRangeRead': True}
+        self.audit.update(status='companion_archive', archive=archive)
+        self.assertIs(self.review()['audit']['archive']['inventoryComplete'], False)
+        for field, value in [('path', '../a.jpg'), ('dataOffset', 4096), ('sha256', 'not a digest'),
+                             ('pixels', 'deferred'), ('bytes', 0), ('dimensionsMatch', None)]:
+            with self.subTest(field=field):
+                modified = copy.deepcopy(self.policy)
+                modified['sources'][0]['scenes'][0]['audit']['archive']['sample'][field] = value
+                with self.assertRaisesRegex(ValueError, 'exact sampled member'):
+                    photo_scene_reviews({'entries': [self.entry]}, modified)
+        for field, value in [('inventoryComplete', None), ('bytes', True), ('format', 'tar.zst')]:
+            with self.subTest(field=field):
+                modified = copy.deepcopy(self.policy)
+                modified['sources'][0]['scenes'][0]['audit']['archive'][field] = value
+                with self.assertRaises(ValueError):
+                    photo_scene_reviews({'entries': [self.entry]}, modified)
 
     def test_photos_never_upgrade_model_compatibility_or_complete_export(self):
         proof = {'level': 'native_layout_checked', 'delivery': 'cors_headers_checked', 'viewerUrl': 'model-url'}

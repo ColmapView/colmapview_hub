@@ -84,6 +84,13 @@ def archive_credits(path, jobs):
 
 
 def archive_target(network, job, credits):
+    evidence = job['audit']['archive']
+    if evidence.get('format') == 'tar':
+        sample = evidence['sample']
+        return {'url': job['url'], 'sourcePath': sample['path'], 'sourceArchive': evidence['path'],
+                'archiveFormat': 'tar', 'archiveBytes': evidence['bytes'], 'registeredName': sample['registeredName'],
+                'headerOffset': sample['headerOffset'], 'dataOffset': sample['dataOffset'], 'bytes': sample['bytes'],
+                'sourceSha256': sample['sha256'], 'imageLicense': 'Not specified'}
     request = urllib.request.Request(job['url'], method='HEAD')
     with urllib.request.urlopen(request, timeout=40) as response:
         size = int(response.headers['Content-Length'])

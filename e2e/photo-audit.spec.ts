@@ -7,12 +7,12 @@ test('photo evidence covers every published scene and keeps stronger export chec
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     total: number; generation: string; photos: Record<string, number> };
   expect(index.total).toBe(5576);
-  expect(index.photos).toEqual({ sample_checked: 1537, path_policy_required: 150, review_required: 89, not_found: 3204,
-    not_included: 78, companion_archive: 478, partial: 20, complete_export_checked: 20 });
+  expect(index.photos).toEqual({ sample_checked: 1537, path_policy_required: 150, review_required: 87, not_found: 3145,
+    not_included: 78, companion_archive: 537, partial: 22, complete_export_checked: 20 });
   expect(Object.values(index.photos).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const available = await (await page.request.get('/hub/datasets/api/entries?photos=available')).json() as {
     total: number; entries: { photoStatus: string }[] };
-  expect(available.total).toBe(1577);
+  expect(available.total).toBe(1579);
   expect(available.entries.every(entry => ['complete_export_checked', 'sample_checked', 'partial'].includes(entry.photoStatus))).toBe(true);
   const audit = await (await page.request.get('/hub/datasets/individual/photo-audit.json')).json();
   expect(audit).toMatchObject({ generation: index.generation, scenes: 5576, collections: 144, photos: index.photos });
@@ -32,12 +32,12 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   await expect(page.locator('#catalog-count')).toContainText('of 78 scene datasets');
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos not included');
   await page.getByRole('combobox', { name: 'Photographs', exact: true }).selectOption('not_found');
-  await expect(page.locator('#catalog-count')).toContainText('of 3,204 scene datasets');
+  await expect(page.locator('#catalog-count')).toContainText('of 3,145 scene datasets');
   await page.goBack();
   await expect(page.locator('#catalog-count')).toContainText('of 78 scene datasets');
   await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('not_included');
   await page.goForward();
-  await expect(page.locator('#catalog-count')).toContainText('of 3,204 scene datasets');
+  await expect(page.locator('#catalog-count')).toContainText('of 3,145 scene datasets');
   await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('not_found');
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await expect(page.locator('#catalog-count')).toContainText('of 5,576 scene datasets');
@@ -47,10 +47,11 @@ test('photo filtering survives Back and Forward and makes no provider requests',
 test('companion ZIP and Waymo JSON mapping requirements are visible without changing the model link', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     sources: { id: string; sourceId: string }[] };
-  await page.goto('/hub/datasets/?photos=companion_archive');
+  const archiveSource = index.sources.find(source => source.sourceId === 'hf:cornell-vailab/megaunscene')!;
+  await page.goto('/hub/datasets/?photos=companion_archive&dataset=' + archiveSource.id);
   await expect(page.locator('#catalog-count')).toContainText('of 478 scene datasets');
-  await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos in a separate ZIP');
-  const zipped = await (await page.request.get('/hub/datasets/api/entries?photos=companion_archive')).json() as {
+  await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos in a separate archive');
+  const zipped = await (await page.request.get('/hub/datasets/api/entries?photos=companion_archive&dataset=' + archiveSource.id)).json() as {
     entries: { id: string; openUrl: string; photoStatus: string }[] };
   await page.goto('/hub/datasets/entry/' + zipped.entries[0].id);
   await expect(page.locator('main')).toContainText('Separate image archive');
@@ -66,6 +67,55 @@ test('companion ZIP and Waymo JSON mapping requirements are visible without chan
   await expect(page.locator('main')).toContainText('mapping.json');
   await expect(page.locator('main')).toContainText('Six-digit COLMAP image names map explicitly to eight-digit cache PNG paths');
   expect((await page.request.get(mapping.entries[0].openUrl, { maxRedirects: 0 })).status()).toBe(302);
+});
+
+test('separate TAR previews retain extraction, name and calibration limitations', async ({ page }) => {
+  const providers: string[] = [];
+  page.on('request', request => { if (/huggingface\.co|amazonaws\.com/.test(request.url())) providers.push(request.url()); });
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:whc/fastmap_sfm');
+  await page.goto('/hub/datasets/?photos=companion_archive&dataset=' + source.id + '&q=m360_bicycle');
+  const card = page.locator('.dataset-card').first();
+  await expect(card.locator('[data-asset="images"]')).toHaveText('Images · archive');
+  await expect(card.locator('.dataset-thumbnail')).toBeVisible();
+  await card.getByRole('button', { name: /Metadata/ }).click();
+  await expect(card.locator('[data-photo-status]')).toHaveText('Photos in a separate archive');
+  await card.getByRole('link', { name: 'Full metadata', exact: true }).click();
+  await expect(page.locator('main')).toContainText('At least 1 image member listed');
+  await expect(page.locator('main')).toContainText('The current camera link does not attach this TAR');
+  await expect(page.locator('main')).toContainText('Remove the archive capture prefix m360_bicycle/');
+  const open = await page.request.get('/hub/datasets/open/data-c11e028799bfa121d0f8ea13', { maxRedirects: 0 });
+  expect(open.status()).toBe(302);
+  expect(new URL(open.headers().location).searchParams.get('url')).toContain('/ground_truths/m360_bicycle');
+  await page.goto('/hub/datasets/entry/data-0c5127dab3fe12c39f4c4660');
+  await expect(page.locator('main')).toContainText('camera dimensions differ');
+  await expect(page.locator('main')).toContainText('extraction and renaming alone do not establish correct projection');
+  expect(providers).toEqual([]);
+});
+
+test('later TV photographs show partial sampled coverage without changing camera loading', async ({ page }) => {
+  for (const [id, count] of [['data-9f28674f0f884957979b0a58', '1/74 inspected names from 5493 registered poses'],
+    ['data-8110d379a298766a8274b55d', '1/21 inspected names from 1485 registered poses']]) {
+    await page.goto('/hub/datasets/entry/' + id);
+    await expect(page.locator('.dataset-thumbnail')).toBeVisible();
+    await expect(page.locator('[data-asset="images"]')).toHaveText('Images · partial');
+    await expect(page.locator('main')).toContainText(count);
+    await expect(page.locator('main')).not.toContainText('All photos verified in export');
+    expect((await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 })).status()).toBe(302);
+  }
+});
+
+test('compressed splats require conversion and empty geometry does not receive a presence badge', async ({ page }) => {
+  const packed = sceneId('hf:promc/reconstruction-scenes', 'lawn-tree');
+  await page.goto('/hub/datasets/entry/' + packed);
+  await expect(page.locator('[data-asset="splats"]')).toHaveText('Splats · setup');
+  await expect(page.locator('[data-asset="geometry"]')).toHaveCount(0);
+  await expect(page.locator('main')).toContainText('Convert it to standard Gaussian PLY');
+  expect((await page.request.get('/hub/datasets/open/' + packed, { maxRedirects: 0 })).status()).toBe(302);
+  await page.goto('/hub/datasets/entry/' + sceneId('hf:lishenyu/Plant3D', 'plant/plant_000/dense/sparse'));
+  await expect(page.locator('[data-asset="geometry"]')).toHaveCount(0);
+  await expect(page.locator('[data-asset="cameras"]')).toBeVisible();
+  await expect(page.locator('[data-asset="images"]')).toBeVisible();
 });
 
 test('confirmed truncated native models are absent from detail, open and search routes', async ({ page }) => {
