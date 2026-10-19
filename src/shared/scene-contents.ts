@@ -1,5 +1,4 @@
 import { escapeHtml as escape } from './html';
-import { classifyLicense, licenseCategory } from './license-categories';
 import type { LicenseCategory } from './license-categories';
 import type { PhotoStatus } from './scene-photos';
 
@@ -104,10 +103,7 @@ export function sceneContentsHtml(contents?: SceneContents): string {
 
 export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }, compact = false): string {
   const thumbnail = entry.thumbnail;
-  if (!thumbnail || !isSceneThumbnail(thumbnail) || licenseCategory(entry) !== 'commercial'
-      || classifyLicense(entry.license) !== 'commercial' || thumbnail.datasetLicense !== entry.license
-      || !(classifyLicense(thumbnail.license) === 'commercial' || ['pd', 'cc0', 'cc-by-2.5', 'cc-by-sa-2.0', 'cc-by-sa-2.5',
-        'cc-by-sa-3.0-pl', 'cc-by-sa-3.0-ro', 'cc-by-sa-3.0-es', 'cc-by-3.0-us', 'cc-by-2.5-hu'].includes(thumbnail.license))) return '';
+  if (!thumbnail || !isSceneThumbnail(thumbnail) || thumbnail.datasetLicense !== entry.license) return '';
   return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(thumbnail.url)}" width="320" height="320" loading="lazy" decoding="async" alt="${escape(`Scene photograph from ${entry.title}`)}">`
     + (compact ? '' : `<figcaption>${sceneThumbnailCreditHtml(thumbnail)}</figcaption>`) + '</figure>';
 }

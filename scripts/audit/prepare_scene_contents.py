@@ -29,7 +29,7 @@ from pathlib import Path
 from ..catalog.scene_contents import is_metadata_sidecar
 
 
-MAX_PHOTO_BYTES = 24 * 1024 * 1024
+MAX_PHOTO_BYTES = 64 * 1024 * 1024
 MAX_HEADER_BYTES = 65536
 GAUSSIAN = {'x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
             'scale_0', 'scale_1', 'scale_2', 'rot_0', 'rot_1', 'rot_2', 'rot_3'}
@@ -254,8 +254,6 @@ def prepare(plan, root, scratch, workers=6):
         target = row.get('thumbnail')
         if target:
             try:
-                if row.get('licenseCategory') != 'commercial':
-                    raise ValueError('Preview requires commercial category')
                 pinned_url(target['url'], row)
                 body = archive_photo(network, target) if target.get('sourceArchive') else network.get(target['url'])
                 preview, original = square_preview(body)

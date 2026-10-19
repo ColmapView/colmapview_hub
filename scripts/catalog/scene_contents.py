@@ -1,9 +1,10 @@
-"""Validate pinned content inventories and copy immutable, licensed previews."""
+"""Validate pinned content inventories and copy immutable, attributed previews."""
 
 import hashlib
 import re
 from copy import deepcopy
 from pathlib import PurePosixPath
+from urllib.parse import urlsplit
 
 from .scene_qualification import scene_key
 
@@ -11,9 +12,6 @@ from .scene_qualification import scene_key
 DATA_KINDS = {'images', 'cameras', 'point_cloud', 'splats', 'masks', 'meshes', 'geometry'}
 CONTENT_KINDS = DATA_KINDS - {'images', 'cameras'}
 PHOTO_STATES = {'complete_export_checked', 'sample_checked', 'partial', 'path_policy_required', 'companion_archive'}
-PHOTO_LICENSES = {'pd', 'cc0', 'cc0-1.0', 'cc-by-2.0', 'cc-by-2.5', 'cc-by-3.0', 'cc-by-4.0',
-                 'cc-by-sa-2.0', 'cc-by-sa-2.5', 'cc-by-sa-3.0', 'cc-by-sa-4.0',
-                 'cc-by-sa-3.0-pl', 'cc-by-sa-3.0-ro', 'cc-by-sa-3.0-es', 'cc-by-3.0-us', 'cc-by-2.5-hu'}
 
 
 def source_path(value):
@@ -24,6 +22,15 @@ def source_path(value):
 def is_metadata_sidecar(value):
     return isinstance(value, str) and any(part.startswith('._') or part.casefold() in ('__macosx', '.ds_store')
                                           for part in value.split('/'))
+
+
+def photo_source_path(value, entry):
+    if source_path(value):
+        return True
+    if not isinstance(value, str) or entry.get('provider') != 'public':
+        return False
+    url = urlsplit(value)
+    return url.scheme == 'https' and bool(url.hostname) and not (url.username or url.password or url.fragment)
 
 
 def content_scene_reviews(catalog, policy, root):
@@ -52,15 +59,16 @@ def content_scene_reviews(catalog, policy, root):
                     raise ValueError('A PLY extension does not establish Gaussian splats')
             thumbnail = scene.get('thumbnail')
             if thumbnail:
-                if (parent.get('licenseCategory') != 'commercial' or parent['license'] != thumbnail.get('datasetLicense')
-                        or thumbnail.get('license') != parent['license'] and thumbnail.get('license') not in PHOTO_LICENSES
+                if (parent['license'] != thumbnail.get('datasetLicense')
+                        or not isinstance(thumbnail.get('license'), str) or not thumbnail['license'].strip()
                         or not re.fullmatch(r'[a-f0-9]{64}\.jpg', thumbnail.get('file', ''))
                         or thumbnail.get('width') != 320 or thumbnail.get('height') != 320
                         or thumbnail.get('crop') != 'center_square' or not thumbnail.get('attribution')
                         or not re.fullmatch('[a-f0-9]{64}', thumbnail.get('sourceSha256', ''))
-                        or not source_path(thumbnail.get('sourcePath'))
+                        or not photo_source_path(thumbnail.get('sourcePath'), parent)
+                        or is_metadata_sidecar(thumbnail.get('sourcePath'))
                         or (thumbnail.get('sourceArchive') and not source_path(thumbnail['sourceArchive']))):
-                    raise ValueError('Preview requires an attributed commercial-license photo and fixed square crop')
+                    raise ValueError('Preview requires attributed source provenance and a fixed square crop')
                 file = root / 'data/scene-thumbnails' / thumbnail['file']
                 if file.is_symlink():
                     raise ValueError('Preview must be a regular built asset')
@@ -106,7 +114,7 @@ def apply_thumbnail_evidence(entry, proof, thumbnail):
     state = proof.get('photoAvailability')
     if thumbnail:
         audit = proof.get('photoAudit') or {}
-        if state not in PHOTO_STATES or entry.get('licenseCategory') != 'commercial' or entry['license'] != thumbnail['datasetLicense']:
+        if state not in PHOTO_STATES or entry['license'] != thumbnail['datasetLicense']:
             raise ValueError('Preview conflicts with scene photo or license evidence')
         if thumbnail.get('sourceArchive'):
             if thumbnail['sourceArchive'] != (audit.get('archive') or {}).get('path'):

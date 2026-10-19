@@ -75,7 +75,7 @@ test('a scene manifest attaches the exact sibling-photo model and selected cloud
   expect(read[1].viewState.target).toHaveLength(3);
 });
 
-test('cards show content roles and load licensed square photos from the Hub', async ({ page }) => {
+test('cards show content roles, load same-origin photos and open metadata only on activation', async ({ page }) => {
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com|wikimedia\.org/.test(request.url())) providerRequests.push(request.url()); });
   await page.goto('/hub/datasets/?licenseCategory=commercial&photos=available&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9');
@@ -160,6 +160,31 @@ test('cards show content roles and load licensed square photos from the Hub', as
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('combobox', { name: 'License category', exact: true }).selectOption('non-commercial');
   await expect(page.locator('.dataset-thumbnail')).toHaveCount(0);
+  expect(providerRequests).toEqual([]);
+});
+
+test('previews cover custom and non-commercial licenses while preserving the reported terms', async ({ page }) => {
+  const providerRequests: string[] = [];
+  page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com|wikimedia\.org/.test(request.url())) providerRequests.push(request.url()); });
+  const query = 'dataset=hf-alexmkwizu-gaussian-training-datasets-3d278c96cb37';
+  await page.goto('/hub/datasets/?' + query);
+  await expect(page.locator('.dataset-card')).toHaveCount(11);
+  await expect(page.locator('.dataset-thumbnail')).toHaveCount(11);
+  const first = page.locator('.dataset-card').first();
+  await expect.poll(() => first.locator('.dataset-thumbnail').evaluate((image: HTMLImageElement) => [image.complete, image.naturalWidth, image.naturalHeight])).toEqual([true, 320, 320]);
+  await first.getByRole('button', { name: /Metadata/ }).click();
+  await expect(first.locator('.dataset-metadata')).toContainText('Not specified');
+  await expect(first.locator('.dataset-photo-credit')).toContainText('other');
+  await first.getByRole('button', { name: 'Close', exact: true }).click();
+  const data = await (await page.request.get('/hub/datasets/api/entries?' + query)).json();
+  for (const entry of data.entries) {
+    expect(entry.license).toBe('other');
+    expect(entry.licenseCategory).toBe('not-specified');
+    expect(entry.thumbnail.datasetLicense).toBe('other');
+    expect(entry.thumbnail.url).toMatch(/^\/hub\/datasets\/individual\/thumbnails\/[a-f0-9]{64}\.jpg$/);
+  }
+  await page.goto('/hub/datasets/?licenseCategory=non-commercial&photos=available');
+  await expect(page.locator('.dataset-card').first().locator('.dataset-thumbnail')).toBeVisible();
   expect(providerRequests).toEqual([]);
 });
 

@@ -210,7 +210,7 @@ const squareThumbnail = { url: '/hub/datasets/individual/thumbnails/' + 'a'.repe
   licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', creditUrl: 'https://commons.wikimedia.org/wiki/File:a.jpg',
   attribution: 'Original photographer', crop: 'center_square' };
 
-test('square previews remain same-origin, attributed and commercially licensed at both source and photo level', () => {
+test('square previews remain same-origin and attributed for every source and image license category', () => {
   const summary = render.individualSummary(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source);
   const html = render.catalogCard(summary);
   assert.equal(render.isCatalogSummary(summary), true);
@@ -223,10 +223,11 @@ test('square previews remain same-origin, attributed and commercially licensed a
   assert.match(html, /dataset-photo-credit.*Original photographer.*cc-by-sa-4.0.*Cropped/);
   const detail = render.catalogEntryPage(render.individualEntry(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source, parent));
   assert.match(detail, /Center-square crop of the first available registered photograph/);
-  for (const license of ['cc-by-nc-4.0', 'unknown']) {
-    assert.doesNotMatch(render.catalogCard({ ...summary, license }), /class="dataset-thumbnail"/);
-    assert.doesNotMatch(render.catalogCard({ ...summary, thumbnail: { ...squareThumbnail, license } }), /class="dataset-thumbnail"/);
+  for (const license of ['cc-by-nc-4.0', 'unknown', 'other']) {
+    assert.match(render.catalogCard({ ...summary, license, thumbnail: { ...squareThumbnail, datasetLicense: license, license } }), /class="dataset-thumbnail"/);
+    assert.match(render.catalogCard({ ...summary, thumbnail: { ...squareThumbnail, license } }), /class="dataset-thumbnail"/);
   }
+  // A changed source license still invalidates a stale provenance record.
   assert.doesNotMatch(render.catalogCard({ ...summary, license: 'unknown', licenseCategory: 'commercial' }), /class="dataset-thumbnail"/);
   for (const url of ['https://huggingface.co/photo.jpg', '//example.com/photo.jpg', '/hub/datasets/individual/thumbnails/../private.jpg']) {
     assert.equal(render.isCatalogSummary({ ...summary, thumbnail: { ...squareThumbnail, url } }), false);
@@ -273,7 +274,8 @@ test('placeholder cards distinguish absent photos from unavailable previews', ()
   }
   const licensed = { ...summary, photoStatus: 'sample_checked', thumbnail: squareThumbnail };
   assert.doesNotMatch(render.catalogCard(licensed), /dataset-preview-placeholder/);
-  assert.match(render.catalogCard({ ...licensed, license: 'cc-by-nc-4.0' }), /dataset-preview-placeholder/);
+  assert.doesNotMatch(render.catalogCard({ ...licensed, license: 'cc-by-nc-4.0',
+    thumbnail: { ...squareThumbnail, datasetLicense: 'cc-by-nc-4.0' } }), /dataset-preview-placeholder/);
 });
 const parent = { id: 'hf-owner-dataset-123456abcdef', sourceId: 'hf:owner/dataset', title: 'owner/dataset', provider: 'huggingface',
   sourceUrl: 'https://huggingface.co/datasets/owner/dataset', dataUrl: 'https://huggingface.co/datasets/owner/dataset/tree/abc/first/sparse/0',

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from scripts.catalog.scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews, is_metadata_sidecar
 from scripts.audit.prepare_scene_contents import ply_content, validate_asset_samples
+from scripts.audit.prepare_scene_previews import photo_url, preview_jobs
 
 
 class SceneContentsTests(unittest.TestCase):
@@ -24,7 +25,7 @@ class SceneContentsTests(unittest.TestCase):
         self.assertFalse(is_metadata_sidecar('scene/mask/_000.png'))
         validate_asset_samples({'data': {'masks': {'status': 'listed', 'count': 1, 'samplePath': 'scene/mask/000.png'}}})
 
-    def test_reused_preview_must_match_the_manifest_bound_photo_and_commercial_terms(self):
+    def test_reused_preview_must_match_the_manifest_bound_photo_and_recorded_terms(self):
         proof = {'photoAvailability': 'complete_export_checked', 'photoAudit': {'samplePath': 'scene/images/a.png'}}
         entry = {'licenseCategory': 'commercial', 'license': 'cc-by-4.0'}
         thumbnail = {'file': 'a' * 64 + '.jpg', 'sourcePath': 'scene/images/a.png', 'datasetLicense': 'cc-by-4.0'}
@@ -32,8 +33,11 @@ class SceneContentsTests(unittest.TestCase):
         self.assertNotIn('thumbnail', proof)
         with self.assertRaisesRegex(ValueError, 'photograph does not match'):
             apply_thumbnail_evidence(entry, proof, {**thumbnail, 'sourcePath': 'peer/images/a.png'})
+        for license in ('cc-by-nc-4.0', 'other', 'Not specified'):
+            self.assertIn('thumbnail', apply_thumbnail_evidence({**entry, 'license': license, 'licenseCategory': 'not-specified'},
+                          proof, {**thumbnail, 'datasetLicense': license}))
         with self.assertRaisesRegex(ValueError, 'license evidence'):
-            apply_thumbnail_evidence({**entry, 'licenseCategory': 'unknown'}, proof, thumbnail)
+            apply_thumbnail_evidence({**entry, 'license': 'other'}, proof, thumbnail)
 
     def setUp(self):
         self.entry = {'sourceId': 'hf:owner/data', 'license': 'cc-by-4.0', 'licenseCategory': 'commercial',
@@ -75,7 +79,7 @@ class SceneContentsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'model files changed'):
             self.apply()
 
-    def test_preview_requires_exact_photo_and_can_keep_its_own_commercial_license(self):
+    def test_preview_requires_exact_photo_and_keeps_its_own_license(self):
         self.proof.update({'photoAvailability': 'sample_checked', 'photoAudit': {'samplePath': 'scene/images/a.jpg'}})
         self.review['thumbnail'] = {'file': 'a' * 64 + '.jpg', 'sourcePath': 'scene/images/a.jpg', 'license': 'cc-by-sa-4.0',
                                     'datasetLicense': 'cc-by-4.0', 'attribution': 'Photographer'}
@@ -110,12 +114,43 @@ class SceneContentsTests(unittest.TestCase):
                 'datasetLicense': self.entry['license'], 'attribution': 'Photographer'}
             content_scene_reviews({'entries': [self.entry]}, policy, root)
             scene['thumbnail']['license'] = 'cc-by-nc-4.0'
-            with self.assertRaisesRegex(ValueError, 'commercial-license'):
+            content_scene_reviews({'entries': [self.entry]}, policy, root)
+            for license in ('cc-by-nc-4.0', 'other', 'Not specified'):
+                self.entry['license'] = scene['thumbnail']['datasetLicense'] = license
                 content_scene_reviews({'entries': [self.entry]}, policy, root)
             scene['thumbnail']['license'] = 'cc-by-sa-4.0'
             file.write_bytes(body + b'changed')
             with self.assertRaisesRegex(ValueError, 'bytes changed'):
                 content_scene_reviews({'entries': [self.entry]}, policy, root)
+
+    def test_bulk_preview_jobs_cover_checked_photos_without_changing_license_or_loading_evidence(self):
+        scene = {key: copy.deepcopy(self.review[key]) for key in ('kind', 'path', 'files', 'data')}
+        source = {'sourceId': self.entry['sourceId'], 'revision': 'a' * 40, 'scenes': [scene]}
+        contents = {'schemaVersion': 1, 'coverage': 'all_published_scenes', 'checkedAt': '2026-10-19', 'sources': [source]}
+        audit = {'status': 'sample_checked', 'checkedAt': '2026-10-19', 'listingComplete': True, 'policy': 'exact_registered_sample',
+                 'summary': 'Photo checked', 'samplePath': 'scene/images/a%20b.png', 'sampleBrowserRead': True, 'samplePixels': 'decoded'}
+        photos = copy.deepcopy(contents)
+        photos['sources'][0]['scenes'][0]['audit'] = audit
+        for license in ('cc-by-4.0', 'cc-by-nc-4.0', 'other'):
+            self.entry['license'] = license
+            catalog = {'entries': [self.entry]}
+            before = copy.deepcopy((catalog, contents, photos))
+            jobs, retained, placeholders = preview_jobs(catalog, contents, photos, Path('.'))
+            self.assertEqual((len(jobs), retained, placeholders), (1, 0, {}))
+            self.assertEqual(jobs[0]['url'], 'https://huggingface.co/datasets/owner/data/resolve/' + 'a' * 40 + '/scene/images/a%2520b.png')
+            self.assertEqual((catalog, contents, photos), before)
+        audit['status'] = 'not_found'
+        audit.pop('samplePath')
+        jobs, retained, placeholders = preview_jobs(catalog, contents, photos, Path('.'))
+        self.assertEqual((jobs, retained, placeholders), ([], 0, {'not_found': 1}))
+
+    def test_public_preview_paths_use_the_exact_checked_https_photo(self):
+        source = {'sourceId': 'public:example', 'revision': 'a' * 40}
+        self.assertEqual(photo_url(source, 'https://example.org/photo.jpg'), 'https://example.org/photo.jpg')
+        with self.assertRaisesRegex(ValueError, 'exact checked public source'):
+            photo_url(source, 'http://example.org/photo.jpg')
+        with self.assertRaisesRegex(ValueError, 'exact checked public source'):
+            photo_url(source, 'relative/photo.jpg')
 
     def test_ply_headers_distinguish_splats_meshes_clouds_and_empty_geometry(self):
         header = b'ply\nformat binary_little_endian 1.0\nelement vertex 3\nproperty float x\nproperty float y\nproperty float z\n'

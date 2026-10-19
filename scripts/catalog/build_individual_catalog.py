@@ -521,7 +521,7 @@ def build(root=Path('.')):
                              for key, value in row.items()} for row in photo_rows)
     else:
         (output / 'photo-audit.csv').write_text('', encoding='utf8')
-    print(f'Built {total:,} scenes from {len(sources):,} sources with {len(thumbnails):,} distinct licensed previews.', flush=True)
+    print(f'Built {total:,} scenes from {len(sources):,} sources with {len(thumbnails):,} distinct attributed previews.', flush=True)
 
 
 if __name__ == '__main__':

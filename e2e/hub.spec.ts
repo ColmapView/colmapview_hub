@@ -311,7 +311,9 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await expect(page.getByText('License (source metadata)', { exact: true })).toBeVisible();
   await expect(page.locator('main')).toContainText('Not specified');
   await expect(page.locator('main')).toContainText('Verified original photographs');
-  await expect(page.locator('img,iframe')).toHaveCount(0);
+  await expect(page.locator('iframe')).toHaveCount(0);
+  await expect(page.locator('.dataset-thumbnail')).toBeVisible();
+  await expect(page.locator('.dataset-thumbnail')).toHaveAttribute('src', /^\/hub\/datasets\/individual\/thumbnails\/[a-f0-9]{64}\.jpg$/);
   await page.getByRole('link', { name: '← All datasets', exact: true }).click();
   await page.getByText('About this catalog', { exact: true }).click();
   await page.getByRole('link', { name: 'Audit and coverage', exact: true }).click();
