@@ -1,2 +1,7 @@
 # Local-only values. Production uses wrangler secret put; never commit real keys.
 HUB_KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+# Remembered connections are disabled in wrangler.jsonc until provider setup is complete.
+# Test-only encryption key. Generate a different random key for every deployed environment.
+AUTH_KEY="BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+# AUTH_GOOGLE_CLIENT_SECRET=""
+# AUTH_HF_CLIENT_SECRET=""

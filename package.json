@@ -1,6 +1,6 @@
 {
   "name": "colmapview_hub",
-  "version": "0.7.27",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -39,5 +39,9 @@
   },
   "engines": {
     "node": ">=24"
+  },
+  "dependencies": {
+    "aws4fetch": "1.0.20",
+    "oauth4webapi": "3.8.8"
   }
 }

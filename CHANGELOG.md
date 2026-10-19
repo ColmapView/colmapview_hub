@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+## 0.8.0 — 2026-10-19
+
+- Add an optional `/auth/*` session service for the custom viewer, separate from public Hub cards. Store browser-bound connection credentials encrypted in SQLite Durable Objects for at most 30 days.
+- Use authorization-code PKCE and verified Google/Hugging Face identities, serialized token renewal, exact-attempt cancellation and server-side disconnection.
+- Sign bounded bucket object/list/multipart requests without receiving dataset contents or returning saved secrets. Bucket persistence requires an explicit remember choice; saved read-only connections require an explicit upload upgrade.
+- Keep the service disabled until provider callbacks, Worker secrets and the viewer privacy update are configured.
+- Limit connection starts before creating stored sessions, with a clear retry response, while leaving restoration, token renewal and file transfers outside that allowance.
+
 ## 0.7.25 — 2026-10-19
 
 - Generate scene previews across every license category, including non-commercial and unspecified terms. Preserve reported source/image licenses, attribution and source hashes.

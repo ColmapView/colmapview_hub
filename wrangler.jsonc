@@ -23,6 +23,10 @@
     {
       "pattern": "colmapview.opsiclear.com/s/*",
       "zone_name": "opsiclear.com"
+    },
+    {
+      "pattern": "colmapview.opsiclear.com/auth/*",
+      "zone_name": "opsiclear.com"
     }
   ],
   "assets": {
@@ -31,7 +35,7 @@
     // Static files in public/hub/ are served at /hub/… without the Worker. Wrangler's warning that the routes "will attempt
     // to serve Assets on a configured path" is expected for this /hub/* → public/hub/* mapping. Setting run_worker_first
     // back to true would route static files through the Worker again.
-    "run_worker_first": ["/s", "/s/*", "/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/datasets/individual/*", "!/hub/datasets/*.manifest.json", "!/hub/datasets/audit*", "!/hub/datasets/catalog*", "!/hub/datasets/dataset-audit.json"]
+    "run_worker_first": ["/auth/*", "/s", "/s/*", "/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/datasets/individual/*", "!/hub/datasets/*.manifest.json", "!/hub/datasets/audit*", "!/hub/datasets/catalog*", "!/hub/datasets/dataset-audit.json"]
   },
   "r2_buckets": [
     {
@@ -39,11 +43,22 @@
       "bucket_name": "colmapview-hub"
     }
   ],
+  "ratelimits": [
+    {
+      "name": "AUTH_CONNECT_LIMITER",
+      "namespace_id": "2026101901",
+      "simple": { "limit": 20, "period": 60 }
+    }
+  ],
   "durable_objects": {
     "bindings": [
       {
         "name": "LOOKUP_GUARDS",
         "class_name": "LookupGuard"
+      },
+      {
+        "name": "ACCOUNT_SESSIONS",
+        "class_name": "AccountSession"
       }
     ]
   },
@@ -62,16 +77,27 @@
       "deleted_classes": [
         "ClientGuard"
       ]
+    },
+    {
+      "tag": "v3-account-sessions",
+      "new_sqlite_classes": ["AccountSession"]
     }
   ],
   "vars": {
     "HUB_ORIGIN": "https://colmapview.opsiclear.com",
     "HUB_PATH": "/hub",
-    "HUB_LISTINGS_ENABLED": "false"
+    "HUB_LISTINGS_ENABLED": "false",
+    "AUTH_ENABLED": "false",
+    "AUTH_GOOGLE_CLIENT_ID": "425433759789-mhpo5d6im8gvjofhnhti1k7ujfd68gg9.apps.googleusercontent.com",
+    "AUTH_HF_CLIENT_ID": ""
+  },
+  "secrets": {
+    "required": ["HUB_KEY"]
   },
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 0.1
+    "head_sampling_rate": 0.1,
+    "logs": { "enabled": true, "invocation_logs": false }
   },
   "account_id": "c9cc8c86e445c959591ac1dd26ee0b17"
 }

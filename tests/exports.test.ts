@@ -8,6 +8,6 @@ describe('worker module exports', () => {
       if (name === 'default') expect(typeof (value as ExportedHandler).fetch, name).toBe('function');
       else expect(typeof value, name).toBe('function');
     }
-    expect(Object.keys(mod).sort()).toEqual(['LookupGuard', 'default']);
+    expect(Object.keys(mod).sort()).toEqual(['AccountSession', 'LookupGuard', 'default']);
   });
 });
