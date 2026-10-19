@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8.0 — 2026-10-19
+
 - Add an optional `/auth/*` session service for the custom viewer, separate from public Hub cards. Store browser-bound connection credentials encrypted in SQLite Durable Objects for at most 30 days.
 - Use authorization-code PKCE and verified Google/Hugging Face identities, serialized token renewal, exact-attempt cancellation and server-side disconnection.
 - Sign bounded bucket object/list/multipart requests without receiving dataset contents or returning saved secrets. Bucket persistence requires an explicit remember choice; saved read-only connections require an explicit upload upgrade.
