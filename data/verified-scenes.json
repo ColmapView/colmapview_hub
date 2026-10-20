@@ -1562,16 +1562,16 @@
       },
       "loadPath": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json",
       "loadUrl": "https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json",
-      "checkedAt": "2026-10-19T03:33:22.411Z",
-      "exportSha256": "a7ea8b8e5bda804673cf3d72f403a161f354552661e07908bb030cde4ff14dce",
+      "checkedAt": "2026-10-20T04:42:50.323Z",
+      "exportSha256": "94d8b6b3aa191fe19f524fc356ece105421b9a8a958eebf6bd770e03bc198d30",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fraw.githubusercontent.com%2FopenMVG%2FopenMVG%2F6887e7385400f4cca378507296ccc20c8a0837dd%2Fsrc%2Fsoftware%2FSfM%2Fpython%2Fsfm_viewer%2Fsample_data%2Fsfm_data.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 11,
         "images": 11,
-        "points": 0
+        "points": 6586
       },
       "photos": [],
       "checks": {
@@ -1579,7 +1579,9 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointObservations": "passed"
       },
       "sourceFiles": [
         {
@@ -1590,7 +1592,10 @@
           "browserRead": true
         }
       ],
-      "sourceSnapshotSha256": "3834f5df90992277380c81db0e65ee76efa50fa7d008823e62a1f95b7e080a47"
+      "sourceSnapshotSha256": "3834f5df90992277380c81db0e65ee76efa50fa7d008823e62a1f95b7e080a47",
+      "pointObservations": 22564,
+      "pointPrecision": "source_or_float32",
+      "notes": "Supersedes the former zero-point camera-only receipt. All embedded landmarks and reciprocal source observations are independently checked. Source photo availability remains separate from the model-only evidence tier."
     },
     {
       "sourceId": "public:[\"OpenSfM Berlin example\",\"Berlin\",\"camera + RGB\"]",

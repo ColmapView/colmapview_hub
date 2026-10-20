@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.10 — 2026-10-20
+
+- Correct the OpenMVG SceauxCastle scene's verified point count to 6,586 after importing its embedded landmarks and 22,564 observations. Independently verify OpenMVG point values and reciprocal image tracks while retaining companion PLY verification for NeRF scenes.
+
 ## 0.9.9 — 2026-10-20
 
 - Remove the remembered-connection service and permanently delete its saved credentials. Keep public Hub cards, R2 records, catalogs and share links.

@@ -76,6 +76,43 @@ def rodrigues(vector):
     cross = np.array([[0, -z, y], [z, 0, -x], [-y, x, 0]])
     return np.eye(3) + math.sin(angle) * cross + (1 - math.cos(angle)) * (cross @ cross)
 
+def verify_openmvg_structure(source, model, result):
+    """Check every landmark and reciprocal observation, joining by source view ID."""
+    landmarks = source.get('structure', [])
+    if not isinstance(landmarks, list) or len({row['key'] for row in landmarks}) != len(landmarks):
+        raise ValueError('Invalid or duplicate OpenMVG landmarks')
+    if set(model.points3D) != {row['key'] for row in landmarks}:
+        raise ValueError('OpenMVG source landmark IDs or count differ')
+    images = {row['key']: model.images[index + 1] for index, row in enumerate(source['views']) if index + 1 in model.images}
+    observations = 0
+    for row in landmarks:
+        point = model.points3D[row['key']]
+        source_point = np.asarray(row['value']['X'], dtype=float)
+        # The existing WASM export realizes geometry from float32 render buffers.
+        # Accept exactly source values or their float32 representation, not an arbitrary tolerance.
+        if not (np.array_equal(source_point, point.xyz)
+                or np.array_equal(source_point.astype(np.float32).astype(float), point.xyz)):
+            raise ValueError('OpenMVG landmark coordinates differ beyond viewer float32 precision')
+        expected = {images[obs['key']].image_id: obs['value']['x'] for obs in row['value']['observations'] if obs['key'] in images}
+        if len(point.track.elements) != len(expected) or {item.image_id for item in point.track.elements} != set(expected):
+            raise ValueError('OpenMVG landmark observations differ')
+        errors = []
+        for item in point.track.elements:
+            image = model.images[item.image_id]
+            observation = image.points2D[item.point2D_idx]
+            if observation.point3D_id != row['key']:
+                raise ValueError('OpenMVG image/point reference is not reciprocal')
+            close(expected[item.image_id], observation.xy, 'OpenMVG observation coordinates', atol=0, rtol=0)
+            projected = model.cameras[image.camera_id].img_from_cam(image.cam_from_world() * source_point)
+            if projected is not None and np.isfinite(projected).all():
+                errors.append(float(np.linalg.norm(projected - observation.xy)))
+            observations += 1
+        close(float(np.mean(errors)) if errors else 0, point.error, 'OpenMVG computed reprojection error', atol=1e-8, rtol=np.finfo(np.float32).eps)
+    if sum(len(image.points2D) for image in model.images.values()) != observations:
+        raise ValueError('OpenMVG image observations contain unverified entries')
+    result.update(pointValues='passed', pointObservations=observations, pointPrecision='source_or_float32')
+
+
 def verify_scene_exports(root, output, frame_coverage):
     scenes = json.loads((root / 'model-browser-results.json').read_bytes())
     photos = json.loads((root / 'reference-photos.json').read_bytes())
@@ -100,8 +137,9 @@ def verify_scene_exports(root, output, frame_coverage):
                         (folder / name).write_bytes(archive.read('sparse/0/' + name))
                 model = pycolmap.Reconstruction(str(folder))
                 cloud = scene.get('companionPointCloud')
-                if not model.num_reg_images() or not model.num_cameras() or (not cloud and model.num_points3D()):
+                if not model.num_reg_images() or not model.num_cameras():
                     raise ValueError('Camera model export has invalid counts')
+                structure_checked = False
                 if cloud:
                     source_cloud = root / 'model-source' / (scene['id'] + '.ply')
                     cloud_bytes = source_cloud.read_bytes()
@@ -115,6 +153,7 @@ def verify_scene_exports(root, output, frame_coverage):
                         raise ValueError('XYZ companion points must not synthesize camera observations')
                     result['pointValues'] = 'passed'
                     result['companionPointCloud'] = cloud['path']
+                    structure_checked = True
                 raw = (root / 'model-source' / (scene['id'] + '.bin')).read_bytes()
                 reference_size = None
                 if scene['id'] in photos or scene['sourceId'] in photos:
@@ -210,8 +249,12 @@ def verify_scene_exports(root, output, frame_coverage):
                             close([intrinsic['width'], intrinsic['height']], [camera.width, camera.height], 'OpenMVG image dimensions', atol=0, rtol=0)
                             radial = intrinsic.get('disto_k3', [0, 0, 0])
                             close([focal, focal, cx, cy, radial[0], radial[1], 0, 0, radial[2], 0, 0, 0], camera.params, 'OpenMVG calibration')
+                        verify_openmvg_structure(source, model, result)
+                        structure_checked = True
                     else:
                         raise ValueError('Source schema needs an independent verifier')
+                if model.num_points3D() and not structure_checked:
+                    raise ValueError('Nonempty camera-adapter exports require independent source point checks')
                 result.update(status='passed', counts={'cameras': model.num_cameras(), 'images': model.num_reg_images(), 'points': model.num_points3D()},
                               sourceSha256=scene['sourceReceipt']['sha256'], exportSha256=scene['exportSha256'])
         except Exception as error:

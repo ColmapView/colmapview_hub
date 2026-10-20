@@ -70,6 +70,20 @@ test('Dynamic Maps keeps all pose statistics and displays the complete photograp
   expect(Math.abs(box.width / box.height - 320 / 234)).toBeLessThan(0.01);
 });
 
+test('OpenMVG retains its embedded sparse points in API, cards and the pinned viewer target', async ({ page }) => {
+  const result = await (await page.request.get('/hub/datasets/api/entries?q=SceauxCastle')).json();
+  expect(result.total).toBe(1);
+  const scene = result.entries[0];
+  expect(scene.sceneStats).toEqual({ cameraPoses: 11, cameraModels: 11, points: 6586 });
+  expect(scene.availableData.point_cloud).toMatchObject({ status: 'checked', count: 6586 });
+  await page.goto('/hub/datasets/?q=SceauxCastle');
+  await expect(page.locator('[data-stat="points"]')).toHaveText('6,586');
+  await expect(page.locator('.dataset-contents')).toContainText('Point cloud');
+  const opened = await page.request.get(scene.openUrl, { maxRedirects: 0 });
+  expect(opened.status()).toBe(302);
+  expect(new URL(opened.headers().location).searchParams.get('url')).toBe('https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json');
+});
+
 test('companion ZIP requirements remain explicit and Waymo mappings launch through pinned photo manifests', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     sources: { id: string; sourceId: string }[] };
