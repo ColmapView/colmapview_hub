@@ -332,3 +332,8 @@ Gaussian frames with zero native sparse points. Its remaining 267 cases are scop
 non-listings, inspected non-XYZ camera/flow arrays or meshes. The auxiliary and
 sibling inspection receipts retain their original pins; unchanged confirmed facts
 need no repeat source audit. Berlin keeps its original tracks and complete photos.
+
+zero-point-temporal-live-verification.json.gz records all 47 production launches,
+actual source range-body extraction, UI downloads and complete independent COLMAP
+reads against viewer 0.19.10 / Hub 0.9.14. Its catalog comparison preserves all
+5,583 identities, all older manifests and 5,536 unchanged launch records.
