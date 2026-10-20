@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.6 — 2026-10-19
+
+- Align card headings, previews and summary rows; keep data labels and camera/point values together so wrapping stays consistent across the grid.
+
 ## 0.9.5 — 2026-10-19
 
 - Randomize new feed visits and page refreshes, preserving active filters and stable scrolling and Back navigation. Keep explicit seeded API pages reproducible without caching one-off random responses.

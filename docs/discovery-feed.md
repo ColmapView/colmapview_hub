@@ -91,6 +91,9 @@ layout with `content-visibility`; full 3D scenes are opened only through a viewe
 link. Existing information buttons keep metadata in a dialog panel.
 Empty previews retain the full card preview space. Information panels link to the
 recorded original source page for both server-rendered and appended scene cards.
+Cards reserve two title lines and two data-label lines, expanding the latter when
+needed. Each data label stays together and camera/point statistics use two columns.
+Preview frames fill the remaining row space while photographs retain their proportions.
 
 Return navigation uses a bounded, per-tab session cache of public summaries and
 the visible scene anchor. It retains at most 240 contiguous scenes per saved view,
