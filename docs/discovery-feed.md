@@ -68,13 +68,17 @@ before ranking, then reads only the selected page's bounded metadata packs.
 The API accepts `sort=discover|random|new` and an optional 8–32 lowercase hex `seed`.
 An unseeded initial request generates a fresh cryptographic seed and bypasses the
 response cache. Responses return the actual selection in `feed: {mode, seed}`.
-HTML forms, subsequent pages,
-filtered requests and saved links carry that seed. Shuffle generates a fresh
+API requests and server-rendered fallback forms and pagination carry that seed.
+Shuffle generates a fresh
 cryptographic seed while preserving the active mode and filters. The seed is
 ordering state, not a user identifier. Search responses revalidate against both
-the current catalog generation and the UI release key. The browser pins the visit's
-seed in its URL so scrolling and Back navigation retain the same ordering. Refresh
+the current catalog generation and the UI release key. The browser keeps the visit's
+seed in history state, leaving only filters in the visible URL. API requests and
+the no-JavaScript pagination fallback still carry the seed. Existing seeded links
+are accepted and cleaned after loading. Separate visits and Shuffle entries have
+independent return snapshots even when their visible URLs match. Refresh
 starts a new feed at the first page with a fresh seed, preserving the active filters.
+Copying the visible URL shares its filters and starts a fresh ordering when opened.
 
 The browser appends 24 scenes when a sentinel approaches the viewport. It keeps
 manual Load more/Retry controls and server-rendered Previous/Next links for

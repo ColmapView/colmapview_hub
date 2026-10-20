@@ -181,7 +181,7 @@ test('opens a private Drive result directly so the viewer can request access', a
 test('opens datasets from the Hub home without an upload form or horizontal scroll', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   expect((await page.goto('/hub/'))!.status()).toBe(200);
-  await expect(page).toHaveURL(/\/hub\/datasets\/\?seed=[a-f0-9]{16}$/);
+  await expect(page).toHaveURL(/\/hub\/datasets\/$/);
   await expect(page.locator('input[type="file"], textarea')).toHaveCount(0);
   expect(await noHorizontalScroll(page)).toBe(true);
 });
@@ -283,7 +283,7 @@ test('preserves saved filters after their redundant controls are removed', async
 
 test('opens the scene browser directly in the ColmapView frame', async ({ page }) => {
   await page.goto('/hub/');
-  await expect(page).toHaveURL(/\/hub\/datasets\/\?seed=[a-f0-9]{16}$/);
+  await expect(page).toHaveURL(/\/hub\/datasets\/$/);
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link')).toHaveText(['Datasets', 'Open viewer']);
   await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Contact']);

@@ -56,12 +56,23 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     return values;
   };
   let committed = query(firstPage);
-  const urlFor = (values: URLSearchParams) => '/hub/datasets/' + (values.size ? `?${values}` : '');
-  const key = () => location.pathname + location.search;
-  // Give each fresh visit its own history and return-navigation cache entry.
-  if (committed.has('seed') && !new URLSearchParams(location.search).has('seed')) {
-    history.replaceState(history.state, '', urlFor(committed));
+  const urlFor = (values: URLSearchParams) => {
+    const visible = new URLSearchParams(values);
+    visible.delete('seed');
+    return '/hub/datasets/' + (visible.size ? `?${visible}` : '');
+  };
+  const documentNavigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+  const serverSeed = committed.get('seed') || undefined;
+  const returningSeed = documentNavigation?.type === 'back_forward' ? navigation.feedSeed() : undefined;
+  const initialSeed = returningSeed || serverSeed;
+  if (initialSeed) {
+    committed.set('seed', initialSeed);
+    fields.find(field => field.name === 'seed')!.value = initialSeed;
   }
+  // Equal visible URLs can represent different shuffled visits. Keep their
+  // seeds in history state and use both values to identify a return snapshot.
+  navigation.prepare('replace')(urlFor(new URLSearchParams(location.search)), initialSeed);
+  const key = () => JSON.stringify([location.pathname + location.search, navigation.feedSeed()]);
   let viewKey = key();
   const remember = () => {
     // popstate can arrive before the first restored frame. Do not replace the
@@ -88,6 +99,9 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const previousQuery = new URLSearchParams(committed);
     if (firstPage > 2) previousQuery.set('page', String(firstPage - 1)); else previousQuery.delete('page');
     previous.href = urlFor(previousQuery);
+    const shuffleQuery = new URLSearchParams(committed);
+    shuffleQuery.delete('page');
+    document.querySelectorAll<HTMLAnchorElement>('#catalog-shuffle, #catalog-reshuffle').forEach(link => { link.href = urlFor(shuffleQuery); });
     more.hidden = lastPage >= pages;
     end.hidden = !total || lastPage < pages;
     savedFilters.textContent = savedFilterSummary(committed);
@@ -215,7 +229,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       if (firstPage > 1) committed.set('page', String(firstPage)); else committed.delete('page');
       updateNavigation();
       updateSelection(data.dataset);
-      updateHistory(urlFor(committed));
+      updateHistory(urlFor(committed), committed.get('seed') || undefined);
       viewKey = key();
       departing = null;
       automaticPaused = false;
@@ -288,6 +302,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     event.preventDefault();
     clearTimeout(timer);
     const values = new URL(previous.href).searchParams;
+    if (committed.has('seed')) values.set('seed', committed.get('seed')!);
     for (const field of fields) field.value = values.get(field.name) || '';
     void load(values, { focus: true, history: 'push' });
   });
@@ -296,16 +311,22 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     remember();
     if (restore()) return;
     const values = new URLSearchParams(location.search);
+    const seed = navigation.feedSeed();
+    if (seed) values.set('seed', seed);
     for (const field of fields) field.value = values.get(field.name) || '';
     const advanced = form.querySelector<HTMLDetailsElement>('.catalog-advanced');
     if (advanced && ['provider', 'license', 'status', 'photos', 'data'].some(name => values.has(name))) advanced.open = true;
     void load(values, { restoring: true });
   });
-  const documentNavigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+  updateNavigation();
   if (committed.has('seed') && documentNavigation?.type === 'reload') {
     freshSeed();
     void load(query(), { history: 'replace' });
-  } else restore();
+  } else if (!restore() && returningSeed && returningSeed !== serverSeed) {
+    // History survives even when session storage is unavailable. Re-fetch the
+    // returning visit's seed instead of using the fresh server-rendered order.
+    void load(query(firstPage), { restoring: true });
+  }
   addEventListener('pagehide', remember);
   results.addEventListener('click', event => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0 || !(event.target instanceof Element)) return;

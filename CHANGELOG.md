@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.7 — 2026-10-19
+
+- Keep shuffle seeds in browser history instead of the visible URL, retaining separate visits and Shuffle history, stable scrolling and Back navigation, and fresh ordering on refresh.
+
 ## 0.9.6 — 2026-10-19
 
 - Align card headings, previews and summary rows; keep data labels and camera/point values together so wrapping stays consistent across the grid.

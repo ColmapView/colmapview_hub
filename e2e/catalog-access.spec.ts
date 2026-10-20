@@ -21,24 +21,32 @@ test('feed modes are seeded, paginated and balanced across source collections', 
 test('fresh visits get independent orders and Back keeps each visit', async ({ page }) => {
   const path = '/hub/datasets/?kind=COLMAP+reconstruction';
   await page.goto(path);
-  await expect(page).toHaveURL(/seed=[a-f0-9]{16}/);
-  const firstSeed = new URL(page.url()).searchParams.get('seed');
+  await expect.poll(() => page.evaluate(() => history.state?.colmapviewFeedSeed)).toMatch(/^[a-f0-9]{16}$/);
+  await expect(page).toHaveURL(new URL(path, page.url()).href);
+  const firstSeed = await page.evaluate(() => history.state.colmapviewFeedSeed);
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
   const firstIds = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
+  await page.goto('/hub/datasets/entry/' + firstIds[0]);
   await page.goto(path);
-  await expect(page).toHaveURL(/seed=[a-f0-9]{16}/);
-  expect(new URL(page.url()).searchParams.get('seed')).not.toBe(firstSeed);
+  await expect.poll(() => page.evaluate(() => history.state?.colmapviewFeedSeed)).toMatch(/^[a-f0-9]{16}$/);
+  await expect(page).toHaveURL(new URL(path, page.url()).href);
+  expect(await page.evaluate(() => history.state.colmapviewFeedSeed)).not.toBe(firstSeed);
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).not.toEqual(firstIds.slice(0, 24));
   await page.goBack();
+  await expect(page.getByRole('heading', { name: 'Dataset information', exact: true })).toBeVisible();
+  await page.goBack();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
-  expect(new URL(page.url()).searchParams.get('seed')).toBe(firstSeed);
+  expect(await page.evaluate(() => history.state.colmapviewFeedSeed)).toBe(firstSeed);
+  expect(new URL(page.url()).searchParams.has('seed')).toBe(false);
   expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(firstIds);
 });
 
 test('scrolling appends scenes without duplicates and shuffle preserves active filters', async ({ page }) => {
   await page.goto('/hub/datasets/?sort=random&seed=12345678&kind=COLMAP+reconstruction');
+  await expect(page).toHaveURL(/sort=random&kind=COLMAP\+reconstruction$/);
+  expect(await page.evaluate(() => history.state.colmapviewFeedSeed)).toBe('12345678');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   const first = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
@@ -50,9 +58,20 @@ test('scrolling appends scenes without duplicates and shuffle preserves active f
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await expect(page.getByLabel('Type', { exact: true })).toHaveValue('COLMAP reconstruction');
   await expect(page.getByLabel('Feed', { exact: true })).toHaveValue('random');
-  expect(new URL(page.url()).searchParams.get('seed')).not.toBe('12345678');
-  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).not.toEqual(first);
+  const shuffledSeed = await page.evaluate(() => history.state.colmapviewFeedSeed);
+  expect(shuffledSeed).not.toBe('12345678');
+  expect(new URL(page.url()).searchParams.has('seed')).toBe(false);
+  const shuffled = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
+  expect(shuffled).not.toEqual(first);
   expect(await page.evaluate(() => scrollY)).toBe(0);
+  await page.goBack();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  expect(await page.evaluate(() => history.state.colmapviewFeedSeed)).toBe('12345678');
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(all);
+  await page.goForward();
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  expect(await page.evaluate(() => history.state.colmapviewFeedSeed)).toBe(shuffledSeed);
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(shuffled);
 });
 
 test('failed automatic loading pauses until an explicit retry', async ({ page }) => {
@@ -116,7 +135,8 @@ for (const width of [1280, 390]) test(`Back restores the visible scene and refre
   await expect(page.locator(`[data-entry-id="${identity}"]`)).toBeInViewport();
   expect(await page.evaluate(() => history.scrollRestoration)).toBe('manual');
   await page.reload();
-  await expect.poll(() => new URL(page.url()).searchParams.get('seed')).not.toBe('12345678');
+  await expect.poll(() => page.evaluate(() => history.state?.colmapviewFeedSeed)).not.toBe('12345678');
+  expect(new URL(page.url()).searchParams.has('seed')).toBe(false);
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).not.toEqual(ids.slice(0, 24));
   await expect(page.getByLabel('Feed', { exact: true })).toHaveValue('random');
@@ -201,6 +221,16 @@ test('blocked storage and unavailable intersection observers retain manual pagin
   await page.goto('/hub/datasets/?sort=random&seed=12345678');
   await page.getByRole('button', { name: 'Load more', exact: true }).click();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
+  const first = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
+  const identity = first[0];
+  await page.goto('/hub/datasets/entry/' + identity);
+  await page.goBack();
+  await expect.poll(() => page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(first.slice(0, 24));
+  expect(await page.evaluate(() => history.state.colmapviewFeedSeed)).toBe('12345678');
+  expect(new URL(page.url()).searchParams.has('seed')).toBe(false);
+  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(first);
   expect(errors).toEqual([]);
 });
 
