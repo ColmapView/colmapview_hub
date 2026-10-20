@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.5 — 2026-10-19
+
+- Randomize new feed visits and page refreshes, preserving active filters and stable scrolling and Back navigation. Keep explicit seeded API pages reproducible without caching one-off random responses.
+
 ## 0.9.4 — 2026-10-19
 
 - Give missing-photo previews the full card preview space and add the original publisher link to scene information panels, including automatically loaded cards.

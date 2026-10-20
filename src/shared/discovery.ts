@@ -6,7 +6,8 @@ export type FeedMode = typeof FEED_MODES[number];
 export type DiscoveryRow = [tier: number, preview: number, firstSeen: number];
 export interface DiscoveryAsset { schemaVersion: 1; generation: string; rows: DiscoveryRow[] }
 export interface FeedSelection { mode: FeedMode; seed: string }
-export const defaultFeedSeed = () => new Date().toISOString().slice(0, 10).replaceAll('-', '');
+export const defaultFeedSeed = () => [...crypto.getRandomValues(new Uint8Array(8))]
+  .map(byte => byte.toString(16).padStart(2, '0')).join('');
 export const feedMode = (value: string | null): FeedMode => FEED_MODES.find(mode => mode === value) || 'discover';
 
 export function isDiscoveryAsset(value: unknown, index: IndividualIndex): value is DiscoveryAsset {

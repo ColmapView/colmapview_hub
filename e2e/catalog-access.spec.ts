@@ -18,6 +18,25 @@ test('feed modes are seeded, paginated and balanced across source collections', 
   expect(cameras.entries.every((entry: { sceneStats: { points: number } }) => entry.sceneStats.points === 0)).toBe(true);
 });
 
+test('fresh visits get independent orders and Back keeps each visit', async ({ page }) => {
+  const path = '/hub/datasets/?kind=COLMAP+reconstruction';
+  await page.goto(path);
+  await expect(page).toHaveURL(/seed=[a-f0-9]{16}/);
+  const firstSeed = new URL(page.url()).searchParams.get('seed');
+  await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  const firstIds = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
+  await page.goto(path);
+  await expect(page).toHaveURL(/seed=[a-f0-9]{16}/);
+  expect(new URL(page.url()).searchParams.get('seed')).not.toBe(firstSeed);
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).not.toEqual(firstIds.slice(0, 24));
+  await page.goBack();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+  expect(new URL(page.url()).searchParams.get('seed')).toBe(firstSeed);
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(firstIds);
+});
+
 test('scrolling appends scenes without duplicates and shuffle preserves active filters', async ({ page }) => {
   await page.goto('/hub/datasets/?sort=random&seed=12345678&kind=COLMAP+reconstruction');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
@@ -66,7 +85,7 @@ test('duplicate response pages never append repeated cards', async ({ page }) =>
   await expect(page.locator('.dataset-card')).toHaveCount(24);
 });
 
-for (const width of [1280, 390]) test(`returning from a viewer link restores the loaded feed and visible scene at ${width}px`, async ({ page }) => {
+for (const width of [1280, 390]) test(`Back restores the visible scene and refresh reshuffles at ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 720 });
   await page.addInitScript(() => {
     if (sessionStorage.getItem('feed-return-navigation-fixture') !== '1') return;
@@ -97,8 +116,11 @@ for (const width of [1280, 390]) test(`returning from a viewer link restores the
   await expect(page.locator(`[data-entry-id="${identity}"]`)).toBeInViewport();
   expect(await page.evaluate(() => history.scrollRestoration)).toBe('manual');
   await page.reload();
-  await expect(page.locator('.dataset-card')).toHaveCount(48);
-  await expect(page.locator(`[data-entry-id="${identity}"]`)).toBeInViewport();
+  await expect.poll(() => new URL(page.url()).searchParams.get('seed')).not.toBe('12345678');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).not.toEqual(ids.slice(0, 24));
+  await expect(page.getByLabel('Feed', { exact: true })).toHaveValue('random');
+  expect(await page.evaluate(() => scrollY)).toBe(0);
 });
 
 test('a catalog update restarts the feed instead of mixing generations', async ({ page }) => {

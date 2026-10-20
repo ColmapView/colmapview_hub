@@ -5,7 +5,7 @@ import { catalogCardElement } from './catalog-card';
 import { catalogHistory } from './catalog-history';
 import type { CatalogHistoryMode } from './catalog-history';
 import { recallFeed, rememberFeed, restoreFeedPosition } from './feed-memory';
-import { FEED_MODES } from '../shared/discovery';
+import { defaultFeedSeed, FEED_MODES } from '../shared/discovery';
 
 const form = document.querySelector<HTMLFormElement>('#individual-search');
 if (form && document.querySelector('#catalog-more') && document.querySelector('#catalog-status')) {
@@ -58,6 +58,10 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   let committed = query(firstPage);
   const urlFor = (values: URLSearchParams) => '/hub/datasets/' + (values.size ? `?${values}` : '');
   const key = () => location.pathname + location.search;
+  // Give each fresh visit its own history and return-navigation cache entry.
+  if (committed.has('seed') && !new URLSearchParams(location.search).has('seed')) {
+    history.replaceState(history.state, '', urlFor(committed));
+  }
   let viewKey = key();
   const remember = () => {
     // popstate can arrive before the first restored frame. Do not replace the
@@ -258,8 +262,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     search();
   });
   const freshSeed = () => {
-    fields.find(field => field.name === 'seed')!.value = [...crypto.getRandomValues(new Uint8Array(8))]
-      .map(byte => byte.toString(16).padStart(2, '0')).join('');
+    fields.find(field => field.name === 'seed')!.value = defaultFeedSeed();
   };
   document.querySelectorAll<HTMLAnchorElement>('#catalog-shuffle, #catalog-reshuffle').forEach(link => link.addEventListener('click', event => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -298,7 +301,11 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (advanced && ['provider', 'license', 'status', 'photos', 'data'].some(name => values.has(name))) advanced.open = true;
     void load(values, { restoring: true });
   });
-  restore();
+  const documentNavigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+  if (committed.has('seed') && documentNavigation?.type === 'reload') {
+    freshSeed();
+    void load(query(), { history: 'replace' });
+  } else restore();
   addEventListener('pagehide', remember);
   results.addEventListener('click', event => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0 || !(event.target instanceof Element)) return;

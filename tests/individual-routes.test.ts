@@ -48,6 +48,20 @@ it('keeps seeded feed caches separate and retains deterministic pages without pr
     expect(new Set([...original.entries, ...second.entries].map(entry => entry.id)).size).toBe(27);
     expect(original.entries.every(entry => entry.hasViewer)).toBe(true);
     expect((await request(`/datasets/api/entries?${queries[0]}`, { headers: { 'If-None-Match': etag } })).status).toBe(304);
+    const fresh = await request('/datasets/api/entries?sort=random');
+    expect(fresh.headers.get('Cache-Control')).toBe('no-store');
+    const freshResult = await fresh.json<Result>();
+    expect(freshResult.feed.seed).toMatch(/^[a-f0-9]{16}$/);
+    const freshQuery = `sort=random&seed=${freshResult.feed.seed}`;
+    expect(await caches.default.match(new Request(`${base}/datasets/api/entries?${freshQuery}&_catalog=feed-cache&_ui=${HUB_UI_VERSION}`))).toBeUndefined();
+    const another = await request('/datasets/api/entries?sort=random', { headers: { 'If-None-Match': fresh.headers.get('ETag')! } });
+    expect(another.status).toBe(200);
+    expect(another.headers.get('Cache-Control')).toBe('no-store');
+    const anotherResult = await another.json<Result>();
+    expect(anotherResult.feed.seed).not.toBe(freshResult.feed.seed);
+    expect(anotherResult.entries).not.toEqual(freshResult.entries);
+    queries.push(freshQuery);
+    expect((await (await request(`/datasets/api/entries?${freshQuery}`)).json<Result>()).entries).toEqual(freshResult.entries);
     expect(records).not.toHaveBeenCalled();
   } finally {
     for (const query of queries) await caches.default.delete(new Request(`${base}/datasets/api/entries?${query}&_catalog=feed-cache&_ui=${HUB_UI_VERSION}`));

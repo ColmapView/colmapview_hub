@@ -66,12 +66,15 @@ before ranking, then reads only the selected page's bounded metadata packs.
 ## Stable ordering and scrolling
 
 The API accepts `sort=discover|random|new` and an optional 8–32 lowercase hex `seed`.
-An unseeded initial request uses the UTC date as a shared daily seed. Responses
-return the actual selection in `feed: {mode, seed}`. HTML forms, subsequent pages,
+An unseeded initial request generates a fresh cryptographic seed and bypasses the
+response cache. Responses return the actual selection in `feed: {mode, seed}`.
+HTML forms, subsequent pages,
 filtered requests and saved links carry that seed. Shuffle generates a fresh
 cryptographic seed while preserving the active mode and filters. The seed is
 ordering state, not a user identifier. Search responses revalidate against both
-the current catalog generation and the UI release key.
+the current catalog generation and the UI release key. The browser pins the visit's
+seed in its URL so scrolling and Back navigation retain the same ordering. Refresh
+starts a new feed at the first page with a fresh seed, preserving the active filters.
 
 The browser appends 24 scenes when a sentinel approaches the viewport. It keeps
 manual Load more/Retry controls and server-rendered Previous/Next links for
@@ -92,8 +95,8 @@ recorded original source page for both server-rendered and appended scene cards.
 Return navigation uses a bounded, per-tab session cache of public summaries and
 the visible scene anchor. It retains at most 240 contiguous scenes per saved view,
 three views and one million serialized characters, restoring the same scene and
-offset when returning from the viewer or reloading. Longer sessions restore a
-window around the visible scene with Previous navigation for earlier pages.
+offset when returning from the viewer. Refresh starts a new ordering. Longer
+sessions restore a window around the visible scene with Previous navigation for earlier pages.
 The feed records the selected card, owns browser scroll restoration, waits for
 font and deferred card layout to settle, and cancels positioning on user input.
 Blocked storage does not prevent browsing. Nothing is uploaded or retained as a
@@ -107,6 +110,6 @@ dates, single-collection exhaustion, camera-only eligibility, composed filters,
 invalid inputs, stale discovery assets and publication-date persistence.
 
 Browser coverage checks automatic append, shuffle/filter preservation, bounded
-retry behavior, duplicate rejection, viewer return/reload restoration, disabled
+retry behavior, duplicate rejection, viewer return restoration and refresh reshuffling, disabled
 storage/observers, finite results and existing metadata panels. Existing catalog,
 access-control, share-link and account-session suites remain required.

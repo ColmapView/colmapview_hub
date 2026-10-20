@@ -9,9 +9,9 @@ import { HUB_UI_VERSION } from '../shared/ui-version';
 import { defaultFeedSeed } from '../shared/discovery';
 
 const REVALIDATE = 'public, no-cache, must-revalidate, no-transform';
-const respond = (request: Request, response: Response) => {
+const respond = (request: Request, response: Response, freshFeed = false) => {
   const headers = new Headers(response.headers);
-  headers.set('Cache-Control', REVALIDATE);
+  headers.set('Cache-Control', freshFeed ? 'no-store' : REVALIDATE);
   headers.set('Cloudflare-CDN-Cache-Control', 'no-store');
   return new Response(request.headers.get('If-None-Match') === headers.get('ETag') ? null : response.body, {
     status: request.headers.get('If-None-Match') === headers.get('ETag') ? 304 : response.status, headers,
@@ -47,7 +47,8 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   // Read the current inventory before the response cache. Removed entries and
   // search results must not survive a catalog deployment in an older cache.
   const index = await individualIndex(env.CATALOG_ASSETS, location.origin);
-  if (index.discovery && !entry && !open && !collection && !filters.has('seed')) filters.set('seed', defaultFeedSeed());
+  const freshFeed = Boolean(index.discovery && !entry && !open && !collection && !filters.has('seed'));
+  if (freshFeed) filters.set('seed', defaultFeedSeed());
   if (collection) return index.sources.some(source => source.id === collection[1] && source.count > 0)
     ? browse(collection[1]) : fail(404, 'Dataset entry not found.');
   if (open) {
@@ -60,7 +61,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   cacheQuery.set('_catalog', index.generation);
   cacheQuery.set('_ui', HUB_UI_VERSION);
   const key = new Request(`${location.origin}${url.pathname}?${cacheQuery}`);
-  const cached = await caches.default.match(key);
+  const cached = freshFeed ? undefined : await caches.default.match(key);
   if (cached) return respond(request, cached);
   let body: string;
   if (entry) {
@@ -78,8 +79,8 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   const etag = '"' + [...new Uint8Array(digest)].slice(0, 16).map(byte => byte.toString(16).padStart(2, '0')).join('') + '"';
   const response = new Response(body, { headers: { 'Content-Type': api ? 'application/json; charset=utf-8' : 'text/html; charset=utf-8',
     'Cache-Control': 'public, max-age=300, no-transform', 'ETag': etag } });
-  if (request.method === 'GET') ctx.waitUntil(caches.default.put(key, response.clone()));
-  // The Cache API stores a short-lived internal copy. Browser and outer CDN
-  // responses always revalidate against the current published generation.
-  return respond(request, response);
+  if (request.method === 'GET' && !freshFeed) ctx.waitUntil(caches.default.put(key, response.clone()));
+  // Seeded responses revalidate against the current generation. One-off fresh
+  // feeds bypass both the internal cache and browser storage.
+  return respond(request, response, freshFeed);
 }
