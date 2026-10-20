@@ -6,6 +6,7 @@ import type { AssetSummary, CreateLinkInput, LinkAccess } from '../src/shared/mo
 import { clientIdentity } from '../src/worker/crypto';
 import { galleryKey, hubLocation } from '../src/worker/pages';
 import { resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
+import { sharedFeedCacheKey } from '../src/worker/publications';
 import { preview } from './fixtures/preview';
 
 export const origin = 'https://colmapview.opsiclear.com';
@@ -69,6 +70,7 @@ export async function guard(clientIp = ip) { return env.LOOKUP_GUARDS.getByName(
 /** Clears this local fixture's cached gallery page, bucket and guards. The Workers test plugin keeps storage and the Cache API between tests. Never touches production. */
 export async function resetState(): Promise<void> {
   await caches.default.delete(galleryKey(hubLocation(env)));
+  await caches.default.delete(sharedFeedCacheKey(base));
   for (const object of (await env.LINKS.list()).objects) await env.LINKS.delete(object.key);
   for (const id of await listDurableObjectIds(env.LOOKUP_GUARDS)) {
     await runInDurableObject(env.LOOKUP_GUARDS.get(id), async (_, state) => { await state.storage.deleteAll(); });

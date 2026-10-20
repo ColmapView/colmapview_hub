@@ -29,6 +29,9 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   shuffle.delete('page');
   return page(location, 'Public datasets', '<div class="catalog-index">' + intro('Public datasets', `${number(index.total)} named scene datasets · ${number(index.sources.filter(source => source.count).length)} source collections`)
     + '<p class="catalog-hint">Explore camera and reconstruction datasets. Original photographs are optional; each scene records its photo availability and loading evidence.</p>'
+    + '<section id="shared-datasets" class="shared-datasets" aria-label="Shared on Hub"><h2>Shared on Hub</h2>'
+    + '<p role="status">Loading shared datasets…</p><div class="dataset-grid" aria-label="Shared datasets"></div>'
+    + '<button type="button" class="button" data-shared-more hidden>Load more shared datasets</button></section>'
     + `<form id="individual-search" class="catalog-filters" role="search" action="/hub/datasets/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
     + '<div class="catalog-feed-controls">'
     + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }])

@@ -1,19 +1,13 @@
 import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, SHARE_PATH, VIEWER_ORIGINS, waitText } from '../shared/model';
-import type { AssetSummary, CardRecord, ListedLink } from '../shared/model';
+import type { CardRecord, ListedLink } from '../shared/model';
 import { escapeHtml } from '../shared/html';
 import { HUB_UI_VERSION } from '../shared/ui-version';
+import { assetLine } from '../shared/asset-summary';
+export { assetLine } from '../shared/asset-summary';
 export { escapeHtml } from '../shared/html';
 
 /** ColmapView's own pages; the Hub shares their header and footer. */
 const VIEWER = VIEWER_ORIGINS[0];
-
-/** Nonzero counts only, for example "83 images · 83,749 points · 82 masks · 1 splat". */
-export function assetLine(assets?: AssetSummary): string {
-  if (!assets) return '';
-  const count = (value: number, noun: string) => value ? `${value.toLocaleString('en-US')} ${noun}${value === 1 ? '' : 's'}` : '';
-  return [count(assets.images, 'image'), count(assets.colmap.points, 'point'), count(assets.masks, 'mask'), count(assets.splats, 'splat')]
-    .filter(Boolean).join(' · ');
-}
 
 export interface HubLocation {
   origin: string;

@@ -43,6 +43,13 @@
       "bucket_name": "colmapview-hub"
     }
   ],
+  "ratelimits": [
+    {
+      "name": "HUB_PUBLICATION_READS",
+      "namespace_id": "2026102001",
+      "simple": { "limit": 60, "period": 60 }
+    }
+  ],
   "durable_objects": {
     "bindings": [
       {
@@ -79,7 +86,8 @@
   "vars": {
     "HUB_ORIGIN": "https://colmapview.opsiclear.com",
     "HUB_PATH": "/hub",
-    "HUB_LISTINGS_ENABLED": "false"
+    "HUB_LISTINGS_ENABLED": "false",
+    "HUB_PUBLICATIONS_ENABLED": "false"
   },
   "secrets": {
     "required": ["HUB_KEY"]

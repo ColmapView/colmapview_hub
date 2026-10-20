@@ -23,3 +23,5 @@ npx wrangler r2 object put colmapview-hub/internal/wordlists-v1.json --remote --
    - Deploy the Hub before releasing a viewer that sends `access`.
 
 WordNet's source license is preserved inside the private configuration. License information attached to a dataset link comes from its creator; the Hub neither infers nor grants dataset rights.
+
+Public community submissions have a separate, disabled-by-default rollout. Keep `HUB_LISTINGS_ENABLED=false`; configure and verify Turnstile before enabling `HUB_PUBLICATIONS_ENABLED`. Follow [the publication setup and review runbook](publication.md), then test one verified listing, one pending source and one rejected challenge. Deploy the Hub before releasing the viewer button. Existing share links and the curated catalog do not depend on this flag.

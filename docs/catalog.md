@@ -64,7 +64,7 @@ Response caches include the catalog generation and UI version. Public catalog re
 
 The research inventory retains archive extraction requirements and import/delivery failures, but those cases are not published as datasets. Sample imports, model-only manifest checks and extracted-file checks retain separate scopes. See [the qualification audit](../data/README.md#full-inventory-audit) and the public `/hub/datasets/audit` page.
 
-These are operator-curated public source entries. Upload share links retain their existing preview, ownership and listing behavior. The dataset catalog never enumerates private R2 link records.
+These are operator-curated public source entries. A separate **Shared on Hub** section loads explicit public submissions asynchronously, four at a time, using the same card and metadata styles. Its feed includes only server-verified records in `listed/`; it never enumerates private links, unlisted links or pending submissions. Curated search and filters retain their existing scope. Community verification is described in [Share on Hub](publication.md); it does not inherit the curated catalog's stronger evidence tiers.
 
 ### Missing component audit — October 19, 2026
 

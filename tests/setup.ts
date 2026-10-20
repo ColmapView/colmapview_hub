@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, vi } from 'vitest';
 
-// The Hub never fetches submitted URLs on the server; any outgoing request fails the test that made it.
+// Outbound reads must be explicit fixtures: publication verification alone may contact Turnstile and trusted HF hosts.
 beforeEach(() => { vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected external request')); });
 afterEach(() => { vi.restoreAllMocks(); });

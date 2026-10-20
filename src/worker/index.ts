@@ -9,6 +9,7 @@ import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWo
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
 import { individualRoute } from './individual-routes';
 import { retiredAuthRoute } from './retired-auth';
+import { publicationConfiguration, sharedDatasetResponse, submitPublication } from './publications';
 export { LookupGuard } from './guard';
 
 const UNAVAILABLE = 'The Hub is temporarily unavailable. Please try again.';
@@ -261,6 +262,20 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, location
     if (request.method === 'OPTIONS') return allowedOrigin(request, location)
       ? new Response(null, { status: 204, headers: { 'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' } })
       : new Response(null, { status: 403 });
+    if (path === '/api/publications/config' && request.method === 'GET') return publicationConfiguration(env);
+    if (path === '/api/publications' && request.method === 'GET') {
+      const ip = request.headers.get('CF-Connecting-IP');
+      if (!ip) throw new Error('Client identity unavailable');
+      const admitted = await env.HUB_PUBLICATION_READS.limit({ key: await clientIdentity(env.HUB_KEY, ip) });
+      if (!admitted.success) return blocked(location, true, 60);
+      return sharedDatasetResponse(env, location, ctx, url.searchParams.get('cursor') ?? undefined);
+    }
+    if (path === '/api/publications' && request.method === 'POST') {
+      if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot publish datasets.' }, 403);
+      const wait = await (await guardFor(request, env)).admitCreation();
+      if (wait) return blocked(location, true, wait);
+      return submitPublication(request, env, location);
+    }
     if (path === '/api/links' && request.method === 'POST') return createLink(request, env, ctx, location);
     const deletion = /^\/api\/links\/([^/]+)$/.exec(path);
     if (deletion && request.method === 'DELETE') return deleteLink(request, env, ctx, location, decodeId(deletion[1]));

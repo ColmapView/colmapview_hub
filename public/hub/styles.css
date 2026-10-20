@@ -206,3 +206,7 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
   .dataset-metadata-links a { min-height: 44px; display: inline-flex; align-items: center; }
   .dataset-label { padding-right: var(--sp-8); }
 }
+.shared-datasets { margin-block: 1.5rem 2rem; }
+.shared-datasets > h2 { font-size: 1rem; margin-bottom: .5rem; }
+.shared-datasets .dataset-grid { margin-block: 1rem; }
+.shared-dataset-preview { width: 100%; height: auto; aspect-ratio: 600 / 315; object-fit: cover; border-radius: .35rem; }
