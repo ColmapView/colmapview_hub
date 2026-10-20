@@ -79,7 +79,11 @@ def verify_points(source, output, count):
             stop = min(count, start + 100000)
             chunk = points[start:stop]
             xyz = np.column_stack([original[axis][start:stop] for axis in ('x', 'y', 'z')])
-            rgb = np.column_stack([original[channel][start:stop] for channel in ('red', 'green', 'blue')])
+            colors = [channel in original.dtype.names for channel in ('red', 'green', 'blue')]
+            if any(colors) and not all(colors):
+                raise ValueError('Partial PLY color declarations are not supported by this independent verifier')
+            rgb = (np.column_stack([original[channel][start:stop] for channel in ('red', 'green', 'blue')])
+                   if all(colors) else np.full((stop - start, 3), 255, dtype='u1'))
             if (not np.isfinite(xyz).all() or not np.array_equal(chunk['xyz'], xyz)
                     or not np.array_equal(chunk['rgb'], rgb) or np.any(chunk['tracks']) or np.any(chunk['error'])
                     or not np.array_equal(chunk['id'], np.arange(start + 1, stop + 1, dtype='<u8'))):

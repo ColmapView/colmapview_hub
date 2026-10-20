@@ -1,5 +1,7 @@
 # Scene component audit — October 19, 2026
 
+This is a dated snapshot. The later NL3D camera/point-cloud verification and current prepared totals are recorded in the [catalog guide](catalog.md).
+
 All **5,579 previously published scenes** were checked for each missing available-data role: **25,204 role checks across 147 source collections**. Cameras were already present in every scene. Depth data is outside this audit.
 
 Download the [per-scene findings CSV](https://colmapview.opsiclear.com/hub/datasets/individual/component-audit.csv) or [full pinned evidence snapshot](https://colmapview.opsiclear.com/hub/datasets/individual/component-audit.json.gz). The latter is also stored in [data/scene-component-audit.json.gz](../data/scene-component-audit.json.gz). The downloads appear under the Hub's additional coverage information. They are a dated audit, not a promise that every source file fully renders or exports.

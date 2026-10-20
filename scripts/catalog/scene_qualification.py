@@ -101,6 +101,8 @@ def checked_source_files(entry, review):
             raise ValueError('Original-file receipt URL differs from its selected source')
     required = ({files[role] for role in ('cameras', 'images', 'points3d') if role in files}
                 if review['kind'] in ('colmap', 'cameras') else {review.get('loadPath')})
+    if review.get('companionPointCloud'):
+        required.add(review['companionPointCloud'])
     if entry.get('provider') == 'public':
         required = {review.get('loadUrl')}
         if public_launch_manifest(review):
@@ -234,7 +236,13 @@ def verified_scene_reviews(catalog, policy):
             raise ValueError('Verified scene import, original RGB export and independent COLMAP checks must pass')
         if export == 'colmap_model' and counts['points'] and review.get('checks', {}).get('pointValues') != 'passed':
             raise ValueError('Nonempty model exports require independent point value and reference checks')
-        if export == 'colmap_model' or entry.get('provider') == 'public':
+        cloud = review.get('companionPointCloud')
+        if (cloud is not None or review['kind'] == 'camera-scene' and counts['points']):
+            if (not isinstance(cloud, str) or not cloud.lower().endswith('.ply') or counts['points'] < 1
+                    or cloud not in (review.get('files') or {}).values()
+                    or review.get('checks', {}).get('pointValues') != 'passed'):
+                raise ValueError('Companion points require the selected PLY, original byte receipt and independent point checks')
+        if export == 'colmap_model' or entry.get('provider') == 'public' or cloud:
             checked_source_files(entry, review)
         frame_coverage = review.get('frameCoverage')
         if frame_coverage is not None and (not isinstance(frame_coverage, dict)
@@ -307,6 +315,9 @@ def qualified_evidence(entry, row, revision, review, hf_url):
              'sceneValidation': {'status': 'passed', 'revision': revision, 'images': counts['images'],
                                  'cameras': counts['cameras'], 'points': counts['points'], 'photoCount': len(review['photos']),
                                  'export': export, 'exportSha256': review['exportSha256']}}
+    if review.get('companionPointCloud'):
+        proof['companionPointCloud'] = review['companionPointCloud']
+        proof['scope'] += ' The selected XYZ PLY was compared point by point with the export in the saved camera world frame; feature observations are absent.'
     if review.get('frameCoverage'):
         coverage = review['frameCoverage']
         proof['scope'] += f' The metadata references {coverage["metadataFrames"]} frames; {coverage["missingRgbFrames"]} missing RGB references are omitted. Every exported pose was compared with its original source frame.'

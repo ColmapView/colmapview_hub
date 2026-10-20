@@ -793,47 +793,6 @@
       ]
     },
     {
-      "sourceId": "hf:NL3D/synthetic_composite_sample",
-      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
-      "kind": "camera-scene",
-      "path": "scenes/metal/metal_01_compose_00296_52e5c2621d",
-      "files": {
-        "metadata:scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
-        "asset:scenes/metal/metal_01_compose_00296_52e5c2621d/mesh_raw.ply": "scenes/metal/metal_01_compose_00296_52e5c2621d/mesh_raw.ply",
-        "asset:scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply": "scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply"
-      },
-      "loadPath": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
-      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
-      "checkedAt": "2026-10-19T03:25:53.590Z",
-      "exportSha256": "8b619b4f216d2f733e664cfc3faf39f4aced62c580a2d600050aa114c6aee71c",
-      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Fmetal%2Fmetal_01_compose_00296_52e5c2621d%2Ftransforms.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
-      "export": "colmap_model",
-      "counts": {
-        "cameras": 50,
-        "images": 50,
-        "points": 0
-      },
-      "photos": [],
-      "checks": {
-        "browserImport": "passed",
-        "modelExport": "passed",
-        "independentColmapRead": "passed",
-        "cameraCalibration": "passed",
-        "cameraPoses": "passed"
-      },
-      "sourceFiles": [
-        {
-          "path": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
-          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
-          "bytes": 41568,
-          "sha256": "71f3ba52f8b0c83a5a146327df0525460b10bd03ee131465663b85b28f7c2f23",
-          "browserRead": true
-        }
-      ]
-    },
-    {
       "sourceId": "hf:nonconformist/Blenderkit_retail_bench_mini",
       "revision": "e39d16c22ff04caa0a4ddefb731431d9aea2a11e",
       "kind": "camera-scene",
@@ -1748,6 +1707,406 @@
         "cameraPoses": "passed",
         "pointValues": "passed"
       }
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/metal/metal_01_compose_00296_52e5c2621d",
+      "files": {
+        "metadata:scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+        "asset:scenes/metal/metal_01_compose_00296_52e5c2621d/mesh_raw.ply": "scenes/metal/metal_01_compose_00296_52e5c2621d/mesh_raw.ply",
+        "asset:scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply": "scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply"
+      },
+      "loadPath": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Fmetal%2Fmetal_01_compose_00296_52e5c2621d%2Ftransforms.json",
+      "checkedAt": "2026-10-20T03:56:46.707Z",
+      "viewerVersion": "0.19.3",
+      "viewerCommit": "ba4d99866a7ec2817767a7c254157fb54449ad7c",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 100000
+      },
+      "export": "colmap_model",
+      "photos": [],
+      "exportSha256": "5e0568543bb8a690cc0c16b724b7b9ba3058c9d273873de185ea4802354b3d32",
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_01_compose_00296_52e5c2621d/transforms.json",
+          "bytes": 41568,
+          "sha256": "71f3ba52f8b0c83a5a146327df0525460b10bd03ee131465663b85b28f7c2f23",
+          "browserRead": true
+        },
+        {
+          "path": "scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply",
+          "bytes": 1200120,
+          "sha256": "22a94b4ad1e41b6178bcafa41e333ec235af47d9397bc596b511e4748136fa15",
+          "browserRead": true
+        }
+      ],
+      "companionPointCloud": "scenes/metal/metal_01_compose_00296_52e5c2621d/points_gt.ply"
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/metal/metal_02_compose_00936_19b7bae876",
+      "files": {
+        "metadata:scenes/metal/metal_02_compose_00936_19b7bae876/transforms.json": "scenes/metal/metal_02_compose_00936_19b7bae876/transforms.json",
+        "asset:scenes/metal/metal_02_compose_00936_19b7bae876/mesh_raw.ply": "scenes/metal/metal_02_compose_00936_19b7bae876/mesh_raw.ply",
+        "asset:scenes/metal/metal_02_compose_00936_19b7bae876/points_gt.ply": "scenes/metal/metal_02_compose_00936_19b7bae876/points_gt.ply"
+      },
+      "loadPath": "scenes/metal/metal_02_compose_00936_19b7bae876/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_02_compose_00936_19b7bae876/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Fmetal%2Fmetal_02_compose_00936_19b7bae876%2Ftransforms.json",
+      "checkedAt": "2026-10-20T03:57:06.124Z",
+      "viewerVersion": "0.19.3",
+      "viewerCommit": "ba4d99866a7ec2817767a7c254157fb54449ad7c",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 100000
+      },
+      "export": "colmap_model",
+      "photos": [],
+      "exportSha256": "b974d31e72317886b984b8f87f5e786718b27991ce084ac9a41dbd3ac0d609bb",
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/metal/metal_02_compose_00936_19b7bae876/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_02_compose_00936_19b7bae876/transforms.json",
+          "bytes": 41544,
+          "sha256": "7f6baea490fcdc50c62737f381b44a20b5ad122c2fa50db94cec6cfde067e647",
+          "browserRead": true
+        },
+        {
+          "path": "scenes/metal/metal_02_compose_00936_19b7bae876/points_gt.ply",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/metal/metal_02_compose_00936_19b7bae876/points_gt.ply",
+          "bytes": 1200120,
+          "sha256": "ce9a811bce18d29298635221ce2319107d989147ec201c0dc878446cc6dec345",
+          "browserRead": true
+        }
+      ],
+      "companionPointCloud": "scenes/metal/metal_02_compose_00936_19b7bae876/points_gt.ply"
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/mixed/mixed_01_compose_00992_a6174b61a2",
+      "files": {
+        "metadata:scenes/mixed/mixed_01_compose_00992_a6174b61a2/transforms.json": "scenes/mixed/mixed_01_compose_00992_a6174b61a2/transforms.json",
+        "asset:scenes/mixed/mixed_01_compose_00992_a6174b61a2/mesh_raw.ply": "scenes/mixed/mixed_01_compose_00992_a6174b61a2/mesh_raw.ply",
+        "asset:scenes/mixed/mixed_01_compose_00992_a6174b61a2/points_gt.ply": "scenes/mixed/mixed_01_compose_00992_a6174b61a2/points_gt.ply"
+      },
+      "loadPath": "scenes/mixed/mixed_01_compose_00992_a6174b61a2/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_01_compose_00992_a6174b61a2/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Fmixed%2Fmixed_01_compose_00992_a6174b61a2%2Ftransforms.json",
+      "checkedAt": "2026-10-20T03:57:11.926Z",
+      "viewerVersion": "0.19.3",
+      "viewerCommit": "ba4d99866a7ec2817767a7c254157fb54449ad7c",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 91906
+      },
+      "export": "colmap_model",
+      "photos": [],
+      "exportSha256": "a1df56954aa8523f97a51a291862c64fac9f8fd4e9bcdbf689ae6fb6482b271f",
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/mixed/mixed_01_compose_00992_a6174b61a2/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_01_compose_00992_a6174b61a2/transforms.json",
+          "bytes": 41564,
+          "sha256": "e348471734251d816f2a0059adf5554251c3c962a1703db179bdd752ac5af1d1",
+          "browserRead": true
+        },
+        {
+          "path": "scenes/mixed/mixed_01_compose_00992_a6174b61a2/points_gt.ply",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_01_compose_00992_a6174b61a2/points_gt.ply",
+          "bytes": 1102991,
+          "sha256": "6ed9885a9bdb00f87786d1dabf46595bd15e83226c0b6539c4ed1520d9c6f5e4",
+          "browserRead": true
+        }
+      ],
+      "companionPointCloud": "scenes/mixed/mixed_01_compose_00992_a6174b61a2/points_gt.ply"
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/mixed/mixed_02_compose_00876_9b965af214",
+      "files": {
+        "metadata:scenes/mixed/mixed_02_compose_00876_9b965af214/transforms.json": "scenes/mixed/mixed_02_compose_00876_9b965af214/transforms.json",
+        "asset:scenes/mixed/mixed_02_compose_00876_9b965af214/mesh_raw.ply": "scenes/mixed/mixed_02_compose_00876_9b965af214/mesh_raw.ply",
+        "asset:scenes/mixed/mixed_02_compose_00876_9b965af214/points_gt.ply": "scenes/mixed/mixed_02_compose_00876_9b965af214/points_gt.ply"
+      },
+      "loadPath": "scenes/mixed/mixed_02_compose_00876_9b965af214/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_02_compose_00876_9b965af214/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Fmixed%2Fmixed_02_compose_00876_9b965af214%2Ftransforms.json",
+      "checkedAt": "2026-10-20T03:57:44.046Z",
+      "viewerVersion": "0.19.3",
+      "viewerCommit": "ba4d99866a7ec2817767a7c254157fb54449ad7c",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 64177
+      },
+      "export": "colmap_model",
+      "photos": [],
+      "exportSha256": "1fee804d27845f3fa346e4ebfd9599af8d0b6e05beb59587b078472b4e0d2e7f",
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/mixed/mixed_02_compose_00876_9b965af214/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_02_compose_00876_9b965af214/transforms.json",
+          "bytes": 41430,
+          "sha256": "eb03fb0133e167a9f0e00504a03ef577db046cdbf409b5ed353f4cf7f8a8b7db",
+          "browserRead": true
+        },
+        {
+          "path": "scenes/mixed/mixed_02_compose_00876_9b965af214/points_gt.ply",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_02_compose_00876_9b965af214/points_gt.ply",
+          "bytes": 770243,
+          "sha256": "ed979f603ce067ba2853ca88e193e09e9be96f102bbaaba544d256f465c05239",
+          "browserRead": true
+        }
+      ],
+      "companionPointCloud": "scenes/mixed/mixed_02_compose_00876_9b965af214/points_gt.ply"
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/mixed/mixed_03_compose_00729_80c99984f2",
+      "files": {
+        "metadata:scenes/mixed/mixed_03_compose_00729_80c99984f2/transforms.json": "scenes/mixed/mixed_03_compose_00729_80c99984f2/transforms.json",
+        "asset:scenes/mixed/mixed_03_compose_00729_80c99984f2/mesh_raw.ply": "scenes/mixed/mixed_03_compose_00729_80c99984f2/mesh_raw.ply",
+        "asset:scenes/mixed/mixed_03_compose_00729_80c99984f2/points_gt.ply": "scenes/mixed/mixed_03_compose_00729_80c99984f2/points_gt.ply"
+      },
+      "loadPath": "scenes/mixed/mixed_03_compose_00729_80c99984f2/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_03_compose_00729_80c99984f2/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Fmixed%2Fmixed_03_compose_00729_80c99984f2%2Ftransforms.json",
+      "checkedAt": "2026-10-20T03:57:49.345Z",
+      "viewerVersion": "0.19.3",
+      "viewerCommit": "ba4d99866a7ec2817767a7c254157fb54449ad7c",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 100000
+      },
+      "export": "colmap_model",
+      "photos": [],
+      "exportSha256": "67c811acdb7cbbe0307fae72e32bcbf714fe07361b93232c839e2044280d2028",
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/mixed/mixed_03_compose_00729_80c99984f2/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_03_compose_00729_80c99984f2/transforms.json",
+          "bytes": 41486,
+          "sha256": "8235208bd3a1fd9a2bdda8adf55ab6deb1884fe181688464bb75761809cc8a66",
+          "browserRead": true
+        },
+        {
+          "path": "scenes/mixed/mixed_03_compose_00729_80c99984f2/points_gt.ply",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/mixed/mixed_03_compose_00729_80c99984f2/points_gt.ply",
+          "bytes": 1200120,
+          "sha256": "629e0981a031e4735d6187518d7307ad87d8773b75d5ec02fe1845f2f551f482",
+          "browserRead": true
+        }
+      ],
+      "companionPointCloud": "scenes/mixed/mixed_03_compose_00729_80c99984f2/points_gt.ply"
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/transparent/transparent_01_compose_00347_ee85150842",
+      "files": {
+        "metadata:scenes/transparent/transparent_01_compose_00347_ee85150842/transforms.json": "scenes/transparent/transparent_01_compose_00347_ee85150842/transforms.json",
+        "asset:scenes/transparent/transparent_01_compose_00347_ee85150842/mesh_raw.ply": "scenes/transparent/transparent_01_compose_00347_ee85150842/mesh_raw.ply",
+        "asset:scenes/transparent/transparent_01_compose_00347_ee85150842/points_gt.ply": "scenes/transparent/transparent_01_compose_00347_ee85150842/points_gt.ply"
+      },
+      "loadPath": "scenes/transparent/transparent_01_compose_00347_ee85150842/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_01_compose_00347_ee85150842/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Ftransparent%2Ftransparent_01_compose_00347_ee85150842%2Ftransforms.json",
+      "checkedAt": "2026-10-20T03:57:54.799Z",
+      "viewerVersion": "0.19.3",
+      "viewerCommit": "ba4d99866a7ec2817767a7c254157fb54449ad7c",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 100000
+      },
+      "export": "colmap_model",
+      "photos": [],
+      "exportSha256": "07f76fb18472b3e549c330856828e31095e1f781b73a4b8f3bf0d521a2324bf5",
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/transparent/transparent_01_compose_00347_ee85150842/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_01_compose_00347_ee85150842/transforms.json",
+          "bytes": 41398,
+          "sha256": "4e9bc6fb0d5ea4258ab07a6b65b5be19aea0c8924389a078db4df3255844fdfe",
+          "browserRead": true
+        },
+        {
+          "path": "scenes/transparent/transparent_01_compose_00347_ee85150842/points_gt.ply",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_01_compose_00347_ee85150842/points_gt.ply",
+          "bytes": 1200120,
+          "sha256": "cbbe704de8fa43f19526e48607a4bdbc2843452f4ea0de21d1ed9ef0e3a5fbd0",
+          "browserRead": true
+        }
+      ],
+      "companionPointCloud": "scenes/transparent/transparent_01_compose_00347_ee85150842/points_gt.ply"
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/transparent/transparent_02_compose_00228_d21a4d07e8",
+      "files": {
+        "metadata:scenes/transparent/transparent_02_compose_00228_d21a4d07e8/transforms.json": "scenes/transparent/transparent_02_compose_00228_d21a4d07e8/transforms.json",
+        "asset:scenes/transparent/transparent_02_compose_00228_d21a4d07e8/mesh_raw.ply": "scenes/transparent/transparent_02_compose_00228_d21a4d07e8/mesh_raw.ply",
+        "asset:scenes/transparent/transparent_02_compose_00228_d21a4d07e8/points_gt.ply": "scenes/transparent/transparent_02_compose_00228_d21a4d07e8/points_gt.ply"
+      },
+      "loadPath": "scenes/transparent/transparent_02_compose_00228_d21a4d07e8/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_02_compose_00228_d21a4d07e8/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Ftransparent%2Ftransparent_02_compose_00228_d21a4d07e8%2Ftransforms.json",
+      "checkedAt": "2026-10-20T03:58:10.113Z",
+      "viewerVersion": "0.19.3",
+      "viewerCommit": "ba4d99866a7ec2817767a7c254157fb54449ad7c",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 65752
+      },
+      "export": "colmap_model",
+      "photos": [],
+      "exportSha256": "74eb3ebf2477740dd920bbacecf8c97e6479d1504eca6f67767276bdbce6660c",
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/transparent/transparent_02_compose_00228_d21a4d07e8/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_02_compose_00228_d21a4d07e8/transforms.json",
+          "bytes": 41474,
+          "sha256": "ec2118ef575314e13dcbbdb5ec5da8b9d0566f9268070cafdce4a33a87c54a64",
+          "browserRead": true
+        },
+        {
+          "path": "scenes/transparent/transparent_02_compose_00228_d21a4d07e8/points_gt.ply",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_02_compose_00228_d21a4d07e8/points_gt.ply",
+          "bytes": 789143,
+          "sha256": "852672ea1db09eba7b29b304da439178d71f0063ecb434d4ebc4617752bf0282",
+          "browserRead": true
+        }
+      ],
+      "companionPointCloud": "scenes/transparent/transparent_02_compose_00228_d21a4d07e8/points_gt.ply"
+    },
+    {
+      "sourceId": "hf:NL3D/synthetic_composite_sample",
+      "revision": "71bf8d085d5d88afa7df11c654cbee0f1289f13b",
+      "kind": "camera-scene",
+      "path": "scenes/transparent/transparent_03_compose_00830_304f888c85",
+      "files": {
+        "metadata:scenes/transparent/transparent_03_compose_00830_304f888c85/transforms.json": "scenes/transparent/transparent_03_compose_00830_304f888c85/transforms.json",
+        "asset:scenes/transparent/transparent_03_compose_00830_304f888c85/mesh_raw.ply": "scenes/transparent/transparent_03_compose_00830_304f888c85/mesh_raw.ply",
+        "asset:scenes/transparent/transparent_03_compose_00830_304f888c85/points_gt.ply": "scenes/transparent/transparent_03_compose_00830_304f888c85/points_gt.ply"
+      },
+      "loadPath": "scenes/transparent/transparent_03_compose_00830_304f888c85/transforms.json",
+      "loadUrl": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_03_compose_00830_304f888c85/transforms.json",
+      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FNL3D%2Fsynthetic_composite_sample%2Fresolve%2F71bf8d085d5d88afa7df11c654cbee0f1289f13b%2Fscenes%2Ftransparent%2Ftransparent_03_compose_00830_304f888c85%2Ftransforms.json",
+      "checkedAt": "2026-10-20T03:58:15.356Z",
+      "viewerVersion": "0.19.3",
+      "viewerCommit": "ba4d99866a7ec2817767a7c254157fb54449ad7c",
+      "counts": {
+        "cameras": 50,
+        "images": 50,
+        "points": 100000
+      },
+      "export": "colmap_model",
+      "photos": [],
+      "exportSha256": "fb0248b68088931a83bd8090c3293484b5a63d460e5cc3ca457d09630bf98dc7",
+      "checks": {
+        "browserImport": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceFiles": [
+        {
+          "path": "scenes/transparent/transparent_03_compose_00830_304f888c85/transforms.json",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_03_compose_00830_304f888c85/transforms.json",
+          "bytes": 41478,
+          "sha256": "6935eab7285b728216a00d525284429bceb48b72133e6ec0bb9ed0fea5084252",
+          "browserRead": true
+        },
+        {
+          "path": "scenes/transparent/transparent_03_compose_00830_304f888c85/points_gt.ply",
+          "url": "https://huggingface.co/datasets/NL3D/synthetic_composite_sample/resolve/71bf8d085d5d88afa7df11c654cbee0f1289f13b/scenes/transparent/transparent_03_compose_00830_304f888c85/points_gt.ply",
+          "bytes": 1200120,
+          "sha256": "fa25e0cd5840e64c7ab7c3116bfc87b4a1dfde09459172bfb15d91295c8d8428",
+          "browserRead": true
+        }
+      ],
+      "companionPointCloud": "scenes/transparent/transparent_03_compose_00830_304f888c85/points_gt.ply"
     }
   ]
 }

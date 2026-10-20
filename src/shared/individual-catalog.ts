@@ -31,6 +31,7 @@ export interface IndividualIndex {
   incompleteCollections: number; scope: string;
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
+  companionPointCloud?: string;
   sceneManifest?: SceneManifestEvidence;
   photoRouting?: PhotoRoutingEvidence;
   photoArchiveRouting?: ArchiveRoutingEvidence;
@@ -226,11 +227,12 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         { label: 'Verified camera models', value: String(proof.sceneValidation.cameras) },
         { label: proof.sceneValidation.export === 'colmap_images' ? 'COLMAP + images export SHA-256' : 'COLMAP model export SHA-256', value: proof.sceneValidation.exportSha256 },
         { label: 'Scene verified on', value: proof.checkedAt }] : []),
+      ...(proof?.companionPointCloud ? [{ label: 'Imported XYZ point cloud (no feature tracks)', value: proof.companionPointCloud, url: file(proof.companionPointCloud) }] : []),
       ...(parent.verification?.sourceImages ? [{ label: 'Source RGB', value: parent.verification.sourceImages.summary, url: parent.verification.sourceImages.sourceUrl }] : []),
       ...(row[8] ? [{ label: 'Scene assets listed', value: String(row[8].listedAssets) },
         { label: 'Scene asset links', value: row[8].linksTruncated ? `Showing ${row[8].linkedAssets} asset links. Use the source scene folder for all ${row[8].listedAssets} listed assets.` : 'Recorded scene asset links are shown below; source photographs, masks and uninspected archives need separate checks.' }] : []),
       { label: 'Collection enumeration', value: source.listingComplete ? 'Listed model paths enumerated; uninspected archives may contain more models.' : 'Source listing is incomplete; additional models may exist.' },
-      ...Object.entries(files || {}).map(([role, value]) => ({ label: role.startsWith('asset:') ? 'Companion model asset (not separately checked)' : `${role} file`, value, ...(archive || parent.provider === 'public' ? {} : { url: file(value) }) })),
+      ...Object.entries(files || {}).map(([role, value]) => ({ label: value === proof?.companionPointCloud ? 'Verified point source' : role.startsWith('asset:') ? 'Companion model asset (not separately checked)' : `${role} file`, value, ...(archive || parent.provider === 'public' ? {} : { url: file(value) }) })),
       ...(kind === 'scene' ? parent.facts : [])],
     audits: [{ sourceId: id, checkedAt: verification.checkedAt, scope: 'source', facts: [{ label: 'Individual model evidence', value: verification.summary },
       { label: 'Scope', value: verification.scope }] }, ...parent.audits.map(audit => ({ ...audit, scope: 'collection' as const }))] };
