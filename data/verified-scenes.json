@@ -1696,11 +1696,11 @@
       },
       "loadPath": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
       "loadUrl": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
-      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
-      "exportSha256": "dd6a44491fae83a00e7de2ad8ca3c242e1b23d980404b2913243189499ff1cd0",
+      "checkedAt": "2026-10-20T14:10:39.392404+00:00",
+      "exportSha256": "7a73dc3d479ea33fb96a11d2738b9b96b26fd7405fbdeab48bde2b7be8d25cbd",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmapillary%2FOpenSfM%2F92381be43cd93ca91e7ef903733a0482440028dd%2Fdata%2Fberlin%2Freconstruction_example.json",
-      "viewerVersion": "0.19.8",
-      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
       "export": "colmap_images",
       "counts": {
         "cameras": 3,
@@ -2247,5 +2247,5 @@
       "companionPointCloud": "scenes/transparent/transparent_03_compose_00830_304f888c85/points_gt.ply"
     }
   ],
-  "checkedAt": "2026-10-20T13:12:11.750389+00:00"
+  "checkedAt": "2026-10-20T14:10:39.392404+00:00"
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+  "checkedAt": "2026-10-20T14:10:39.392404+00:00",
   "scope": "Explicit pinned native and camera-metadata scene selections. Model/geometry exports are independently checked. Full-photo exports, checked photo prefixes, samples, selected temporal views and native source counts retain separate evidence scopes.",
   "scenes": [
     {
@@ -6841,10 +6841,10 @@
           "sha256": "13643d9db52dd42759058e218818f691b938cf886c99ed4f039e5950c761580d"
         }
       },
-      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
-      "viewerVersion": "0.19.8",
-      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
-      "exportSha256": "acf673fd0656eb31793ec9aa271c802f3b39be24a105f2c09b77e33d4a957b2a",
+      "checkedAt": "2026-10-20T14:10:39.392404+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "exportSha256": "7db2360fa6eb564f06c690fd51cef4417e8c5788a147380dda94ba82cd2b3507",
       "checks": {
         "browserImport": "passed",
         "visibleGeometry": "passed",
@@ -6874,7 +6874,7 @@
         "maxSourceRotationDelta": 1.3322676295501878e-15,
         "maxCameraCenterDelta": 2.1371793224034263e-15,
         "sourceSha256": "e0678ce749ff53422712981cf16ca09d6cc01903228cd8cc6d39a3445186c400",
-        "exportSha256": "acf673fd0656eb31793ec9aa271c802f3b39be24a105f2c09b77e33d4a957b2a",
+        "exportSha256": "7db2360fa6eb564f06c690fd51cef4417e8c5788a147380dda94ba82cd2b3507",
         "maxPointPositionDelta": 0.0,
         "sample": {
           "sourcePath": "cow/image/000.png",
@@ -6883,7 +6883,8 @@
           "width": 768,
           "height": 576
         },
-        "sourceNetworkReads": 0
+        "sourceNetworkReads": 0,
+        "photoSample": "passed"
       },
       "browserRead": {
         "pointDrawCount": 4674767,
@@ -6906,6 +6907,7 @@
           }
         ],
         "errors": [],
+        "viewerVersion": "0.19.9",
         "overview": {
           "position": [
             -2.051810906781651,
@@ -6924,8 +6926,7 @@
             -0.11016914677693716
           ],
           "distance": 3.3907481985971133
-        },
-        "viewerVersion": "0.19.7"
+        }
       }
     },
     {
@@ -6993,10 +6994,10 @@
           "sha256": "f62126f11fcd6cb7e36dbf341eda258fcb0fcf48e478865bd31f22851bb40cfd"
         }
       },
-      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
-      "viewerVersion": "0.19.8",
-      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
-      "exportSha256": "a865725bb36f9c5d712c092bdafe7832aa7fe8681c4a610d297b6d1072be5cd0",
+      "checkedAt": "2026-10-20T14:10:39.392404+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "exportSha256": "58fd3ecaca9334022f0d3795af5df142240a9baf938ac380a085ed746302d6f7",
       "checks": {
         "browserImport": "passed",
         "visibleGeometry": "passed",
@@ -7035,7 +7036,7 @@
         "maxSourceRotationDelta": 7.276020497215541e-08,
         "maxCameraCenterDelta": 1.3322676295501878e-15,
         "sourceSha256": "7d6343cc24be2199de71d2126ac9555fc1e5b0b44bdbd78b6ceadaa99ca9dc74",
-        "exportSha256": "a865725bb36f9c5d712c092bdafe7832aa7fe8681c4a610d297b6d1072be5cd0",
+        "exportSha256": "58fd3ecaca9334022f0d3795af5df142240a9baf938ac380a085ed746302d6f7",
         "maxPointPositionDelta": 0.0,
         "temporalAlignment": [
           {
@@ -7066,7 +7067,9 @@
           "width": 800,
           "height": 800
         },
-        "sourceNetworkReads": 0
+        "sourceNetworkReads": 0,
+        "photoSample": "passed",
+        "cameraSourceFramesChecked": "passed"
       },
       "browserRead": {
         "pointDrawCount": 2148,
@@ -7089,6 +7092,7 @@
           }
         ],
         "errors": [],
+        "viewerVersion": "0.19.9",
         "overview": {
           "position": [
             -1.7680671115421838,
@@ -7107,8 +7111,7 @@
             1.2239433393143764
           ],
           "distance": 4.153662959710479
-        },
-        "viewerVersion": "0.19.7"
+        }
       }
     },
     {
@@ -7165,10 +7168,10 @@
           "sha256": "15c450b3d22602a2e35ea5717bbec58705ae87201d19df095399507bb5d7a3f3"
         }
       },
-      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
-      "viewerVersion": "0.19.8",
-      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
-      "exportSha256": "60328872782d2743bf780e4219560a03541cd2c3535a38a60ba0f00f1ba1c882",
+      "checkedAt": "2026-10-20T14:10:39.392404+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "exportSha256": "a521add2cc5a3fa7ae363d5c94845c2104d5ec3d50b22eeaaf2510ed2cbf50b9",
       "checks": {
         "browserImport": "passed",
         "visibleGeometry": "passed",
@@ -7199,7 +7202,7 @@
         "maxSourceRotationDelta": 8.881784197001252e-16,
         "maxCameraCenterDelta": 3.9968028886505635e-15,
         "sourceSha256": "bbec2cfb9371254db9c2919888742c190d592209c1fd906f70f0c1e9501ddd5e",
-        "exportSha256": "60328872782d2743bf780e4219560a03541cd2c3535a38a60ba0f00f1ba1c882",
+        "exportSha256": "a521add2cc5a3fa7ae363d5c94845c2104d5ec3d50b22eeaaf2510ed2cbf50b9",
         "maxPointPositionDelta": 0.0,
         "sample": {
           "sourcePath": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/images_8/frame_00001.png",
@@ -7208,7 +7211,10 @@
           "width": 480,
           "height": 270
         },
-        "sourceNetworkReads": 0
+        "sourceNetworkReads": 0,
+        "photoSample": "passed",
+        "worldTransformMaxPoseDelta": 8.881784197001252e-16,
+        "cameraSourceFramesChecked": "passed"
       },
       "browserRead": {
         "pointDrawCount": 69532,
@@ -7231,6 +7237,7 @@
           }
         ],
         "errors": [],
+        "viewerVersion": "0.19.9",
         "overview": {
           "position": [
             -25.081208056139154,
@@ -7249,8 +7256,7 @@
             -11.845459820702672
           ],
           "distance": 45.94970579132875
-        },
-        "viewerVersion": "0.19.7"
+        }
       },
       "worldAssociation": {
         "method": "all319_source_3dgs_camera_poses_to_metadata",
@@ -7324,10 +7330,10 @@
           "sha256": "8673091afd7f8e92b92fcdbb88d28ec13b9192bc3ead96fa888eff876ff3922e"
         }
       },
-      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
-      "viewerVersion": "0.19.8",
-      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
-      "exportSha256": "acedb2fa4a69ebe1202059752b2c4c8b0d0ab42ca5bdd25805077ae6c5eb1ecd",
+      "checkedAt": "2026-10-20T14:10:39.392404+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "exportSha256": "8852ffbfb5a4d4b08014e2f3b80fc03d0ecf73c562637d73c64db9967b2526da",
       "checks": {
         "browserImport": "passed",
         "visibleGeometry": "passed",
@@ -7357,7 +7363,7 @@
       },
       "viewerState": {
         "version": 1,
-        "viewerVersion": "0.19.8",
+        "viewerVersion": "0.19.9",
         "config": {
           "pointCloud": {
             "showPointCloud": true,
@@ -7384,7 +7390,7 @@
           "distance": 13.369825635736596
         }
       },
-      "selectionSha256": "259ba5a849c1e198b79ee1285f31b08bda6bab1b71ab77b3e00904fdb0267bd4",
+      "selectionSha256": "10b7c6567ecb6b45386fd3e0c9b1a54c3787b8b324bc54e34dfb1f9a3ca87cf4",
       "independentRead": {
         "id": "data-ebfee4a083e682fe67645034",
         "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
@@ -7398,7 +7404,7 @@
         "maxSourceRotationDelta": 0.0,
         "maxCameraCenterDelta": 0.0,
         "sourceSha256": "82e38b2576c0ede0f6b85adedaedc474ca3cc93065ccce92df03206f013da3dc",
-        "exportSha256": "acedb2fa4a69ebe1202059752b2c4c8b0d0ab42ca5bdd25805077ae6c5eb1ecd",
+        "exportSha256": "8852ffbfb5a4d4b08014e2f3b80fc03d0ecf73c562637d73c64db9967b2526da",
         "maxPointPositionDelta": 0.0,
         "unlinkedSourceObservations": 0,
         "sample": {
@@ -7408,7 +7414,8 @@
           "width": 640,
           "height": 480
         },
-        "sourceNetworkReads": 0
+        "sourceNetworkReads": 0,
+        "photoSample": "passed"
       },
       "browserRead": {
         "pointDrawCount": 983145,
@@ -7431,6 +7438,7 @@
           }
         ],
         "errors": [],
+        "viewerVersion": "0.19.9",
         "overview": {
           "position": [
             -5.524160938653058,
@@ -7449,8 +7457,7 @@
             -0.018727079033851624
           ],
           "distance": 13.369825635736596
-        },
-        "viewerVersion": "0.19.7"
+        }
       },
       "observationPolicy": {
         "type": "untracked_xyz",
@@ -7496,10 +7503,10 @@
           "sha256": "a4ce7d65ebaa9f9bc34317a41d5152c2d14594d04dce64eb75d6b494e541beb0"
         }
       },
-      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
-      "viewerVersion": "0.19.8",
-      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
-      "exportSha256": "ccd4d4ef25c639a04e8dcf19a87db99bcb16f977b8f3ab4b48c15b371b319707",
+      "checkedAt": "2026-10-20T14:10:39.392404+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "exportSha256": "3a2baae7fe88f7da1120ca8b3fc2ce6555aa784618c0d7018a4eefeac6bf6501",
       "checks": {
         "browserImport": "passed",
         "visibleGeometry": "passed",
@@ -7529,7 +7536,7 @@
       },
       "viewerState": {
         "version": 1,
-        "viewerVersion": "0.19.8",
+        "viewerVersion": "0.19.9",
         "config": {
           "pointCloud": {
             "showPointCloud": true,
@@ -7556,7 +7563,7 @@
           "distance": 11.681897432457376
         }
       },
-      "selectionSha256": "a8b14dbdef793b6fc1e229f262227c4548cf59fc2a4da6f98530057078d2997b",
+      "selectionSha256": "71a916187cad68dfe116f1f21ca305e724aba8c2cdfb20f7ea13e3ba2afee15d",
       "independentRead": {
         "id": "data-ab3b0f737ecd74be64152988",
         "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
@@ -7570,7 +7577,7 @@
         "maxSourceRotationDelta": 0.0,
         "maxCameraCenterDelta": 0.0,
         "sourceSha256": "1647edcee8a07cbabb0bf8749874f961e527ea681d914841add2e3af274a8556",
-        "exportSha256": "ccd4d4ef25c639a04e8dcf19a87db99bcb16f977b8f3ab4b48c15b371b319707",
+        "exportSha256": "3a2baae7fe88f7da1120ca8b3fc2ce6555aa784618c0d7018a4eefeac6bf6501",
         "maxPointPositionDelta": 0.0,
         "unlinkedSourceObservations": 0,
         "sample": {
@@ -7580,7 +7587,8 @@
           "width": 640,
           "height": 480
         },
-        "sourceNetworkReads": 0
+        "sourceNetworkReads": 0,
+        "photoSample": "passed"
       },
       "browserRead": {
         "pointDrawCount": 601496,
@@ -7603,6 +7611,7 @@
           }
         ],
         "errors": [],
+        "viewerVersion": "0.19.9",
         "overview": {
           "position": [
             -5.903806022232258,
@@ -7621,8 +7630,7 @@
             -0.12281417846679676
           ],
           "distance": 11.681897432457376
-        },
-        "viewerVersion": "0.19.7"
+        }
       },
       "observationPolicy": {
         "type": "untracked_xyz",
@@ -7668,10 +7676,10 @@
           "sha256": "17174cd0bb2ddfa322f3a415c6c6de3c820e9ce796097233c92badfc0b3a2b01"
         }
       },
-      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
-      "viewerVersion": "0.19.8",
-      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
-      "exportSha256": "ad6c66d8cff37059c4135d89e4138d3ba2e3e2307c2e3f9cc048e32a38c11c9e",
+      "checkedAt": "2026-10-20T14:10:39.392404+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "exportSha256": "d854cb412e4da55744e539db40c4ed33062a5a0467b7ebc15ca28580fb328063",
       "checks": {
         "browserImport": "passed",
         "visibleGeometry": "passed",
@@ -7701,7 +7709,7 @@
       },
       "viewerState": {
         "version": 1,
-        "viewerVersion": "0.19.8",
+        "viewerVersion": "0.19.9",
         "config": {
           "pointCloud": {
             "showPointCloud": true,
@@ -7728,7 +7736,7 @@
           "distance": 16.220762626281513
         }
       },
-      "selectionSha256": "7eb03b59e840f82d27ae65231961a47bb7b0b8b6d61aac82b9a3b2e9573fe0a7",
+      "selectionSha256": "1e2ec75ae84c04829e3726559c58df9f2e0737ac67fb90049a2c0b53b98b1dd3",
       "independentRead": {
         "id": "data-f6f812cfaf2b1c7c1f5605c9",
         "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
@@ -7742,7 +7750,7 @@
         "maxSourceRotationDelta": 0.0,
         "maxCameraCenterDelta": 0.0,
         "sourceSha256": "a0b66e5cb4fee27fd23d14ab57e972ba9d401f274d29a1eda3608d71320e12f9",
-        "exportSha256": "ad6c66d8cff37059c4135d89e4138d3ba2e3e2307c2e3f9cc048e32a38c11c9e",
+        "exportSha256": "d854cb412e4da55744e539db40c4ed33062a5a0467b7ebc15ca28580fb328063",
         "maxPointPositionDelta": 0.0,
         "unlinkedSourceObservations": 338032,
         "sample": {
@@ -7752,7 +7760,8 @@
           "width": 1332,
           "height": 876
         },
-        "sourceNetworkReads": 0
+        "sourceNetworkReads": 0,
+        "photoSample": "passed"
       },
       "browserRead": {
         "pointDrawCount": 1051142,
@@ -7775,6 +7784,7 @@
           }
         ],
         "errors": [],
+        "viewerVersion": "0.19.9",
         "overview": {
           "position": [
             -8.030381875808605,
@@ -7793,8 +7803,7 @@
             0.21403047084808202
           ],
           "distance": 16.220762626281513
-        },
-        "viewerVersion": "0.19.7"
+        }
       },
       "observationPolicy": {
         "type": "untracked_xyz",
