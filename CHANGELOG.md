@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.10.0 — 2026-10-20
+
+- Add opt-in public Hub submissions with managed Turnstile protection, request limits and bounded anonymous source verification. Keep unsupported sources pending operator review and existing upload share links unlisted.
+- Show verified community entries in an asynchronous catalog feed with direct viewer links and concise metadata.
+
 ## 0.9.14 — 2026-10-20
 
 - Open all 47 danceNet3D motion scenes with their original cameras and one explicitly labelled source frame: 20 XYZ frames with 1,872,683 points and 27 Gaussian frames with 799,402 Gaussians.

@@ -87,7 +87,8 @@
     "HUB_ORIGIN": "https://colmapview.opsiclear.com",
     "HUB_PATH": "/hub",
     "HUB_LISTINGS_ENABLED": "false",
-    "HUB_PUBLICATIONS_ENABLED": "false"
+    "HUB_PUBLICATIONS_ENABLED": "true",
+    "HUB_TURNSTILE_SITE_KEY": "0x4AAAAAAFeSm6g2_ZlVUxgb"
   },
   "secrets": {
     "required": ["HUB_KEY"]

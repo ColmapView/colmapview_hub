@@ -2,7 +2,6 @@
 interface OptionalSecrets {
   VERIFIED_BOT_TOKEN?: string;
   HUB_TURNSTILE_SECRET?: string;
-  HUB_TURNSTILE_SITE_KEY?: string;
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Merge optional secret types into Wrangler's generated interface.
 interface Env extends OptionalSecrets {}
