@@ -119,4 +119,4 @@ invalid inputs, stale discovery assets and publication-date persistence.
 Browser coverage checks automatic append, shuffle/filter preservation, bounded
 retry behavior, duplicate rejection, viewer return restoration and refresh reshuffling, disabled
 storage/observers, finite results and existing metadata panels. Existing catalog,
-access-control, share-link and account-session suites remain required.
+access-control, share-link and auth-retirement compatibility suites remain required.
