@@ -83,12 +83,14 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const preferred = departing?.isConnected ? departing : focused;
     const preferredIndex = preferred ? cards.indexOf(preferred) : -1;
     const areas = cards.map(card => { const box = card.getBoundingClientRect(); return Math.max(0, Math.min(box.bottom, innerHeight) - Math.max(box.top, 0)); });
-    const visible = preferredIndex >= 0 && areas[preferredIndex] > 0 ? preferredIndex : Math.max(0, areas.indexOf(Math.max(...areas)));
+    const selected = Boolean(departing?.isConnected);
+    const visible = preferredIndex >= 0 && (selected || areas[preferredIndex] > 0) ? preferredIndex : Math.max(0, areas.indexOf(Math.max(...areas)));
     const start = Math.max(0, Math.floor(visible / INDIVIDUAL_PAGE_SIZE) * INDIVIDUAL_PAGE_SIZE - 96);
     const cached = entries.slice(start, start + 240);
     rememberFeed({ key: viewKey, query: committed.toString(), data: { entries: cached, page: firstPage + start / INDIVIDUAL_PAGE_SIZE,
       pages, total, generation }, lastPage: firstPage + start / INDIVIDUAL_PAGE_SIZE + Math.ceil(cached.length / INDIVIDUAL_PAGE_SIZE) - 1,
-    collectionText: selection.textContent || '', anchor: cards[visible] ? { id: entries[visible].id, top: cards[visible].getBoundingClientRect().top } : null });
+    collectionText: selection.textContent || '', anchor: cards[visible] ? { id: entries[visible].id,
+      top: selected && areas[visible] === 0 ? 0 : cards[visible].getBoundingClientRect().top } : null });
   };
   const updateNavigation = () => {
     const offset = (firstPage - 1) * INDIVIDUAL_PAGE_SIZE;

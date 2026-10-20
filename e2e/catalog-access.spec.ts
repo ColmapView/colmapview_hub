@@ -124,6 +124,11 @@ for (const width of [1280, 390]) test(`Back restores the visible scene and refre
   const card = page.locator('.dataset-card').nth(30);
   await card.scrollIntoViewIfNeeded();
   const identity = await card.getAttribute('data-entry-id');
+  await page.evaluate(() => {
+    // Deferred layout can move the selected card outside the viewport between
+    // activation and pagehide. The clicked scene must still be the return anchor.
+    document.querySelector('#catalog-results')!.addEventListener('click', () => scrollTo(0, 0), { capture: true, once: true });
+  });
   await card.locator('.dataset-open').click();
   await expect(page.getByRole('heading', { name: 'Viewer navigation fixture' })).toBeVisible();
   const anchor = await page.evaluate(() => JSON.parse(sessionStorage.getItem('colmapview-scene-feed-v1') || '[]')[0]?.anchor);

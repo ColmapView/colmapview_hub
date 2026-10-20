@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.8 — 2026-10-19
+
+- Retain the selected scene as the return anchor when deferred layout moves it outside the viewport just before navigation, bringing it into view on Back.
+
 ## 0.9.7 — 2026-10-19
 
 - Keep shuffle seeds in browser history instead of the visible URL, retaining separate visits and Shuffle history, stable scrolling and Back navigation, and fresh ordering on refresh.
