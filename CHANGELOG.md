@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.9.9 — 2026-10-20
+
+- Remove the remembered-connection service and permanently delete its saved credentials. Keep public Hub cards, R2 records, catalogs and share links.
+- Reject credential-bearing variants in dataset and license links, and check browser-test types.
+- Preserve the latest full-width grid, source links, shuffle history and return navigation.
+
 ## 0.9.8 — 2026-10-19
 
 - Retain the selected scene as the return anchor when deferred layout moves it outside the viewport just before navigation, bringing it into view on Back.

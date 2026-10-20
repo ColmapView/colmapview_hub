@@ -50,8 +50,9 @@ export function isLoopbackOrigin(origin: string): boolean {
   } catch { return false; }
 }
 
-const CREDENTIAL_PARAMS = new Set(['access_token', 'refresh_token', 'secret_access_key', 'aws_secret_access_key', 'secretkey',
-  'x-amz-signature', 'x-amz-credential', 'x-amz-security-token', 'x-goog-signature', 'x-goog-credential',
+const CREDENTIAL_PARAMS = new Set(['accesstoken', 'refreshtoken', 'idtoken', 'secretaccesskey', 'awssecretaccesskey',
+  'secretkey', 'accesskeyid', 'sessiontoken', 'clientsecret', 'apikey',
+  'xamzsignature', 'xamzcredential', 'xamzsecuritytoken', 'xgoogsignature', 'xgoogcredential',
   'sig', 'signature', 'token', 'awsaccesskeyid']);
 
 /** Query and fragment parameter names: a presigned link can carry credentials in either. */
@@ -59,9 +60,9 @@ function parameterNames(url: URL): string[] {
   return [...url.searchParams.keys(), ...new URLSearchParams(url.hash.slice(1)).keys()];
 }
 
-function rejectCredentials(url: URL): void {
-  if (url.username || url.password || parameterNames(url).some(key => CREDENTIAL_PARAMS.has(key.toLowerCase()))) {
-    throw new InputError('Use a viewer link without access credentials.');
+function rejectCredentials(url: URL, message = 'Use a viewer link without access credentials.'): void {
+  if (url.username || url.password || parameterNames(url).some(key => CREDENTIAL_PARAMS.has(key.toLowerCase().replace(/[-_]/g, '')))) {
+    throw new InputError(message);
   }
 }
 
@@ -75,8 +76,10 @@ function viewerUrl(value: unknown, allowLoopback: boolean): string {
     throw new InputError('Use the OpsiClear or GitHub Pages ColmapView viewer.');
   }
   rejectCredentials(url);
-  const source = url.searchParams.get('url');
-  if (source) {
+  // Uploads publish an explicit source URL. Opaque d= fragments can hide a different source and credentials.
+  if (new URLSearchParams(url.hash.slice(1)).has('d')) throw new InputError('Use a viewer link with its dataset in the URL query.');
+  for (const source of url.searchParams.getAll('url')) {
+    if (!source) continue;
     try { rejectCredentials(new URL(source, url)); } catch (error) { if (error instanceof InputError) throw error; }
   }
   return url.href;
@@ -93,8 +96,9 @@ function licenseInfo(value: unknown): LicenseInfo | undefined {
     try {
       const parsed = new URL(value.url);
       if (!isHttpUrl(parsed, ['https:']) || parsed.username || parsed.password) throw new Error();
+      rejectCredentials(parsed, 'Use a license link without access credentials.');
       url = parsed.href;
-    } catch { throw new InputError('Use an HTTPS license link.'); }
+    } catch (error) { if (error instanceof InputError) throw error; throw new InputError('Use an HTTPS license link.'); }
     // The normalized link can be longer than the input, as in viewerUrl().
     if (url.length > 2048) throw new InputError('License link is invalid.');
   }

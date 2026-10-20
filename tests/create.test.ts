@@ -36,7 +36,9 @@ describe('creation contract', () => {
   });
 
   it.each(['X-Amz-Signature', 'x-amz-credential', 'X-Amz-Security-Token', 'x-goog-signature', 'X-Goog-Credential',
-    'sig', 'signature', 'token', 'AWSAccessKeyId'])('rejects the %s credential parameter in the viewer URL, its source, and either fragment', async name => {
+    'sig', 'signature', 'token', 'AWSAccessKeyId', 'access_token', 'accessToken', 'refresh_token', 'refreshToken',
+    'secretAccessKey', 'accessKeyId', 'access_key_id', 'secret_access_key', 'sessionToken', 'session_token',
+    'client_secret', 'clientSecret', 'id_token', 'idToken', 'api_key', 'apiKey'])('rejects the %s credential parameter in the viewer URL, its source, and either fragment', async name => {
     const source = 'https://data.example/scene.zip';
     for (const viewerUrl of [
       `${origin}/?url=${encodeURIComponent(`${source}?${name}=secret`)}`,
@@ -44,6 +46,7 @@ describe('creation contract', () => {
       `${origin}/?url=${encodeURIComponent(source)}&${name}=secret`,
       `${origin}/?url=${encodeURIComponent(source)}#${name}=secret`,
     ]) expect((await post(input({ viewerUrl }))).status, viewerUrl).toBe(400);
+    expect((await post(input({ license: { name: 'Custom', url: `https://licenses.example/terms?${name}=secret` } }))).status).toBe(400);
     expect(await recordCount()).toBe(0);
   });
 
@@ -59,6 +62,28 @@ describe('creation contract', () => {
   it('keeps camera fragments and ordinary source parameters', async () => {
     const link = await create(input({ viewerUrl: `${origin}/?url=${encodeURIComponent('https://data.example/scene.zip?download=1')}#camera=43` }));
     expect((await stored(link.id)).viewerUrl).toContain('#camera=43');
+  });
+
+  it('checks every source URL when a viewer link repeats the url parameter', async () => {
+    const params = new URLSearchParams([
+      ['url', 'https://data.example/public.zip'],
+      ['url', 'https://data.example/private.zip?access_token=fixture-never-store'],
+    ]);
+    expect((await post(input({ viewerUrl: `${origin}/?${params}` }))).status).toBe(400);
+    expect(await recordCount()).toBe(0);
+  });
+
+  it('refuses opaque source fragments that hide a credential-bearing dataset URL', async () => {
+    // The viewer d= format contains flags, a little-endian length and UTF-8 source bytes.
+    const source = new TextEncoder().encode('https://data.example/private.zip?access_token=fixture-never-store');
+    const bytes = new Uint8Array(source.length + 3);
+    new DataView(bytes.buffer).setUint16(1, source.length, true);
+    bytes.set(source, 3);
+    const data = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    for (const search of ['', '?url=https://data.example/public.zip']) {
+      expect((await post(input({ viewerUrl: `${origin}/${search}#d=${data}` }))).status).toBe(400);
+    }
+    expect(await recordCount()).toBe(0);
   });
 
   it.each([

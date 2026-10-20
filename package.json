@@ -1,6 +1,6 @@
 {
   "name": "colmapview_hub",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
     "catalog:photo-plan": "node scripts/run-python.mjs -m scripts.audit.plan_photo_audit",
     "catalog:discovery": "node scripts/run-python.mjs -m scripts.catalog.scene_discovery",
     "types": "wrangler types --strict-vars=false",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.e2e.json --noEmit",
     "lint": "eslint .",
     "check:css": "node scripts/check-colmapview-css.mjs",
     "check:code": "npm run typecheck && npm run lint && npm run check:css",
@@ -41,9 +41,5 @@
   },
   "engines": {
     "node": ">=24"
-  },
-  "dependencies": {
-    "aws4fetch": "1.0.20",
-    "oauth4webapi": "3.8.8"
   }
 }

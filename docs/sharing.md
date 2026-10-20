@@ -7,7 +7,7 @@ Share links use `/s/<id>` and browser navigations open the saved viewer URL dire
 ## What is stored
 
 One JSON object per link in a private R2 bucket:
-- the viewer URL, including its camera and settings fragment;
+- the viewer URL, including any permitted display fragment;
 - the title, description, optional license name and URL, and an asset summary;
 - a base64 JPEG preview;
 - the creation time and ownership hashes;
@@ -15,9 +15,11 @@ One JSON object per link in a private R2 bucket:
 
 The viewer crops its preview to fill 600 × 315 and keeps it under 64 KiB. The Hub rejects JPEGs that carry EXIF (APP1) or comment segments. `og:image` is an ordinary public HTTPS JPEG endpoint, cached for five minutes.
 
+New cards use an explicit dataset URL in the viewer's `url` query parameter. Creation rejects credential parameters in the viewer, source and license URLs, including duplicate `url` values. Combined `#d=` source fragments are rejected because they can hide credentials inside encoded or compressed data. Display-only camera fragments remain supported. Previously stored records are still read compatibly.
+
 The asset summary counts images, points, masks and Gaussian splats; cards show the nonzero counts. Records are read tolerantly: a page needs only a title, an http(s) viewer URL and a preview, so records written by older Hubs keep rendering.
 
-The Hub has no dataset payloads, provider credentials, accounts, database, storage browser or sitemap. Catalog search covers only published dataset metadata. The server never fetches submitted dataset URLs. X receives a thumbnail card for upload share links, not an inline WebGL player.
+Share-card records contain no dataset payloads or provider credentials. User authentication stays in the viewer tab; the former server credential service is [retired](account-sessions.md). There is no cross-device user database, storage browser or sitemap. Catalog search covers only published dataset metadata. The server never fetches submitted dataset URLs. X receives a thumbnail card for upload share links, not an inline WebGL player.
 
 Anyone with a link can read its card, and publicly disclosed links can be collected. Dataset storage permissions still apply. Deletion removes the record and any listing together; external social-card caches may keep previews they already fetched, and `preview.jpg` is served with `max-age=300`, so browsers and shared caches may keep a fetched preview for up to five minutes. With listings on, gallery pages are cached for a minute. A deletion clears the cached first page in the data center that handled it; a deleted listing can stay for up to a minute in other data centers and on later pages, and a browser may keep a page it already fetched for another minute.
 

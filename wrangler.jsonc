@@ -43,22 +43,11 @@
       "bucket_name": "colmapview-hub"
     }
   ],
-  "ratelimits": [
-    {
-      "name": "AUTH_CONNECT_LIMITER",
-      "namespace_id": "2026101901",
-      "simple": { "limit": 20, "period": 60 }
-    }
-  ],
   "durable_objects": {
     "bindings": [
       {
         "name": "LOOKUP_GUARDS",
         "class_name": "LookupGuard"
-      },
-      {
-        "name": "ACCOUNT_SESSIONS",
-        "class_name": "AccountSession"
       }
     ]
   },
@@ -81,15 +70,16 @@
     {
       "tag": "v3-account-sessions",
       "new_sqlite_classes": ["AccountSession"]
+    },
+    {
+      "tag": "v4-remove-account-sessions",
+      "deleted_classes": ["AccountSession"]
     }
   ],
   "vars": {
     "HUB_ORIGIN": "https://colmapview.opsiclear.com",
     "HUB_PATH": "/hub",
-    "HUB_LISTINGS_ENABLED": "false",
-    "AUTH_ENABLED": "true",
-    "AUTH_GOOGLE_CLIENT_ID": "425433759789-mhpo5d6im8gvjofhnhti1k7ujfd68gg9.apps.googleusercontent.com",
-    "AUTH_HF_CLIENT_ID": "f6c65e64-d374-4e4e-9bad-006d53681ed5"
+    "HUB_LISTINGS_ENABLED": "false"
   },
   "secrets": {
     "required": ["HUB_KEY"]
