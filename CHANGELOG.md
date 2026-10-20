@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.10.1 — 2026-10-20
+
+- Use the Workers-supported manual redirect mode for Turnstile verification, rejecting redirects without forwarding the secret. Verify the request options in the real Workers test runtime.
+
 ## 0.10.0 — 2026-10-20
 
 - Add opt-in public Hub submissions with managed Turnstile protection, request limits and bounded anonymous source verification. Keep unsupported sources pending operator review and existing upload share links unlisted.

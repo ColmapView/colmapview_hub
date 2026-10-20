@@ -89,6 +89,9 @@ describe('public Hub submissions', () => {
   it('verifies model headers, pins the checked revision and exposes only safe public metadata', async () => {
     successfulReads();
     const response = await submit(); expect(response.status).toBe(201);
+    const [challengeUrl, challengeOptions] = vi.mocked(fetch).mock.calls[0];
+    const challengeRequest = new Request(challengeUrl, challengeOptions);
+    expect(challengeRequest.redirect).toBe('manual');
     const result = await response.json<{ id: string; status: string; shareUrl: string }>();
     expect(result.status).toBe('published');
     const object = await env.LINKS.get(recordKey(result.id));

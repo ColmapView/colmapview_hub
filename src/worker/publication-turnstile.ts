@@ -16,7 +16,7 @@ export async function verifyPublicationChallenge(request: Request, token: unknow
   let result: unknown;
   try {
     const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, redirect: 'error', signal: AbortSignal.timeout(8000),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, redirect: 'manual', signal: AbortSignal.timeout(8000),
       body: JSON.stringify({ secret: env.HUB_TURNSTILE_SECRET, response: token, remoteip: request.headers.get('CF-Connecting-IP') }),
     });
     if (!response.ok) { await response.body?.cancel(); throw new Error(); }
