@@ -121,6 +121,7 @@ test('cards show content roles, load same-origin photos and open metadata only o
   await expect(first.locator('[data-photo-status]')).toBeVisible();
   await expect(first.locator('.dataset-photo-credit')).toBeVisible();
   await expect(first.locator('.dataset-metadata-title')).toHaveText('data/i2slam_colmap/scene0024_01');
+  await expect(panel.getByRole('link', { name: 'Original source', exact: false })).toHaveAttribute('href', 'https://huggingface.co/datasets/zhaoshiwen/blur-slam-bpn-data');
   await panel.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(first.locator('[data-stat="cameraModels"]')).not.toBeVisible();
   await expect(info).toHaveAttribute('aria-expanded', 'false');
@@ -310,8 +311,9 @@ test('model-only ArmGS cards show masks and cameras without claiming photos', as
   await expect(placeholder).toBeVisible();
   await expect(placeholder).toHaveText('No photo');
   const bounds = await placeholder.boundingBox();
-  expect(Math.abs(bounds!.width / bounds!.height - 16 / 9)).toBeLessThan(0.01);
+  expect(bounds!.height).toBeGreaterThanOrEqual(bounds!.width - 1);
   await first.getByRole('button', { name: /Metadata/ }).click();
   await expect(first.locator('[data-photo-status]')).toBeVisible();
   await expect(first.locator('[data-photo-status]')).toHaveText('Photos not included');
+  await expect(first.getByRole('link', { name: 'Original source', exact: false })).toHaveAttribute('href', 'https://huggingface.co/datasets/Dororo99/Ours_Waymo_ArmGS');
 });

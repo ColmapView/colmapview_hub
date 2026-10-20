@@ -14,6 +14,7 @@ import type { FeedSelection } from './discovery';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
+  sourceUrl?: string;
   provider: CatalogEntry['provider']; license: string; licenseCategory?: LicenseCategory; access: CatalogEntry['access'];
   start: number; count: number; listingComplete: boolean;
 }
@@ -125,6 +126,7 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
   const statusLabel = gated ? 'Access required' : proof?.statusLabel || (archive ? 'Extraction required; load unverified' : 'Files listed; load not checked');
   const title = ['colmap', 'cameras'].includes(kind) ? path.replace(/(?:^|\/)(?:(?:colmap\/)?sparse(?:\/\d+)?|known_pose_model|triangulated_model|triangulated_text)$/i, '') || source.label : path || source.label;
   return { id, title: title || 'Root reconstruction', provider: source.provider,
+    ...(source.sourceUrl ? { sourceUrl: source.sourceUrl } : {}),
     license: source.license, licenseCategory: licenseCategory(source), access: source.access, statusLabel, formats: [format], testOrFixture: false,
     dataset: { id: source.id, label: source.label, title: source.title }, itemKind: kindLabel,
     ...(proof?.photoAvailability ? { photoStatus: proof.photoAvailability } : {}),

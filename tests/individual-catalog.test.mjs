@@ -119,6 +119,8 @@ test('model-only export details retain camera statistics and do not claim origin
   assert.equal(render.canOpenIndividual(item, source), true);
   const summary = render.individualSummary(item, source);
   assert.equal(summary.sceneStats.cameraPoses, proof.sceneValidation.images);
+  assert.equal(summary.sourceUrl, parent.sourceUrl);
+  assert.ok(render.catalogCard(summary).includes(`href="${parent.sourceUrl}" target="_blank" rel="noopener noreferrer">Original source`));
   const entry = render.individualEntry(item, source, parent);
   const html = render.catalogEntryPage(entry);
   assert.match(html, /COLMAP model export SHA-256/);
@@ -457,7 +459,7 @@ const parent = { id: 'hf-owner-dataset-123456abcdef', sourceId: 'hf:owner/datase
   facts: [{ label: 'Pinned revision', value: 'abc' }], audits: [{ sourceId: 'source-check', checkedAt: '2026-10-16', scope: 'source', facts: [] }],
   verification: { level: 'header_checked', delivery: 'browser_readable', checkedAt: '2026-10-16', summary: 'A representative sample opened.', scope: 'One sample.', viewerVersion: '0.16.14' } };
 const source = { id: parent.id, sourceId: parent.sourceId, title: parent.title, label: 'NGS', provider: 'huggingface', license: parent.license,
-  access: 'public', start: 0, count: 3, listingComplete: false };
+  sourceUrl: parent.sourceUrl, access: 'public', start: 0, count: 3, listingComplete: false };
 const row = (number = 0, overrides = {}) => Object.assign([`data-${String(number).padStart(24, '0')}`, 0, 'colmap', `scene${number}/sparse/0`, 'COLMAP', null,
   { cameras: `scene${number}/sparse/0/cameras.bin`, images: `scene${number}/sparse/0/images.bin`, points3d: `scene${number}/sparse/0/points3D.bin` }, null], overrides);
 const nativePhotoProof = status => ({ ...parent.verification, level: 'native_layout_checked', statusLabel: 'Native COLMAP layout checked',

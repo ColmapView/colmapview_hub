@@ -402,6 +402,7 @@ def build(root=Path('.')):
         else:
             continue
         source = {'id': entry['id'], 'sourceId': entry['sourceId'], 'title': entry['title'], 'label': dataset_label,
+                  'sourceUrl': entry['sourceUrl'],
                   'provider': entry['provider'], 'license': entry['license'],
                   **({'licenseCategory': entry['licenseCategory']} if 'licenseCategory' in entry else {}), 'access': entry['access'],
                   'start': total, 'count': 0, 'listingComplete': complete}

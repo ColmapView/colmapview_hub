@@ -65,7 +65,7 @@ export interface CatalogSnapshot {
   sceneSummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
   photoAudit?: { checkedAt: string; scenes: number; photos: Partial<Record<PhotoStatus, number>> };
 }
-export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail'> & { delivery?: string; hasViewer?: boolean; openUrl?: string };
+export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail'> & { sourceUrl?: string; delivery?: string; hasViewer?: boolean; openUrl?: string };
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
 export function isCatalogOpenUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
@@ -74,6 +74,13 @@ export function isCatalogOpenUrl(value: unknown): value is string {
     const url = new URL(value);
     return ['https://colmapview.opsiclear.com', 'https://colmapview.github.io'].includes(url.origin)
       && !url.username && !url.password && url.pathname === '/' && url.searchParams.has('url');
+  } catch { return false; }
+}
+export function isCatalogSourceUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password;
   } catch { return false; }
 }
 export const catalogOpenUrl = (entry: CatalogSummary) => isCatalogOpenUrl(entry.openUrl) ? entry.openUrl : datasetPath(entry);
@@ -93,7 +100,7 @@ export function catalogSummary(entry: CatalogEntry): CatalogSummary {
   const canOpen = access === 'public' && !entry.verification?.opening
     && !['gated', 'access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error'].includes(entry.verification?.delivery || '')
     && !['conversion_needed', 'no_native_assets', 'unavailable'].includes(entry.verification?.level || '');
-  return { id, title, provider, license, licenseCategory: licenseCategory(entry), access, statusLabel, formats, description, testOrFixture,
+  return { id, title, sourceUrl: entry.sourceUrl, provider, license, licenseCategory: licenseCategory(entry), access, statusLabel, formats, description, testOrFixture,
     ...(canOpen && isCatalogOpenUrl(entry.openUrl || entry.viewerUrl) ? { openUrl: entry.openUrl || entry.viewerUrl } : {}),
     dataset: dataset || { id, label: datasetLabel(entry), title }, ...(itemKind ? { itemKind } : {}),
     ...(entry.photoStatus ? { photoStatus: entry.photoStatus } : {}),
@@ -114,6 +121,7 @@ export function isCatalogSummary(value: unknown): value is CatalogSummary {
     && ['public', 'gated', 'terms', 'unknown'].includes(String(item.access))
     && (item.delivery === undefined || typeof item.delivery === 'string') && (item.hasViewer === undefined || typeof item.hasViewer === 'boolean')
     && (item.openUrl === undefined || isCatalogOpenUrl(item.openUrl))
+    && (item.sourceUrl === undefined || isCatalogSourceUrl(item.sourceUrl))
     && (item.itemKind === undefined || typeof item.itemKind === 'string')
     && (item.photoStatus === undefined || isPhotoStatus(item.photoStatus))
     && (item.availableData === undefined || isSceneContents(item.availableData))

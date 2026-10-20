@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.4 — 2026-10-19
+
+- Give missing-photo previews the full card preview space and add the original publisher link to scene information panels, including automatically loaded cards.
+
 ## 0.9.3 — 2026-10-19
 
 - Use a full-width responsive scene grid with up to four columns, retaining uncropped previews, ranked suggestions, automatic loading and return navigation.

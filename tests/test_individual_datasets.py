@@ -235,6 +235,7 @@ class IndividualDatasetsTests(unittest.TestCase):
                 registered.append({'datasetId': entry['id'], 'sourceId': entry['sourceId'], 'count': 1,
                                    'file': file, 'sha256': hashlib.sha256(raw).hexdigest()})
             entries.append({'id': 'public-scene-0123456789ab', 'sourceId': 'public:scene', 'title': 'Public scene', 'provider': 'public',
+                            'sourceUrl': 'https://example.org/scenes',
                             'facts': [{'label': 'Collection', 'value': 'Scenes'}], 'access': 'public', 'license': 'cc0',
                             'formats': ['COLMAP'], 'statusLabel': 'Files listed', 'viewerUrl': 'https://colmapview.opsiclear.com/?url=sample'})
             entries[3]['checkedAt'] = '2026-10-17'
@@ -316,6 +317,7 @@ class IndividualDatasetsTests(unittest.TestCase):
             self.assertNotEqual(before['generation'], after['generation'])
             self.assertEqual(after['total'], 2)
             self.assertEqual([source['id'] for source in after['sources']], [entries[0]['id'], entries[3]['id']])
+            self.assertEqual([source['sourceUrl'] for source in after['sources']], [entries[0]['sourceUrl'], entries[3]['sourceUrl']])
             self.assertEqual(sum(facet['count'] for facet in after['facets']['status'].values()), 2)
             self.assertNotIn('Access required', after['facets']['status'])
             rows = json.loads((output / 'packs/0.json').read_text(encoding='utf8'))

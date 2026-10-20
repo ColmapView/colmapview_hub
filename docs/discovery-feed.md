@@ -86,6 +86,8 @@ its cards until the panel closes so its links and keyboard interaction stay usab
 Preview images are lazy loaded, uncropped and dimensioned. Offscreen cards defer
 layout with `content-visibility`; full 3D scenes are opened only through a viewer
 link. Existing information buttons keep metadata in a dialog panel.
+Empty previews retain the full card preview space. Information panels link to the
+recorded original source page for both server-rendered and appended scene cards.
 
 Return navigation uses a bounded, per-tab session cache of public summaries and
 the visible scene anchor. It retains at most 240 contiguous scenes per saved view,

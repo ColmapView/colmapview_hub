@@ -294,11 +294,18 @@ test('an asynchronous decoder rejection overrides a successful byte read or earl
   assert.match(entry.description, /failed decoding/);
 });
 
-test('summary validation requires a boolean checked-link flag', () => {
+test('summary validation checks viewer flags and original source links', () => {
   const base = render.catalogSummary(catalog().entries[0]);
   assert.equal(render.isCatalogSummary({ ...base, hasViewer: true }), true);
   assert.equal(render.isCatalogSummary({ ...base, hasViewer: false }), true);
   assert.equal(render.isCatalogSummary({ ...base, hasViewer: 'yes' }), false);
+  assert.equal(base.sourceUrl, catalog().entries[0].sourceUrl);
+  assert.equal(render.isCatalogSummary({ ...base, sourceUrl: undefined }), true);
+  for (const sourceUrl of ['javascript:alert(1)', 'data:text/html,test', 'https://user:secret@example.org/data', 42]) {
+    assert.equal(render.isCatalogSummary({ ...base, sourceUrl }), false);
+    assert.doesNotMatch(render.catalogCard({ ...base, sourceUrl }), /Original source/);
+  }
+  assert.match(render.catalogCard({ ...base, sourceUrl: 'https://example.org/dataset?a=1&b=2' }), /href="https:\/\/example.org\/dataset\?a=1&amp;b=2" target="_blank" rel="noopener noreferrer">Original source/);
 });
 
 test('a readable PLY header inside a model-free ZIP cannot create a direct viewer action', () => {

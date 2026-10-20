@@ -102,7 +102,7 @@ input::placeholder { color: var(--text-muted); }
 .dataset-feed .dataset-card { content-visibility: auto; contain-intrinsic-size: auto 420px; }
 .dataset-feed .dataset-preview { max-width: none; }
 .dataset-feed .dataset-thumbnail { max-height: 480px; object-fit: contain; }
-.dataset-feed .dataset-preview-placeholder { aspect-ratio: 16 / 9; }
+.dataset-feed .dataset-preview-placeholder { flex: 1; }
 .catalog-end { margin: var(--sp-4) auto; max-width: 640px; color: var(--text-secondary); text-align: center; font-size: 13px; }
 #catalog-sentinel { height: 1px; }
 .dataset-card { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; position: relative; padding: var(--sp-4); overflow-wrap: anywhere; }

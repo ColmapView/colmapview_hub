@@ -1,4 +1,4 @@
-import { accessLabel, catalogOpenUrl, datasetFilterValue, datasetPath, deliveryLabel, providerLabel } from './catalog';
+import { accessLabel, catalogOpenUrl, datasetFilterValue, datasetPath, deliveryLabel, isCatalogSourceUrl, providerLabel } from './catalog';
 import type { CatalogSummary } from './catalog';
 import { escapeHtml as escape } from './html';
 import { licenseCategory, LICENSE_CATEGORY_LABELS } from './license-categories';
@@ -38,5 +38,6 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + `<p class="note">${escape(entry.description)}</p>`
     + `<div class="dataset-metadata-links"><a href="${datasetPath(entry)}">Full metadata</a>`
     + (entry.dataset ? `<a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Related scenes</a>` : '')
+    + (isCatalogSourceUrl(entry.sourceUrl) ? `<a href="${escape(entry.sourceUrl)}" target="_blank" rel="noopener noreferrer">Original source ↗</a>` : '')
     + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></dialog></article>`;
 }
