@@ -14,7 +14,7 @@ The migration does not delete `LookupGuard`, Hub cards, catalog files, the LINKS
 
 ## Rollout
 
-**Status:** local revision prepared; no live deletion or credential-service retirement has been performed by this work.
+**Status — October 20, 2026:** approved and deployed. Migration `v4-remove-account-sessions` was accepted in Worker version `cf64e178-65bd-48b2-8a2e-1845fbe72dc9`. Cloudflare's namespace inventory showed `AccountSession` before deployment and only `LookupGuard` afterward. The `ACCOUNT_SESSIONS` binding and auth variables are absent. `AUTH_KEY`, `AUTH_GOOGLE_CLIENT_SECRET` and `AUTH_HF_CLIENT_SECRET` were removed; the existing `HUB_KEY` remains. Anonymous `/auth/session` reports disabled server capabilities with no cookie. Browser-only viewer release and provider-side retirement checks are tracked separately; removing Worker secrets does not establish provider revocation.
 
 1. Pass `npm run check` in both repositories and the focused browser flows. Review the viewer/policy changes and this migration together. Verify the custom frontend uses the existing public HF OAuth client and browser callback; no confidential server app is needed.
 2. Obtain final approval for the rollout and irreversible saved-connection deletion. Deploy this Hub revision with `npm run deploy`; confirm Cloudflare accepts migration `v4-remove-account-sessions`. Older viewers already fall back to browser authentication when `/auth/session` reports disabled capabilities; open tabs using the retired service may need to reload.

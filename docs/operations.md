@@ -2,7 +2,7 @@
 
 Authenticate Wrangler with the Cloudflare account that owns the `opsiclear.com` zone. The account ID is set in `wrangler.jsonc`. Deployments need access to Workers routes, R2 and Durable Objects.
 
-This revision retires remembered connections. Before its first deployment, follow the [credential-service retirement runbook](account-sessions.md): migration `v4-remove-account-sessions` permanently deletes saved auth records and needs explicit rollout approval. The local revision is prepared; production has not yet been changed.
+The remembered-connection service was retired on October 20, 2026 after approval. The [retirement runbook](account-sessions.md) records namespace-deletion and secret-removal checks. Preserve this migration and the browser-only contract when deploying or rolling back; public Hub cards and the catalog keep their existing storage.
 
 1. Create the private R2 bucket `colmapview-hub`. Don't enable an R2 public URL or custom domain.
 2. Set `HUB_KEY` with `npx wrangler secret put HUB_KEY`: 32 cryptographically random bytes, encoded as unpadded base64url. Never put it in source, public assets or GitHub output.

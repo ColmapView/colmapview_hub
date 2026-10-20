@@ -7,6 +7,7 @@
 - Remove the remembered-connection service and permanently delete its saved credentials. Keep public Hub cards, R2 records, catalogs and share links.
 - Reject credential-bearing variants in dataset and license links, and check browser-test types.
 - Preserve the latest full-width grid, source links, shuffle history and return navigation.
+- Qualify all eight NL3D camera scenes with their XYZ clouds and exact point-source evidence, replacing the old zero-point receipt and adding seven missing entries.
 
 ## 0.9.8 — 2026-10-19
 

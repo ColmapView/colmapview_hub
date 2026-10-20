@@ -16,6 +16,7 @@ import zipfile
 import numpy as np
 import pycolmap
 from PIL import Image
+from .verify_scene_manifest_exports import verify_points
 
 
 def close(expected, actual, label, atol=1e-9, rtol=1e-12):
@@ -98,12 +99,26 @@ def verify_scene_exports(root, output, frame_coverage):
                     for name in ('cameras.bin', 'images.bin', 'points3D.bin'):
                         (folder / name).write_bytes(archive.read('sparse/0/' + name))
                 model = pycolmap.Reconstruction(str(folder))
-                if not model.num_reg_images() or not model.num_cameras() or model.num_points3D():
+                cloud = scene.get('companionPointCloud')
+                if not model.num_reg_images() or not model.num_cameras() or (not cloud and model.num_points3D()):
                     raise ValueError('Camera model export has invalid counts')
+                if cloud:
+                    source_cloud = root / 'model-source' / (scene['id'] + '.ply')
+                    cloud_bytes = source_cloud.read_bytes()
+                    if (cloud.get('browserRead') is not True or len(cloud_bytes) != cloud.get('bytes')
+                            or hashlib.sha256(cloud_bytes).hexdigest() != cloud.get('sha256')
+                            or type(cloud.get('points')) is not int or cloud['points'] < 1
+                            or model.num_points3D() != cloud['points']):
+                        raise ValueError('Companion point source or browser receipt differs')
+                    verify_points(source_cloud, folder / 'points3D.bin', cloud['points'])
+                    if any(image.num_points3D for image in model.images.values()):
+                        raise ValueError('XYZ companion points must not synthesize camera observations')
+                    result['pointValues'] = 'passed'
+                    result['companionPointCloud'] = cloud['path']
                 raw = (root / 'model-source' / (scene['id'] + '.bin')).read_bytes()
                 reference_size = None
-                if scene['sourceId'] in photos:
-                    reference = photos[scene['sourceId']]
+                if scene['id'] in photos or scene['sourceId'] in photos:
+                    reference = photos.get(scene['id']) or photos[scene['sourceId']]
                     with Image.open(io.BytesIO((root / reference['path']).read_bytes())) as photo:
                         reference_size = photo.size
                 images = sorted(model.images.items())

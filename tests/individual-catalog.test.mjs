@@ -127,6 +127,17 @@ test('model-only export details retain camera statistics and do not claim origin
   assert.doesNotMatch(html, /Verified original photographs|COLMAP \+ images export SHA-256/);
 });
 
+test('camera metadata with a verified XYZ companion shows the loaded count and exact source', () => {
+  const pointPath = 'scene/points_gt.ply';
+  const proof = { ...verified, companionPointCloud: pointPath,
+    sceneValidation: { ...verified.sceneValidation, export: 'colmap_model', photoCount: 0, points: 100000 } };
+  const item = row(0, { 2: 'camera-scene', 6: { ['asset:' + pointPath]: pointPath }, 7: proof });
+  assert.equal(render.individualSummary(item, source).sceneStats.points, 100000);
+  const entry = render.individualEntry(item, source, parent);
+  assert.ok(entry.facts.some(fact => fact.label === 'Imported XYZ point cloud (no feature tracks)' && fact.value === pointPath && fact.url));
+  assert.ok(entry.facts.some(fact => fact.label === 'Verified point source' && fact.value === pointPath));
+});
+
 test('photo availability is displayed separately without changing model actions', () => {
   for (const [status, label] of [['partial', 'Photos partially available'], ['path_policy_required', 'Photos need setup'],
     ['companion_archive', 'Photos in a separate archive'], ['not_found', 'No loose photos found'], ['not_included', 'Photos not included']]) {

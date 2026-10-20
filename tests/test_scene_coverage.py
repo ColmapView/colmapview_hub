@@ -146,7 +146,20 @@ class SceneCoverageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'point value'):
             self.verify(review)
         review['checks']['pointValues'] = 'passed'
+        with self.assertRaisesRegex(ValueError, 'Companion points'):
+            self.verify(review)
+        path = 'capture/points_gt.ply'
+        review['files']['asset:' + path] = path
+        review['companionPointCloud'] = path
+        with self.assertRaisesRegex(ValueError, 'receipt'):
+            self.verify(review)
+        review['sourceFiles'].append({'path': path, 'url': hf_url(self.entry, 'a' * 40, path),
+                                      'bytes': 100, 'sha256': 'e' * 64, 'browserRead': True})
         self.verify(review)
+        for field, value in [('companionPointCloud', 'capture/mesh.obj'), ('counts', {**review['counts'], 'points': 0})]:
+            broken = copy.deepcopy(review); broken[field] = value
+            with self.subTest(field), self.assertRaisesRegex(ValueError, 'Companion points'):
+                self.verify(broken)
 
     def test_discovery_records_all_supported_camera_filename_families(self):
         names = ['transforms.json', 'cameras.json', 'reconstruction.json', 'reconstruction_example.json',
