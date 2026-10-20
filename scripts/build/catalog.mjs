@@ -38,7 +38,18 @@ for (const entry of snapshot.entries) {
   for (const audit of entry.audits) if (audit.sourceUrl) publicUrl(audit.sourceUrl);
   for (const fact of [...entry.facts, ...entry.audits.flatMap(audit => audit.facts)]) if (fact.url) publicUrl(fact.url);
 }
-const { catalogAuditPage, catalogSummary } = await catalogRenderer();
+const { catalogAuditPage, catalogSummary, canOpenIndividual } = await catalogRenderer();
+let checkedScenes = 0;
+for (let pack = 0; pack < Math.ceil(sceneIndex.total / sceneIndex.packSize); pack++) {
+  const rows = await json(`public/hub/datasets/individual/packs/${pack}.json`);
+  for (const row of rows) {
+    const source = sceneIndex.sources[row[1]];
+    if (!source || !canOpenIndividual(row, source)) throw new Error(`Published scene fails the Hub loading contract: ${row[0]}`);
+  }
+  checkedScenes += rows.length;
+}
+if (checkedScenes !== sceneIndex.total) throw new Error('Published scene packs disagree with the index total');
+console.log(`Validated all ${checkedScenes.toLocaleString('en-US')} scene launches against the Hub loading contract.`);
 const output = resolve('public/hub/datasets');
 await mkdir(output, { recursive: true });
 // Only generated files immediately inside this fixed directory are cleaned, never source data or child directories.

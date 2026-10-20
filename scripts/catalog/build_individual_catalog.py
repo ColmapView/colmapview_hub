@@ -432,6 +432,12 @@ def build(root=Path('.')):
                 raise ValueError('Published scene is missing pinned content evidence')
             proof = apply_content_evidence(entry, row, revision, proof, content_review)
             matched_contents.add(review_key)
+            routing_review = photo_routing.get(review_key)
+            if routing_review:
+                proof = apply_routing(entry, row, revision, proof, routing_review, hf_url)
+                matched_routing.add(review_key)
+            # A complete scene selection supersedes the older photo-only launch,
+            # while retaining that original routing receipt as historical evidence.
             manifest_review = manifest_reviews.get(review_key)
             if manifest_review:
                 proof, format_name = apply_manifest_evidence(entry, row, revision, proof, manifest_review, hf_url)
@@ -441,10 +447,6 @@ def build(root=Path('.')):
                     thumbnail = checked_photo_previews.get((entry['sourceId'], revision, first_photo['sourcePath'], first_photo['sha256']))
                     if thumbnail:
                         proof = apply_thumbnail_evidence(entry, proof, thumbnail)
-            routing_review = photo_routing.get(review_key)
-            if routing_review:
-                proof = apply_routing(entry, row, revision, proof, routing_review, hf_url)
-                matched_routing.add(review_key)
             if review_key in photo_archives:
                 proof = apply_archive_routing(entry, row, revision, proof, photo_archives[review_key], hf_url)
                 matched_archives.add(review_key)

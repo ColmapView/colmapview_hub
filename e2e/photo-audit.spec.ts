@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 const sceneId = (source: string, path: string) => 'data-' + createHash('sha256').update([source, 'colmap', '', path].join('\0')).digest('hex').slice(0, 24);
 
 test('photo evidence covers every published scene and keeps stronger export checks separate', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
-    total: number; generation: string; sources: unknown[]; photos: Record<string, number> };
+    total: number; generation: string; sources: unknown[]; photos: Record<string, number>; photoRouting: Record<string, number> };
   expect(index.total).toBeGreaterThan(0);
   expect(Object.keys(index.photos).sort()).toEqual(['sample_checked', 'path_policy_required', 'review_required', 'not_found',
     'not_included', 'companion_archive', 'partial', 'complete_export_checked'].sort());
@@ -20,10 +21,10 @@ test('photo evidence covers every published scene and keeps stronger export chec
   expect(csv.ok()).toBe(true);
   expect(await csv.text()).toContain('mappingFile,companionArchive,samplePhoto');
   expect(await csv.text()).toContain('launchRouting,photoManifest,listedPhotos,boundNamesChecked');
-  expect(audit.routing.photo_inventory_manifest).toBe(1247);
-  expect(audit.routing.photo_archive_manifest).toBe(516);
-  expect(audit.routing.prefix_manifest).toBe(235);
-  expect(audit.routing.full_scene_manifest).toBe(23);
+  expect(audit.routing).toEqual(index.photoRouting);
+  expect(Object.values(index.photoRouting).reduce((sum, count) => sum + count, 0)).toBe(index.total);
+  const manifests = JSON.parse(await readFile(new URL('../data/scene-manifests.json', import.meta.url), 'utf8'));
+  expect(audit.routing.full_scene_manifest).toBe(manifests.scenes.length);
   expect(audit.repeatAudit.skip_confirmed_facts).toBeGreaterThan(0);
   expect(audit.repeatAudit.review_required).toBeGreaterThanOrEqual(0);
   expect(audit.repeatAudit.skip_confirmed_facts + audit.repeatAudit.review_required).toBe(index.total);

@@ -1,12 +1,20 @@
 # Zero-point scenes, 2026-10-20
 
-The audit covers all **357 effective zero-point scenes in 45 collections** from generation 8aed9dd7761e4e91fc6b77a72809fbef47c74f38369231e9eb651470ecffcd8c. Fifteen scenes now select **9,336,828 verified source points/vertices**. All five static cloud bindings and all three auxiliary-container follow-ups from the first pass are resolved. Unknown counts were excluded. Sixteen already working native/XYZ manifests and the previous OpenMVG repair are preserved.
+The audit covers all **357 effective zero-point scenes in 45 collections** from generation 8aed9dd7761e4e91fc6b77a72809fbef47c74f38369231e9eb651470ecffcd8c. Forty-three scenes now select **14,329,849 verified source points/vertices**. The latest pass closes 28 same-scene sibling bindings with 4,993,021 points; temporal archive loading remains open. Unknown counts were excluded. Sixteen already working native/XYZ manifests and the previous OpenMVG repair are preserved.
 
 The [readable scene list](zero-point-scenes-2026-10-20.md) links every audited scene. The [evidence ledger](../data/zero-point-audit.json.gz) retains exact revisions, selections, source hashes and independent export results. The [auxiliary inspection](../data/zero-point-auxiliary-inspection.json.gz) records array shapes and byte-range receipts. Confirmed facts can be reused at unchanged pins and evidence keys without a global source scan.
 
 Viewer **0.19.9** and Hub **0.9.12** are deployed. The [production verification receipt](../data/zero-point-live-verification.json.gz) records all six new selections and Berlin loading through their published Hub links, visible geometry, decoded photographs, retained share sources and successful COLMAP downloads. Independent checks matched all 7,382,230 newly selected vertices, calibration/poses, the cloth photographs and Berlin's source observations and three original JPEGs. Reopening the cloth share link retained its four synchronized views and selected vertex frame. Catalog regression checks preserved all 5,583 scene identities, previews, masks and splats; 5,577 launch routes are unchanged.
 
-## Closed loading gaps
+## Same-scene sibling bindings
+
+The [per-scene binding list](sibling-point-bindings-2026-10-20.md) records 15 BMVS and 13 TwinWorld fixes. Every selection loaded in released viewer 0.19.9, drew its geometry, retained its manifest when shared and exported through the UI. PyCOLMAP read every complete exported model; independent source comparisons checked every XYZ/RGB value, calibration and pose, plus 63 original photographs. All 45 declared masks decoded in the browser. Masks retain their existing unknown semantic role; this pass does not claim feature-mask export.
+
+Fourteen BMVS seed/calibration variants share exactly the cloud model poses. The doll seed has the same camera and image IDs, calibration and poses as its native reconstruction (maximum pose component difference 4.45e-16); its originally empty feature table can therefore use the native observations and 3,006 native landmarks without inventing tracks. TwinWorld explicitly documents a joint train/test reconstruction world, and all 13 test calibrations match their train models. Seven final-test splits intentionally withhold photos; they retain cameras and the scene cloud.
+
+The [sibling inspection receipt](../data/zero-point-sibling-inspection.json.gz) preserves pinned camera/reference files, publisher declaration, numerical associations and full-model export proofs. Unproved sibling paths, nonempty native models, different camera identities and ignored native point transforms are rejected by publication validation.
+
+## Previously closed loading gaps
 
 | Collection / selected scene | Points | Verified selection |
 | --- | ---: | --- |
@@ -37,11 +45,10 @@ The first pass also corrected eight NeRF companion-cloud receipts: dry_ice (100,
 | ---: | --- |
 | 262 | No static point source listed in the complete checked scene scope. This is scoped evidence, not collection-wide absence. |
 | 2 | Auxiliary scope has no static XYZ. All 70 HDR flow NPZ indexes contain only two-channel flow and masks, both NPY sequences contain 2D flow, and poses_bounds.npy is a camera array. DTU scan24/cameras.npz contains 294 camera/scale/inverse matrices. Thirty-six depth arrays were excluded under the requested non-depth scope. |
-| 28 | Other reconstruction/training variants have geometry; selected BMVS seed/calibration and TwinWorld held-out models remain separate. |
-| 47 | danceNet3D geometry uses separate time-indexed archives, including multi-gigabyte TAR/Zstandard sequences. Static COLMAP launches do not attach arbitrary temporal frames. Archive timeline loading remains a separate unsupported feature. |
+| 47 | danceNet3D geometry uses separate time-indexed archives, including 20 sparse-cloud TAR/Zstandard sequences and 47 Gaussian ZIP sequences. Their published splats need translation (0, 1.5, 1.3) into the COLMAP camera world. Static COLMAP launches do not attach arbitrary temporal frames. Archive timeline loading remains a separate unsupported feature. |
 | 3 | Mesh geometry exists. Mesh vertices are not reported as sparse reconstruction points. |
 
-These **342 remaining zeros** are explained rather than unresolved static-path failures. Usable cameras/poses still qualify without photographs or sparse points. Existing masks, splats, previews, original links, other variants and scene identities are retained.
+These **314 remaining zeros** comprise confirmed scoped absence, meshes and 47 temporal archive cases. The temporal cases remain loader work, not absence confirmations. Usable cameras/poses still qualify without photographs or sparse points. Existing masks, splats, previews, original links, other variants and scene identities are retained.
 
 ## Reproduction
 

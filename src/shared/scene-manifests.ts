@@ -7,6 +7,7 @@ export interface SceneManifestEvidence {
   pointFormat: 'xyz_ply' | 'colmap_binary' | 'colmap_text' | 'numpy_frame' | 'none';
   sourceCounts?: {cameras: number; images: number; points: number};
   frameIndices?: number[];
+  pointAssociation?: {sceneRoot: string; method: 'identical_poses' | 'publisher_shared_world' | 'identical_native_model'};
   photoCount: number;
   maskCount: number;
   maskRole: 'unknown' | 'foreground' | 'validity';
@@ -36,6 +37,19 @@ function validPointSource(format: unknown, path: unknown, points: unknown): bool
     && path.endsWith(pointSuffixes[format as keyof typeof pointSuffixes]);
 }
 
+function validPointAssociation(item: Record<string, unknown>): boolean {
+  if (item.pointAssociation === undefined) return true;
+  const association = item.pointAssociation as SceneManifestEvidence['pointAssociation'];
+  const root = association?.sceneRoot;
+  if (!association || typeof root !== 'string' || !root || /[\\?#]/.test(root)
+    || root.split('/').some(part => !part || part === '.' || part === '..')
+    || typeof item.pointSource !== 'string' || !item.pointSource.startsWith(root + '/')
+    || item.sourceCounts !== undefined || item.frameIndices !== undefined) return false;
+  return association.method === 'identical_native_model'
+    ? ['colmap_binary', 'colmap_text'].includes(String(item.pointFormat))
+    : ['identical_poses', 'publisher_shared_world'].includes(association.method) && item.pointFormat === 'xyz_ply';
+}
+
 /** A manifest launch cannot inherit a native count or an unrelated viewer URL. */
 export function isSceneManifestEvidence(value: unknown): value is SceneManifestEvidence {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -49,6 +63,7 @@ export function isSceneManifestEvidence(value: unknown): value is SceneManifestE
     && ['unknown', 'foreground', 'validity'].includes(String(item.maskRole))
     && validPointSource(item.pointFormat, item.pointSource, counts?.points)
     && validSourceSelection(item, counts)
+    && validPointAssociation(item)
     && typeof item.viewerVersion === 'string' && /^\d+\.\d+\.\d+$/.test(item.viewerVersion);
 }
 

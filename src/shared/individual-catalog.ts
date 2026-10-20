@@ -35,6 +35,7 @@ export type IndividualProof = CatalogVerification & { statusLabel: string; viewe
   companionPointCloud?: string;
   sceneManifest?: SceneManifestEvidence;
   photoRouting?: PhotoRoutingEvidence;
+  priorPhotoRouting?: PhotoRoutingEvidence;
   photoArchiveRouting?: ArchiveRoutingEvidence;
   sceneCompatibility?: { status: 'native_headers_checked'; revision: string; cameraRecordChecked: boolean; poseRecordChecked: boolean;
     cameras: number | null; images: number | null; points: number | null;
@@ -92,7 +93,9 @@ function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): pro
   const native = proof.sceneCompatibility ?? proof.sceneValidation;
   const original = proof.sceneManifest.sourceCounts ?? proof.sceneManifest.counts;
   return native?.cameras === original.cameras && native.images === original.images
-    && (['xyz_ply', 'numpy_frame'].includes(proof.sceneManifest.pointFormat) ? native.points === 0 : native.points === proof.sceneManifest.counts.points);
+    && (['xyz_ply', 'numpy_frame'].includes(proof.sceneManifest.pointFormat)
+      || proof.sceneManifest.pointAssociation?.method === 'identical_native_model'
+      ? native.points === 0 : native.points === proof.sceneManifest.counts.points);
 }
 
 export function canOpenIndividual(row: IndividualRecord, source: IndividualSource): boolean {

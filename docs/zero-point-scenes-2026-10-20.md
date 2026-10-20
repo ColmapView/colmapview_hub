@@ -1,16 +1,16 @@
 # Scenes in the zero-point audit, 2026-10-20
 
-All 357 scenes from the baseline catalog, including fifteen corrected scenes. Unknown point counts are excluded. These are selected model counts; a collection may contain additional geometry. See the [audit notes](zero-point-audit-2026-10-20.md) for evidence and remaining limitations.
+All 357 baseline scenes, including 43 corrected selections. Unknown counts are excluded. These are selected model counts; a collection may contain additional geometry. See the [audit notes](zero-point-audit-2026-10-20.md) for evidence and remaining temporal limitations.
 
 | Collection | Named scene | Points after review | Finding |
 | --- | --- | ---: | --- |
 | 777rain/nerf-synthetic | [nerf_synthetic/lego](https://colmapview.opsiclear.com/hub/datasets/open/data-ce9c0aeda21c40fe182c9961) | 0 | No point source listed in checked scope |
-| ALC901/DL3DV-10K-3dgs | [2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539](https://colmapview.opsiclear.com/hub/datasets/open/data-2cbe117bb42a638692c46147) | 69,532 | Corrected export / loader |
+| ALC901/DL3DV-10K-3dgs | [2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539](https://colmapview.opsiclear.com/hub/datasets/open/data-2cbe117bb42a638692c46147) | 69,532 | Verified source points and COLMAP export |
 | anon211/embodied_gaussians | [real/empty/static_scan](https://colmapview.opsiclear.com/hub/datasets/open/data-aff82e0cc19d95f0bd434d01) | 0 | No point source listed in checked scope |
 | Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission | [lego_6_views](https://colmapview.opsiclear.com/hub/datasets/open/data-9d0c522d6e99148c4cc45042) | 0 | Mesh, not sparse points |
-| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ebfee4a083e682fe67645034) | 983,145 | Corrected export / loader |
-| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ab3b0f737ecd74be64152988) | 601,496 | Corrected export / loader |
-| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-f6f812cfaf2b1c7c1f5605c9) | 1,051,142 | Corrected export / loader |
+| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ebfee4a083e682fe67645034) | 983,145 | Verified source points and COLMAP export |
+| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ab3b0f737ecd74be64152988) | 601,496 | Verified source points and COLMAP export |
+| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-f6f812cfaf2b1c7c1f5605c9) | 1,051,142 | Verified source points and COLMAP export |
 | Bugjudger/HDR_Pretrain | [scenes/102343992/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ba70c38874f155f7c8e1374e) | 0 | No point source listed in checked scope |
 | Bugjudger/HDR_Pretrain | [scenes/102344022/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-a2304ff370e9c56c9f821b4e) | 0 | No point source listed in checked scope |
 | Bugjudger/HDR_Pretrain | [scenes/102344049/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-d517a2952e5841827b3040bb) | 0 | No point source listed in checked scope |
@@ -179,84 +179,82 @@ All 357 scenes from the baseline catalog, including fifteen corrected scenes. Un
 | Bugjudger/HDR_Pretrain | [scenes/108736851_177263586/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-51e8e3f1d2c6634c465d4703) | 0 | No point source listed in checked scope |
 | Bugjudger/HDR_Pretrain | [scenes/108736872_177263607/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-bd6658dfdd8134e0598e32d5) | 0 | No point source listed in checked scope |
 | Bugjudger/HDR_Pretrain | [scenes/108736884_177263634/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-5956ddc7d82c2ba1cf06954e) | 0 | No point source listed in checked scope |
-| Cloth-splatters/cloth-splatting-folding-scenes | [TOWEL_00_00](https://colmapview.opsiclear.com/hub/datasets/open/data-e16ab11d39e7a5aff5dbfe39) | 2,148 | Corrected export / loader |
+| Cloth-splatters/cloth-splatting-folding-scenes | [TOWEL_00_00](https://colmapview.opsiclear.com/hub/datasets/open/data-e16ab11d39e7a5aff5dbfe39) | 2,148 | Verified source points and COLMAP export |
 | dynamic-maps/hard-intersection-multimodal-sample | [calibration](https://colmapview.opsiclear.com/hub/datasets/open/data-053b8232e1af4b630ba067b2) | 0 | No point source listed in checked scope |
 | Falcary/great-e-nerf | [master/views](https://colmapview.opsiclear.com/hub/datasets/open/data-0666e402f7b78e4ae120fc15) | 0 | No point source listed in checked scope |
 | fantasticoven/youtube-colmap | [job_2/scene_37/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-7769a0e5955c5b9a9415d556) | 0 | No point source listed in checked scope |
 | fantasticoven/youtube-colmap | [job_3/scene_7/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-3a0461af1a41019a76f891a3) | 0 | No point source listed in checked scope |
 | fantasticoven/youtube-colmap | [job_5/scene_31/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-f276879d6a2ce9f59099270a) | 0 | No point source listed in checked scope |
-| HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting | [dry_ice](https://colmapview.opsiclear.com/hub/datasets/open/data-8e43e64c62d97b27aa9b03f1) | 100,000 | Corrected export / loader |
+| HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting | [dry_ice](https://colmapview.opsiclear.com/hub/datasets/open/data-8e43e64c62d97b27aa9b03f1) | 100,000 | Verified source points and COLMAP export |
 | hobbyaih/360data1 | [USB/100109/start](https://colmapview.opsiclear.com/hub/datasets/open/data-070b67f001a788e5cf977e6b) | 0 | No point source listed in checked scope |
-| Instant-NGP Fox example | [Instant-NGP Fox example — fox (JSON + JPEG)](https://colmapview.opsiclear.com/hub/datasets/open/data-d1b9d4828b867780f291cbc1) | 0 | No point source listed in checked scope |
-| jayinnn/Skyfall-GS-datasets | [datasets_JAX/JAX_004](https://colmapview.opsiclear.com/hub/datasets/open/data-ccb1a469660cdfbf01e50cd9) | 35,355 | Corrected export / loader |
+| jayinnn/Skyfall-GS-datasets | [datasets_JAX/JAX_004](https://colmapview.opsiclear.com/hub/datasets/open/data-ccb1a469660cdfbf01e50cd9) | 35,355 | Verified source points and COLMAP export |
 | JiaJinrang/PanoWorld | [training_data/3D-FRONT/00004f89-9aa5-43c2-ae3c-129586be8aaa/viewpoints/panorama_0000](https://colmapview.opsiclear.com/hub/datasets/open/data-f85333e7c1adb523358813a8) | 0 | No point source listed in checked scope |
 | Jiuhe131/refracgs_dataset | [refracgs_synthetic/toys_30view](https://colmapview.opsiclear.com/hub/datasets/open/data-af55782d5edfd7da7ec4742f) | 0 | No point source listed in checked scope |
 | KayZhu/ExtremeOcc-3D | [gt_assets/0093ec0a03c37d4db280862a4b9d64a861bfb075bc7fe7f66c32b24f01a4f686](https://colmapview.opsiclear.com/hub/datasets/open/data-8815de01e71cb45566d3d4bf) | 0 | Mesh, not sparse points |
 | kentaito321/Multi_View_Industrial_part_Dataset | [MVID/cap](https://colmapview.opsiclear.com/hub/datasets/open/data-ca88018d9d4b447a6ab0a5a4) | 0 | No point source listed in checked scope |
-| MikolajZ/eks_data | [data/mic](https://colmapview.opsiclear.com/hub/datasets/open/data-3b34ad12ccf1d0d088d8e4f6) | 786,432 | Corrected export / loader |
-| MikolajZ/eks_demo_data | [data/ficus](https://colmapview.opsiclear.com/hub/datasets/open/data-59ff7f968664bd3efab92875) | 786,432 | Corrected export / loader |
-| MiniWan/dl3dv | [(dataset root)](https://colmapview.opsiclear.com/hub/datasets/open/data-0693d9c1b8281564202125c4) | 0 | No point source listed in checked scope |
+| MikolajZ/eks_data | [data/mic](https://colmapview.opsiclear.com/hub/datasets/open/data-3b34ad12ccf1d0d088d8e4f6) | 786,432 | Verified source points and COLMAP export |
+| MikolajZ/eks_demo_data | [data/ficus](https://colmapview.opsiclear.com/hub/datasets/open/data-59ff7f968664bd3efab92875) | 786,432 | Verified source points and COLMAP export |
+| MiniWan/dl3dv | [(root)](https://colmapview.opsiclear.com/hub/datasets/open/data-0693d9c1b8281564202125c4) | 0 | No point source listed in checked scope |
 | nonconformist/Blenderkit_retail_bench_mini | [renders_cond/000381a5-e810-48ca-8b5c-a096db1e6a29](https://colmapview.opsiclear.com/hub/datasets/open/data-54bab35a8ef223de80e00fbd) | 0 | No point source listed in checked scope |
-| nyuvideolab/danceNet3D | [s4/3PointStep/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-b41ab2a34430b23d25428e3c) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/BartSimpson/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-fcc991de25ac4227dcba86a0) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/BizMarkie/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-e459f56a50132184083b480e) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/HouseFootwork/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-ebc089e808b20c73bbbfa268) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/HouseFootworkAdvanced/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-946cb86e7239a1326d4d69a5) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/RoboCop/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-09270003aae7613a59e0012e) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/RunningMan/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-3f4ea10c23177e52d5d3eebe) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/TheRooftop/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-7e05161666e90ef42adc5365) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/ToeTaps/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-70fd5029af4aa2c5f21b5d1a) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s4/WuTang/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-4e9110f9b55037af1fd01ed8) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/AttitudePromenade/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-426796cd7b4bfc85275919cf) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/BasicSuzieQ/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-a0b816ed7ed2c09a395445bb) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/BigKicks/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-79c1324121bf7c7e99377c6f) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/BourreeTurns/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-381ee1543ef9754acfb284ed) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/BourreeTurns2/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-a825a8330cf4781a9f95673c) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/Chacha/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-8518ab16a7871af4e2205be0) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/ComboSeated/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-f76c61950fb4c21f6a6b3eb7) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/DoubleSpiral/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-cb8c4407e8eaa6e3c700edb3) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/Flair/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-374473095d879223fe39a504) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/Jumping/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-bbd77fe34ce2d2eaa34e3c6a) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/Pirouettes/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-58d70c4d569087094efe49da) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/Portdebras/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-c8e8d872eddc307fefc4678b) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/PortdebrasSeated/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-98bfa26a3e6e33aa5fd08025) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/RonDeJambeAtere/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-481e36ea529385884986725b) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/RonDeJambeAtere2/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-3aa9d4f5a6c4373e8314329a) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/RonDeJambeInAir/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-8d232566ce568b891b273a33) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/SalsaTurns/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-6d6b5268fe321fcec524d1af) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/Shoulders/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-67a158e8d2da4ac17f61bfac) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/ShouldersSeated/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-ff11836c542109b795dc7c2a) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/SonBasic/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-391222458c54dfef906fe3c9) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/SonBasicSeated/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-29099a5cc0b30c207d048df4) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/Turns/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-1248a3bfefd5e565a7dc39c5) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s5/Twists/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-c408cffed23d17f99985b083) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_Breathing/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-ec5c4e2f45ce178fdb9aeaf2) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_Chimee/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-e100fa8d3285c0656b691fe9) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_CircleTurns/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-7c9df9c037a0f555d9c817ab) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_DropTurn/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-92781a1b85a9d67cd728e6c3) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_GrandPlies/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-689d89596d92765a6fe34ee6) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_Ocho/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-7ab128e89d676305e079e729) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_Portedbras/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-ee5c0babffcc717dc45efd7a) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_ReleasetoFloor/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-618551ab9ed12a4638387be8) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_RollDown/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-a437d5e1978a657545ed2fc4) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_SalsaBasic/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-bc1344eaf826b6bec4e0d1c5) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_StyleArms/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-516602b0e33fc582b8141136) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_Swings/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-73286b712cc2d3655ffbf7c6) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/BiancaGolden_SyncopatedGroove/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-f3bc0d8859f1d1c1aa20af0d) | 0 | Separate geometry sequence archives |
-| nyuvideolab/danceNet3D | [s6/RobertRubama_RussiaCostume/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-f2fb02d49ef81b679d771cd7) | 0 | Separate geometry sequence archives |
-| OpenSfM Berlin example | [OpenSfM Berlin example — Berlin (camera + RGB)](https://colmapview.opsiclear.com/hub/datasets/open/data-cf868e6dac260324bd1750cb) | 1,430 | Corrected export / loader |
+| nyuvideolab/danceNet3D | [s4/3PointStep/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-b41ab2a34430b23d25428e3c) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/BartSimpson/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-fcc991de25ac4227dcba86a0) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/BizMarkie/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-e459f56a50132184083b480e) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/HouseFootwork/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-ebc089e808b20c73bbbfa268) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/HouseFootworkAdvanced/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-946cb86e7239a1326d4d69a5) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/RoboCop/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-09270003aae7613a59e0012e) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/RunningMan/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-3f4ea10c23177e52d5d3eebe) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/TheRooftop/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-7e05161666e90ef42adc5365) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/ToeTaps/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-70fd5029af4aa2c5f21b5d1a) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s4/WuTang/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-4e9110f9b55037af1fd01ed8) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/AttitudePromenade/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-426796cd7b4bfc85275919cf) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/BasicSuzieQ/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-a0b816ed7ed2c09a395445bb) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/BigKicks/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-79c1324121bf7c7e99377c6f) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/BourreeTurns/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-381ee1543ef9754acfb284ed) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/BourreeTurns2/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-a825a8330cf4781a9f95673c) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/Chacha/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-8518ab16a7871af4e2205be0) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/ComboSeated/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-f76c61950fb4c21f6a6b3eb7) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/DoubleSpiral/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-cb8c4407e8eaa6e3c700edb3) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/Flair/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-374473095d879223fe39a504) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/Jumping/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-bbd77fe34ce2d2eaa34e3c6a) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/Pirouettes/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-58d70c4d569087094efe49da) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/Portdebras/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-c8e8d872eddc307fefc4678b) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/PortdebrasSeated/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-98bfa26a3e6e33aa5fd08025) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/RonDeJambeAtere/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-481e36ea529385884986725b) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/RonDeJambeAtere2/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-3aa9d4f5a6c4373e8314329a) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/RonDeJambeInAir/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-8d232566ce568b891b273a33) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/SalsaTurns/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-6d6b5268fe321fcec524d1af) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/Shoulders/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-67a158e8d2da4ac17f61bfac) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/ShouldersSeated/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-ff11836c542109b795dc7c2a) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/SonBasic/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-391222458c54dfef906fe3c9) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/SonBasicSeated/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-29099a5cc0b30c207d048df4) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/Turns/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-1248a3bfefd5e565a7dc39c5) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s5/Twists/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-c408cffed23d17f99985b083) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_Breathing/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-ec5c4e2f45ce178fdb9aeaf2) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_Chimee/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-e100fa8d3285c0656b691fe9) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_CircleTurns/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-7c9df9c037a0f555d9c817ab) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_DropTurn/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-92781a1b85a9d67cd728e6c3) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_GrandPlies/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-689d89596d92765a6fe34ee6) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_Ocho/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-7ab128e89d676305e079e729) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_Portedbras/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-ee5c0babffcc717dc45efd7a) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_ReleasetoFloor/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-618551ab9ed12a4638387be8) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_RollDown/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-a437d5e1978a657545ed2fc4) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_SalsaBasic/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-bc1344eaf826b6bec4e0d1c5) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_StyleArms/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-516602b0e33fc582b8141136) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_Swings/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-73286b712cc2d3655ffbf7c6) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/BiancaGolden_SyncopatedGroove/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-f3bc0d8859f1d1c1aa20af0d) | 0 | Temporal geometry archive; adapter pending |
+| nyuvideolab/danceNet3D | [s6/RobertRubama_RussiaCostume/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-f2fb02d49ef81b679d771cd7) | 0 | Temporal geometry archive; adapter pending |
 | pablovela5620/nerf-synthetic-mirror | [mic](https://colmapview.opsiclear.com/hub/datasets/open/data-d28cbb0f5daf045780e9b015) | 0 | No point source listed in checked scope |
 | phuckstnk63/nerf-synthetic | [nerf_synthetic/lego](https://colmapview.opsiclear.com/hub/datasets/open/data-b8ebbc530e021cca353a9b25) | 0 | No point source listed in checked scope |
-| pkupig/dadr_splatting-dataset | [(dataset root)](https://colmapview.opsiclear.com/hub/datasets/open/data-eee83d18db2ff588bd8e4220) | 100,000 | Corrected export / loader |
-| SHlNDY/HDR-NSFF | [bag/dense](https://colmapview.opsiclear.com/hub/datasets/open/data-9498c7d33ba93e43c27bb139) | 0 | Camera / 2D-flow arrays confirmed |
+| pkupig/dadr_splatting-dataset | [(root)](https://colmapview.opsiclear.com/hub/datasets/open/data-eee83d18db2ff588bd8e4220) | 100,000 | Verified source points and COLMAP export |
+| SHlNDY/HDR-NSFF | [bag/dense](https://colmapview.opsiclear.com/hub/datasets/open/data-9498c7d33ba93e43c27bb139) | 0 | Inspected camera / 2D flow arrays; no XYZ |
 | SimeonOA/Botany-Bot | [belize](https://colmapview.opsiclear.com/hub/datasets/open/data-d0df8903d18a5231c82a228a) | 0 | No point source listed in checked scope |
-| SimeonOA/GrowSplat-Dataset | [quinoa/20221031](https://colmapview.opsiclear.com/hub/datasets/open/data-082cde7d93154199922d68d3) | 16,315 | Corrected export / loader |
+| SimeonOA/GrowSplat-Dataset | [quinoa/20221031](https://colmapview.opsiclear.com/hub/datasets/open/data-082cde7d93154199922d68d3) | 16,315 | Verified source points and COLMAP export |
 | suvadityamuk/gso-footwear-trellis2-latents | [renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a](https://colmapview.opsiclear.com/hub/datasets/open/data-f82ddb1c864b85240cac3360) | 0 | No point source listed in checked scope |
-| Tenstorrent/tt-nerf-p150-white | [(dataset root)](https://colmapview.opsiclear.com/hub/datasets/open/data-9424278994e3716d5e28dc51) | 0 | No point source listed in checked scope |
+| Tenstorrent/tt-nerf-p150-white | [(root)](https://colmapview.opsiclear.com/hub/datasets/open/data-9424278994e3716d5e28dc51) | 0 | No point source listed in checked scope |
 | tiange/Cap3D | [RenderedImage_perobj_zips/example_zipfile](https://colmapview.opsiclear.com/hub/datasets/open/data-5939a1f34aa05c53a23e5440) | 0 | No point source listed in checked scope |
-| turandai/gaussian-surfels-bmvs | [cow](https://colmapview.opsiclear.com/hub/datasets/open/data-2e3b09ccb7812f86e4ef4d97) | 4,674,767 | Corrected export / loader |
-| turandai/gaussian-surfels-dtu | [scan24](https://colmapview.opsiclear.com/hub/datasets/open/data-4b8a1a825df7432023cb4989) | 0 | Camera / 2D-flow arrays confirmed |
-| uild42/gate-gsplat-assets | [left_scene/mocap_processed](https://colmapview.opsiclear.com/hub/datasets/open/data-7dcde70513736e18520c65e0) | 28,634 | Corrected export / loader |
+| turandai/gaussian-surfels-bmvs | [cow](https://colmapview.opsiclear.com/hub/datasets/open/data-2e3b09ccb7812f86e4ef4d97) | 4,674,767 | Verified source points and COLMAP export |
+| turandai/gaussian-surfels-dtu | [scan24](https://colmapview.opsiclear.com/hub/datasets/open/data-4b8a1a825df7432023cb4989) | 0 | Inspected camera / 2D flow arrays; no XYZ |
+| uild42/gate-gsplat-assets | [left_scene/mocap_processed](https://colmapview.opsiclear.com/hub/datasets/open/data-7dcde70513736e18520c65e0) | 28,634 | Verified source points and COLMAP export |
 | Uniiii/eth3d_v2 | [courtyard/distorded_images](https://colmapview.opsiclear.com/hub/datasets/open/data-bb91e65baffc13e16d6ccd08) | 0 | No point source listed in checked scope |
 | Uniiii/eth3d_v2 | [courtyard/undistorded_images](https://colmapview.opsiclear.com/hub/datasets/open/data-eb08fb81b6b4ab51b3c5ba4b) | 0 | No point source listed in checked scope |
 | Uniiii/eth3d_v2 | [electro/distorded_images](https://colmapview.opsiclear.com/hub/datasets/open/data-955b2cdcde5219fb66bdd8c1) | 0 | No point source listed in checked scope |
@@ -267,22 +265,22 @@ All 357 scenes from the baseline catalog, including fifteen corrected scenes. Un
 | Uniiii/eth3d_v2 | [relief/distorded_images](https://colmapview.opsiclear.com/hub/datasets/open/data-7dafe8977aef56b0e8b056b5) | 0 | No point source listed in checked scope |
 | Uniiii/eth3d_v2 | [relief/undistorded_images](https://colmapview.opsiclear.com/hub/datasets/open/data-5c085cd4df267a71ff2b80fd) | 0 | No point source listed in checked scope |
 | VAST-AI/AniGen-Sample-Dataset | [renders/32516e9c-d01d-4667-bd5b-62cc64a97cd6.scene.glb_pose_1](https://colmapview.opsiclear.com/hub/datasets/open/data-6c819655e4f45089f7b281fd) | 0 | Mesh, not sparse points |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/basketball/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-62e132c2f7617c37913a0b05) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/basketball/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-27517eeb8f75afa392061c68) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/bear/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-a5566bf470510dd671a288b8) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/bear/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-755d27d418ac7f6883d94788) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/bread/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-3f96d2d3beee25e0bbfd53c9) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/bread/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-94182469eff91112b82a45e7) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/camera/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-b93f75d0a07dd8b1a4f73987) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/camera/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-15fffe6e9efcbf8d5073efcd) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/clock/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-db762a235852d78bdb7888bc) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/clock/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-a29001c258975880cbc4b680) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/cow/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-e85d555331ebbd39c80e8972) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/cow/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-a5e66a55087ae8e47e23ae33) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/dog/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-0a32005d7839cb40c9b6a481) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/dog/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-1a563d3a51aae91c0dfd2a28) | 0 | Points in another model variant |
-| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/doll/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-1ace528de1ed12b923db4910) | 0 | Points in another model variant |
-| yaguchi27/EV_hw1_nerf_synthetic | [lego](https://colmapview.opsiclear.com/hub/datasets/open/data-0ee408a214af89ee37f7b9f5) | 100,000 | Corrected export / loader |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/basketball/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-62e132c2f7617c37913a0b05) | 350,710 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/basketball/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-27517eeb8f75afa392061c68) | 350,710 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/bear/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-a5566bf470510dd671a288b8) | 340,440 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/bear/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-755d27d418ac7f6883d94788) | 340,440 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/bread/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-3f96d2d3beee25e0bbfd53c9) | 326,806 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/bread/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-94182469eff91112b82a45e7) | 326,806 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/camera/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-b93f75d0a07dd8b1a4f73987) | 359,250 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/camera/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-15fffe6e9efcbf8d5073efcd) | 359,250 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/clock/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-db762a235852d78bdb7888bc) | 220,844 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/clock/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-a29001c258975880cbc4b680) | 220,844 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/cow/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-e85d555331ebbd39c80e8972) | 303,922 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/cow/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-a5e66a55087ae8e47e23ae33) | 303,922 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/dog/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-0a32005d7839cb40c9b6a481) | 399,842 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/dog/dense/sparse_calibrated](https://colmapview.opsiclear.com/hub/datasets/open/data-1a563d3a51aae91c0dfd2a28) | 399,842 | Verified source points and COLMAP export |
+| Wuuu3511/bmvs_sparse_dtu2 | [large_overlap/doll/dense/colmap_workspace/sparse_seed](https://colmapview.opsiclear.com/hub/datasets/open/data-1ace528de1ed12b923db4910) | 3,006 | Verified source points and COLMAP export |
+| yaguchi27/EV_hw1_nerf_synthetic | [lego](https://colmapview.opsiclear.com/hub/datasets/open/data-0ee408a214af89ee37f7b9f5) | 100,000 | Verified source points and COLMAP export |
 | yimingshao1/refracgs_dataset | [refracgs_synthetic/toys_30view](https://colmapview.opsiclear.com/hub/datasets/open/data-85f946d1836c2ba96d8439ab) | 0 | No point source listed in checked scope |
 | yinyue27/RefRef_additional | [image_data/textured_cube_scene/single-convex/ball](https://colmapview.opsiclear.com/hub/datasets/open/data-6137364d2268a28cc17872a8) | 0 | No point source listed in checked scope |
 | yutofurutani/WildCity | [wildcity/Scene1/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-f2bddab8c79a5e48558ba631) | 0 | No point source listed in checked scope |
@@ -348,16 +346,18 @@ All 357 scenes from the baseline catalog, including fifteen corrected scenes. Un
 | yutofurutani/WildCity | [wildcity/Scene153/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-661412f428402c02f7527171) | 0 | No point source listed in checked scope |
 | yutofurutani/WildCity | [wildcity/Scene154/colmap](https://colmapview.opsiclear.com/hub/datasets/open/data-67534e0a546e7ab795dff4fe) | 0 | No point source listed in checked scope |
 | Yuvan666/embodied_gaussians | [real/empty/static_scan](https://colmapview.opsiclear.com/hub/datasets/open/data-48f917aa2ce178060e561f9f) | 0 | No point source listed in checked scope |
-| Zqlin/TwinWorld_Datasets | [Data_Goldcoast/scene_009/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-02fd82ee6918facd73ae7d7b) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_Goldcoast/scene_010/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-403f39c6246435b022b7d851) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_Goldcoast/scene_011/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-3cd6f98a8d36118b7c6e9498) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_Goldcoast/scene_012/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-377e0a542ea2403670222d81) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_000/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-e81e7563dd42632ac258fb4e) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_001/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-f4950a28235651b9faf72ac8) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_002/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-bbe61c620f78d116c237ea28) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_003/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-c9c9f644e066bc3c2e201a4b) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_004/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-dd1fc3913ce256b5c5063f13) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_005/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-0e170fad789f490bb38c0d20) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_006/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-c4b9e1f77a89ce6e2b7d4004) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_007/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-a210bdde101a45494b789f2b) | 0 | Points in another model variant |
-| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_008/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-eea2a9fb97bbf2fe6e9c6ace) | 0 | Points in another model variant |
+| Zqlin/TwinWorld_Datasets | [Data_Goldcoast/scene_009/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-02fd82ee6918facd73ae7d7b) | 28,530 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_Goldcoast/scene_010/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-403f39c6246435b022b7d851) | 29,122 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_Goldcoast/scene_011/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-3cd6f98a8d36118b7c6e9498) | 32,328 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_Goldcoast/scene_012/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-377e0a542ea2403670222d81) | 15,883 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_000/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-e81e7563dd42632ac258fb4e) | 27,949 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_001/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-f4950a28235651b9faf72ac8) | 17,925 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_002/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-bbe61c620f78d116c237ea28) | 44,849 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_003/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-c9c9f644e066bc3c2e201a4b) | 35,806 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_004/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-dd1fc3913ce256b5c5063f13) | 27,066 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_005/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-0e170fad789f490bb38c0d20) | 42,979 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_006/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-c4b9e1f77a89ce6e2b7d4004) | 21,107 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_007/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-a210bdde101a45494b789f2b) | 23,323 | Verified source points and COLMAP export |
+| Zqlin/TwinWorld_Datasets | [Data_TUM/scene_008/test/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-eea2a9fb97bbf2fe6e9c6ace) | 39,520 | Verified source points and COLMAP export |
+| public:["Instant-NGP Fox example","fox","JSON + JPEG"] | [Instant-NGP Fox example — fox (JSON + JPEG)](https://colmapview.opsiclear.com/hub/datasets/open/data-d1b9d4828b867780f291cbc1) | 0 | No point source listed in checked scope |
+| public:["OpenSfM Berlin example","Berlin","camera + RGB"] | [OpenSfM Berlin example — Berlin (camera + RGB)](https://colmapview.opsiclear.com/hub/datasets/open/data-cf868e6dac260324bd1750cb) | 1,430 | Verified source points and COLMAP export |

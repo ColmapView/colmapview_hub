@@ -21,7 +21,7 @@ CHECKS = ('browserImport', 'visibleGeometry', 'cameraAlignment', 'modelExport',
           'independentColmapRead', 'cameraCalibration', 'cameraPoses', 'pointValues')
 SELECTION_FIELDS = ('sourceId', 'revision', 'kind', 'path', 'files', 'modelFiles',
                     'points', 'photos', 'masks', 'maskRole', 'viewerState', 'counts', 'associationFiles',
-                    'imagePrefix', 'sourceCounts', 'frameIndices', 'resizePolicy')
+                    'imagePrefix', 'sourceCounts', 'frameIndices', 'resizePolicy', 'pointAssociation')
 
 
 def json_bytes(value):
@@ -64,6 +64,64 @@ def validate_state(state, untracked):
         raise ValueError('Manifest cloud needs a finite, checked overview')
     if 'transform' in state['config']:
         raise ValueError('A scene transform cannot establish companion-cloud alignment')
+
+
+def validate_point_association(review):
+    """A sibling cloud needs its own pinned world proof, never basename inference."""
+    association = review.get('pointAssociation')
+    if association is None:
+        return False
+    points = review.get('points') or {}
+    root = association.get('sceneRoot') if isinstance(association, dict) else None
+    if (review.get('kind') not in ('colmap', 'cameras') or points.get('format') not in ('xyz_ply', 'colmap_binary', 'colmap_text')
+            or not source_path(root) or not source_path(points.get('sourcePath'))
+            or not review['path'].startswith(root + '/') or not points['sourcePath'].startswith(root + '/')
+            or posixpath.commonpath([review['path'], posixpath.dirname(points['sourcePath'])]) != root
+            or review.get('checks', {}).get('pointAssociation') != 'passed'):
+        raise ValueError('Sibling point association needs the exact common scene root and checked world proof')
+    reference = association.get('referenceModel', {})
+    if not isinstance(reference, dict):
+        raise ValueError('Sibling point association needs reference model receipts')
+    for role in ('cameras', 'images'):
+        receipt = reference.get(role)
+        if (not file_receipt(receipt) or posixpath.dirname(receipt['sourcePath']) != posixpath.dirname(points['sourcePath'])
+                or posixpath.basename(receipt['sourcePath']) not in (role + '.bin', role + '.txt')):
+            raise ValueError('Sibling point association needs the cloud model camera and pose byte receipts')
+    method = association.get('method')
+    if method != 'identical_native_model' and points['format'] != 'xyz_ply':
+        raise ValueError('Native sibling tracks require identical camera and image identities')
+    if method == 'identical_poses':
+        delta = association.get('maxPoseDelta')
+        if (not is_count(association.get('matchedImages'), 1)
+                or association['matchedImages'] != review['counts']['images'] or type(delta) not in (int, float)
+                or not math.isfinite(delta) or not 0 <= delta <= 1e-9):
+            raise ValueError('Sibling point association must match every selected pose')
+    elif method == 'identical_native_model':
+        if (points['format'] not in ('colmap_binary', 'colmap_text')
+                or not is_count(association.get('matchedImages'), 1)
+                or association['matchedImages'] != review['counts']['images']
+                or not is_count(association.get('matchedCameras'), 1)
+                or association['matchedCameras'] != review['counts']['cameras']
+                or type(association.get('maxPoseDelta')) not in (int, float)
+                or not math.isfinite(association['maxPoseDelta']) or not 0 <= association['maxPoseDelta'] <= 1e-9
+                or type(association.get('maxCalibrationDelta')) not in (int, float)
+                or not math.isfinite(association['maxCalibrationDelta']) or not 0 <= association['maxCalibrationDelta'] <= 1e-9
+                or association.get('identityIds') != 'matched' or type(association.get('sourceFeatures')) is not int
+                or association['sourceFeatures'] != 0
+                or any(review.get('checks', {}).get(key) != 'passed' for key in ('trackValues', 'sourceCameraIdentity'))):
+            raise ValueError('Native sibling tracks require identical cameras, poses, IDs and an empty original feature table')
+    elif method == 'publisher_shared_world':
+        if (not file_receipt(association.get('declaration'))
+                or not isinstance(association['declaration'].get('statement'), str)
+                or not 10 <= len(association['declaration']['statement']) <= 2048
+                or not is_count(association.get('matchedCameras'), 1)
+                or association['matchedCameras'] != review['counts']['cameras']
+                or type(association.get('maxCalibrationDelta')) not in (int, float)
+                or association['maxCalibrationDelta'] != 0):
+            raise ValueError('Sibling point association needs the pinned publisher declaration and identical calibration')
+    else:
+        raise ValueError('Unknown sibling point association method')
+    return True
 
 
 def manifest_scene_reviews(catalog, policy):
@@ -139,8 +197,12 @@ def manifest_scene_reviews(catalog, policy):
                     or not all(math.floor(resized['source' + key.title()] / resized['factor']) <= resized[key]
                         <= math.ceil(resized['source' + key.title()] / resized['factor']) for key in ('width', 'height'))):
                 raise ValueError('Resized metadata requires an exact original receipt and checked power-of-two photograph dimensions')
-        elif points and points['format'] == 'numpy_frame':
-            raise ValueError('Temporal vertices require a metadata camera manifest')
+        elif points:
+            if points['format'] == 'numpy_frame':
+                raise ValueError('Temporal vertices require a metadata camera manifest')
+            if 'transform' in points:
+                raise ValueError('Native manifests require points already aligned with their camera world')
+        validate_point_association(review)
         if review.get('imagePrefix'):
             if metadata or review.get('photos'):
                 raise ValueError('A native checked prefix cannot replace explicit metadata media')
@@ -210,6 +272,8 @@ def manifest_assets(review, entry, hf_url):
     state_name = hashlib.sha256(state).hexdigest() + '.state.json'
     url = lambda path: hf_url(entry, review['revision'], path)
     files = {role: url(review['files'][role]) for role in ('cameras', 'images')}
+    if review.get('pointAssociation', {}).get('method') == 'identical_native_model':
+        files['images'] = url(review['pointAssociation']['referenceModel']['images']['sourcePath'])
     if review['points'] is not None:
         files['points3D'] = url(review['points']['sourcePath'])
     for role in ('rigs', 'frames'):
@@ -247,11 +311,14 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
             raise ValueError('Metadata geometry must belong to this exact checked camera scene')
     elif points and points['format'] == 'xyz_ply':
         if (native.get('points') != 0 or points['sourcePath'] not in
-                [value for role, value in row[2].items() if role.startswith('asset:')]):
+                [value for role, value in row[2].items() if role.startswith('asset:')]
+                and not validate_point_association(review)):
             raise ValueError('Manifest must supplement this exact empty native model with its checked companion')
     elif (native.get('points') != review['counts']['points']
             or points and points['sourcePath'] != row[2].get('points3d')):
-        raise ValueError('Manifest must preserve native points and observation IDs')
+        if (native.get('points') != 0 or review.get('pointAssociation', {}).get('method') != 'identical_native_model'
+                or not validate_point_association(review)):
+            raise ValueError('Manifest must preserve native points and observation IDs')
     if review['photos'] and proof.get('sourceImages', {}).get('status') == 'not_included':
         raise ValueError('Manifest photographs conflict with the publisher exclusion')
     if review.get('imagePrefix'):
@@ -262,6 +329,8 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
                     ('samplePath', 'samplePath'), ('samplePrefixSha256', 'samplePrefixSha256')])):
             raise ValueError('Manifest prefix must preserve the exact previously checked native photographs')
     result = deepcopy(proof)
+    if 'photoRouting' in result:
+        result['priorPhotoRouting'] = result.pop('photoRouting')
     assets = manifest_assets(review, entry, hf_url)
     manifest_name = review['selectionSha256'] + '.manifest.json'
     manifest_url = ASSET_BASE + manifest_name
@@ -275,6 +344,8 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
         'pointSource': points['sourcePath'] if points else None, 'pointFormat': points['format'] if points else 'none',
         'photoCount': len(review['photos']), 'maskCount': len(review['masks']), 'maskRole': review.get('maskRole', 'unknown'),
         'exportSha256': review['exportSha256'], 'viewerCommit': review['viewerCommit'], 'viewerVersion': review['viewerVersion']}
+    if review.get('pointAssociation'):
+        result['sceneManifest']['pointAssociation'] = {key: review['pointAssociation'][key] for key in ('sceneRoot', 'method')}
     if review.get('imagePrefix', {}).get('decodedSample'):
         result['photoAudit'].update(samplePixels='decoded', sampleSha256=review['imagePrefix']['decodedSample']['sha256'])
     if metadata:

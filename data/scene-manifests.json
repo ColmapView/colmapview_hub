@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-10-20T14:10:39.392404+00:00",
+  "checkedAt": "2026-10-20T15:45:03.133288+00:00",
   "scope": "Explicit pinned native and camera-metadata scene selections. Model/geometry exports are independently checked. Full-photo exports, checked photo prefixes, samples, selected temporal views and native source counts retain separate evidence scopes.",
   "scenes": [
     {
@@ -7809,6 +7809,5062 @@
         "type": "untracked_xyz",
         "sourceReferencesDisconnected": 338032,
         "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/basketball/dense/colmap_workspace/sparse_seed",
+      "files": {
+        "cameras": "large_overlap/basketball/dense/colmap_workspace/sparse_seed/cameras.txt",
+        "images": "large_overlap/basketball/dense/colmap_workspace/sparse_seed/images.txt",
+        "points3d": "large_overlap/basketball/dense/colmap_workspace/sparse_seed/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/basketball/dense/colmap_workspace/sparse_seed/cameras.txt",
+          "bytes": 94,
+          "sha256": "bd2f8ca3e36a165340c0be6fdd7aac61d75e044b8777f7eb36072bd6dedfd6f3"
+        },
+        "images": {
+          "sourcePath": "large_overlap/basketball/dense/colmap_workspace/sparse_seed/images.txt",
+          "bytes": 466,
+          "sha256": "8013d97f7a37eaec797ff72ac34aab02ad062e69d1c3467a7b335a88b5372825"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/basketball/dense/images/0000.png",
+          "bytes": 976119,
+          "sha256": "782190886155c94448ca0897f1c89e9f920e5b07410c9f0e4c83239d53a92af5",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/basketball/dense/images/0001.png",
+          "bytes": 923535,
+          "sha256": "a4296a06aad92d009ee4073a6e56ed7ae37a33c87c7d55cd4d1034ef007e306a",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/basketball/dense/images/0002.png",
+          "bytes": 982082,
+          "sha256": "1eeaa0258e2a4cc5feaeaa8b680d7c942ef9749d07021ba20e70e81bbe4d64be",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/basketball/dense/mask/0000.png",
+          "bytes": 4208,
+          "sha256": "f88ae59c3d05e20e645b58d46fec0f9ec46464da17907c96d3b11ea0593cc3aa",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/basketball/dense/mask/0001.png",
+          "bytes": 3977,
+          "sha256": "d8177bf15ac2c25734a61cdd99d3408166836044e29123ef8a93d4eea873f27e",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/basketball/dense/mask/0002.png",
+          "bytes": 3974,
+          "sha256": "5af963b547a30f1b6b7cd46588a06519d3014db1c2b3cd1c2d65830c3fce01a1",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 350710
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "a668f0015f0337a69252e062ccce7b41e989fa430dd9cdc4d78e5412aaef320d",
+      "points": {
+        "sourcePath": "large_overlap/basketball/dense/sparse/points3D.ply",
+        "bytes": 9469404,
+        "sha256": "407a0e800680ad1da809c227a6dc1ff15341e22565ef05429a85552d524dd9c0",
+        "format": "xyz_ply",
+        "count": 350710
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            1.3559853128786439,
+            0.9170538256060063,
+            1.9907398214755754
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155872
+          ],
+          "target": [
+            -0.16630394756793976,
+            -0.15750329941511154,
+            0.19981127977371216
+          ],
+          "distance": 2.5844656408795648
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.035818570834037264,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/basketball/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "62acd23d6899e80e88ecae3348656642483477607aed514871437c149171b9ed"
+          },
+          "images": {
+            "sourcePath": "large_overlap/basketball/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "54c18c1ac48b520f1e6bac779174a76911ef1fb458358f2ed9a6cce8c319e500"
+          }
+        },
+        "sceneRoot": "large_overlap/basketball/dense"
+      },
+      "selectionSha256": "1b117d5656023ef6f7fa4b3179c0b57a971096b84325aa474a3390af4109691e",
+      "independentRead": {
+        "id": "data-62e132c2f7617c37913a0b05",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 350710
+        },
+        "sourceSha256": "407a0e800680ad1da809c227a6dc1ff15341e22565ef05429a85552d524dd9c0",
+        "exportSha256": "a668f0015f0337a69252e062ccce7b41e989fa430dd9cdc4d78e5412aaef320d",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 350710,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/1b117d5656023ef6f7fa4b3179c0b57a971096b84325aa474a3390af4109691e.manifest.json",
+        "errors": [],
+        "renderSha256": "f0d4fbf4e54126adea2208cbeaf9af3f8bcf58d50eb8a8c294cf9ea6ffa4ca49"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/basketball/dense/sparse_calibrated",
+      "files": {
+        "cameras": "large_overlap/basketball/dense/sparse_calibrated/cameras.bin",
+        "images": "large_overlap/basketball/dense/sparse_calibrated/images.bin",
+        "points3d": "large_overlap/basketball/dense/sparse_calibrated/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/basketball/dense/sparse_calibrated/cameras.bin",
+          "bytes": 176,
+          "sha256": "62acd23d6899e80e88ecae3348656642483477607aed514871437c149171b9ed"
+        },
+        "images": {
+          "sourcePath": "large_overlap/basketball/dense/sparse_calibrated/images.bin",
+          "bytes": 251,
+          "sha256": "54c18c1ac48b520f1e6bac779174a76911ef1fb458358f2ed9a6cce8c319e500"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/basketball/dense/images/0000.png",
+          "bytes": 976119,
+          "sha256": "782190886155c94448ca0897f1c89e9f920e5b07410c9f0e4c83239d53a92af5",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/basketball/dense/images/0001.png",
+          "bytes": 923535,
+          "sha256": "a4296a06aad92d009ee4073a6e56ed7ae37a33c87c7d55cd4d1034ef007e306a",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/basketball/dense/images/0002.png",
+          "bytes": 982082,
+          "sha256": "1eeaa0258e2a4cc5feaeaa8b680d7c942ef9749d07021ba20e70e81bbe4d64be",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/basketball/dense/mask/0000.png",
+          "bytes": 4208,
+          "sha256": "f88ae59c3d05e20e645b58d46fec0f9ec46464da17907c96d3b11ea0593cc3aa",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/basketball/dense/mask/0001.png",
+          "bytes": 3977,
+          "sha256": "d8177bf15ac2c25734a61cdd99d3408166836044e29123ef8a93d4eea873f27e",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/basketball/dense/mask/0002.png",
+          "bytes": 3974,
+          "sha256": "5af963b547a30f1b6b7cd46588a06519d3014db1c2b3cd1c2d65830c3fce01a1",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 3,
+        "images": 3,
+        "points": 350710
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "22532444fea489abe92f04533ec19663ef5a1522adeae054e5da8dde076944d4",
+      "points": {
+        "sourcePath": "large_overlap/basketball/dense/sparse/points3D.ply",
+        "bytes": 9469404,
+        "sha256": "407a0e800680ad1da809c227a6dc1ff15341e22565ef05429a85552d524dd9c0",
+        "format": "xyz_ply",
+        "count": 350710
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            1.3559853128786439,
+            0.9170538256060063,
+            1.9907398214755754
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155872
+          ],
+          "target": [
+            -0.16630394756793976,
+            -0.15750329941511154,
+            0.19981127977371216
+          ],
+          "distance": 2.5844656408795648
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.035818570834037264,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/basketball/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "62acd23d6899e80e88ecae3348656642483477607aed514871437c149171b9ed"
+          },
+          "images": {
+            "sourcePath": "large_overlap/basketball/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "54c18c1ac48b520f1e6bac779174a76911ef1fb458358f2ed9a6cce8c319e500"
+          }
+        },
+        "sceneRoot": "large_overlap/basketball/dense"
+      },
+      "selectionSha256": "ee344f334eab0326857b62a8ab6827686976a96a8cf784d7e64657d9eef02c56",
+      "independentRead": {
+        "id": "data-27517eeb8f75afa392061c68",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 3,
+          "images": 3,
+          "points": 350710
+        },
+        "sourceSha256": "407a0e800680ad1da809c227a6dc1ff15341e22565ef05429a85552d524dd9c0",
+        "exportSha256": "22532444fea489abe92f04533ec19663ef5a1522adeae054e5da8dde076944d4",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 350710,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/ee344f334eab0326857b62a8ab6827686976a96a8cf784d7e64657d9eef02c56.manifest.json",
+        "errors": [],
+        "renderSha256": "60130f91a9acf7753ece4ec2daf04540b74a6a9f49388e8bd0a5eac18e50c291"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/bear/dense/colmap_workspace/sparse_seed",
+      "files": {
+        "cameras": "large_overlap/bear/dense/colmap_workspace/sparse_seed/cameras.txt",
+        "images": "large_overlap/bear/dense/colmap_workspace/sparse_seed/images.txt",
+        "points3d": "large_overlap/bear/dense/colmap_workspace/sparse_seed/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/bear/dense/colmap_workspace/sparse_seed/cameras.txt",
+          "bytes": 93,
+          "sha256": "a8a479eeed07248189621d2ff036d9276c0263edac2ec4fb1daedb0a70fc87cf"
+        },
+        "images": {
+          "sourcePath": "large_overlap/bear/dense/colmap_workspace/sparse_seed/images.txt",
+          "bytes": 466,
+          "sha256": "3b006d23e1344ea39d202b793418d2a93a55c4c6e8d5a21ab0317444edc0ca64"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/bear/dense/images/0000.png",
+          "bytes": 810639,
+          "sha256": "e63c0dd83890632043b972f02dce9f5890126c35006f6e8c644111069d263357",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/bear/dense/images/0001.png",
+          "bytes": 865362,
+          "sha256": "f339a7ab38640bc4e3644ce10eeb8fd121f6ad777cdb3ccda2e0d64848c455b9",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/bear/dense/images/0002.png",
+          "bytes": 829423,
+          "sha256": "a510696c9c0d22f1882bfac087d989bb9225f7d7b173cd7c3ad0cc09a0d6768f",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/bear/dense/mask/0000.png",
+          "bytes": 6742,
+          "sha256": "57d1663b15b749ec249a99a2c1533743e001d4df656523aa2df62781ab35959a",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/bear/dense/mask/0001.png",
+          "bytes": 8572,
+          "sha256": "270eb34d0b319b51fc0da182760b3f2b4cf8c848f7b4243e05f8d321ed5a6d9d",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/bear/dense/mask/0002.png",
+          "bytes": 8211,
+          "sha256": "7bcfaa81f1065b68367fcbc5922527a740f3755dd16666b01733a7f4b416084c",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 340440
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "0cd90175f72689165ab004b937cd71957fd4980eecf8e990110ab19494738c50",
+      "points": {
+        "sourcePath": "large_overlap/bear/dense/sparse/points3D.ply",
+        "bytes": 9192114,
+        "sha256": "e67d68fedd14a15e4c51a15562da40675c0c0044c7f3c6727b678db20f7f278c",
+        "format": "xyz_ply",
+        "count": 340440
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            1.9012076700342677,
+            1.3359270670563321,
+            1.7949760918071438
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155871
+          ],
+          "target": [
+            0.16004183888435364,
+            0.10686883330345154,
+            -0.2534542977809906
+          ],
+          "distance": 2.956063202048955
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.04096860779176269,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/bear/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "f3e402a5208c55190a6aeacb9bddd57bd550cc29c18c356e04e74d81471023fc"
+          },
+          "images": {
+            "sourcePath": "large_overlap/bear/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "2741c811d4315045e3fd908c7dd102b49986057043add031474274001d30e2ef"
+          }
+        },
+        "sceneRoot": "large_overlap/bear/dense"
+      },
+      "selectionSha256": "f0932bcc730465ae8174ef87a71e94bcdd070d6794a68ca51bc6952f4218b8f7",
+      "independentRead": {
+        "id": "data-a5566bf470510dd671a288b8",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 340440
+        },
+        "sourceSha256": "e67d68fedd14a15e4c51a15562da40675c0c0044c7f3c6727b678db20f7f278c",
+        "exportSha256": "0cd90175f72689165ab004b937cd71957fd4980eecf8e990110ab19494738c50",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 340440,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/f0932bcc730465ae8174ef87a71e94bcdd070d6794a68ca51bc6952f4218b8f7.manifest.json",
+        "errors": [],
+        "renderSha256": "d92c6b9947e1746ee368c5448c4ab1a50345f676dc4dc0e074dee6277fb2dc32"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/bear/dense/sparse_calibrated",
+      "files": {
+        "cameras": "large_overlap/bear/dense/sparse_calibrated/cameras.bin",
+        "images": "large_overlap/bear/dense/sparse_calibrated/images.bin",
+        "points3d": "large_overlap/bear/dense/sparse_calibrated/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/bear/dense/sparse_calibrated/cameras.bin",
+          "bytes": 176,
+          "sha256": "f3e402a5208c55190a6aeacb9bddd57bd550cc29c18c356e04e74d81471023fc"
+        },
+        "images": {
+          "sourcePath": "large_overlap/bear/dense/sparse_calibrated/images.bin",
+          "bytes": 251,
+          "sha256": "2741c811d4315045e3fd908c7dd102b49986057043add031474274001d30e2ef"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/bear/dense/images/0000.png",
+          "bytes": 810639,
+          "sha256": "e63c0dd83890632043b972f02dce9f5890126c35006f6e8c644111069d263357",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/bear/dense/images/0001.png",
+          "bytes": 865362,
+          "sha256": "f339a7ab38640bc4e3644ce10eeb8fd121f6ad777cdb3ccda2e0d64848c455b9",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/bear/dense/images/0002.png",
+          "bytes": 829423,
+          "sha256": "a510696c9c0d22f1882bfac087d989bb9225f7d7b173cd7c3ad0cc09a0d6768f",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/bear/dense/mask/0000.png",
+          "bytes": 6742,
+          "sha256": "57d1663b15b749ec249a99a2c1533743e001d4df656523aa2df62781ab35959a",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/bear/dense/mask/0001.png",
+          "bytes": 8572,
+          "sha256": "270eb34d0b319b51fc0da182760b3f2b4cf8c848f7b4243e05f8d321ed5a6d9d",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/bear/dense/mask/0002.png",
+          "bytes": 8211,
+          "sha256": "7bcfaa81f1065b68367fcbc5922527a740f3755dd16666b01733a7f4b416084c",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 3,
+        "images": 3,
+        "points": 340440
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "aff0be7283434152f2faa2eef45e2acecf3912285b7843411a641f8bd83ee55a",
+      "points": {
+        "sourcePath": "large_overlap/bear/dense/sparse/points3D.ply",
+        "bytes": 9192114,
+        "sha256": "e67d68fedd14a15e4c51a15562da40675c0c0044c7f3c6727b678db20f7f278c",
+        "format": "xyz_ply",
+        "count": 340440
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            1.9012076700342677,
+            1.3359270670563321,
+            1.7949760918071438
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155871
+          ],
+          "target": [
+            0.16004183888435364,
+            0.10686883330345154,
+            -0.2534542977809906
+          ],
+          "distance": 2.956063202048955
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.04096860779176269,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/bear/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "f3e402a5208c55190a6aeacb9bddd57bd550cc29c18c356e04e74d81471023fc"
+          },
+          "images": {
+            "sourcePath": "large_overlap/bear/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "2741c811d4315045e3fd908c7dd102b49986057043add031474274001d30e2ef"
+          }
+        },
+        "sceneRoot": "large_overlap/bear/dense"
+      },
+      "selectionSha256": "2cb2b95b0825f87a3b8fd30654a16c027177d2926a29ff7e9516d2ba3037cc63",
+      "independentRead": {
+        "id": "data-755d27d418ac7f6883d94788",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 3,
+          "images": 3,
+          "points": 340440
+        },
+        "sourceSha256": "e67d68fedd14a15e4c51a15562da40675c0c0044c7f3c6727b678db20f7f278c",
+        "exportSha256": "aff0be7283434152f2faa2eef45e2acecf3912285b7843411a641f8bd83ee55a",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 340440,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/2cb2b95b0825f87a3b8fd30654a16c027177d2926a29ff7e9516d2ba3037cc63.manifest.json",
+        "errors": [],
+        "renderSha256": "d92c6b9947e1746ee368c5448c4ab1a50345f676dc4dc0e074dee6277fb2dc32"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/bread/dense/colmap_workspace/sparse_seed",
+      "files": {
+        "cameras": "large_overlap/bread/dense/colmap_workspace/sparse_seed/cameras.txt",
+        "images": "large_overlap/bread/dense/colmap_workspace/sparse_seed/images.txt",
+        "points3d": "large_overlap/bread/dense/colmap_workspace/sparse_seed/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/bread/dense/colmap_workspace/sparse_seed/cameras.txt",
+          "bytes": 94,
+          "sha256": "7b68f6c9ff2d724be476257e98c5d68c94b5adde08d79f7f2ad2238dff9ffb9b"
+        },
+        "images": {
+          "sourcePath": "large_overlap/bread/dense/colmap_workspace/sparse_seed/images.txt",
+          "bytes": 469,
+          "sha256": "cab192424df86bef27c13c6c7138bc414b2f8950eea17bb29c30d3364fa4533e"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/bread/dense/images/0000.png",
+          "bytes": 485679,
+          "sha256": "a06a118d20bf11efd38763f0fb29fac429e55850276393e9f58e250a82751dd5",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/bread/dense/images/0001.png",
+          "bytes": 480076,
+          "sha256": "a0c8d09bd9aed0ac6f644ebfbae4fa1c6acae526b1d1e08399ea08e559880742",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/bread/dense/images/0002.png",
+          "bytes": 487438,
+          "sha256": "8b769816b21f47172f8895a1552eb613697783f2e3785e151195073bb799ac82",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/bread/dense/mask/0000.png",
+          "bytes": 3426,
+          "sha256": "583e5772a849972506cceec48347d7b3984ca778ce4a4e05a0f06715e0d61d67",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/bread/dense/mask/0001.png",
+          "bytes": 3413,
+          "sha256": "b95f4705e9d1dcf846c3b7cd447bcfa9b3c1df1fa8c2ce255c3f25a568f95402",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/bread/dense/mask/0002.png",
+          "bytes": 3422,
+          "sha256": "2a62f6f858feecfa17ccfcb93ec737fe22dbdb1609e30cf2ef4eb5784138c35c",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 326806
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "1b8bdb0424e3b8167a839899dc24c1be88feb24401b9c725a633ceddb97fa907",
+      "points": {
+        "sourcePath": "large_overlap/bread/dense/sparse/points3D.ply",
+        "bytes": 8823996,
+        "sha256": "66eb3b60dff770091378edb5fefd86406e22c6b64e0858e12d78a6dcfddd3d63",
+        "format": "xyz_ply",
+        "count": 326806
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            0.8439678957844806,
+            0.5278076779757375,
+            1.160679459371407
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155872
+          ],
+          "target": [
+            -0.07696962356567383,
+            -0.12226586509495974,
+            0.07722355425357819
+          ],
+          "distance": 1.5635210981249978
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.021669118102356576,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/bread/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "64693a7f24df8582bafe29017468fbf2fb08880c7bf3f0ea0f1dcf33222ed18d"
+          },
+          "images": {
+            "sourcePath": "large_overlap/bread/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "e41c7c84064ba69aba3061e138477b3046031a3e595c8a076615ef77f1982fca"
+          }
+        },
+        "sceneRoot": "large_overlap/bread/dense"
+      },
+      "selectionSha256": "6f398b29b8914d13e46d694c5f846783cd2612d33743cfc1e9cbacd2f04f4306",
+      "independentRead": {
+        "id": "data-3f96d2d3beee25e0bbfd53c9",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 326806
+        },
+        "sourceSha256": "66eb3b60dff770091378edb5fefd86406e22c6b64e0858e12d78a6dcfddd3d63",
+        "exportSha256": "1b8bdb0424e3b8167a839899dc24c1be88feb24401b9c725a633ceddb97fa907",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 326806,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/6f398b29b8914d13e46d694c5f846783cd2612d33743cfc1e9cbacd2f04f4306.manifest.json",
+        "errors": [],
+        "renderSha256": "cdaf559ac9fc4a7fe2665b5d5193b2c2692e00e095c287ff1bf712c0e3b03c68"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/bread/dense/sparse_calibrated",
+      "files": {
+        "cameras": "large_overlap/bread/dense/sparse_calibrated/cameras.bin",
+        "images": "large_overlap/bread/dense/sparse_calibrated/images.bin",
+        "points3d": "large_overlap/bread/dense/sparse_calibrated/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/bread/dense/sparse_calibrated/cameras.bin",
+          "bytes": 176,
+          "sha256": "64693a7f24df8582bafe29017468fbf2fb08880c7bf3f0ea0f1dcf33222ed18d"
+        },
+        "images": {
+          "sourcePath": "large_overlap/bread/dense/sparse_calibrated/images.bin",
+          "bytes": 251,
+          "sha256": "e41c7c84064ba69aba3061e138477b3046031a3e595c8a076615ef77f1982fca"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/bread/dense/images/0000.png",
+          "bytes": 485679,
+          "sha256": "a06a118d20bf11efd38763f0fb29fac429e55850276393e9f58e250a82751dd5",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/bread/dense/images/0001.png",
+          "bytes": 480076,
+          "sha256": "a0c8d09bd9aed0ac6f644ebfbae4fa1c6acae526b1d1e08399ea08e559880742",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/bread/dense/images/0002.png",
+          "bytes": 487438,
+          "sha256": "8b769816b21f47172f8895a1552eb613697783f2e3785e151195073bb799ac82",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/bread/dense/mask/0000.png",
+          "bytes": 3426,
+          "sha256": "583e5772a849972506cceec48347d7b3984ca778ce4a4e05a0f06715e0d61d67",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/bread/dense/mask/0001.png",
+          "bytes": 3413,
+          "sha256": "b95f4705e9d1dcf846c3b7cd447bcfa9b3c1df1fa8c2ce255c3f25a568f95402",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/bread/dense/mask/0002.png",
+          "bytes": 3422,
+          "sha256": "2a62f6f858feecfa17ccfcb93ec737fe22dbdb1609e30cf2ef4eb5784138c35c",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 3,
+        "images": 3,
+        "points": 326806
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "762e37fdaf9b747fd2343de9ea45216b76eb49875cb41b36847d53202b8dd93a",
+      "points": {
+        "sourcePath": "large_overlap/bread/dense/sparse/points3D.ply",
+        "bytes": 8823996,
+        "sha256": "66eb3b60dff770091378edb5fefd86406e22c6b64e0858e12d78a6dcfddd3d63",
+        "format": "xyz_ply",
+        "count": 326806
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            0.8439678957844806,
+            0.5278076779757375,
+            1.160679459371407
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155872
+          ],
+          "target": [
+            -0.07696962356567383,
+            -0.12226586509495974,
+            0.07722355425357819
+          ],
+          "distance": 1.5635210981249978
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.021669118102356576,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/bread/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "64693a7f24df8582bafe29017468fbf2fb08880c7bf3f0ea0f1dcf33222ed18d"
+          },
+          "images": {
+            "sourcePath": "large_overlap/bread/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "e41c7c84064ba69aba3061e138477b3046031a3e595c8a076615ef77f1982fca"
+          }
+        },
+        "sceneRoot": "large_overlap/bread/dense"
+      },
+      "selectionSha256": "1b94a5d97848608df766ea7ec2163626e84241d586b684e10bff80d47fabe13f",
+      "independentRead": {
+        "id": "data-94182469eff91112b82a45e7",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 3,
+          "images": 3,
+          "points": 326806
+        },
+        "sourceSha256": "66eb3b60dff770091378edb5fefd86406e22c6b64e0858e12d78a6dcfddd3d63",
+        "exportSha256": "762e37fdaf9b747fd2343de9ea45216b76eb49875cb41b36847d53202b8dd93a",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 326806,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/1b94a5d97848608df766ea7ec2163626e84241d586b684e10bff80d47fabe13f.manifest.json",
+        "errors": [],
+        "renderSha256": "0201c735e1b24ba9f32bb7e34741bc19b856bea9bb264ba9a164c4467c0e2f95"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/camera/dense/colmap_workspace/sparse_seed",
+      "files": {
+        "cameras": "large_overlap/camera/dense/colmap_workspace/sparse_seed/cameras.txt",
+        "images": "large_overlap/camera/dense/colmap_workspace/sparse_seed/images.txt",
+        "points3d": "large_overlap/camera/dense/colmap_workspace/sparse_seed/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/camera/dense/colmap_workspace/sparse_seed/cameras.txt",
+          "bytes": 94,
+          "sha256": "80871e0f0c931902a73ea455e519feb8f91d77a21d53859f3336dcb59953e2f5"
+        },
+        "images": {
+          "sourcePath": "large_overlap/camera/dense/colmap_workspace/sparse_seed/images.txt",
+          "bytes": 476,
+          "sha256": "e30375f38e9a32f5aca600c1388f2e072f01ae1267dd02fe564d0b4404a00b5b"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/camera/dense/images/0000.png",
+          "bytes": 824948,
+          "sha256": "31689de5ba446d0f7ca1ade902bf9e78bc7d4264ad2f597023ba01def48a15b2",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/camera/dense/images/0001.png",
+          "bytes": 831839,
+          "sha256": "70d23834dabd03b15b7d91c55869e933e3b9f1d545581b888136fcf4cdaba26c",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/camera/dense/images/0002.png",
+          "bytes": 867102,
+          "sha256": "24f6639b02842b07f38cf3f27fe3ca46d0ba269eeb73e3dc56bf07d9b091881b",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/camera/dense/mask/0000.png",
+          "bytes": 4147,
+          "sha256": "50d69deed0865056a22192d7bb86dad4d39d8d12bdbc07d4b6ce174059743415",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/camera/dense/mask/0001.png",
+          "bytes": 4087,
+          "sha256": "bd0b57134adb8a7e1332c47ec792b29525038effc1461cd554ec5232bc085f2c",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/camera/dense/mask/0002.png",
+          "bytes": 4013,
+          "sha256": "af24832e76bb0ca089316b394cce1bd03c2984fe981e1a605c1d0d985effacc2",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 359250
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "f133d693560d4f5cf2477192a6aace98ec5b70b90c1ba2fb738b7f7cd787de89",
+      "points": {
+        "sourcePath": "large_overlap/camera/dense/sparse/points3D.ply",
+        "bytes": 9699984,
+        "sha256": "58db19f22fea34cdd56bb85215b6b507e7d715a6ae0c462e682f4fa4a3fba231",
+        "format": "xyz_ply",
+        "count": 359250
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            1.2105061280828717,
+            0.6768269770707805,
+            1.2549962589088612
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155871
+          ],
+          "target": [
+            0.15222397446632385,
+            -0.07019571959972382,
+            0.009958431124687195
+          ],
+          "distance": 1.796697865145302
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.02490075655568348,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/camera/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "3725837094f7bd157de4ca1e69a824047d20db1e724628dd1d1db1dc22e5b82f"
+          },
+          "images": {
+            "sourcePath": "large_overlap/camera/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "5ea36716048eacba93bfe8793adf08d32b117df8b4e38f30ec0f5c9a13e20efe"
+          }
+        },
+        "sceneRoot": "large_overlap/camera/dense"
+      },
+      "selectionSha256": "1dfab9daabee467826ba590d526b197af2d10d6f90e1f82edd3ac46de2fdd9f6",
+      "independentRead": {
+        "id": "data-b93f75d0a07dd8b1a4f73987",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 359250
+        },
+        "sourceSha256": "58db19f22fea34cdd56bb85215b6b507e7d715a6ae0c462e682f4fa4a3fba231",
+        "exportSha256": "f133d693560d4f5cf2477192a6aace98ec5b70b90c1ba2fb738b7f7cd787de89",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 359250,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/1dfab9daabee467826ba590d526b197af2d10d6f90e1f82edd3ac46de2fdd9f6.manifest.json",
+        "errors": [],
+        "renderSha256": "2ab63b18bc2655aa9eada79ed009c5b759a0e009ba566b1d46072990f68a8e31"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/camera/dense/sparse_calibrated",
+      "files": {
+        "cameras": "large_overlap/camera/dense/sparse_calibrated/cameras.bin",
+        "images": "large_overlap/camera/dense/sparse_calibrated/images.bin",
+        "points3d": "large_overlap/camera/dense/sparse_calibrated/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/camera/dense/sparse_calibrated/cameras.bin",
+          "bytes": 176,
+          "sha256": "3725837094f7bd157de4ca1e69a824047d20db1e724628dd1d1db1dc22e5b82f"
+        },
+        "images": {
+          "sourcePath": "large_overlap/camera/dense/sparse_calibrated/images.bin",
+          "bytes": 251,
+          "sha256": "5ea36716048eacba93bfe8793adf08d32b117df8b4e38f30ec0f5c9a13e20efe"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/camera/dense/images/0000.png",
+          "bytes": 824948,
+          "sha256": "31689de5ba446d0f7ca1ade902bf9e78bc7d4264ad2f597023ba01def48a15b2",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/camera/dense/images/0001.png",
+          "bytes": 831839,
+          "sha256": "70d23834dabd03b15b7d91c55869e933e3b9f1d545581b888136fcf4cdaba26c",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/camera/dense/images/0002.png",
+          "bytes": 867102,
+          "sha256": "24f6639b02842b07f38cf3f27fe3ca46d0ba269eeb73e3dc56bf07d9b091881b",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/camera/dense/mask/0000.png",
+          "bytes": 4147,
+          "sha256": "50d69deed0865056a22192d7bb86dad4d39d8d12bdbc07d4b6ce174059743415",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/camera/dense/mask/0001.png",
+          "bytes": 4087,
+          "sha256": "bd0b57134adb8a7e1332c47ec792b29525038effc1461cd554ec5232bc085f2c",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/camera/dense/mask/0002.png",
+          "bytes": 4013,
+          "sha256": "af24832e76bb0ca089316b394cce1bd03c2984fe981e1a605c1d0d985effacc2",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 3,
+        "images": 3,
+        "points": 359250
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "8158d27fccf56a6165b781f855254d0ed5acdf4623914efaca43258f9611d04f",
+      "points": {
+        "sourcePath": "large_overlap/camera/dense/sparse/points3D.ply",
+        "bytes": 9699984,
+        "sha256": "58db19f22fea34cdd56bb85215b6b507e7d715a6ae0c462e682f4fa4a3fba231",
+        "format": "xyz_ply",
+        "count": 359250
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            1.2105061280828717,
+            0.6768269770707805,
+            1.2549962589088612
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155871
+          ],
+          "target": [
+            0.15222397446632385,
+            -0.07019571959972382,
+            0.009958431124687195
+          ],
+          "distance": 1.796697865145302
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.02490075655568348,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/camera/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "3725837094f7bd157de4ca1e69a824047d20db1e724628dd1d1db1dc22e5b82f"
+          },
+          "images": {
+            "sourcePath": "large_overlap/camera/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "5ea36716048eacba93bfe8793adf08d32b117df8b4e38f30ec0f5c9a13e20efe"
+          }
+        },
+        "sceneRoot": "large_overlap/camera/dense"
+      },
+      "selectionSha256": "5a9949ac094a647ec051c466b64778dcdf1e335c9d62bac8ccb3bd99e1d2fd29",
+      "independentRead": {
+        "id": "data-15fffe6e9efcbf8d5073efcd",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 3,
+          "images": 3,
+          "points": 359250
+        },
+        "sourceSha256": "58db19f22fea34cdd56bb85215b6b507e7d715a6ae0c462e682f4fa4a3fba231",
+        "exportSha256": "8158d27fccf56a6165b781f855254d0ed5acdf4623914efaca43258f9611d04f",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 359250,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/5a9949ac094a647ec051c466b64778dcdf1e335c9d62bac8ccb3bd99e1d2fd29.manifest.json",
+        "errors": [],
+        "renderSha256": "84dac61ccdc78ea8d5ef4f2e32330b1a5049f369954ec7f6801e6fc4874a66c0"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/clock/dense/colmap_workspace/sparse_seed",
+      "files": {
+        "cameras": "large_overlap/clock/dense/colmap_workspace/sparse_seed/cameras.txt",
+        "images": "large_overlap/clock/dense/colmap_workspace/sparse_seed/images.txt",
+        "points3d": "large_overlap/clock/dense/colmap_workspace/sparse_seed/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/clock/dense/colmap_workspace/sparse_seed/cameras.txt",
+          "bytes": 94,
+          "sha256": "08ad616ec230760012596f3896c51124fbc12247bdfac6e4e5d5d10d1a26e035"
+        },
+        "images": {
+          "sourcePath": "large_overlap/clock/dense/colmap_workspace/sparse_seed/images.txt",
+          "bytes": 473,
+          "sha256": "4cd6439b55fd290daa8b7354bcfeabfc016127bb4e460e4b19a2b1479a529ecc"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/clock/dense/images/0000.png",
+          "bytes": 649421,
+          "sha256": "58259ea5bb1bb816fa7a9110cd9a5327c78a67b52fb1de8007a53a0858d1a47f",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/clock/dense/images/0001.png",
+          "bytes": 626657,
+          "sha256": "cc78414e43c211873a8d796bb731a79605c9cb559fd1403c5be64fe554def500",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/clock/dense/images/0002.png",
+          "bytes": 647712,
+          "sha256": "37a5b5189587b661151716eb01ca269d01174e5b273d071e01f3e47f298a4ed1",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/clock/dense/mask/0000.png",
+          "bytes": 7269,
+          "sha256": "fc2c9176928e8382545d6513b3242c9349658b28b90517ac7bd3999ab70adc91",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/clock/dense/mask/0001.png",
+          "bytes": 6942,
+          "sha256": "d045575770d8754be58860fb5af40e7abd1e5447c7df2e714b7511dde4161989",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/clock/dense/mask/0002.png",
+          "bytes": 7215,
+          "sha256": "f737b675026075ef6e30ff4ac6c955072f1017d8f8efa6f4a52104902ee78cfa",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 220844
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "3610adcf1548b9a7bac62cfaf5e72a6a00c3e1de2670ea4680f42d4d629b04be",
+      "points": {
+        "sourcePath": "large_overlap/clock/dense/sparse/points3D.ply",
+        "bytes": 5963022,
+        "sha256": "c89381c84ff4a696eb30e72842f48236f235c36df5e688023b63537d74e9a0d7",
+        "format": "xyz_ply",
+        "count": 220844
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            1.6609549947467799,
+            1.2900325447592562,
+            1.995940163776846
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427751,
+            0.9171103521155871
+          ],
+          "target": [
+            -0.11163495481014252,
+            0.038792580366134644,
+            -0.08945977687835693
+          ],
+          "distance": 3.009413479442371
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.04170799881310406,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/clock/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "c212ed303db5e9e640dc056afa1039b705dc78a946b19602b16c5f31f3eff5f2"
+          },
+          "images": {
+            "sourcePath": "large_overlap/clock/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "c4ad6f48fdd788061c5a4aa5c1251d2a286e6ecfa4ef00a23f83193fd708c85a"
+          }
+        },
+        "sceneRoot": "large_overlap/clock/dense"
+      },
+      "selectionSha256": "52678a24ecb13a2cc3f9739ac2878c092adab32cfeb15ea4aa29dee761f3309f",
+      "independentRead": {
+        "id": "data-db762a235852d78bdb7888bc",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 220844
+        },
+        "sourceSha256": "c89381c84ff4a696eb30e72842f48236f235c36df5e688023b63537d74e9a0d7",
+        "exportSha256": "3610adcf1548b9a7bac62cfaf5e72a6a00c3e1de2670ea4680f42d4d629b04be",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 220844,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/52678a24ecb13a2cc3f9739ac2878c092adab32cfeb15ea4aa29dee761f3309f.manifest.json",
+        "errors": [],
+        "renderSha256": "e7938e993f0158b412a7f16bd69ec4e678d11ccbfa4ac766284c41475ad41191"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/clock/dense/sparse_calibrated",
+      "files": {
+        "cameras": "large_overlap/clock/dense/sparse_calibrated/cameras.bin",
+        "images": "large_overlap/clock/dense/sparse_calibrated/images.bin",
+        "points3d": "large_overlap/clock/dense/sparse_calibrated/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/clock/dense/sparse_calibrated/cameras.bin",
+          "bytes": 176,
+          "sha256": "c212ed303db5e9e640dc056afa1039b705dc78a946b19602b16c5f31f3eff5f2"
+        },
+        "images": {
+          "sourcePath": "large_overlap/clock/dense/sparse_calibrated/images.bin",
+          "bytes": 251,
+          "sha256": "c4ad6f48fdd788061c5a4aa5c1251d2a286e6ecfa4ef00a23f83193fd708c85a"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/clock/dense/images/0000.png",
+          "bytes": 649421,
+          "sha256": "58259ea5bb1bb816fa7a9110cd9a5327c78a67b52fb1de8007a53a0858d1a47f",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/clock/dense/images/0001.png",
+          "bytes": 626657,
+          "sha256": "cc78414e43c211873a8d796bb731a79605c9cb559fd1403c5be64fe554def500",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/clock/dense/images/0002.png",
+          "bytes": 647712,
+          "sha256": "37a5b5189587b661151716eb01ca269d01174e5b273d071e01f3e47f298a4ed1",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/clock/dense/mask/0000.png",
+          "bytes": 7269,
+          "sha256": "fc2c9176928e8382545d6513b3242c9349658b28b90517ac7bd3999ab70adc91",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/clock/dense/mask/0001.png",
+          "bytes": 6942,
+          "sha256": "d045575770d8754be58860fb5af40e7abd1e5447c7df2e714b7511dde4161989",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/clock/dense/mask/0002.png",
+          "bytes": 7215,
+          "sha256": "f737b675026075ef6e30ff4ac6c955072f1017d8f8efa6f4a52104902ee78cfa",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 3,
+        "images": 3,
+        "points": 220844
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "039440642de69e1abcdcf8c6c76c04038598164503c03ff7a1fb3a466e667830",
+      "points": {
+        "sourcePath": "large_overlap/clock/dense/sparse/points3D.ply",
+        "bytes": 5963022,
+        "sha256": "c89381c84ff4a696eb30e72842f48236f235c36df5e688023b63537d74e9a0d7",
+        "format": "xyz_ply",
+        "count": 220844
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            1.6609549947467799,
+            1.2900325447592562,
+            1.995940163776846
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427751,
+            0.9171103521155871
+          ],
+          "target": [
+            -0.11163495481014252,
+            0.038792580366134644,
+            -0.08945977687835693
+          ],
+          "distance": 3.009413479442371
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.04170799881310406,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/clock/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "c212ed303db5e9e640dc056afa1039b705dc78a946b19602b16c5f31f3eff5f2"
+          },
+          "images": {
+            "sourcePath": "large_overlap/clock/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "c4ad6f48fdd788061c5a4aa5c1251d2a286e6ecfa4ef00a23f83193fd708c85a"
+          }
+        },
+        "sceneRoot": "large_overlap/clock/dense"
+      },
+      "selectionSha256": "ee677ce474a4d8518c362ed05414f57fb455c31265d02e9fc6cfdb8461418513",
+      "independentRead": {
+        "id": "data-a29001c258975880cbc4b680",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 3,
+          "images": 3,
+          "points": 220844
+        },
+        "sourceSha256": "c89381c84ff4a696eb30e72842f48236f235c36df5e688023b63537d74e9a0d7",
+        "exportSha256": "039440642de69e1abcdcf8c6c76c04038598164503c03ff7a1fb3a466e667830",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 220844,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/ee677ce474a4d8518c362ed05414f57fb455c31265d02e9fc6cfdb8461418513.manifest.json",
+        "errors": [],
+        "renderSha256": "1f73f2d9baac2d33ddeeb56a54651f7f76a599bd0a27e46be926fe6f232a9ddb"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/cow/dense/colmap_workspace/sparse_seed",
+      "files": {
+        "cameras": "large_overlap/cow/dense/colmap_workspace/sparse_seed/cameras.txt",
+        "images": "large_overlap/cow/dense/colmap_workspace/sparse_seed/images.txt",
+        "points3d": "large_overlap/cow/dense/colmap_workspace/sparse_seed/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/cow/dense/colmap_workspace/sparse_seed/cameras.txt",
+          "bytes": 94,
+          "sha256": "3eb9cd130d3b94e7aa8fff523eeab4682eda2d81d4282b31cb23a68b3bc72267"
+        },
+        "images": {
+          "sourcePath": "large_overlap/cow/dense/colmap_workspace/sparse_seed/images.txt",
+          "bytes": 472,
+          "sha256": "47a222af5b3862cb1fa60b17f8da2e4389c2f61c171db9ed3bca991db89af2c6"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/cow/dense/images/0000.png",
+          "bytes": 584667,
+          "sha256": "b73b23e1d14dc25eddba0bc08f94362091ad1642f75507152cdfbb0a05188adb",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/cow/dense/images/0001.png",
+          "bytes": 600927,
+          "sha256": "78a4d17de6cda75b09462b38ac6a439407a632fc3b3756b74808b521adef4a01",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/cow/dense/images/0002.png",
+          "bytes": 610521,
+          "sha256": "f3c49e2f9fa4e7a69c11f3bec2f4912b6e8ee2d8fd030957fcb33931c8686f75",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/cow/dense/mask/0000.png",
+          "bytes": 4657,
+          "sha256": "7cc520af7b0f790aef845a7898de45c3ea9635b089db5156d7ba35b8345398c9",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/cow/dense/mask/0001.png",
+          "bytes": 3920,
+          "sha256": "34ae3c0ee82167c7533d7b2418e6df28c26d86cba502186fc99ee0456929eeeb",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/cow/dense/mask/0002.png",
+          "bytes": 4418,
+          "sha256": "7049efebd49206b40aa08910cc838ff146c8a327031fc5a10c947837bbaa2d85",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 303922
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "58054249af4755b1961aab477ac557b5c33d461e4874c534b47be79a201e9edb",
+      "points": {
+        "sourcePath": "large_overlap/cow/dense/sparse/points3D.ply",
+        "bytes": 8206128,
+        "sha256": "6f02bd6116a8123800464d2513cf72e37feccfe4d0c5a0f422b1803eba5fef37",
+        "format": "xyz_ply",
+        "count": 303922
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            2.3700986153458494,
+            1.4391091419721307,
+            3.369791564587862
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155871
+          ],
+          "target": [
+            -0.6758973300457001,
+            -0.7110056430101395,
+            -0.21373307704925537
+          ],
+          "distance": 5.171337713315729
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.07167049283274235,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/cow/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "f47679f5a65c4ce082d0a63106da7b957f42fba2954d7f99f52b1b90359aad24"
+          },
+          "images": {
+            "sourcePath": "large_overlap/cow/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "718b30b8305313dc7fe0325f13baa94e43ff40292161892e2a9b75185b7d751f"
+          }
+        },
+        "sceneRoot": "large_overlap/cow/dense"
+      },
+      "selectionSha256": "a4953902e870b177e89c036164ba47b82350316ae7b23a42e83f44ab5ef0cf3b",
+      "independentRead": {
+        "id": "data-e85d555331ebbd39c80e8972",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 303922
+        },
+        "sourceSha256": "6f02bd6116a8123800464d2513cf72e37feccfe4d0c5a0f422b1803eba5fef37",
+        "exportSha256": "58054249af4755b1961aab477ac557b5c33d461e4874c534b47be79a201e9edb",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 303922,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/a4953902e870b177e89c036164ba47b82350316ae7b23a42e83f44ab5ef0cf3b.manifest.json",
+        "errors": [],
+        "renderSha256": "c9c31ff5d388f5e6b76883023fbdc029a7348a36744e1887b253c1ae9b17df62"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/cow/dense/sparse_calibrated",
+      "files": {
+        "cameras": "large_overlap/cow/dense/sparse_calibrated/cameras.bin",
+        "images": "large_overlap/cow/dense/sparse_calibrated/images.bin",
+        "points3d": "large_overlap/cow/dense/sparse_calibrated/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/cow/dense/sparse_calibrated/cameras.bin",
+          "bytes": 176,
+          "sha256": "f47679f5a65c4ce082d0a63106da7b957f42fba2954d7f99f52b1b90359aad24"
+        },
+        "images": {
+          "sourcePath": "large_overlap/cow/dense/sparse_calibrated/images.bin",
+          "bytes": 251,
+          "sha256": "718b30b8305313dc7fe0325f13baa94e43ff40292161892e2a9b75185b7d751f"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/cow/dense/images/0000.png",
+          "bytes": 584667,
+          "sha256": "b73b23e1d14dc25eddba0bc08f94362091ad1642f75507152cdfbb0a05188adb",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/cow/dense/images/0001.png",
+          "bytes": 600927,
+          "sha256": "78a4d17de6cda75b09462b38ac6a439407a632fc3b3756b74808b521adef4a01",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/cow/dense/images/0002.png",
+          "bytes": 610521,
+          "sha256": "f3c49e2f9fa4e7a69c11f3bec2f4912b6e8ee2d8fd030957fcb33931c8686f75",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/cow/dense/mask/0000.png",
+          "bytes": 4657,
+          "sha256": "7cc520af7b0f790aef845a7898de45c3ea9635b089db5156d7ba35b8345398c9",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/cow/dense/mask/0001.png",
+          "bytes": 3920,
+          "sha256": "34ae3c0ee82167c7533d7b2418e6df28c26d86cba502186fc99ee0456929eeeb",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/cow/dense/mask/0002.png",
+          "bytes": 4418,
+          "sha256": "7049efebd49206b40aa08910cc838ff146c8a327031fc5a10c947837bbaa2d85",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 3,
+        "images": 3,
+        "points": 303922
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "1c32446fd16202ef58e77c309e38986cb34131b9bcda776eb3a0c162d0df05d7",
+      "points": {
+        "sourcePath": "large_overlap/cow/dense/sparse/points3D.ply",
+        "bytes": 8206128,
+        "sha256": "6f02bd6116a8123800464d2513cf72e37feccfe4d0c5a0f422b1803eba5fef37",
+        "format": "xyz_ply",
+        "count": 303922
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            2.3700986153458494,
+            1.4391091419721307,
+            3.369791564587862
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427752,
+            0.9171103521155871
+          ],
+          "target": [
+            -0.6758973300457001,
+            -0.7110056430101395,
+            -0.21373307704925537
+          ],
+          "distance": 5.171337713315729
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.07167049283274235,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/cow/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "f47679f5a65c4ce082d0a63106da7b957f42fba2954d7f99f52b1b90359aad24"
+          },
+          "images": {
+            "sourcePath": "large_overlap/cow/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "718b30b8305313dc7fe0325f13baa94e43ff40292161892e2a9b75185b7d751f"
+          }
+        },
+        "sceneRoot": "large_overlap/cow/dense"
+      },
+      "selectionSha256": "ffdf61d661bac5e989eb03126a396052cdc27d43d29d8219edf85266e931cce2",
+      "independentRead": {
+        "id": "data-a5e66a55087ae8e47e23ae33",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 3,
+          "images": 3,
+          "points": 303922
+        },
+        "sourceSha256": "6f02bd6116a8123800464d2513cf72e37feccfe4d0c5a0f422b1803eba5fef37",
+        "exportSha256": "1c32446fd16202ef58e77c309e38986cb34131b9bcda776eb3a0c162d0df05d7",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 303922,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/ffdf61d661bac5e989eb03126a396052cdc27d43d29d8219edf85266e931cce2.manifest.json",
+        "errors": [],
+        "renderSha256": "fb1fa221efc028b3426464ddd6e4af63d73b6f5d30dca7bc9ac577db84475d55"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/dog/dense/colmap_workspace/sparse_seed",
+      "files": {
+        "cameras": "large_overlap/dog/dense/colmap_workspace/sparse_seed/cameras.txt",
+        "images": "large_overlap/dog/dense/colmap_workspace/sparse_seed/images.txt",
+        "points3d": "large_overlap/dog/dense/colmap_workspace/sparse_seed/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/dog/dense/colmap_workspace/sparse_seed/cameras.txt",
+          "bytes": 94,
+          "sha256": "584d5f6439c5cf7c62e03cfb2e98bef4ce5def6f3120483017963a2275649007"
+        },
+        "images": {
+          "sourcePath": "large_overlap/dog/dense/colmap_workspace/sparse_seed/images.txt",
+          "bytes": 468,
+          "sha256": "ea7ac6ddcc1fa0fe9b5858b8c744119b3e1130559abb4ca472987fdf23337ad5"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/dog/dense/images/0000.png",
+          "bytes": 821101,
+          "sha256": "c4d77fdf234c831889dc48bf03808b2d6cb3afc94b31469818f479c3aef63fd4",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/dog/dense/images/0001.png",
+          "bytes": 829764,
+          "sha256": "3c50e3b68d2f13f6badde89a32dda8f623e14aba4556869439d19c4cc067f2a3",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/dog/dense/images/0002.png",
+          "bytes": 830665,
+          "sha256": "e5dc268ff4aa468f348f1d94239ae1c5f203971ba1903de99790219a5d5896c7",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/dog/dense/mask/0000.png",
+          "bytes": 5847,
+          "sha256": "25ebae480a2844c3fca980c30315c67c77d84865da882ab88e4a6e9c70bb37ce",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/dog/dense/mask/0001.png",
+          "bytes": 5421,
+          "sha256": "640cbb362fbbb2cf25bd529111442a646022ae24dada63ae22f14cd588e10bc4",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/dog/dense/mask/0002.png",
+          "bytes": 5391,
+          "sha256": "09bced812604f30307b84bc13ad3bddddd52901787ec09d02382accac725ec38",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 399842
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "ff21b79eaa00b0ddbcbce1d0207a8812495b35c0b8d93db86a38c07881ced22e",
+      "points": {
+        "sourcePath": "large_overlap/dog/dense/sparse/points3D.ply",
+        "bytes": 10795968,
+        "sha256": "fc4d4452ee608dbb415f4da1947286fdf6932d24e0592fcc4446ac1af0328957",
+        "format": "xyz_ply",
+        "count": 399842
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            2.803070481563258,
+            1.7036702920020665,
+            3.2695967735550546
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427754,
+            0.9171103521155872
+          ],
+          "target": [
+            0.38655008375644684,
+            -0.0021088123321533203,
+            0.4266315996646881
+          ],
+          "distance": 4.102645995665861
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.05685930347780733,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/dog/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "0c46b226b3f4a658afcf522c672364876edfb5977d7868ccfe17e8e88981dddd"
+          },
+          "images": {
+            "sourcePath": "large_overlap/dog/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "16fbdb8eba2469a46ff6983688699cd93f420e757e14de1830328b31e76cf0dc"
+          }
+        },
+        "sceneRoot": "large_overlap/dog/dense"
+      },
+      "selectionSha256": "353c849ca0f2b9cb662016e226c48082f2bc12387ef1a3834245efd7ce12828b",
+      "independentRead": {
+        "id": "data-0a32005d7839cb40c9b6a481",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 399842
+        },
+        "sourceSha256": "fc4d4452ee608dbb415f4da1947286fdf6932d24e0592fcc4446ac1af0328957",
+        "exportSha256": "ff21b79eaa00b0ddbcbce1d0207a8812495b35c0b8d93db86a38c07881ced22e",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 399842,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/353c849ca0f2b9cb662016e226c48082f2bc12387ef1a3834245efd7ce12828b.manifest.json",
+        "errors": [],
+        "renderSha256": "42e76f434efdfe52b5c4e3dda5b168c78bd842d45d9e7480bf0f802528201ce4"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/dog/dense/sparse_calibrated",
+      "files": {
+        "cameras": "large_overlap/dog/dense/sparse_calibrated/cameras.bin",
+        "images": "large_overlap/dog/dense/sparse_calibrated/images.bin",
+        "points3d": "large_overlap/dog/dense/sparse_calibrated/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/dog/dense/sparse_calibrated/cameras.bin",
+          "bytes": 176,
+          "sha256": "0c46b226b3f4a658afcf522c672364876edfb5977d7868ccfe17e8e88981dddd"
+        },
+        "images": {
+          "sourcePath": "large_overlap/dog/dense/sparse_calibrated/images.bin",
+          "bytes": 251,
+          "sha256": "16fbdb8eba2469a46ff6983688699cd93f420e757e14de1830328b31e76cf0dc"
+        }
+      },
+      "photos": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/dog/dense/images/0000.png",
+          "bytes": 821101,
+          "sha256": "c4d77fdf234c831889dc48bf03808b2d6cb3afc94b31469818f479c3aef63fd4",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/dog/dense/images/0001.png",
+          "bytes": 829764,
+          "sha256": "3c50e3b68d2f13f6badde89a32dda8f623e14aba4556869439d19c4cc067f2a3",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/dog/dense/images/0002.png",
+          "bytes": 830665,
+          "sha256": "e5dc268ff4aa468f348f1d94239ae1c5f203971ba1903de99790219a5d5896c7",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "name": "0000.png",
+          "sourcePath": "large_overlap/dog/dense/mask/0000.png",
+          "bytes": 5847,
+          "sha256": "25ebae480a2844c3fca980c30315c67c77d84865da882ab88e4a6e9c70bb37ce",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0001.png",
+          "sourcePath": "large_overlap/dog/dense/mask/0001.png",
+          "bytes": 5421,
+          "sha256": "640cbb362fbbb2cf25bd529111442a646022ae24dada63ae22f14cd588e10bc4",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "name": "0002.png",
+          "sourcePath": "large_overlap/dog/dense/mask/0002.png",
+          "bytes": 5391,
+          "sha256": "09bced812604f30307b84bc13ad3bddddd52901787ec09d02382accac725ec38",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "counts": {
+        "cameras": 3,
+        "images": 3,
+        "points": 399842
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "05c736cdfc85bb96f3f1941bc847b2f38b795aba2e4fcf3e2d7a78b731922edc",
+      "points": {
+        "sourcePath": "large_overlap/dog/dense/sparse/points3D.ply",
+        "bytes": 10795968,
+        "sha256": "fc4d4452ee608dbb415f4da1947286fdf6932d24e0592fcc4446ac1af0328957",
+        "format": "xyz_ply",
+        "count": 399842
+      },
+      "maskRole": "unknown",
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            2.803070481563258,
+            1.7036702920020665,
+            3.2695967735550546
+          ],
+          "quaternion": [
+            -0.19969542038352625,
+            0.3371086987015141,
+            0.07340344937427754,
+            0.9171103521155872
+          ],
+          "target": [
+            0.38655008375644684,
+            -0.0021088123321533203,
+            0.4266315996646881
+          ],
+          "distance": 4.102645995665861
+        },
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0,
+            "maxReprojectionError": null,
+            "thinning": 0,
+            "colorMode": "rgb",
+            "pointSize": 2,
+            "pointOpacity": 1
+          },
+          "camera": {
+            "cameraScale": 0.05685930347780733,
+            "cameraMode": "orbit",
+            "cameraFov": 60
+          }
+        }
+      },
+      "pointAssociation": {
+        "method": "identical_poses",
+        "matchedImages": 3,
+        "maxPoseDelta": 0.0,
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/dog/dense/sparse/cameras.bin",
+            "bytes": 176,
+            "sha256": "0c46b226b3f4a658afcf522c672364876edfb5977d7868ccfe17e8e88981dddd"
+          },
+          "images": {
+            "sourcePath": "large_overlap/dog/dense/sparse/images.bin",
+            "bytes": 251,
+            "sha256": "16fbdb8eba2469a46ff6983688699cd93f420e757e14de1830328b31e76cf0dc"
+          }
+        },
+        "sceneRoot": "large_overlap/dog/dense"
+      },
+      "selectionSha256": "3047412c4d4db1c8657479c71e8e94e8d3eb2903fa0c08cb64a7e681819cc1b0",
+      "independentRead": {
+        "id": "data-1a563d3a51aae91c0dfd2a28",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 3,
+          "images": 3,
+          "points": 399842
+        },
+        "sourceSha256": "fc4d4452ee608dbb415f4da1947286fdf6932d24e0592fcc4446ac1af0328957",
+        "exportSha256": "05c736cdfc85bb96f3f1941bc847b2f38b795aba2e4fcf3e2d7a78b731922edc",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "identical_poses",
+          "sourceNetworkReads": 0,
+          "matchedImages": 3,
+          "maxPoseDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 399842,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/3047412c4d4db1c8657479c71e8e94e8d3eb2903fa0c08cb64a7e681819cc1b0.manifest.json",
+        "errors": [],
+        "renderSha256": "4f76f609db59595213b0d062f6ff74901d6dbb19a4dbcc154b9e7faae3352ecd"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_Goldcoast/scene_009/test/sparse/0",
+      "files": {
+        "cameras": "Data_Goldcoast/scene_009/test/sparse/0/cameras.txt",
+        "images": "Data_Goldcoast/scene_009/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_Goldcoast/scene_009/test/sparse/0/cameras.txt",
+          "bytes": 212,
+          "sha256": "41cf3e0d17a16c98482c0d083f7372ba1723390c54acba5503e282f1778be48a"
+        },
+        "images": {
+          "sourcePath": "Data_Goldcoast/scene_009/test/sparse/0/images.txt",
+          "bytes": 669,
+          "sha256": "4467451356780907b19bba91c72e3de60a93c8cf859481e1d462d487ae8f49a0"
+        }
+      },
+      "photos": [
+        {
+          "sourcePath": "Data_Goldcoast/scene_009/test/images/DJI_20211110132859_0036.JPG",
+          "bytes": 875496,
+          "sha256": "1eac37d06a8a9c79ce8ff1ca8ca4d636a5beebafdc72349bddd93c01f3f69a1c",
+          "name": "DJI_20211110132859_0036.JPG",
+          "width": 1600,
+          "height": 1058
+        },
+        {
+          "sourcePath": "Data_Goldcoast/scene_009/test/images/DJI_20211110134307_0313.JPG",
+          "bytes": 847114,
+          "sha256": "badb9854f3c2381f3d3180bac3be6b0d81137051f784dae7cb676d2af09ea257",
+          "name": "DJI_20211110134307_0313.JPG",
+          "width": 1600,
+          "height": 1058
+        },
+        {
+          "sourcePath": "Data_Goldcoast/scene_009/test/images/DJI_20211110133646_0026.JPG",
+          "bytes": 881987,
+          "sha256": "f0bf6998955467ad562510c43c4b0d7b7f219a4adce7ea0d81194f8c544c2fcd",
+          "name": "DJI_20211110133646_0026.JPG",
+          "width": 1600,
+          "height": 1058
+        }
+      ],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 28530
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed"
+      },
+      "exportSha256": "0685fca53864097e8efe8a93d1d423929c62f5b29b55c4b2a2493d60a7d9f00a",
+      "points": {
+        "sourcePath": "Data_Goldcoast/scene_009/train/sparse/0/points3D.ply",
+        "bytes": 770543,
+        "sha256": "89a4328e349eb3c97ecfbe8aa072933ffcb0af7083e8444787a1f29d6e499574",
+        "format": "xyz_ply",
+        "count": 28530
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_Goldcoast/scene_009/train/sparse/0/cameras.txt",
+            "bytes": 212,
+            "sha256": "41cf3e0d17a16c98482c0d083f7372ba1723390c54acba5503e282f1778be48a"
+          },
+          "images": {
+            "sourcePath": "Data_Goldcoast/scene_009/train/sparse/0/images.txt",
+            "bytes": 3677708,
+            "sha256": "a62ebc501ae26de68f511245064f69d1099d320c92b6aa2df52d7f26e9d126ea"
+          }
+        },
+        "sceneRoot": "Data_Goldcoast/scene_009"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            31.214691580405603,
+            -77.0394255550209,
+            140.9048047936821
+          ],
+          "target": [
+            23.562051753997803,
+            37.28686309814451,
+            -80.02750394821166
+          ],
+          "quaternion": [
+            0.12340171469335069,
+            0.20227450208664474,
+            -0.793722384503897,
+            0.5602337181514415
+          ],
+          "distance": 248.87777767318457
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "7004abb2ed959e31fed6ab69cdaa0e8201dc9819fee58c386e49f8befa7ab442",
+      "independentRead": {
+        "id": "data-02fd82ee6918facd73ae7d7b",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 28530
+        },
+        "sourceSha256": "89a4328e349eb3c97ecfbe8aa072933ffcb0af7083e8444787a1f29d6e499574",
+        "exportSha256": "0685fca53864097e8efe8a93d1d423929c62f5b29b55c4b2a2493d60a7d9f00a",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 28530,
+        "photoCount": 3,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/7004abb2ed959e31fed6ab69cdaa0e8201dc9819fee58c386e49f8befa7ab442.manifest.json",
+        "errors": [],
+        "renderSha256": "75034e2d6a4bbd71147fc0ed18cd98d26ddd07744b3dbf1508020bc250274d19"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_Goldcoast/scene_010/test/sparse/0",
+      "files": {
+        "cameras": "Data_Goldcoast/scene_010/test/sparse/0/cameras.txt",
+        "images": "Data_Goldcoast/scene_010/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_Goldcoast/scene_010/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "781003afa33eaef4c366c37fa8c0bac161b03c94b25577d1002cb5c12b22a7e6"
+        },
+        "images": {
+          "sourcePath": "Data_Goldcoast/scene_010/test/sparse/0/images.txt",
+          "bytes": 670,
+          "sha256": "0993b46c2f96a15527dd7b439bf67214558e93fe8ec85a0eac62e5a32b0eee5b"
+        }
+      },
+      "photos": [
+        {
+          "sourcePath": "Data_Goldcoast/scene_010/test/images/DJI_20211110134227_0270.JPG",
+          "bytes": 901187,
+          "sha256": "51ff46ec1393b86ccd6123c33dabf9a52ab55e2867f1dbaebf90d351fca3fa1d",
+          "name": "DJI_20211110134227_0270.JPG",
+          "width": 1600,
+          "height": 1058
+        },
+        {
+          "sourcePath": "Data_Goldcoast/scene_010/test/images/DJI_20211110133703_0040.JPG",
+          "bytes": 823231,
+          "sha256": "8324546ac7de5e789d94df514c47fdfade07b2f57640319dd9005e31926086e5",
+          "name": "DJI_20211110133703_0040.JPG",
+          "width": 1600,
+          "height": 1058
+        },
+        {
+          "sourcePath": "Data_Goldcoast/scene_010/test/images/DJI_20211110132917_0051.JPG",
+          "bytes": 910742,
+          "sha256": "5b5809c47af7259b2fe6036c789d5a74036bd9170ccfe6ba0aac4796c4946fb8",
+          "name": "DJI_20211110132917_0051.JPG",
+          "width": 1600,
+          "height": 1058
+        }
+      ],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 29122
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed"
+      },
+      "exportSha256": "91ac55cee53cd97705dd60dbfd4ff1a0f020ab64bdd3ea3d40bcb1e90c1b7d75",
+      "points": {
+        "sourcePath": "Data_Goldcoast/scene_010/train/sparse/0/points3D.ply",
+        "bytes": 786527,
+        "sha256": "9eeee6f04119ef01ed8f6022d73a52c9850faac19bdb548958366865cb3bb139",
+        "format": "xyz_ply",
+        "count": 29122
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_Goldcoast/scene_010/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "781003afa33eaef4c366c37fa8c0bac161b03c94b25577d1002cb5c12b22a7e6"
+          },
+          "images": {
+            "sourcePath": "Data_Goldcoast/scene_010/train/sparse/0/images.txt",
+            "bytes": 3552111,
+            "sha256": "0d84ae5504d30bb22b8dff4dce1945ebffcf0c64fe8e622aeac41513c86b74fb"
+          }
+        },
+        "sceneRoot": "Data_Goldcoast/scene_010"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            -62.692595235892625,
+            -74.6181352781867,
+            183.2414627028649
+          ],
+          "target": [
+            23.616433067321793,
+            67.3769055008889,
+            -85.85553340911865
+          ],
+          "quaternion": [
+            0.06178646545365157,
+            -0.26599994146813677,
+            0.6876765542127321,
+            0.6727015836251584
+          ],
+          "distance": 316.26734464530057
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "82463f34a2999b4f55a07285379a43950446d30dba23dcdfe4e8edd5e80cc5e9",
+      "independentRead": {
+        "id": "data-403f39c6246435b022b7d851",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 29122
+        },
+        "sourceSha256": "9eeee6f04119ef01ed8f6022d73a52c9850faac19bdb548958366865cb3bb139",
+        "exportSha256": "91ac55cee53cd97705dd60dbfd4ff1a0f020ab64bdd3ea3d40bcb1e90c1b7d75",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 29122,
+        "photoCount": 3,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/82463f34a2999b4f55a07285379a43950446d30dba23dcdfe4e8edd5e80cc5e9.manifest.json",
+        "errors": [],
+        "renderSha256": "3c0e547d914639aa8b118082c5e2c63eb25d66266975c20a3310ed037b97f6d8"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_Goldcoast/scene_011/test/sparse/0",
+      "files": {
+        "cameras": "Data_Goldcoast/scene_011/test/sparse/0/cameras.txt",
+        "images": "Data_Goldcoast/scene_011/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_Goldcoast/scene_011/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "d3a0907bc935f7ed7c9793bc10d2fb54df2cf11230c37a72f0660011cc0bf25f"
+        },
+        "images": {
+          "sourcePath": "Data_Goldcoast/scene_011/test/sparse/0/images.txt",
+          "bytes": 669,
+          "sha256": "fa03960fd1afd7d6f95849d19e9d8d4a52af3163c86ce6cf21227959fc8a6dfe"
+        }
+      },
+      "photos": [],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 32328
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed"
+      },
+      "exportSha256": "92bfb278fba8e5adb368ab1078178fdbbece36d47f8b217e9eeee54c972b00dd",
+      "points": {
+        "sourcePath": "Data_Goldcoast/scene_011/train/sparse/0/points3D.ply",
+        "bytes": 873089,
+        "sha256": "8c066254f7e62c8b3468955c814a13e97d75726f6b73dd1ca4c357ec93fa08bb",
+        "format": "xyz_ply",
+        "count": 32328
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_Goldcoast/scene_011/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "d3a0907bc935f7ed7c9793bc10d2fb54df2cf11230c37a72f0660011cc0bf25f"
+          },
+          "images": {
+            "sourcePath": "Data_Goldcoast/scene_011/train/sparse/0/images.txt",
+            "bytes": 4014167,
+            "sha256": "5c2f2c667c40c8b529014a492691b2abd119d9d9d2b250922b8647ed94c917b0"
+          }
+        },
+        "sceneRoot": "Data_Goldcoast/scene_011"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            86.15819545080103,
+            -94.17642201046809,
+            190.28337050143443
+          ],
+          "target": [
+            25.03092012405395,
+            17.96336292266845,
+            -84.61301601409912
+          ],
+          "quaternion": [
+            0.025113711641140884,
+            0.21428941434635362,
+            -0.7971215339282888,
+            0.5639562115399691
+          ],
+          "distance": 303.1169716017559
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "e6d639eecfe892a628b9aba820c070a50140575192d8e73b23dcfdec93765202",
+      "independentRead": {
+        "id": "data-3cd6f98a8d36118b7c6e9498",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 32328
+        },
+        "sourceSha256": "8c066254f7e62c8b3468955c814a13e97d75726f6b73dd1ca4c357ec93fa08bb",
+        "exportSha256": "92bfb278fba8e5adb368ab1078178fdbbece36d47f8b217e9eeee54c972b00dd",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 32328,
+        "photoCount": 0,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/e6d639eecfe892a628b9aba820c070a50140575192d8e73b23dcfdec93765202.manifest.json",
+        "errors": [],
+        "renderSha256": "f971f0f52bbef4caaf38185d0a91626efc365ec254e05cefad2180a9aa13d236"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_Goldcoast/scene_012/test/sparse/0",
+      "files": {
+        "cameras": "Data_Goldcoast/scene_012/test/sparse/0/cameras.txt",
+        "images": "Data_Goldcoast/scene_012/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_Goldcoast/scene_012/test/sparse/0/cameras.txt",
+          "bytes": 212,
+          "sha256": "c63cf3636a827c24f5ba01f76d1c8c819f1ef0e23949418f824e535fe0b1d98f"
+        },
+        "images": {
+          "sourcePath": "Data_Goldcoast/scene_012/test/sparse/0/images.txt",
+          "bytes": 675,
+          "sha256": "e0e9f5f3ff075449c8e065ba8e8f336f89cddd23f0646b6282d9c6632c0e02ff"
+        }
+      },
+      "photos": [],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 15883
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed"
+      },
+      "exportSha256": "f80f80548ac8b7d8db73915091a3978e96ad9e0e783b9909f54e0a2f46d94377",
+      "points": {
+        "sourcePath": "Data_Goldcoast/scene_012/train/sparse/0/points3D.ply",
+        "bytes": 429074,
+        "sha256": "06b6d794ebe28bcd362825d77ae7ed9683924188d6d8efce5ad35b4fe2680181",
+        "format": "xyz_ply",
+        "count": 15883
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_Goldcoast/scene_012/train/sparse/0/cameras.txt",
+            "bytes": 212,
+            "sha256": "c63cf3636a827c24f5ba01f76d1c8c819f1ef0e23949418f824e535fe0b1d98f"
+          },
+          "images": {
+            "sourcePath": "Data_Goldcoast/scene_012/train/sparse/0/images.txt",
+            "bytes": 1930022,
+            "sha256": "529b320c60ae05f7934ecdd20a300c4b72dcfe0b5e95fd9ee47c7ffa52449d74"
+          }
+        },
+        "sceneRoot": "Data_Goldcoast/scene_012"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            123.26956100882123,
+            -137.2026231913495,
+            182.9030235251949
+          ],
+          "target": [
+            -10.471647109985327,
+            42.459009361267114,
+            -83.20587074279786
+          ],
+          "quaternion": [
+            0.004963101087944319,
+            0.3426914946305508,
+            -0.7453640841495411,
+            0.5718131593408686
+          ],
+          "distance": 347.82029349806936
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "aaf251c7c460da2ad119f5c3dca00fd55274f33a25b77656753a663c9640de38",
+      "independentRead": {
+        "id": "data-377e0a542ea2403670222d81",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 15883
+        },
+        "sourceSha256": "06b6d794ebe28bcd362825d77ae7ed9683924188d6d8efce5ad35b4fe2680181",
+        "exportSha256": "f80f80548ac8b7d8db73915091a3978e96ad9e0e783b9909f54e0a2f46d94377",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 15883,
+        "photoCount": 0,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/aaf251c7c460da2ad119f5c3dca00fd55274f33a25b77656753a663c9640de38.manifest.json",
+        "errors": [],
+        "renderSha256": "6ea70bfdb4972579a2c3cca6cb10ef239e95b033bb5c13f421ccb009ba2fa3d1"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_000/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_000/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_000/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_000/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_000/test/sparse/0/images.txt",
+          "bytes": 681,
+          "sha256": "abd95a10cd2411846b7ce368b42f2b551c5737dfbe3fe3bc9eaa5e39fc0c50bd"
+        }
+      },
+      "photos": [
+        {
+          "sourcePath": "Data_TUM/scene_000/test/images/DJI_20241217101323_0014_D.JPG",
+          "bytes": 901567,
+          "sha256": "46daf2a9c73b313db2cae2e936bc6e418ef722532041bcd254762e7f272c0648",
+          "name": "DJI_20241217101323_0014_D.JPG",
+          "width": 1600,
+          "height": 1157
+        },
+        {
+          "sourcePath": "Data_TUM/scene_000/test/images/DJI_20241217101307_0006_D.JPG",
+          "bytes": 1044748,
+          "sha256": "c06dc7c173e9c1b50b492a5427e3228db53ac58a87d012f6e3ce1682b312606e",
+          "name": "DJI_20241217101307_0006_D.JPG",
+          "width": 1600,
+          "height": 1157
+        },
+        {
+          "sourcePath": "Data_TUM/scene_000/test/images/DJI_20241217101343_0024_D.JPG",
+          "bytes": 933117,
+          "sha256": "1fe2f23fa3ab0ca758ae5dd46175936c3d4789fe6d76d31cb567b9fd0a2baf76",
+          "name": "DJI_20241217101343_0024_D.JPG",
+          "width": 1600,
+          "height": 1157
+        }
+      ],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 27949
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed"
+      },
+      "exportSha256": "96134e38b6a9a261cec2772b2b477c5644a19ad470f40bd56de2daa0ec7625c2",
+      "points": {
+        "sourcePath": "Data_TUM/scene_000/train/sparse/0/points3D.ply",
+        "bytes": 754856,
+        "sha256": "b33ae8f870fa933e3f36b27229664f8ec77d72f2373d565a22ad44b422240755",
+        "format": "xyz_ply",
+        "count": 27949
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_000/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_000/train/sparse/0/images.txt",
+            "bytes": 4844976,
+            "sha256": "c777bb90ec4c4824694efdc0bc23e792674652dd4b12175abd3a385d091cd39c"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_000"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            485.2920249011147,
+            -117.14344170576446,
+            31.095499039085112
+          ],
+          "target": [
+            -27.295441284179688,
+            102.51832422733308,
+            -28.316191577911376
+          ],
+          "quaternion": [
+            0.5687831045710627,
+            0.35145106653713365,
+            0.427491371287748,
+            0.608456288700294
+          ],
+          "distance": 560.8270240324346
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "33eea84cae95ee649e12df2b038a1349f9b1081754e3278e850c79083f976d6d",
+      "independentRead": {
+        "id": "data-e81e7563dd42632ac258fb4e",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 27949
+        },
+        "sourceSha256": "b33ae8f870fa933e3f36b27229664f8ec77d72f2373d565a22ad44b422240755",
+        "exportSha256": "96134e38b6a9a261cec2772b2b477c5644a19ad470f40bd56de2daa0ec7625c2",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 27949,
+        "photoCount": 3,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/33eea84cae95ee649e12df2b038a1349f9b1081754e3278e850c79083f976d6d.manifest.json",
+        "errors": [],
+        "renderSha256": "bf20668b2fe9898d6b43fd9a66c48e743303538d50744a18e5bfec5a93898930"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_001/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_001/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_001/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_001/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_001/test/sparse/0/images.txt",
+          "bytes": 681,
+          "sha256": "2d5349cfbe7375841ccbb1fc74493757fc7325531fe5210524d4fcdfb790a2e9"
+        }
+      },
+      "photos": [
+        {
+          "sourcePath": "Data_TUM/scene_001/test/images/DJI_20241217103353_0006_D.JPG",
+          "bytes": 966707,
+          "sha256": "8434783663c71a79310a005d0127688b1756cdbfa644cb477aff871ec2b678dc",
+          "name": "DJI_20241217103353_0006_D.JPG",
+          "width": 1600,
+          "height": 1157
+        },
+        {
+          "sourcePath": "Data_TUM/scene_001/test/images/DJI_20241217103625_0082_D.JPG",
+          "bytes": 945448,
+          "sha256": "959023237d7559e4b1cac2fd5bdf05db7e70093e62d84ebe1efb271df6fb67ba",
+          "name": "DJI_20241217103625_0082_D.JPG",
+          "width": 1600,
+          "height": 1157
+        },
+        {
+          "sourcePath": "Data_TUM/scene_001/test/images/DJI_20241217103643_0091_D.JPG",
+          "bytes": 915905,
+          "sha256": "13833172a51b57e75f9f090b1af4b0a7927e2ba6053bfed59a75d1e1d001ef15",
+          "name": "DJI_20241217103643_0091_D.JPG",
+          "width": 1600,
+          "height": 1157
+        }
+      ],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 17925
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed"
+      },
+      "exportSha256": "90b268f1695ebb77a6cb260f49ac3ff0b645218317929eaf21dd3e2c03b7abce",
+      "points": {
+        "sourcePath": "Data_TUM/scene_001/train/sparse/0/points3D.ply",
+        "bytes": 484208,
+        "sha256": "842075c89fc8c21ea4b00592cb342c5378e58468644edf5507c4a5b800591b1f",
+        "format": "xyz_ply",
+        "count": 17925
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_001/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_001/train/sparse/0/images.txt",
+            "bytes": 4186357,
+            "sha256": "5b508e31d1d2e5076881c8c93b5ca8d5e1221a0e73a87ed72ad90485c89ce620"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_001"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            -171.28591348245715,
+            78.21896962083281,
+            138.84870831684972
+          ],
+          "target": [
+            43.13035034179684,
+            10.017754058837887,
+            -28.082837753295898
+          ],
+          "quaternion": [
+            0.25538957988382144,
+            -0.3699441003687968,
+            -0.7064255540513408,
+            0.5466996082606455
+          ],
+          "distance": 280.16402529563806
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "e0f16bf015e0746c7d9ccba9febdcbaf6dca1cab4d90e7bdbf13efa2cc60d5eb",
+      "independentRead": {
+        "id": "data-f4950a28235651b9faf72ac8",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 17925
+        },
+        "sourceSha256": "842075c89fc8c21ea4b00592cb342c5378e58468644edf5507c4a5b800591b1f",
+        "exportSha256": "90b268f1695ebb77a6cb260f49ac3ff0b645218317929eaf21dd3e2c03b7abce",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 17925,
+        "photoCount": 3,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/e0f16bf015e0746c7d9ccba9febdcbaf6dca1cab4d90e7bdbf13efa2cc60d5eb.manifest.json",
+        "errors": [],
+        "renderSha256": "1ee303bb4380882f997e2065835637812792c27118aa9920a78657aadae7cf9d"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_002/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_002/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_002/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_002/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_002/test/sparse/0/images.txt",
+          "bytes": 681,
+          "sha256": "dc84e88bb3cdab66f82f5d1f9e33dac251157a61b602c683350d436188ee1f56"
+        }
+      },
+      "photos": [
+        {
+          "sourcePath": "Data_TUM/scene_002/test/images/DJI_20241217094937_0015_D.JPG",
+          "bytes": 979683,
+          "sha256": "b5c4de1c9a880ae0490825e129972b4cdefb3f977dbce83387f17aad8a75b209",
+          "name": "DJI_20241217094937_0015_D.JPG",
+          "width": 1600,
+          "height": 1157
+        },
+        {
+          "sourcePath": "Data_TUM/scene_002/test/images/DJI_20241217095003_0028_D.JPG",
+          "bytes": 918051,
+          "sha256": "d842ab7eff071cc31375441dd8923a047c588a58b5e22b2ace9c3aeb567c3452",
+          "name": "DJI_20241217095003_0028_D.JPG",
+          "width": 1600,
+          "height": 1157
+        },
+        {
+          "sourcePath": "Data_TUM/scene_002/test/images/DJI_20241217095023_0038_D.JPG",
+          "bytes": 906647,
+          "sha256": "653955a438272fe665285ba3474ef5f68bf48c7d493a9f0dda63499c8c44df26",
+          "name": "DJI_20241217095023_0038_D.JPG",
+          "width": 1600,
+          "height": 1157
+        }
+      ],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 44849
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed"
+      },
+      "exportSha256": "a3710af842310592ef6fa0397c7251ecb2f86ea3de4b1d18131a61d934084fc0",
+      "points": {
+        "sourcePath": "Data_TUM/scene_002/train/sparse/0/points3D.ply",
+        "bytes": 1211156,
+        "sha256": "eae4d8165d73026aa5477667e313bf991d43e0aa56ec9e157ceb499092507077",
+        "format": "xyz_ply",
+        "count": 44849
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_002/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_002/train/sparse/0/images.txt",
+            "bytes": 8381296,
+            "sha256": "a569f234f3d98127c05fbdcddf5c86fd2b6cd5c6a7b22aefd4ab9f32e80ec762"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_002"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            -246.22607772442672,
+            -467.8332078947446,
+            36.81084416823822
+          ],
+          "target": [
+            66.77840606689347,
+            28.48785064697249,
+            -25.39892524719239
+          ],
+          "quaternion": [
+            0.6278081643694354,
+            -0.2305266879491811,
+            -0.15551906782886066,
+            0.7269994322115411
+          ],
+          "distance": 590.0647891851897
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "eb9c0c2ca414b79151dd9af79393e9a4bb64705253f9f5c71a9f0b432e1b037a",
+      "independentRead": {
+        "id": "data-bbe61c620f78d116c237ea28",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 44849
+        },
+        "sourceSha256": "eae4d8165d73026aa5477667e313bf991d43e0aa56ec9e157ceb499092507077",
+        "exportSha256": "a3710af842310592ef6fa0397c7251ecb2f86ea3de4b1d18131a61d934084fc0",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 44849,
+        "photoCount": 3,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/eb9c0c2ca414b79151dd9af79393e9a4bb64705253f9f5c71a9f0b432e1b037a.manifest.json",
+        "errors": [],
+        "renderSha256": "89fdbb4964701eaf6497b7747f26035b28e54ecc523b0c1d6438674d1086fa21"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_003/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_003/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_003/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_003/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_003/test/sparse/0/images.txt",
+          "bytes": 678,
+          "sha256": "a07766e796449525e038d1ec87022470127e43895e64f41651ea2c8daca56d57"
+        }
+      },
+      "photos": [
+        {
+          "sourcePath": "Data_TUM/scene_003/test/images/DJI_20241217101825_0030_D.JPG",
+          "bytes": 961166,
+          "sha256": "1f69f71492825cb736a84839a2253e51b1145f35e75d7f5de2c18f071d18826e",
+          "name": "DJI_20241217101825_0030_D.JPG",
+          "width": 1600,
+          "height": 1157
+        },
+        {
+          "sourcePath": "Data_TUM/scene_003/test/images/DJI_20241217101839_0037_D.JPG",
+          "bytes": 985942,
+          "sha256": "9328ef9f330717f60df73c557ac9dc026e7d9ec96bf6d92025207a92ea59978d",
+          "name": "DJI_20241217101839_0037_D.JPG",
+          "width": 1600,
+          "height": 1157
+        },
+        {
+          "sourcePath": "Data_TUM/scene_003/test/images/DJI_20241217102006_0002_D.JPG",
+          "bytes": 1007121,
+          "sha256": "f89701b74cf9ded0f63007796246fce8a6ab44b455733f94392cd3951640cb86",
+          "name": "DJI_20241217102006_0002_D.JPG",
+          "width": 1600,
+          "height": 1157
+        }
+      ],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 35806
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed"
+      },
+      "exportSha256": "0411bc816b117a596ae7440bdfefee2626df2d1cffe1667d0300a73d9c801296",
+      "points": {
+        "sourcePath": "Data_TUM/scene_003/train/sparse/0/points3D.ply",
+        "bytes": 966995,
+        "sha256": "f1b9bc55c141c608a2d5cb588b26a3ad408ccd1b6310fee09d644d7623c4775a",
+        "format": "xyz_ply",
+        "count": 35806
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_003/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_003/train/sparse/0/images.txt",
+            "bytes": 4986519,
+            "sha256": "d09a54e329f2769d326ff94c46776e6cb3a7a92ed47b452fde3497edaf457adb"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_003"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            74.07247290659654,
+            -33.8982111537871,
+            104.2924468457868
+          ],
+          "target": [
+            -82.71641035079958,
+            -116.5435325622559,
+            -30.94531073570252
+          ],
+          "quaternion": [
+            0.34119083762139324,
+            0.28334354761092745,
+            0.876966496173915,
+            0.18502705461340788
+          ],
+          "distance": 222.94002363748007
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "d823f45d048ad16c2e1b2960cfd0c3b2083cd223cd865c0839e9137bcffbadfb",
+      "independentRead": {
+        "id": "data-c9c9f644e066bc3c2e201a4b",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 35806
+        },
+        "sourceSha256": "f1b9bc55c141c608a2d5cb588b26a3ad408ccd1b6310fee09d644d7623c4775a",
+        "exportSha256": "0411bc816b117a596ae7440bdfefee2626df2d1cffe1667d0300a73d9c801296",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "photoSample": "passed",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 35806,
+        "photoCount": 3,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/d823f45d048ad16c2e1b2960cfd0c3b2083cd223cd865c0839e9137bcffbadfb.manifest.json",
+        "errors": [],
+        "renderSha256": "0b9c7f7eef7d18d182f3f5ef02e4e4018640f7bfbed19e6693f39269b093b9b2"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_004/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_004/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_004/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_004/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_004/test/sparse/0/images.txt",
+          "bytes": 677,
+          "sha256": "26718a574e783d8495526b80b503078b7f101f32d0dadb47b213b2b6a39d0a93"
+        }
+      },
+      "photos": [],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 27066
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed"
+      },
+      "exportSha256": "e66d8b23af28e813f7dc47eae5e5fe19ba9f4ca594e190580b503b08fc24b07e",
+      "points": {
+        "sourcePath": "Data_TUM/scene_004/train/sparse/0/points3D.ply",
+        "bytes": 731015,
+        "sha256": "39148c74f3a27509ae60364180965b674572195074f5027a5a4cbfdacac1ec28",
+        "format": "xyz_ply",
+        "count": 27066
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_004/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_004/train/sparse/0/images.txt",
+            "bytes": 5243394,
+            "sha256": "79f15c38e0f508204ad76cd7405d083c1a94f97a30a5f11b87f153967f07da63"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_004"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            32.106521196126394,
+            -53.34774862445262,
+            72.90815123981177
+          ],
+          "target": [
+            -67.0558165550232,
+            -70.46404008865358,
+            -30.904062557220456
+          ],
+          "quaternion": [
+            0.2545276664195015,
+            0.2760441069538525,
+            0.7350185939795382,
+            0.5645909887231957
+          ],
+          "distance": 144.57908699117334
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "75d489dfbd805217be8deb98cf0f8aca665bc63c30df28b947ced8622a6febcd",
+      "independentRead": {
+        "id": "data-dd1fc3913ce256b5c5063f13",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 27066
+        },
+        "sourceSha256": "39148c74f3a27509ae60364180965b674572195074f5027a5a4cbfdacac1ec28",
+        "exportSha256": "e66d8b23af28e813f7dc47eae5e5fe19ba9f4ca594e190580b503b08fc24b07e",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 27066,
+        "photoCount": 0,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/75d489dfbd805217be8deb98cf0f8aca665bc63c30df28b947ced8622a6febcd.manifest.json",
+        "errors": [],
+        "renderSha256": "2e0ba71782097d704ba251040b647778efd2ea5bfdf4992c56af1f6ee1922c0a"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_005/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_005/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_005/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_005/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_005/test/sparse/0/images.txt",
+          "bytes": 676,
+          "sha256": "308c1e174cc2c2bc2280fb2612416a15630581b71e7e4c31d20bfdda3f86ed1c"
+        }
+      },
+      "photos": [],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 42979
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed"
+      },
+      "exportSha256": "ed676c80fafe486f71d1f9752520606cf3e45359acbfbc089f34d593931209c0",
+      "points": {
+        "sourcePath": "Data_TUM/scene_005/train/sparse/0/points3D.ply",
+        "bytes": 1160666,
+        "sha256": "d25c0b36a200b40cc78abd84c0206763073828dc167a9f2bc2c586b04b7c26d6",
+        "format": "xyz_ply",
+        "count": 42979
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_005/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_005/train/sparse/0/images.txt",
+            "bytes": 7689309,
+            "sha256": "4016296ab6f245c03931df45292cc81bd94610afe27139cf25005837bb8cf678"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_005"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            -402.7646097389699,
+            222.22474012377359,
+            73.70206656138139
+          ],
+          "target": [
+            -25.643565521240156,
+            -81.29445648193358,
+            -29.153208885192853
+          ],
+          "quaternion": [
+            -0.19667863225554302,
+            0.5978308705020989,
+            0.6520340794010563,
+            -0.4228088518330812
+          ],
+          "distance": 494.89735540537646
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "c4591fa123e76781764733ff0f076da84da107fe4389893a7b94a4b621b5928b",
+      "independentRead": {
+        "id": "data-0e170fad789f490bb38c0d20",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 42979
+        },
+        "sourceSha256": "d25c0b36a200b40cc78abd84c0206763073828dc167a9f2bc2c586b04b7c26d6",
+        "exportSha256": "ed676c80fafe486f71d1f9752520606cf3e45359acbfbc089f34d593931209c0",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 42979,
+        "photoCount": 0,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/c4591fa123e76781764733ff0f076da84da107fe4389893a7b94a4b621b5928b.manifest.json",
+        "errors": [],
+        "renderSha256": "4ae9e02f0e51c831937c765bf0c4665dc8d6fcbf5308be84fcaeaa2581776506"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_006/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_006/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_006/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_006/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_006/test/sparse/0/images.txt",
+          "bytes": 682,
+          "sha256": "8673d4e3f9ff00770e63cc444f6fde40143fc6b7c78e1f20ab93c0bcf25bed6f"
+        }
+      },
+      "photos": [],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 21107
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed"
+      },
+      "exportSha256": "daf0335a2fe69cd1f250cc79a0c286706641916690b1e1c3d3e292494ea74b01",
+      "points": {
+        "sourcePath": "Data_TUM/scene_006/train/sparse/0/points3D.ply",
+        "bytes": 570122,
+        "sha256": "3192a4621bef1ee82a492af557f9c030e398bd723f779696db72003e453d5820",
+        "format": "xyz_ply",
+        "count": 21107
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_006/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_006/train/sparse/0/images.txt",
+            "bytes": 4344804,
+            "sha256": "1a4c2907e64c92bb750bd5813fc2cd39f1fdf3deb80c05dfc13d5bb27fb1ae75"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_006"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            -93.09634566554448,
+            327.95933049579867,
+            95.43270002852451
+          ],
+          "target": [
+            -50.08014591217078,
+            -3.815944519042972,
+            -31.145566329956054
+          ],
+          "quaternion": [
+            -0.016835254166502975,
+            0.5681387424771722,
+            0.8187065267015203,
+            -0.08157552727343817
+          ],
+          "distance": 357.697196056545
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "9c8ee118c424d93fbb839ffec4123611e500296b87ddbecd98f05b55ed4d4c9e",
+      "independentRead": {
+        "id": "data-c4b9e1f77a89ce6e2b7d4004",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 21107
+        },
+        "sourceSha256": "3192a4621bef1ee82a492af557f9c030e398bd723f779696db72003e453d5820",
+        "exportSha256": "daf0335a2fe69cd1f250cc79a0c286706641916690b1e1c3d3e292494ea74b01",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 21107,
+        "photoCount": 0,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/9c8ee118c424d93fbb839ffec4123611e500296b87ddbecd98f05b55ed4d4c9e.manifest.json",
+        "errors": [],
+        "renderSha256": "f25c1f734610775826a54119be8490be3d1d117417ede313ece867da8f531dbb"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_007/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_007/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_007/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_007/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_007/test/sparse/0/images.txt",
+          "bytes": 681,
+          "sha256": "40b34c41bd7a75f16ad399abc48b9e07fe6b5b2863193f23766bf8decbb4a04d"
+        }
+      },
+      "photos": [],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 23323
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed"
+      },
+      "exportSha256": "73a6f6fe80e0e31931d518fda62c263b5e52f670a6b6b809d6f56b52b2f2a840",
+      "points": {
+        "sourcePath": "Data_TUM/scene_007/train/sparse/0/points3D.ply",
+        "bytes": 629954,
+        "sha256": "b837326afeb7db733c2b6036f16257bae0e8aca654a2d1c4a69531677e22fd5e",
+        "format": "xyz_ply",
+        "count": 23323
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_007/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_007/train/sparse/0/images.txt",
+            "bytes": 5413270,
+            "sha256": "4223e99572144c9df3696ecc4049540dd93395e004968e99108cb6fa7f1992dc"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_007"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            28.304600352371935,
+            273.9510559202066,
+            81.55481483444748
+          ],
+          "target": [
+            33.295934095382684,
+            106.4425708389282,
+            -33.01603179931641
+          ],
+          "quaternion": [
+            0.13173289578582897,
+            0.44772460805182396,
+            0.8406398869833805,
+            -0.27479756171642006
+          ],
+          "distance": 203.00365731960704
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "14a87ad408be848cca9ab6b9d9cae444cfd13d0caec8d812b3104665ea923871",
+      "independentRead": {
+        "id": "data-a210bdde101a45494b789f2b",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 23323
+        },
+        "sourceSha256": "b837326afeb7db733c2b6036f16257bae0e8aca654a2d1c4a69531677e22fd5e",
+        "exportSha256": "73a6f6fe80e0e31931d518fda62c263b5e52f670a6b6b809d6f56b52b2f2a840",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 23323,
+        "photoCount": 0,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/14a87ad408be848cca9ab6b9d9cae444cfd13d0caec8d812b3104665ea923871.manifest.json",
+        "errors": [],
+        "renderSha256": "a02e85fe3e573f89233cad17f556f77e938b76bf799fc4cbee3e19d2e40bc56f"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+      "revision": "8d5dfff84ca57f985f27b7ffaf38203e7297cc2e",
+      "kind": "cameras",
+      "path": "Data_TUM/scene_008/test/sparse/0",
+      "files": {
+        "cameras": "Data_TUM/scene_008/test/sparse/0/cameras.txt",
+        "images": "Data_TUM/scene_008/test/sparse/0/images.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "Data_TUM/scene_008/test/sparse/0/cameras.txt",
+          "bytes": 213,
+          "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+        },
+        "images": {
+          "sourcePath": "Data_TUM/scene_008/test/sparse/0/images.txt",
+          "bytes": 684,
+          "sha256": "d1d35ff7e6c9d3c85b6ce3109a64038e9d758a1bec8e07b77bbcec4b0a4b3715"
+        }
+      },
+      "photos": [],
+      "masks": [],
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 39520
+      },
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed"
+      },
+      "exportSha256": "853d879a49c4341bd41a745e03c76f2f10d27f2ff636e7879f89570d7a00d5c6",
+      "points": {
+        "sourcePath": "Data_TUM/scene_008/train/sparse/0/points3D.ply",
+        "bytes": 1067273,
+        "sha256": "be2b26753d8fac70202f7389b92ac5096d15d4c7313c4d6b2dfaba8925a8c00d",
+        "format": "xyz_ply",
+        "count": 39520
+      },
+      "pointAssociation": {
+        "method": "publisher_shared_world",
+        "matchedCameras": 1,
+        "maxCalibrationDelta": 0.0,
+        "declaration": {
+          "sourcePath": "README.md",
+          "bytes": 6210,
+          "sha256": "ce8916c05fadbe9c3d05724332bfb7275a2945d7e081d0c0ad0a725a6a8c9b5c",
+          "statement": "share the same world coordinate system"
+        },
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "Data_TUM/scene_008/train/sparse/0/cameras.txt",
+            "bytes": 213,
+            "sha256": "f11aae99dc4139a8bf68a5fefffc128d41a21da696660dd1ba872888ebc48084"
+          },
+          "images": {
+            "sourcePath": "Data_TUM/scene_008/train/sparse/0/images.txt",
+            "bytes": 6691140,
+            "sha256": "80b8ad7966db203bd20a82b6ba0187556e3a7511a19ed4298f70301bcbf101ec"
+          }
+        },
+        "sceneRoot": "Data_TUM/scene_008"
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            174.51514719263747,
+            345.4824868860236,
+            62.883432938889314
+          ],
+          "target": [
+            59.31560802459717,
+            37.23314256668091,
+            -32.75392123222352
+          ],
+          "quaternion": [
+            0.11025893705147442,
+            0.5901720118394056,
+            0.7877813028201486,
+            0.1376247876245294
+          ],
+          "distance": 342.68804416069787
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "selectionSha256": "36f706d5f463c30cecf0e5e9ceae309ebbcd248c033ca1143cc679abe378afa8",
+      "independentRead": {
+        "id": "data-eea2a9fb97bbf2fe6e9c6ace",
+        "sourceId": "hf:Zqlin/TwinWorld_Datasets",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 39520
+        },
+        "sourceSha256": "be2b26753d8fac70202f7389b92ac5096d15d4c7313c4d6b2dfaba8925a8c00d",
+        "exportSha256": "853d879a49c4341bd41a745e03c76f2f10d27f2ff636e7879f89570d7a00d5c6",
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "maxPointPositionDelta": 0.0,
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "unlinkedSourceObservations": 0,
+        "pointAssociation": {
+          "method": "publisher_shared_world",
+          "sourceNetworkReads": 0,
+          "matchedCameras": 1,
+          "maxCalibrationDelta": 0.0
+        },
+        "pointValues": "passed"
+      },
+      "browserRead": {
+        "pointDrawCount": 39520,
+        "photoCount": 0,
+        "maskCount": 0,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/36f706d5f463c30cecf0e5e9ceae309ebbcd248c033ca1143cc679abe378afa8.manifest.json",
+        "errors": [],
+        "renderSha256": "7cfd346844f053321ca89556783697b9b33bc1a6211613e811d17defc346b452"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+      "revision": "40fd1370ea9c87e6fed2fb91ebd94785fb632352",
+      "kind": "colmap",
+      "path": "large_overlap/doll/dense/colmap_workspace/sparse_seed",
+      "files": {
+        "cameras": "large_overlap/doll/dense/colmap_workspace/sparse_seed/cameras.txt",
+        "images": "large_overlap/doll/dense/colmap_workspace/sparse_seed/images.txt",
+        "points3d": "large_overlap/doll/dense/colmap_workspace/sparse_seed/points3D.txt"
+      },
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "large_overlap/doll/dense/colmap_workspace/sparse_seed/cameras.txt",
+          "bytes": 94,
+          "sha256": "e399b17605b507f8d8ab82dc1e74e91a4c41b91303a54bd91e492cf63b0fbf68"
+        },
+        "images": {
+          "sourcePath": "large_overlap/doll/dense/colmap_workspace/sparse_seed/images.txt",
+          "bytes": 465,
+          "sha256": "7e14495aac060b1b37e7ffcbdc8a209ae41dfc4e7d58feb25ed7bc9d2b35336c"
+        }
+      },
+      "photos": [
+        {
+          "sourcePath": "large_overlap/doll/dense/images/0000.png",
+          "bytes": 867976,
+          "sha256": "1e6b7090dad823dcc8615f3aadfa40b5bb14aaa11d1066cdf343e854b2112a1b",
+          "name": "0000.png",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "sourcePath": "large_overlap/doll/dense/images/0001.png",
+          "bytes": 940327,
+          "sha256": "b9c148cd75127c34be5001c2ee59e487a6b41a68b89a9e231960d1f31fa6237d",
+          "name": "0001.png",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "sourcePath": "large_overlap/doll/dense/images/0002.png",
+          "bytes": 900093,
+          "sha256": "5c774eab7a8c856e39acccfc3690a1aac66496abf489423f5619bd89f5b7463a",
+          "name": "0002.png",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "masks": [
+        {
+          "sourcePath": "large_overlap/doll/dense/mask/0000.png",
+          "bytes": 3825,
+          "sha256": "dad5052c4cfbf88173155967ef901d7d309bd64e4161a79529da0a20d11b512a",
+          "name": "0000.png",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "sourcePath": "large_overlap/doll/dense/mask/0001.png",
+          "bytes": 3531,
+          "sha256": "6b2de57f2d1120bacef0f3f76a948aedc50a74889551ee28f21f6de38d562bba",
+          "name": "0001.png",
+          "width": 768,
+          "height": 576
+        },
+        {
+          "sourcePath": "large_overlap/doll/dense/mask/0002.png",
+          "bytes": 4099,
+          "sha256": "6e820623b27d5211828d19bce281211a2818d8e50b9c6f79d5c4b6de90a708ed",
+          "name": "0002.png",
+          "width": 768,
+          "height": 576
+        }
+      ],
+      "checkedAt": "2026-10-20T15:45:03.133288+00:00",
+      "viewerVersion": "0.19.9",
+      "viewerCommit": "f8d116b6b7ebdec298de3d49069dff87dab7049e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "pointAssociation": "passed",
+        "trackValues": "passed",
+        "sourceCameraIdentity": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed",
+        "maskDecode": "passed"
+      },
+      "exportSha256": "8ac6b4b5e6628a7c3b2b024dac818ac99ce6a639b3c1266ead3749b774a3d430",
+      "points": {
+        "sourcePath": "large_overlap/doll/dense/colmap_workspace/sparse_native/points3D.bin",
+        "bytes": 207866,
+        "sha256": "0ecf7698096558d157fe4269a66c90f93baf7d4b11532f456b874f19670ab24d",
+        "format": "colmap_binary",
+        "count": 3006
+      },
+      "counts": {
+        "cameras": 1,
+        "images": 3,
+        "points": 3006
+      },
+      "pointAssociation": {
+        "sceneRoot": "large_overlap/doll/dense/colmap_workspace",
+        "method": "identical_native_model",
+        "referenceModel": {
+          "cameras": {
+            "sourcePath": "large_overlap/doll/dense/colmap_workspace/sparse_native/cameras.bin",
+            "bytes": 64,
+            "sha256": "7fbf3ef147726f597933bd5c6736a4a8443190233b4424e0984988e39a4b32ec"
+          },
+          "images": {
+            "sourcePath": "large_overlap/doll/dense/colmap_workspace/sparse_native/images.bin",
+            "bytes": 600995,
+            "sha256": "101aa06eb2aa8fa9ebd2671a5c547548a4cbad792835df509a631a5eec1cf2f0"
+          }
+        },
+        "matchedImages": 3,
+        "matchedCameras": 1,
+        "maxPoseDelta": 4.440892098500626e-16,
+        "maxCalibrationDelta": 0.0,
+        "identityIds": "matched",
+        "sourceFeatures": 0
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.9",
+        "viewState": {
+          "position": [
+            4.412943632845875,
+            2.8780062756443012,
+            6.651107675494502
+          ],
+          "target": [
+            -0.00591457696985589,
+            0.22669134975486266,
+            0.022820360770905126
+          ],
+          "quaternion": [
+            -0.153090926503237,
+            0.2860530127740613,
+            0.0463522029029995,
+            0.944768921690009
+          ],
+          "distance": 8.395830598649889
+        },
+        "config": {
+          "pointCloud": {
+            "minTrackLength": 0,
+            "showPointCloud": true,
+            "pointSize": 2
+          }
+        }
+      },
+      "maskRole": "unknown",
+      "selectionSha256": "e6da1e564fcd216b35e9fa846f17c5a07cc082b2d0d083c14928b11deb637308",
+      "independentRead": {
+        "id": "data-1ace528de1ed12b923db4910",
+        "sourceId": "hf:Wuuu3511/bmvs_sparse_dtu2",
+        "status": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 3,
+          "points": 3006
+        },
+        "sourceSha256": "0ecf7698096558d157fe4269a66c90f93baf7d4b11532f456b874f19670ab24d",
+        "exportSha256": "8ac6b4b5e6628a7c3b2b024dac818ac99ce6a639b3c1266ead3749b774a3d430",
+        "pointValues": "passed",
+        "pointReadMethod": "pycolmap_full_model_and_chunked_source_comparison",
+        "sourceFeatures": 0,
+        "pointAssociation": {
+          "method": "identical_native_model",
+          "matchedImages": 3,
+          "matchedCameras": 1,
+          "maxPoseDelta": 4.440892098500626e-16,
+          "sourceNetworkReads": 0
+        },
+        "maxPointPositionDelta": 0.0,
+        "maxPointErrorDelta": 0.0,
+        "tracks": 6819
+      },
+      "browserRead": {
+        "pointDrawCount": 3006,
+        "photoCount": 3,
+        "maskCount": 3,
+        "sharedSource": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/e6da1e564fcd216b35e9fa846f17c5a07cc082b2d0d083c14928b11deb637308.manifest.json",
+        "errors": [],
+        "renderSha256": "15656b3a1e1cb8f98d2f6bc3140ea8cf07be3c2c667da77d2cbd8fd98e8687fc"
+      },
+      "observationPolicy": {
+        "type": "native_ids_and_tracks",
+        "sourceFeatures": 0,
+        "referenceObservations": 6819,
+        "pointIds": "preserved",
+        "sourceFeatureCoordinates": "preserved_from_identical_reference_cameras"
       }
     }
   ]

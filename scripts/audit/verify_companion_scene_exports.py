@@ -16,7 +16,56 @@ import pycolmap
 from PIL import Image
 
 from .verify_camera_model_exports import close, params, pose
-from .verify_scene_manifest_exports import cached_source, file_hash, native_component_delta, scene_id, xyz_ply
+from .verify_scene_manifest_exports import cached_source, file_hash, native_component_delta, scene_id, verify_native_points, xyz_ply
+
+
+def native_camera_model(scene, receipts, cache, folder):
+    """Read original text or binary camera files without relabelling their bytes."""
+    folder.mkdir()
+    suffixes = {Path(receipts[role]['sourcePath']).suffix for role in ('cameras', 'images')}
+    if suffixes not in ({'.bin'}, {'.txt'}):
+        raise ValueError('Independent native verification requires a consistent text or binary camera pair')
+    suffix = next(iter(suffixes))
+    for role in ('cameras', 'images'):
+        (folder / (role + suffix)).write_bytes(cached_source(scene, receipts[role], cache).read_bytes())
+    (folder / ('points3D' + suffix)).write_bytes(bytes(8) if suffix == '.bin' else b'')
+    return pycolmap.Reconstruction(str(folder))
+
+
+def verify_point_association(scene, cache, original, folder):
+    association = scene.get('pointAssociation')
+    if association is None:
+        return None
+    reference = native_camera_model(scene, association['referenceModel'], cache, folder / 'reference')
+    result = {'method': association['method'], 'sourceNetworkReads': 0}
+    if association['method'] == 'identical_poses':
+        by_name = {image.name: image for image in reference.images.values()}
+        if len(by_name) != reference.num_reg_images():
+            raise ValueError('Reference model has ambiguous image names')
+        delta = 0.
+        for image in original.images.values():
+            peer = by_name.get(image.name)
+            if peer is None:
+                raise ValueError('Reference cloud model lacks a selected image pose')
+            delta = max(delta, float(np.max(np.abs(image.cam_from_world().matrix() - peer.cam_from_world().matrix()))))
+        if delta > 1e-9 or delta != association['maxPoseDelta'] or original.num_reg_images() != association['matchedImages']:
+            raise ValueError('Selected cameras and sibling cloud do not share every source pose')
+        result.update(matchedImages=original.num_reg_images(), maxPoseDelta=delta)
+    elif association['method'] == 'publisher_shared_world':
+        declaration = association['declaration']
+        if declaration['statement'] not in cached_source(scene, declaration, cache).read_text(encoding='utf-8'):
+            raise ValueError('World-coordinate declaration differs from the pinned publisher source')
+        for key, camera in original.cameras.items():
+            peer = reference.cameras[key] if key in reference.cameras else None
+            if (peer is None or camera.model != peer.model or camera.width != peer.width or camera.height != peer.height
+                    or not np.array_equal(camera.params, peer.params)):
+                raise ValueError('Shared-world camera calibration differs from the reference model')
+        if original.num_cameras() != association['matchedCameras'] or association['maxCalibrationDelta'] != 0:
+            raise ValueError('Shared-world camera receipt differs')
+        result.update(matchedCameras=original.num_cameras(), maxCalibrationDelta=0.)
+    else:
+        raise ValueError('Unsupported source-world association')
+    return result
 
 
 def verify_cloud(scene, cache, output):
@@ -124,7 +173,89 @@ def verify_metadata(scene, cache, model, result):
                 close([k[0, 0], k[1, 1], k[0, 2], k[1, 2]], model.cameras[image.camera_id].params, 'DTU calibration', atol=1e-7)
 
 
+def verify_native_association(scene, browser, exports, cache, scratch):
+    """Reuse real tracks only when the empty target has the same camera/image identities."""
+    identity = scene_id(scene)
+    archive_path = exports / (identity + '.zip')
+    if (not browser or browser.get('status') != 'passed' or browser.get('errors')
+            or browser.get('counts') != scene['counts'] or browser.get('pointDrawCount') != scene['counts']['points']
+            or file_hash(archive_path) != browser['exportSha256']):
+        raise ValueError('Native association needs the exact browser model export')
+    association = scene['pointAssociation']
+    with tempfile.TemporaryDirectory(prefix='native-association-', dir=scratch) as name:
+        folder = Path(name)
+        original = native_camera_model(scene, scene['modelFiles'], cache, folder / 'original')
+        reference_folder = folder / 'reference'
+        native_camera_model(scene, association['referenceModel'], cache, reference_folder)
+        point_suffix = Path(scene['points']['sourcePath']).suffix
+        (reference_folder / ('points3D' + point_suffix)).write_bytes(cached_source(scene, scene['points'], cache).read_bytes())
+        reference = pycolmap.Reconstruction(str(reference_folder))
+        if (set(original.cameras) != set(reference.cameras) or set(original.images) != set(reference.images)
+                or any(len(image.points2D) for image in original.images.values())):
+            raise ValueError('Native association would change source identities or replace existing features')
+        for key, camera in original.cameras.items():
+            peer = reference.cameras[key]
+            if (camera.model != peer.model or camera.width != peer.width or camera.height != peer.height
+                    or not np.allclose(camera.params, peer.params, atol=1e-9, rtol=0)):
+                raise ValueError('Native reference calibration differs')
+        delta = 0.
+        for key, image in original.images.items():
+            peer = reference.images[key]
+            if image.name != peer.name or image.camera_id != peer.camera_id:
+                raise ValueError('Native reference image identity differs')
+            delta = max(delta, float(np.max(np.abs(image.cam_from_world().matrix() - peer.cam_from_world().matrix()))))
+        if delta > 1e-9 or delta != association['maxPoseDelta']:
+            raise ValueError('Native reference camera poses differ')
+        exported = folder / 'exported'; exported.mkdir()
+        with zipfile.ZipFile(archive_path) as archive:
+            expected = {'sparse/0/' + role + '.bin' for role in ('cameras', 'images', 'points3D')}
+            expected.update('images/' + photo['name'] for photo in scene['photos'])
+            if len(archive.namelist()) != len(set(archive.namelist())) or set(archive.namelist()) != expected:
+                raise ValueError('Native export paths differ')
+            for role in ('cameras', 'images', 'points3D'):
+                (exported / (role + '.bin')).write_bytes(archive.read('sparse/0/' + role + '.bin'))
+            for photo in scene['photos']:
+                cached_source(scene, photo, cache)
+                raw = archive.read('images/' + photo['name'])
+                if len(raw) != photo['bytes'] or hashlib.sha256(raw).hexdigest() != photo['sha256']:
+                    raise ValueError('Native export changed original photograph bytes')
+                with Image.open(io.BytesIO(raw)) as image:
+                    image.load()
+                    if image.size != (photo['width'], photo['height']) or image.getexif().get(274, 1) != 1:
+                        raise ValueError('Native photograph dimensions or orientation differ')
+        selected = pycolmap.Reconstruction(str(exported))
+        if ((selected.num_cameras(), selected.num_reg_images(), selected.num_points3D()) !=
+                (scene['counts']['cameras'], scene['counts']['images'], scene['counts']['points'])
+                or set(selected.cameras) != set(original.cameras) or set(selected.images) != set(reference.images)):
+            raise ValueError('Native exported model counts or identities differ')
+        for key, camera in original.cameras.items():
+            actual = selected.cameras[key]
+            if (camera.model != actual.model or camera.width != actual.width or camera.height != actual.height
+                    or not np.array_equal(camera.params, actual.params)):
+                raise ValueError('Native export changed original calibration')
+        for key, image in reference.images.items():
+            actual = selected.images[key]
+            if (image.name != actual.name or image.camera_id != actual.camera_id
+                    or not np.allclose(image.cam_from_world().matrix(), actual.cam_from_world().matrix(), atol=1e-12, rtol=0)
+                    or len(image.points2D) != len(actual.points2D)
+                    or any(a.point3D_id != b.point3D_id or not np.array_equal(a.xy, b.xy) for a, b in zip(image.points2D, actual.points2D))):
+                raise ValueError('Native export changed reference poses or observations')
+        point_result = verify_native_points(reference, selected)
+        cameras_by_name = {image.name: selected.cameras[image.camera_id] for image in selected.images.values()}
+        if any((cameras_by_name[photo['name']].width, cameras_by_name[photo['name']].height) !=
+                (photo['width'], photo['height']) for photo in scene['photos']):
+            raise ValueError('Native photographs do not match camera calibration')
+    return {'id': identity, 'sourceId': scene['sourceId'], 'status': 'passed', 'counts': scene['counts'],
+            'sourceSha256': scene['points']['sha256'], 'exportSha256': browser['exportSha256'], 'pointValues': 'passed',
+            'pointReadMethod': 'pycolmap_full_model_and_chunked_source_comparison', 'sourceFeatures': 0,
+            'pointAssociation': {'method': association['method'], 'matchedImages': original.num_reg_images(),
+                                 'matchedCameras': original.num_cameras(), 'maxPoseDelta': delta, 'sourceNetworkReads': 0},
+            **point_result}
+
+
 def verify(scene, browser, exports, cache, scratch):
+    if scene.get('pointAssociation', {}).get('method') == 'identical_native_model':
+        return verify_native_association(scene, browser, exports, cache, scratch)
     identity = scene_id(scene)
     if (not browser or browser.get('status') != 'passed' or browser.get('errors')
             or browser.get('counts') != scene['counts'] or browser.get('pointDrawCount') != scene['counts']['points']):
@@ -155,11 +286,17 @@ def verify(scene, browser, exports, cache, scratch):
                     if image.size != (photo['width'], photo['height']):
                         raise ValueError('Photograph dimensions differ')
         result.update(verify_cloud(scene, cache, folder / 'points3D.bin'))
-        # C++ independently reads cameras and every feature; points were checked in bounded chunks.
-        (folder / 'points3D.bin').write_bytes(bytes(8))
+        # Small/medium models also pass the complete C++ COLMAP point reader.
+        # Large streams retain the bounded comparison above without a second multi-million-point heap.
+        full_point_read = scene['counts']['points'] <= 500000
+        if not full_point_read:
+            (folder / 'points3D.bin').write_bytes(bytes(8))
         model = pycolmap.Reconstruction(str(folder))
-        if (model.num_cameras(), model.num_reg_images()) != (scene['counts']['cameras'], scene['counts']['images']) or any(image.num_points3D for image in model.images.values()):
+        if ((model.num_cameras(), model.num_reg_images(), model.num_points3D()) !=
+                (scene['counts']['cameras'], scene['counts']['images'], scene['counts']['points'] if full_point_read else 0)
+                or any(image.num_points3D for image in model.images.values())):
             raise ValueError('Camera counts or untracked observations differ')
+        result['pointReadMethod'] = 'pycolmap_full_model_and_chunked_source_comparison' if full_point_read else 'chunked_binary_source_comparison'
         sample = browser.get('sample')
         if sample:
             with Image.open(cached_source(scene, sample, cache)) as image:
@@ -174,11 +311,7 @@ def verify(scene, browser, exports, cache, scratch):
         if scene['kind'] == 'camera-scene':
             verify_metadata(scene, cache, model, result)
         else:
-            original_path = folder / 'original'; original_path.mkdir()
-            for role in ('cameras', 'images'):
-                (original_path / (role + '.bin')).write_bytes(cached_source(scene, scene['modelFiles'][role], cache).read_bytes())
-            (original_path / 'points3D.bin').write_bytes(bytes(8))
-            original = pycolmap.Reconstruction(str(original_path))
+            original = native_camera_model(scene, scene['modelFiles'], cache, folder / 'original')
             if set(original.cameras) != set(model.cameras) or set(original.images) != set(model.images):
                 raise ValueError('Native camera/image IDs differ')
             for key, camera in original.cameras.items():
@@ -192,6 +325,14 @@ def verify(scene, browser, exports, cache, scratch):
                         or any(not np.array_equal(a.xy, b.xy) for a, b in zip(image.points2D, actual.points2D))):
                     raise ValueError('Native pose or retained feature coordinates differ')
             result['unlinkedSourceObservations'] = sum(image.num_points3D for image in original.images.values())
+            association = verify_point_association(scene, cache, original, folder)
+            if association is not None:
+                result['pointAssociation'] = association
+            named = {image.name: image for image in model.images.values()}
+            for photo in scene['photos']:
+                camera = model.cameras[named[photo['name']].camera_id]
+                if (camera.width, camera.height) != (photo['width'], photo['height']):
+                    raise ValueError('Original photograph dimensions differ from their exported camera')
     result['pointValues'] = 'passed'
     return result
 

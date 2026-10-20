@@ -316,6 +316,26 @@ function explicitManifestProof() {
   return { ...proof, sceneManifest: manifest, viewerUrl: 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(manifest.url) };
 }
 
+test('a shared native model retains its source identities without reviving an older photo-only route', () => {
+  const proof = explicitManifestProof();
+  proof.sceneManifest.pointFormat = 'colmap_binary';
+  proof.sceneManifest.pointSource = 'scene/sparse_native/points3D.bin';
+  proof.sceneManifest.pointAssociation = { sceneRoot: 'scene', method: 'identical_native_model' };
+  proof.priorPhotoRouting = routedPhotoProof().photoRouting;
+  const item = row(0, { 7: proof });
+  assert.equal(render.canOpenIndividual(item, source), true);
+  assert.equal(render.individualSummary(item, source).sceneStats.points, 350710);
+  for (const edit of [p => { p.sceneManifest.pointAssociation.sceneRoot = 'other'; },
+    p => { p.sceneManifest.pointAssociation.sceneRoot = '../scene'; },
+    p => { p.sceneManifest.pointAssociation.method = 'same_names'; },
+    p => { delete p.sceneManifest.pointAssociation; },
+    p => { p.sceneCompatibility.points = 1; },
+    p => { p.photoRouting = p.priorPhotoRouting; }]) {
+    const bad = structuredClone(proof); edit(bad);
+    assert.equal(render.canOpenIndividual(row(0, { 7: bad }), source), false);
+  }
+});
+
 test('selected manifest totals and launch target follow the checked companion while native evidence stays zero', () => {
   const proof = explicitManifestProof();
   const item = row(0, { 7: proof });

@@ -64,6 +64,103 @@ class SceneManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'selection-bound'):
             self.reviews()
 
+    def test_full_scene_manifest_retains_prior_photo_routing_evidence(self):
+        routing = {'url': 'https://source.invalid/old-photo.manifest.json', 'mappedNames': 1}
+        self.proof['photoRouting'] = routing
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(updated['priorPhotoRouting'], routing)
+        self.assertNotIn('photoRouting', updated)
+        self.assertTrue(updated['viewerUrl'].endswith(self.review['selectionSha256'] + '.manifest.json'))
+        self.assertEqual(updated['photoAvailability'], 'complete_export_checked')
+
+    def sibling_association(self, method='identical_poses'):
+        self.review['path'] = 'scene/sparse_seed'
+        self.files.clear()
+        self.files.update({role: 'scene/sparse_seed/' + role + '.txt' for role in ('cameras', 'images')})
+        self.review['modelFiles'] = {role: {'sourcePath': path, 'bytes': 10, 'sha256': 'a' * 64}
+                                     for role, path in self.files.items()}
+        self.row[:3] = ['colmap', self.review['path'], self.files]
+        association = {'sceneRoot': 'scene', 'method': method, 'referenceModel': {
+            role: {'sourcePath': 'scene/sparse_mast3r/' + role + '.bin', 'bytes': 100, 'sha256': 'b' * 64}
+            for role in ('cameras', 'images')}}
+        if method == 'identical_poses':
+            association.update(matchedImages=1, maxPoseDelta=0)
+        else:
+            association.update(matchedCameras=1, maxCalibrationDelta=0,
+                declaration={'sourcePath': 'README.md', 'bytes': 100, 'sha256': 'e' * 64,
+                             'statement': 'share the same world coordinate system'})
+        self.review['pointAssociation'] = association
+        self.review['checks']['pointAssociation'] = 'passed'
+        self.bind()
+
+    def test_sibling_clouds_require_a_selection_bound_world_association(self):
+        for method in ('identical_poses', 'publisher_shared_world'):
+            with self.subTest(method=method):
+                self.sibling_association(method)
+                self.reviews()
+                updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+                self.assertEqual(updated['sceneManifest']['counts']['points'], 42)
+                self.assertEqual(updated['sceneManifest']['pointAssociation']['method'], method)
+                self.assertEqual(updated['sceneCompatibility']['points'], 0)
+        self.review['pointAssociation']['declaration']['sha256'] = 'f' * 64
+        with self.assertRaisesRegex(ValueError, 'selection-bound'):
+            self.reviews()
+
+    def test_unproven_sibling_worlds_and_collection_wide_scopes_fail(self):
+        self.sibling_association()
+        original = copy.deepcopy(self.review)
+        changes = [lambda r: r['pointAssociation'].update(sceneRoot='other'),
+                   lambda r: r['pointAssociation'].update(sceneRoot='scene/sparse_seed'),
+                   lambda r: r['pointAssociation'].update(method='same_basename'),
+                   lambda r: r['pointAssociation'].update(matchedImages=0),
+                   lambda r: r['pointAssociation'].update(maxPoseDelta=0.1),
+                   lambda r: r['pointAssociation'].update(maxPoseDelta=float('nan')),
+                   lambda r: r['pointAssociation']['referenceModel']['images'].update(sourcePath='other/images.bin'),
+                   lambda r: r['pointAssociation']['referenceModel'].pop('cameras'),
+                   lambda r: r['checks'].update(pointAssociation='not_checked')]
+        for change in changes:
+            self.review = copy.deepcopy(original)
+            change(self.review)
+            with self.assertRaises(ValueError):
+                self.bind(); self.reviews()
+        self.review = original
+        self.proof['sceneCompatibility']['points'] = 1
+        with self.assertRaisesRegex(ValueError, 'exact empty native'):
+            apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+
+    def test_native_cloud_transforms_cannot_be_accepted_and_silently_ignored(self):
+        self.review['points']['transform'] = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        self.bind()
+        with self.assertRaisesRegex(ValueError, 'already aligned'):
+            self.reviews()
+
+    def test_native_tracks_bind_only_to_an_empty_identical_camera_model(self):
+        self.sibling_association()
+        self.review['points'].update(sourcePath='scene/sparse_mast3r/points3D.bin', format='colmap_binary')
+        association = self.review['pointAssociation']
+        association.update(method='identical_native_model', matchedCameras=1, maxCalibrationDelta=0,
+                           identityIds='matched', sourceFeatures=0)
+        self.review['checks'].update(trackValues='passed', sourceCameraIdentity='passed')
+        self.bind(); self.reviews()
+        assets = manifest_assets(self.review, self.entry, hf_url)
+        manifest = json.loads(assets[self.review['selectionSha256'] + '.manifest.json'])
+        self.assertTrue(manifest['files']['cameras'].endswith('/scene/sparse_seed/cameras.txt'))
+        self.assertTrue(manifest['files']['images'].endswith('/scene/sparse_mast3r/images.bin'))
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(updated['sceneManifest']['pointFormat'], 'colmap_binary')
+        original = copy.deepcopy(self.review)
+        for changes in [{'sourceFeatures': 1}, {'identityIds': 'different'}, {'maxCalibrationDelta': 0.1},
+                        {'matchedCameras': 2}, {'matchedImages': 2}]:
+            self.review = copy.deepcopy(original)
+            self.review['pointAssociation'].update(changes)
+            self.bind()
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, 'identical cameras'):
+                self.reviews()
+        self.review = original
+        self.proof['sceneCompatibility']['points'] = 1
+        with self.assertRaisesRegex(ValueError, 'preserve native points'):
+            apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+
     def test_camera_only_cloud_binding_preserves_checked_photo_prefix_and_evidence_tier(self):
         self.review.update(kind='cameras', photos=[], masks=[])
         self.files.pop('points3d')
