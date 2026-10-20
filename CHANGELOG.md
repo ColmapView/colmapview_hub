@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.9.14 — 2026-10-20
+
+- Open all 47 danceNet3D motion scenes with their original cameras and one explicitly labelled source frame: 20 XYZ frames with 1,872,683 points and 27 Gaussian frames with 799,402 Gaussians.
+- Publish version 3 geometry manifests only after complete member integrity, frame membership, camera-world alignment, browser rendering and independent COLMAP export checks. Keep sparse points separate from splats and leave video-only photographs unbound.
+- Retain all earlier source receipts and catalogue identities. The zero-point ledger now distinguishes loaded Gaussian frames, scoped absence, auxiliary camera/flow data and meshes.
+
+## 0.9.13 — 2026-10-20
+
+- Bind 28 verified sibling sources: 15 BMVS models and 13 TwinWorld test splits, adding 4,993,021 points with original poses, photographs and masks.
+- Require pinned world associations, preserve native tracks for the identical doll model, and reject publication when any generated launch differs from runtime eligibility.
+
 ## 0.9.12 — 2026-10-20
 
 - Close all five static cloud bindings from the zero-point audit, retaining checked photo prefixes and explicit camera-world transforms. Add a synchronized four-view, 2,148-vertex preview of the cloth trajectory's first frame.

@@ -318,11 +318,17 @@ distortion. All 319 resulting calibrations and poses passed PyCOLMAP 4.0.3, and 
 source photograph decoded in the browser. The existing model-only export tier
 remains separate from full original-photograph export.
 
-The [zero-point audit](../docs/zero-point-audit-2026-10-20.md) closes its five
-static cloud bindings and three auxiliary follow-ups. scene-manifests.json now
-retains 23 checked selections, including a synchronized cloth frame and explicit
-metadata-world transforms. zero-point-auxiliary-inspection.json.gz records the
-inspected camera/flow arrays; unchanged confirmed scopes need no repeat audit.
-The scene ledger contains 15 recoveries (9,336,828 points/vertices) and explains
-all 342 remaining static-model zeros. Berlin also retains its original track
-sidecar and complete original-photo export.
+The [zero-point audit](../docs/zero-point-audit-2026-10-20.md) closes the checked
+static/sibling bindings, auxiliary follow-ups and all 47 temporal scene launches.
+scene-manifests.json retains 98 selections: the earlier 51 receipts plus 20 XYZ
+and 27 Gaussian archive frames. The [frame list](../docs/temporal-frame-selections-2026-10-20.md)
+names every selected time and source. zero-point-temporal-inspection.json.gz
+records complete member hashes, bounded prefix/ZIP receipts, source metadata,
+browser rendering and independent complete COLMAP export checks. Whole archive
+hashes are publisher LFS declarations, not full-download claims.
+
+The ledger contains 63 point recoveries (16,202,532 points/vertices) and 27 loaded
+Gaussian frames with zero native sparse points. Its remaining 267 cases are scoped
+non-listings, inspected non-XYZ camera/flow arrays or meshes. The auxiliary and
+sibling inspection receipts retain their original pins; unchanged confirmed facts
+need no repeat source audit. Berlin keeps its original tracks and complete photos.

@@ -93,7 +93,7 @@ function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): pro
   const native = proof.sceneCompatibility ?? proof.sceneValidation;
   const original = proof.sceneManifest.sourceCounts ?? proof.sceneManifest.counts;
   return native?.cameras === original.cameras && native.images === original.images
-    && (['xyz_ply', 'numpy_frame'].includes(proof.sceneManifest.pointFormat)
+    && (['xyz_ply', 'numpy_frame', 'archive_xyz_ply'].includes(proof.sceneManifest.pointFormat)
       || proof.sceneManifest.pointAssociation?.method === 'identical_native_model'
       ? native.points === 0 : native.points === proof.sceneManifest.counts.points);
 }
@@ -126,7 +126,8 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
 
 export function individualSummary(row: IndividualRecord, source: IndividualSource): CatalogSummary {
   const [id, , kind, path, format, archive, , proof] = row;
-  const selectedKind = kind === 'cameras' && hasCheckedSceneManifest(proof) && proof.sceneManifest.counts.points > 0 ? 'colmap' : kind;
+  const selectedKind = hasCheckedSceneManifest(proof) && proof.sceneManifest.frameGeometry?.role === 'splat' ? 'splat-scene'
+    : kind === 'cameras' && hasCheckedSceneManifest(proof) && proof.sceneManifest.counts.points > 0 ? 'colmap' : kind;
   const kindLabel = individualKind(selectedKind, format);
   const gated = source.access === 'gated' || proof?.delivery === 'gated';
   const statusLabel = gated ? 'Access required' : proof?.statusLabel || (archive ? 'Extraction required; load unverified' : 'Files listed; load not checked');
@@ -187,10 +188,16 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         { label: 'Photo route checked on', value: proof.photoRouting.checkedAt },
       ] : []),
       ...(proof?.sceneManifest && isSceneManifestEvidence(proof.sceneManifest) ? [
-        { label: 'Scene manifest', value: 'Explicit v1 model and media selection', url: proof.sceneManifest.url },
+        { label: 'Scene manifest', value: proof.sceneManifest.frameGeometry ? 'Explicit v3 selected geometry frame' : 'Explicit v1 model and media selection', url: proof.sceneManifest.url },
         ...(proof.sceneManifest.pointSource ? [{ label: 'Selected point cloud', value: proof.sceneManifest.pointSource, url: file(proof.sceneManifest.pointSource) }] : []),
         { label: 'Selected scene export SHA-256', value: proof.sceneManifest.exportSha256 },
         { label: 'Manifest viewer build', value: `${proof.sceneManifest.viewerVersion} (${proof.sceneManifest.viewerCommit})` },
+        ...(proof.sceneManifest.frameGeometry ? [
+          { label: 'Selected frame', value: `${proof.sceneManifest.frameGeometry.frame} from ${proof.sceneManifest.frameGeometry.frameCount.toLocaleString('en-US')} published frames` },
+          { label: 'Selected geometry', value: `${proof.sceneManifest.frameGeometry.count.toLocaleString('en-US')} ${proof.sceneManifest.frameGeometry.role === 'splat' ? 'Gaussians (separate from COLMAP sparse points)' : 'untracked XYZ points'}` },
+          { label: 'Geometry member', value: proof.sceneManifest.frameGeometry.memberPath, url: file(proof.sceneManifest.frameGeometry.sourcePath) },
+          { label: 'Temporal scope', value: 'One static frame. Video decoding, sequence playback and archived masks are outside this launch.' },
+        ] : []),
         ...(proof.sceneManifest.frameIndices ? [{label: 'Selected temporal views', value: `${proof.sceneManifest.counts.images} of ${proof.sceneManifest.sourceCounts!.images} source frames`}]: []),
         ...(proof.sceneManifest.maskCount && proof.sceneManifest.maskRole === 'unknown'
           ? [{ label: 'Mask export', value: 'Masks display in the viewer. Their role is unverified, so they are not qualified as COLMAP feature masks.' }] : []),

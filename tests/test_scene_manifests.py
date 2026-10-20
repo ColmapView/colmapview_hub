@@ -134,6 +134,95 @@ class SceneManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'already aligned'):
             self.reviews()
 
+    def frame_review(self, role='points3D'):
+        sequence = 's4/Motion'
+        self.files.clear()
+        self.files.update({key: sequence + '/colmap/' + key + '.bin' for key in ('cameras', 'images')})
+        receipt = lambda path: {'sourcePath': path, 'bytes': 100, 'sha256': 'b' * 64}
+        self.review.update(kind='cameras', path=sequence + '/colmap', photos=[], masks=[],
+            modelFiles={key: receipt(path) for key, path in self.files.items()}, viewerVersion='0.19.10')
+        self.review['viewerState']['viewerVersion'] = '0.19.10'
+        self.row[:3] = ['cameras', self.review['path'], self.files]
+        archive_path = ('pointcloud/' + sequence + '.tar.zst') if role == 'points3D' else ('3dgs/' + sequence + '.zip')
+        archive = {**receipt(archive_path), 'url': hf_url(self.entry, 'a' * 40, archive_path),
+            'format': 'tar.zst' if role == 'points3D' else 'zip', 'role': role,
+            'member': {'path': '0000001.ply', 'bytes': 64, 'sha256': 'e' * 64},
+            'listingReceipt': {'url': 'https://huggingface.co/api/datasets/owner/data/tree/' + 'a' * 40 + '/pointcloud/s4',
+                               'bytes': 100, 'sha256': 'f' * 64, 'status': 200}}
+        frame = {'sequencePath': sequence, 'frame': '0000001', 'frameCount': 2, 'count': 42,
+            'role': role, 'archive': archive, 'sessionManifest': receipt('s4/manifest.json'), 'sourceReadme': receipt('README.md')}
+        self.review['frameGeometry'] = frame
+        self.review['checks'].update({key: 'passed' for key in ('frameMembership', 'frameCameraNames', 'geometryArchive', 'geometryIntegrity')})
+        if role == 'points3D':
+            archive['prefix'] = {'bytes': 80, 'sha256': 'f' * 64}
+            self.review['points'] = {**receipt(archive_path), 'format': 'archive_xyz_ply', 'count': 42}
+        else:
+            self.review.update(points=None, counts={'cameras': 1, 'images': 1, 'points': 0})
+            frame['worldTranslation'] = [0, 1.5, 1.3]
+            frame['sourceReadme']['statement'] = 'COLMAP position = released position + (0, 1.5, 1.3)'
+            self.review['checks'].update(splatValues='passed', splatWorldTransform='passed')
+            self.review['viewerState']['config'].update(splat={'transform': {'scale': 1, 'rotationX': 0, 'rotationY': 0,
+                'rotationZ': 0, 'translationX': 0, 'translationY': 1.5, 'translationZ': 1.3}})
+            self.review['viewerState']['config']['pointCloud']['colorMode'] = 'splats'
+        self.bind()
+
+    def test_selected_archive_frame_retains_native_cameras_and_separates_gaussians_from_points(self):
+        for role in ('points3D', 'splat'):
+            with self.subTest(role=role):
+                self.setUp(); self.frame_review(role); self.reviews()
+                manifest = json.loads(manifest_assets(self.review, self.entry, hf_url)[self.review['selectionSha256'] + '.manifest.json'])
+                self.assertEqual(manifest['version'], 3)
+                self.assertNotIn('points3D', manifest['files'])
+                self.assertTrue(manifest['skipImages'])
+                self.assertEqual(manifest['geometryFiles'][0]['member']['path'], '0000001.ply')
+                updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+                self.assertEqual(updated['sceneCompatibility']['points'], 0)
+                self.assertEqual(updated['sceneManifest']['frameGeometry']['count'], 42)
+                self.assertEqual(updated['sceneManifest']['counts']['points'], 42 if role == 'points3D' else 0)
+                data = updated['availableData']['point_cloud' if role == 'points3D' else 'splats']
+                self.assertEqual(data['status'], 'checked')
+                self.assertEqual(data['count'], 42 if role == 'points3D' else 1)
+                self.assertIn('One checked static frame', updated['scope'])
+
+    def test_archive_frame_requires_bounded_exact_member_and_independent_source_checks(self):
+        self.frame_review()
+        original = copy.deepcopy(self.review)
+        changes = [lambda r: r['frameGeometry'].update(sequencePath='s5/Other'),
+            lambda r: r['frameGeometry'].update(frame='0000002'),
+            lambda r: r['frameGeometry'].update(frameCount=0),
+            lambda r: r['frameGeometry'].update(count=43),
+            lambda r: r['frameGeometry']['archive']['member'].update(bytes=65 * 1024**2),
+            lambda r: r['frameGeometry']['archive']['prefix'].update(bytes=17 * 1024**2),
+            lambda r: r['frameGeometry']['archive'].update(url='https://unrelated.test/frames.tar.zst'),
+            lambda r: r['frameGeometry']['archive']['listingReceipt'].update(status=404),
+            lambda r: r['frameGeometry']['sessionManifest'].update(sourcePath='s5/manifest.json'),
+            lambda r: r['checks'].update(frameCameraNames='not_checked'),
+            lambda r: r.update(viewerVersion='0.19.9'),
+            lambda r: r.update(sourceCounts={}),
+            lambda r: r.update(frameIndices=[]),
+            lambda r: r.pop('frameGeometry')]
+        for change in changes:
+            self.review = copy.deepcopy(original); change(self.review)
+            with self.assertRaises(ValueError):
+                self.bind(); self.reviews()
+        self.review = original
+        self.proof['sceneCompatibility']['points'] = 1
+        with self.assertRaisesRegex(ValueError, 'nonempty native'):
+            apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+
+    def test_gaussian_alignment_cannot_inherit_an_unverified_transform_or_sparse_count(self):
+        self.frame_review('splat')
+        original = copy.deepcopy(self.review)
+        for change in [lambda r: r['counts'].update(points=42),
+            lambda r: r['frameGeometry'].pop('worldTranslation'),
+            lambda r: r['frameGeometry']['sourceReadme'].pop('statement'),
+            lambda r: r['viewerState']['config']['splat']['transform'].update(translationY=0),
+            lambda r: r['viewerState']['config']['pointCloud'].update(colorMode='rgb'),
+            lambda r: r['checks'].update(splatValues='not_checked')]:
+            self.review = copy.deepcopy(original); change(self.review)
+            with self.assertRaises(ValueError):
+                self.bind(); self.reviews()
+
     def test_native_tracks_bind_only_to_an_empty_identical_camera_model(self):
         self.sibling_association()
         self.review['points'].update(sourcePath='scene/sparse_mast3r/points3D.bin', format='colmap_binary')

@@ -273,7 +273,7 @@ test('ZIP photo previews retain image credits and describe automatic archive loa
   await expect(first.locator('figcaption')).toHaveCount(0);
   await first.getByRole('button', { name: /Metadata/ }).click();
   await expect(first.locator('.dataset-photo-credit a').first()).toHaveAttribute('href', /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
-  await expect(first.locator('.dataset-photo-credit')).toContainText(summary.thumbnail.license);
+  await expect(first.locator('.dataset-photo-credit')).toContainText(summary.thumbnail.license === 'pd' ? 'Public domain' : summary.thumbnail.license);
   await first.getByRole('link', { name: 'Full metadata', exact: true }).click();
   await expect(page.locator('main')).toContainText('Preview attribution');
   await expect(page.locator('main')).toContainText('The launch manifest attaches both');
@@ -281,20 +281,42 @@ test('ZIP photo previews retain image credits and describe automatic archive loa
   await expect(page.getByRole('link', { name: 'Try in ColmapView', exact: true })).toBeVisible();
 });
 
-test('recovered archived components stay separate from selected camera-only scene counts', async ({ page }) => {
+for (const selected of [
+  { id: 'data-ebc089e808b20c73bbbfa268', sequence: 's4/HouseFootwork', role: 'points3D', frame: '0000242', points: 62455, count: 62455 },
+  { id: 'data-b41ab2a34430b23d25428e3c', sequence: 's4/3PointStep', role: 'splat', frame: '0000001', points: 0, count: 18280 },
+]) test(`selected ${selected.role} archive frame retains native cameras and truthful sparse counts`, async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:nyuvideolab/danceNet3D');
-  const result = await (await page.request.get('/hub/datasets/api/entries?dataset=' + source.id)).json();
-  const entry = result.entries[0];
-  expect(entry.availableData.splats).toMatchObject({ status: 'archive', archiveFormat: 'zip' });
+  const result = await (await page.request.get('/hub/datasets/api/entries?dataset=' + source.id + '&q=' + encodeURIComponent(selected.sequence.replace('/', ' ')))).json();
+  const entry = result.entries.find((entry: { id: string }) => entry.id === selected.id);
+  expect(entry).toBeDefined();
+  expect(entry.availableData.splats).toMatchObject({ status: selected.role === 'splat' ? 'checked' : 'archive', archiveFormat: 'zip' });
   expect(entry.availableData.masks).toMatchObject({ status: 'archive', archiveFormat: 'tar.zst' });
-  expect(entry.sceneStats.points).toBe(0);
+  expect(entry.sceneStats.points).toBe(selected.points);
+  expect(entry.sceneStats.cameraPoses).toBe(29);
   await page.goto('/hub/datasets/entry/' + entry.id);
-  await expect(page.locator('[data-asset="splats"]')).toHaveText('Splats · archive');
+  await expect(page.locator('[data-asset="splats"]')).toHaveText(selected.role === 'splat' ? 'Splats' : 'Splats · archive');
   await expect(page.locator('[data-asset="masks"]')).toHaveText('Masks · archive');
   await expect(page.locator('main')).toContainText('splats archive member');
   await expect(page.locator('main')).toContainText(entry.availableData.splats.archiveMember);
-  expect((await page.request.get(entry.openUrl, { maxRedirects: 0 })).status()).toBe(302);
+  await expect(page.locator('main')).toContainText('Selected frame');
+  await expect(page.locator('main')).toContainText(selected.count.toLocaleString('en-US') + (selected.role === 'splat' ? ' Gaussians' : ' untracked XYZ points'));
+  await expect(page.locator('[data-stat="points"]')).toHaveText(selected.points.toLocaleString('en-US'));
+  const opened = await page.request.get(entry.openUrl, { maxRedirects: 0 });
+  expect(opened.status()).toBe(302);
+  const target = new URL(new URL(opened.headers().location).searchParams.get('url')!);
+  const manifest = await (await page.request.get(target.pathname)).json();
+  expect(manifest.version).toBe(3);
+  expect(manifest.skipImages).toBe(true);
+  expect(manifest.files.points3D).toBeUndefined();
+  expect(manifest.geometryFiles).toHaveLength(1);
+  expect(manifest.geometryFiles[0]).toMatchObject({ role: selected.role, format: selected.role === 'splat' ? 'zip' : 'tar.zst', member: { path: selected.frame + '.ply' } });
+  expect(manifest.files.cameras).toContain('/' + selected.sequence + '/colmap/cameras.bin');
+  const state = await (await page.request.get(new URL(manifest.viewerStatePath, manifest.baseUrl).pathname)).json();
+  if (selected.role === 'splat') {
+    expect(state.config.splat.transform).toEqual({ scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0, translationX: 0, translationY: 1.5, translationZ: 1.3 });
+    expect(state.config.pointCloud.colorMode).toBe('splats');
+  } else expect(state.config.pointCloud.minTrackLength).toBe(0);
 });
 
 test('model-only ArmGS cards show masks and cameras without claiming photos', async ({ page }) => {

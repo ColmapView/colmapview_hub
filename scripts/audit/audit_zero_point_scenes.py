@@ -45,6 +45,7 @@ def finding(source_id, proof, previous):
 
 NOTES = {
     'recovered': 'Original source geometry passed browser import, COLMAP export and independent XYZ/RGB and camera checks. The prior zero-point receipt is superseded.',
+    'gaussian_frame_loaded': 'A complete selected Gaussian frame loaded with its original cameras and checked publisher world translation. The native COLMAP sparse-point count correctly remains zero. Video decoding and the full timeline are outside this launch.',
     'static_cloud_requires_binding': 'A source point cloud exists. The current launch does not select it. Explicit path selection and camera-world alignment/export checks are still required.',
     'animated_geometry_archive': 'Geometry is supplied as separate frame sequences in archives. A zero static sparse-point count does not mean the dataset has no geometry. Temporal selection and association remain separate.',
     'mesh_only': 'A checked mesh exists. Mesh vertices are not a sparse reconstruction point cloud; no conversion or synthetic sparse points were added.',
@@ -95,13 +96,20 @@ def audit(index, rows, prior, exports=(), confirmations=()):
                   'hubUrl': 'https://colmapview.opsiclear.com/hub/datasets/open/' + scene_id}
         exported = checked.get(scene_id)
         if exported:
+            geometry = exported.get('selectedGeometry', {})
+            gaussian = (geometry.get('role') == 'splat' and type(geometry.get('count')) is int and geometry['count'] > 0
+                        and isinstance(geometry.get('frame'), str) and re.fullmatch(r'\d{7}', geometry['frame'])
+                        and type(geometry.get('frameCount')) is int and geometry['frameCount'] > 0
+                        and exported.get('counts', {}).get('points') == 0
+                        and all(exported.get(key) == 'passed' for key in
+                                ('splatValues', 'splatWorldTransform', 'frameMembership', 'frameCameraNames')))
             if (exported.get('status') != 'passed' or exported.get('pointValues') != 'passed'
-                    or exported.get('sourceId') != source_id or exported.get('counts', {}).get('points', 0) <= 0
+                    or exported.get('sourceId') != source_id or not gaussian and exported.get('counts', {}).get('points', 0) <= 0
                     or (any(exported['counts'][key] != counts[key] for key in ('images', 'cameras'))
                         and not verified_frame_selection(exported, counts))
                     or not all(re.fullmatch('[a-f0-9]{64}', exported.get(key, '')) for key in ('sourceSha256', 'exportSha256'))):
                 raise ValueError('Replacement export lacks independent source-point/camera evidence: ' + scene_id)
-            result.update(finding='recovered', counts=exported['counts'], verification=exported)
+            result.update(finding='gaussian_frame_loaded' if gaussian else 'recovered', counts=exported['counts'], verification=exported)
         result['summary'] = NOTES[result['finding']]
         identity = {'sourceId': source_id, 'revision': source_audit['revision'], 'kind': kind, 'path': path, 'files': files,
                     'inventorySha256': source_audit.get('inventorySha256'), 'geometry': result['availableGeometry']}

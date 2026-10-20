@@ -3,6 +3,26 @@ from scripts.audit.audit_zero_point_scenes import audit, effective_counts, findi
 
 
 class ZeroPointAuditTest(unittest.TestCase):
+    def test_loaded_gaussians_keep_zero_sparse_points_and_need_independent_frame_world_evidence(self):
+        index = {'generation': 'snapshot', 'total': 1, 'sources': [{'sourceId': 'hf:example/data'}]}
+        files = {'cameras': 'cameras.bin', 'images': 'images.bin'}
+        counts = {'cameras': 1, 'images': 2, 'points': 0}
+        row = ['scene', 0, 'cameras', 'scene', 'COLMAP', None, files,
+               {'sceneCompatibility': {'revision': 'a' * 40, **counts}}]
+        prior = {'sources': [{'sourceId': 'hf:example/data', 'revision': 'a' * 40}],
+                 'scenes': [{'id': 'scene', 'source': 0, 'kind': 'cameras', 'path': 'scene', 'files': files,
+                             'scope': 'scene', 'scopeComplete': True, 'findings': {}}]}
+        verified = {'id': 'scene', 'sourceId': 'hf:example/data', 'status': 'passed', 'counts': counts,
+                    'sourceSha256': 'b' * 64, 'exportSha256': 'c' * 64,
+                    'selectedGeometry': {'role': 'splat', 'count': 123, 'frame': '0000001', 'frameCount': 100},
+                    **{key: 'passed' for key in ('pointValues', 'splatValues', 'splatWorldTransform', 'frameMembership', 'frameCameraNames')}}
+        result = audit(index, [row], prior, exports=[verified])
+        self.assertEqual(result['summary']['findings'], {'gaussian_frame_loaded': 1})
+        self.assertEqual(result['summary']['recoveredPoints'], 0)
+        for key in ('splatValues', 'splatWorldTransform', 'frameMembership', 'frameCameraNames'):
+            with self.assertRaisesRegex(ValueError, 'independent'):
+                audit(index, [row], prior, exports=[{**verified, key: 'not_checked'}])
+
     def test_temporal_camera_subsets_require_independent_original_frame_evidence(self):
         original={'cameras':92,'images':92,'points':0}
         exported={'cameraSourceFramesChecked':'passed','counts':{'cameras':4,'images':4,'points':2148},

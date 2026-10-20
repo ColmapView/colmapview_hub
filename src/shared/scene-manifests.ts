@@ -4,10 +4,12 @@ export interface SceneManifestEvidence {
   selectionSha256: string;
   counts: { cameras: number; images: number; points: number };
   pointSource: string | null;
-  pointFormat: 'xyz_ply' | 'colmap_binary' | 'colmap_text' | 'numpy_frame' | 'none';
+  pointFormat: 'xyz_ply' | 'colmap_binary' | 'colmap_text' | 'numpy_frame' | 'archive_xyz_ply' | 'none';
   sourceCounts?: {cameras: number; images: number; points: number};
   frameIndices?: number[];
   pointAssociation?: {sceneRoot: string; method: 'identical_poses' | 'publisher_shared_world' | 'identical_native_model'};
+  frameGeometry?: {sequencePath: string; frame: string; frameCount: number; role: 'points3D' | 'splat'; count: number;
+    sourcePath: string; memberPath: string; memberSha256: string};
   photoCount: number;
   maskCount: number;
   maskRole: 'unknown' | 'foreground' | 'validity';
@@ -20,7 +22,7 @@ const hash = (value: unknown, length = 64): value is string => typeof value === 
   && new RegExp(`^[a-f0-9]{${length}}$`).test(value);
 const count = (value: unknown, minimum = 0): value is number => typeof value === 'number'
   && Number.isSafeInteger(value) && value >= minimum;
-const pointSuffixes = { xyz_ply: '.ply', colmap_binary: '.bin', colmap_text: '.txt', numpy_frame: '.npz' } as const;
+const pointSuffixes = { xyz_ply: '.ply', colmap_binary: '.bin', colmap_text: '.txt', numpy_frame: '.npz', archive_xyz_ply: '.tar.zst' } as const;
 function validSourceSelection(item: Record<string, unknown>, selected: SceneManifestEvidence['counts'] | undefined): boolean {
   const source = item.sourceCounts as SceneManifestEvidence['sourceCounts'];
   if (source === undefined) return item.frameIndices === undefined && item.pointFormat !== 'numpy_frame';
@@ -50,6 +52,24 @@ function validPointAssociation(item: Record<string, unknown>): boolean {
     : ['identical_poses', 'publisher_shared_world'].includes(association.method) && item.pointFormat === 'xyz_ply';
 }
 
+function validFrameGeometry(item: Record<string, unknown>, counts: SceneManifestEvidence['counts'] | undefined): boolean {
+  if (item.frameGeometry === undefined) return item.pointFormat !== 'archive_xyz_ply';
+  const version = String(item.viewerVersion).split('.').map(Number);
+  if (version.length !== 3 || !version.every(value => count(value))
+    || !(version[0] > 0 || version[1] > 19 || version[1] === 19 && version[2] >= 10)) return false;
+  const frame = item.frameGeometry as SceneManifestEvidence['frameGeometry'];
+  if (!frame || !counts || typeof frame.sequencePath !== 'string' || !frame.sequencePath
+    || /[\\?#]/.test(frame.sequencePath) || frame.sequencePath.split('/').some(part => !part || part === '.' || part === '..')
+    || typeof frame.frame !== 'string' || !/^\d{7}$/.test(frame.frame) || !count(frame.frameCount, 1) || !count(frame.count, 1)
+    || frame.memberPath !== frame.frame + '.ply' || !hash(frame.memberSha256)
+    || item.sourceCounts !== undefined || item.frameIndices !== undefined || item.pointAssociation !== undefined) return false;
+  return frame.role === 'points3D'
+    ? item.pointFormat === 'archive_xyz_ply' && frame.sourcePath === 'pointcloud/' + frame.sequencePath + '.tar.zst'
+      && item.pointSource === frame.sourcePath && counts.points === frame.count
+    : frame.role === 'splat' && frame.sourcePath === '3dgs/' + frame.sequencePath + '.zip'
+      && item.pointFormat === 'none' && item.pointSource === null && counts.points === 0;
+}
+
 /** A manifest launch cannot inherit a native count or an unrelated viewer URL. */
 export function isSceneManifestEvidence(value: unknown): value is SceneManifestEvidence {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -64,6 +84,7 @@ export function isSceneManifestEvidence(value: unknown): value is SceneManifestE
     && validPointSource(item.pointFormat, item.pointSource, counts?.points)
     && validSourceSelection(item, counts)
     && validPointAssociation(item)
+    && validFrameGeometry(item, counts)
     && typeof item.viewerVersion === 'string' && /^\d+\.\d+\.\d+$/.test(item.viewerVersion);
 }
 

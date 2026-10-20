@@ -1,6 +1,6 @@
 # Zero-point scenes, 2026-10-20
 
-The audit covers all **357 effective zero-point scenes in 45 collections** from generation 8aed9dd7761e4e91fc6b77a72809fbef47c74f38369231e9eb651470ecffcd8c. Forty-three scenes now select **14,329,849 verified source points/vertices**. The latest pass closes 28 same-scene sibling bindings with 4,993,021 points; temporal archive loading remains open. Unknown counts were excluded. Sixteen already working native/XYZ manifests and the previous OpenMVG repair are preserved.
+The audit covers all **357 effective zero-point scenes in 45 collections** from generation 8aed9dd7761e4e91fc6b77a72809fbef47c74f38369231e9eb651470ecffcd8c. Sixty-three scenes now select **16,202,532 verified source points/vertices**. Another 27 scenes load checked Gaussian frames while correctly retaining zero native sparse points. The latest pass resolves all 47 temporal scene launches through explicit frame selections. Unknown counts were excluded. Earlier native/XYZ manifests and the previous OpenMVG repair are preserved.
 
 The [readable scene list](zero-point-scenes-2026-10-20.md) links every audited scene. The [evidence ledger](../data/zero-point-audit.json.gz) retains exact revisions, selections, source hashes and independent export results. The [auxiliary inspection](../data/zero-point-auxiliary-inspection.json.gz) records array shapes and byte-range receipts. Confirmed facts can be reused at unchanged pins and evidence keys without a global source scan.
 
@@ -15,6 +15,14 @@ The [per-scene binding list](sibling-point-bindings-2026-10-20.md) records 15 BM
 Fourteen BMVS seed/calibration variants share exactly the cloud model poses. The doll seed has the same camera and image IDs, calibration and poses as its native reconstruction (maximum pose component difference 4.45e-16); its originally empty feature table can therefore use the native observations and 3,006 native landmarks without inventing tracks. TwinWorld explicitly documents a joint train/test reconstruction world, and all 13 test calibrations match their train models. Seven final-test splits intentionally withhold photos; they retain cameras and the scene cloud.
 
 The [sibling inspection receipt](../data/zero-point-sibling-inspection.json.gz) preserves pinned camera/reference files, publisher declaration, numerical associations and full-model export proofs. Unproved sibling paths, nonempty native models, different camera identities and ignored native point transforms are rejected by publication validation.
+
+## Selected temporal geometry
+
+The [47-scene frame list](temporal-frame-selections-2026-10-20.md) records every danceNet3D selection. Twenty complete first regular TAR/Zstandard members add **1,872,683 XYZ/RGB points**; 27 Gaussian ZIP/ZIP64 members add **799,402 Gaussians** as separate render layers. All imported, visibly rendered, shared and exported in viewer 0.19.10. Every complete COLMAP export passed PyCOLMAP; every XYZ/RGB value, calibration and pose matched the source. Gaussian member hashes and GPU-decoded counts matched, using the publisher's exact cloud-only translation (0, 1.5, 1.3).
+
+The [temporal inspection receipt](../data/zero-point-temporal-inspection.json.gz) retains complete selected-member and prefix hashes, publisher LFS archive identities, session frame membership, camera-name matching and numerical world checks. The browser reads a bounded prefix or the ZIP index and selected payload, rather than entire multi-gigabyte sequences. The first TAR member can be frame 0000242, so the Hub names the actual selected frame. Source photographs exist as H.265 recordings; these launches do not infer nonexistent PNGs, decode videos, merge times or attach unrelated archived masks. Source mask and alternate geometry inventories remain intact.
+
+The prepared Hub 0.9.14 catalog retains all 5,583 scene IDs and its earlier 51 manifest receipts. Only these 47 launch records change; the other 5,536 records remain byte-for-byte equal. Viewer release and published-URL checks must complete before the v3 links are activated.
 
 ## Previously closed loading gaps
 
@@ -47,10 +55,10 @@ The first pass also corrected eight NeRF companion-cloud receipts: dry_ice (100,
 | ---: | --- |
 | 262 | No static point source listed in the complete checked scene scope. This is scoped evidence, not collection-wide absence. |
 | 2 | Auxiliary scope has no static XYZ. All 70 HDR flow NPZ indexes contain only two-channel flow and masks, both NPY sequences contain 2D flow, and poses_bounds.npy is a camera array. DTU scan24/cameras.npz contains 294 camera/scale/inverse matrices. Thirty-six depth arrays were excluded under the requested non-depth scope. |
-| 47 | danceNet3D geometry uses separate time-indexed archives, including 20 sparse-cloud TAR/Zstandard sequences and 47 Gaussian ZIP sequences. Their published splats need translation (0, 1.5, 1.3) into the COLMAP camera world. Static COLMAP launches do not attach arbitrary temporal frames. Archive timeline loading remains a separate unsupported feature. |
+| 27 | A checked Gaussian frame now loads with the original cameras and the publisher's world translation. These are Gaussians, so the native sparse-point count correctly stays zero. Other times, video decoding and mask-frame extraction remain separate capabilities. |
 | 3 | Mesh geometry exists. Mesh vertices are not reported as sparse reconstruction points. |
 
-These **314 remaining zeros** comprise confirmed scoped absence, meshes and 47 temporal archive cases. The temporal cases remain loader work, not absence confirmations. Usable cameras/poses still qualify without photographs or sparse points. Existing masks, splats, previews, original links, other variants and scene identities are retained.
+These **294 remaining zeros** comprise 262 scoped non-listings, two inspected non-XYZ auxiliary scopes, three mesh-only scenes and 27 loaded Gaussian frames. No static companion or sibling association remains unresolved in this audit. Usable cameras/poses still qualify without photographs or sparse points. Existing masks, splats, previews, original links, other variants and scene identities are retained. Complete timeline/video support is outside the selected-frame launch scope.
 
 ## Reproduction
 

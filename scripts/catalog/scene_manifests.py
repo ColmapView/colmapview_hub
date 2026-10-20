@@ -1,4 +1,4 @@
-"""Build explicit v1 scene manifests from offline, revision-bound load receipts.
+"""Build explicit scene manifests from offline, revision-bound load receipts.
 
 No source downloads happen here or in the Worker. A different file selection
 needs its own import, geometry and export evidence; native evidence stays intact.
@@ -21,7 +21,7 @@ CHECKS = ('browserImport', 'visibleGeometry', 'cameraAlignment', 'modelExport',
           'independentColmapRead', 'cameraCalibration', 'cameraPoses', 'pointValues')
 SELECTION_FIELDS = ('sourceId', 'revision', 'kind', 'path', 'files', 'modelFiles',
                     'points', 'photos', 'masks', 'maskRole', 'viewerState', 'counts', 'associationFiles',
-                    'imagePrefix', 'sourceCounts', 'frameIndices', 'resizePolicy', 'pointAssociation')
+                    'imagePrefix', 'sourceCounts', 'frameIndices', 'resizePolicy', 'pointAssociation', 'frameGeometry')
 
 
 def json_bytes(value):
@@ -124,6 +124,73 @@ def validate_point_association(review):
     return True
 
 
+def validate_frame_geometry(review):
+    """Select one checked frame without reclassifying Gaussians as sparse points."""
+    frame = review.get('frameGeometry')
+    if frame is None:
+        if (review.get('points') or {}).get('format') == 'archive_xyz_ply':
+            raise ValueError('Archived points require selected-frame evidence')
+        return False
+    if not isinstance(frame, dict):
+        raise ValueError('Invalid selected-frame evidence')
+    archive = frame.get('archive', {})
+    member = archive.get('member', {}) if isinstance(archive, dict) else {}
+    sequence, number = frame.get('sequencePath'), frame.get('frame')
+    role = frame.get('role')
+    required = ('frameMembership', 'frameCameraNames', 'geometryArchive', 'geometryIntegrity')
+    if (review.get('kind') not in ('colmap', 'cameras')
+            or any(key in review for key in ('pointAssociation', 'sourceCounts', 'frameIndices'))
+            or tuple(int(part) for part in review['viewerVersion'].split('.')) < (0, 19, 10)
+            or not source_path(sequence) or review.get('path') != sequence + '/colmap'
+            or not isinstance(number, str) or not re.fullmatch(r'\d{7}', number)
+            or not is_count(frame.get('frameCount'), 1) or not is_count(frame.get('count'), 1)
+            or not file_receipt(frame.get('sessionManifest'))
+            or frame['sessionManifest']['sourcePath'] != posixpath.dirname(sequence) + '/manifest.json'
+            or not file_receipt(frame.get('sourceReadme'))
+            or any(posixpath.dirname(review['files'].get(key, '')) != review['path'] for key in ('cameras', 'images'))
+            or role not in ('points3D', 'splat') or not file_receipt(archive)
+            or archive.get('role') != role or not isinstance(member, dict)
+            or member.get('path') != number + '.ply' or not is_count(member.get('bytes'), 1)
+            or member['bytes'] > 64 * 1024**2 or not re.fullmatch('[a-f0-9]{64}', member.get('sha256', ''))
+            or any(review.get('checks', {}).get(key) != 'passed' for key in required)):
+        raise ValueError('Selected frame needs exact sequence, camera names, source receipts and checked member integrity')
+    repo = quote(review['sourceId'].removeprefix('hf:'), safe='/')
+    expected_url = f'https://huggingface.co/datasets/{repo}/resolve/{review["revision"]}/' + quote(archive['sourcePath'], safe='/')
+    listing = archive.get('listingReceipt', {})
+    if (archive.get('url') != expected_url or not isinstance(listing, dict) or listing.get('status') != 200
+            or not is_count(listing.get('bytes'), 1) or not re.fullmatch('[a-f0-9]{64}', listing.get('sha256', ''))
+            or not listing.get('url', '').startswith(f'https://huggingface.co/api/datasets/{repo}/tree/{review["revision"]}/')):
+        raise ValueError('Geometry archive needs a pinned URL and publisher LFS listing receipt')
+    points = review.get('points')
+    if role == 'points3D':
+        prefix = archive.get('prefix', {})
+        if (archive.get('format') != 'tar.zst' or archive['sourcePath'] != 'pointcloud/' + sequence + '.tar.zst'
+                or not isinstance(prefix, dict) or not is_count(prefix.get('bytes'), 18)
+                or prefix['bytes'] > min(16 * 1024**2, archive['bytes'])
+                or not re.fullmatch('[a-f0-9]{64}', prefix.get('sha256', ''))
+                or not points or points.get('format') != 'archive_xyz_ply'
+                or any(points.get(key) != archive[key] for key in ('sourcePath', 'bytes', 'sha256'))
+                or points.get('count') != frame['count'] or review['counts']['points'] != frame['count']
+                or 'worldTranslation' in frame):
+            raise ValueError('Archived XYZ requires a complete checked first TAR member in the unchanged camera world')
+    else:
+        translation = frame.get('worldTranslation')
+        declaration = frame['sourceReadme'].get('statement')
+        if (archive.get('format') != 'zip' or archive['sourcePath'] != '3dgs/' + sequence + '.zip'
+                or 'prefix' in archive or points is not None or review['counts']['points'] != 0
+                or not isinstance(translation, list) or len(translation) != 3
+                or any(type(value) not in (int, float) or not math.isfinite(value) for value in translation)
+                or not isinstance(declaration, str) or not 10 <= len(declaration) <= 2048
+                or any(review.get('checks', {}).get(key) != 'passed' for key in ('splatValues', 'splatWorldTransform'))):
+            raise ValueError('Gaussian frame needs its own count and pinned publisher world translation')
+        expected = {'scale': 1, 'rotationX': 0, 'rotationY': 0, 'rotationZ': 0,
+                    **dict(zip(('translationX', 'translationY', 'translationZ'), translation))}
+        config = review.get('viewerState', {}).get('config', {})
+        if config.get('splat', {}).get('transform') != expected or config.get('pointCloud', {}).get('colorMode') != 'splats':
+            raise ValueError('Gaussian saved state must render the exact checked world translation')
+    return True
+
+
 def manifest_scene_reviews(catalog, policy):
     if policy.get('schemaVersion') != 1 or not isinstance(policy.get('scenes'), list) or not policy.get('checkedAt'):
         raise ValueError('Invalid scene manifest policy')
@@ -150,7 +217,7 @@ def manifest_scene_reviews(catalog, policy):
         points = review.get('points')
         if not isinstance(counts, dict) or points is not None and not isinstance(points, dict):
             raise ValueError('Invalid manifest counts or points receipt')
-        suffixes = {'xyz_ply': '.ply', 'colmap_binary': '.bin', 'colmap_text': '.txt', 'numpy_frame': '.npz'}
+        suffixes = {'xyz_ply': '.ply', 'colmap_binary': '.bin', 'colmap_text': '.txt', 'numpy_frame': '.npz', 'archive_xyz_ply': '.tar.zst'}
         if (not all(is_count(counts.get(key), 1) for key in ('cameras', 'images'))
                 or not is_count(counts.get('points')) or (points is None and counts['points'] != 0)
                 or (points is not None and (not file_receipt(points) or points.get('format') not in suffixes
@@ -203,6 +270,7 @@ def manifest_scene_reviews(catalog, policy):
             if 'transform' in points:
                 raise ValueError('Native manifests require points already aligned with their camera world')
         validate_point_association(review)
+        validate_frame_geometry(review)
         if review.get('imagePrefix'):
             if metadata or review.get('photos'):
                 raise ValueError('A native checked prefix cannot replace explicit metadata media')
@@ -245,7 +313,7 @@ def manifest_scene_reviews(catalog, policy):
         if review.get('associationFiles') and set(review['associationFiles']) != {'cameras', 'images'}:
             raise ValueError('Peer photo association needs both camera and pose files')
         if not metadata:
-            validate_state(review.get('viewerState'), bool(points and points['format'] == 'xyz_ply'))
+            validate_state(review.get('viewerState'), bool(points and points['format'] in ('xyz_ply', 'archive_xyz_ply')))
         if not metadata and review['viewerState']['viewerVersion'] != review['viewerVersion']:
             raise ValueError('Manifest viewer build and saved state must agree')
         key = scene_key(review['sourceId'], review['kind'], review['path'])
@@ -274,13 +342,18 @@ def manifest_assets(review, entry, hf_url):
     files = {role: url(review['files'][role]) for role in ('cameras', 'images')}
     if review.get('pointAssociation', {}).get('method') == 'identical_native_model':
         files['images'] = url(review['pointAssociation']['referenceModel']['images']['sourcePath'])
-    if review['points'] is not None:
+    if review['points'] is not None and not review.get('frameGeometry'):
         files['points3D'] = url(review['points']['sourcePath'])
     for role in ('rigs', 'frames'):
         if role in review['files']:
             files[role] = url(review['files'][role])
     manifest = {'version': 1, 'name': review['path'] or review['sourceId'].removeprefix('hf:'), 'baseUrl': ASSET_BASE, 'files': files,
                 'viewerStatePath': state_name, 'splats': [], 'skipImages': not bool(review['photos'])}
+    if review.get('frameGeometry'):
+        frame = review['frameGeometry']
+        archive = frame['archive']
+        manifest.update(version=3, name=frame['sequencePath'] + ' (frame ' + frame['frame'] + ')',
+            geometryFiles=[{key: archive[key] for key in ('url', 'bytes', 'format', 'role', 'member', 'prefix') if key in archive}])
     if review['photos']:
         manifest['imageNameToPath'] = {item['name']: url(item['sourcePath']) for item in review['photos']}
     elif review.get('imagePrefix'):
@@ -309,6 +382,9 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
         if native.get('points') != 0 or (points['sourcePath'] not in row[2].values()
                 and (points['format'] != 'numpy_frame' or posixpath.dirname(points['sourcePath']) != row[1])):
             raise ValueError('Metadata geometry must belong to this exact checked camera scene')
+    elif validate_frame_geometry(review):
+        if native.get('points') != 0:
+            raise ValueError('Selected frame cannot replace nonempty native points')
     elif points and points['format'] == 'xyz_ply':
         if (native.get('points') != 0 or points['sourcePath'] not in
                 [value for role, value in row[2].items() if role.startswith('asset:')]
@@ -346,6 +422,15 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
         'exportSha256': review['exportSha256'], 'viewerCommit': review['viewerCommit'], 'viewerVersion': review['viewerVersion']}
     if review.get('pointAssociation'):
         result['sceneManifest']['pointAssociation'] = {key: review['pointAssociation'][key] for key in ('sceneRoot', 'method')}
+    if review.get('frameGeometry'):
+        frame = review['frameGeometry']
+        archive = frame['archive']
+        result['sceneManifest']['frameGeometry'] = {key: frame[key] for key in ('sequencePath', 'frame', 'frameCount', 'role', 'count')}
+        result['sceneManifest']['frameGeometry'].update(sourcePath=archive['sourcePath'], memberPath=archive['member']['path'],
+                                                       memberSha256=archive['member']['sha256'])
+        result['summary'] = (f'{review["counts"]["images"]} registered poses with selected frame {frame["frame"]}: '
+            f'{frame["count"]:,} ' + ('points.' if frame['role'] == 'points3D' else 'Gaussians; no native sparse points.'))
+        result['scope'] += ' One checked static frame; video decoding, other times and archived masks are outside this launch.'
     if review.get('imagePrefix', {}).get('decodedSample'):
         result['photoAudit'].update(samplePixels='decoded', sampleSha256=review['imagePrefix']['decodedSample']['sha256'])
     if metadata:
@@ -357,6 +442,12 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
     data = result['availableData']
     if review['counts']['points']:
         data['point_cloud'] = {'status': 'checked', 'count': review['counts']['points'], 'samplePath': points['sourcePath']}
+    if review.get('frameGeometry'):
+        frame = review['frameGeometry']
+        kind = 'point_cloud' if frame['role'] == 'points3D' else 'splats'
+        data[kind] = {'status': 'checked', 'count': frame['count'] if kind == 'point_cloud' else 1,
+                      'samplePath': frame['archive']['sourcePath'], 'archiveMember': frame['archive']['member']['path'],
+                      'archiveFormat': frame['archive']['format']}
     if review['photos']:
         complete = len(review['photos']) == review['counts']['images']
         result['photoAvailability'] = 'complete_export_checked' if complete else 'partial'
@@ -390,4 +481,6 @@ def apply_manifest_evidence(entry, row, revision, proof, review, hf_url):
     # manifest must not erase separately checked companion assets. Its selected
     # points/media remain recorded independently in sceneManifest above.
     return result, ('Camera metadata + selected vertices' if metadata else
+                    'COLMAP + selected Gaussian frame' if review.get('frameGeometry', {}).get('role') == 'splat' else
+                    'COLMAP + selected XYZ frame' if review.get('frameGeometry') else
                     'COLMAP + XYZ PLY' if points and points['format'] == 'xyz_ply' else 'COLMAP')

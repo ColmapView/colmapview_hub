@@ -402,6 +402,43 @@ test('public manifest settings assets have their own static CORS rule', () => {
   assert.match(readFileSync('wrangler.jsonc', 'utf8'), /!\/hub\/datasets\/individual\/\*/);
 });
 
+test('selected archive XYZ and Gaussian frames retain truthful counts and fail closed on changed identities', () => {
+  for (const role of ['points3D', 'splat']) {
+    const proof = explicitManifestProof(), manifest = proof.sceneManifest;
+    manifest.viewerVersion = '0.19.10';
+    manifest.photoCount = 0; manifest.maskCount = 0;
+    manifest.frameGeometry = { sequencePath: 's4/Motion', frame: '0000001', frameCount: 999, role, count: 42,
+      sourcePath: role === 'points3D' ? 'pointcloud/s4/Motion.tar.zst' : '3dgs/s4/Motion.zip',
+      memberPath: '0000001.ply', memberSha256: 'a'.repeat(64) };
+    manifest.pointFormat = role === 'points3D' ? 'archive_xyz_ply' : 'none';
+    manifest.pointSource = role === 'points3D' ? manifest.frameGeometry.sourcePath : null;
+    manifest.counts.points = role === 'points3D' ? 42 : 0;
+    const item = row(0, { 2: 'cameras', 3: 's4/Motion/colmap', 7: proof });
+    assert.equal(render.canOpenIndividual(item, source), true);
+    const summary = render.individualSummary(item, source);
+    assert.equal(summary.sceneStats.points, role === 'points3D' ? 42 : 0);
+    assert.equal(summary.itemKind, role === 'points3D' ? 'COLMAP reconstruction' : 'Gaussian scene');
+    const entry = render.individualEntry(item, source, parent);
+    assert.equal(entry.facts.find(fact => fact.label === 'Selected frame').value, '0000001 from 999 published frames');
+    for (const change of [p => { p.sceneManifest.frameGeometry.sourcePath = '3dgs/s5/Other.zip'; },
+      p => { p.sceneManifest.frameGeometry.memberPath = '../0000001.ply'; },
+      p => { p.sceneManifest.frameGeometry.frameCount = 0; },
+      p => { p.sceneManifest.frameGeometry.count = 0; },
+      p => { p.sceneManifest.frameGeometry.memberSha256 = ''; },
+      p => { p.sceneManifest.frameGeometry.role = 'mesh'; },
+      p => { p.sceneManifest.viewerVersion = '0.19.9'; },
+      p => { p.sceneManifest.frameIndices = [0, 1]; },
+      p => { p.sceneCompatibility.points = 1; }]) {
+      const changed = structuredClone(proof); change(changed);
+      assert.equal(render.canOpenIndividual(row(0, { 7: changed }), source), false);
+    }
+    if (role === 'points3D') {
+      delete manifest.frameGeometry;
+      assert.equal(render.canOpenIndividual(row(0, { 7: proof }), source), false);
+    }
+  }
+});
+
 test('statistics evidence names only the text files completely read in a mixed-format model', () => {
   const proof = nativePhotoProof('not_included');
   proof.sceneCompatibility = { ...proof.sceneCompatibility, cameras: 1, images: 12, points: 0,
