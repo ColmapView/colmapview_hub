@@ -87,26 +87,30 @@ test('companion ZIP requirements remain explicit and Waymo mappings launch throu
   expect(zipManifest.mediaArchives[0].url).toContain('/images.zip');
   const waymo = index.sources.find(source => source.sourceId === 'hf:Dororo99/Ours-V2_waymo_ArmGS')!;
   const mapping = await (await page.request.get('/hub/datasets/api/entries?dataset=' + waymo.id)).json() as {
-    total: number; entries: { id: string; openUrl: string; photoStatus: string }[] };
+    total: number; entries: { id: string; openUrl: string; photoStatus: string; sceneStats: { cameraPoses: number } }[] };
   expect(mapping.total).toBe(10);
   expect(mapping.entries.every(entry => entry.photoStatus === 'sample_checked')).toBe(true);
   await page.goto('/hub/datasets/entry/' + mapping.entries[0].id);
   await expect(page.locator('main')).toContainText('Image-name mapping');
   await expect(page.locator('main')).toContainText('mapping.json');
   await expect(page.locator('main')).toContainText('Six-digit COLMAP image names map explicitly to eight-digit cache PNG paths');
-  const open = await page.request.get(mapping.entries[0].openUrl, { maxRedirects: 0 });
-  expect(open.status()).toBe(302);
-  const target = new URL(new URL(open.headers().location).searchParams.get('url')!);
-  expect(target.pathname).toMatch(/\/individual\/manifests\/[a-f0-9]{64}\.manifest\.json$/);
-  const response = await page.request.get(target.pathname);
-  expect(response.headers()['access-control-allow-origin']).toBe('*');
-  const manifest = await response.json();
-  expect(manifest.files.cameras).toContain('/colmap/');
-  expect(manifest.imageNameToPath['FRONT/000000.png']).toContain('/images/FRONT/00000000.png');
-  expect(Object.keys(manifest.imageNameToPath)).toHaveLength(297);
-  const images = new Set(manifest.images);
-  expect(manifest.images.length).toBeGreaterThanOrEqual(297);
-  expect(Object.values(manifest.imageNameToPath).every(path => images.has(path))).toBe(true);
+  for (const entry of mapping.entries) {
+    const open = await page.request.get(entry.openUrl, { maxRedirects: 0 });
+    expect(open.status()).toBe(302);
+    const target = new URL(new URL(open.headers().location).searchParams.get('url')!);
+    expect(target.pathname).toMatch(/\/individual\/manifests\/[a-f0-9]{64}\.manifest\.json$/);
+    const response = await page.request.get(target.pathname);
+    expect(response.headers()['access-control-allow-origin']).toBe('*');
+    const manifest = await response.json();
+    expect(manifest.files.cameras).toContain('/colmap/');
+    expect(manifest.imageNameToPath['FRONT/000000.png']).toContain('/images/FRONT/00000000.png');
+    // These scenes have different lengths; match each model's audited pose count.
+    expect(entry.sceneStats.cameraPoses).toBeGreaterThan(0);
+    expect(Object.keys(manifest.imageNameToPath)).toHaveLength(entry.sceneStats.cameraPoses);
+    const images = new Set(manifest.images);
+    expect(manifest.images.length).toBeGreaterThanOrEqual(entry.sceneStats.cameraPoses);
+    expect(Object.values(manifest.imageNameToPath).every(path => images.has(path))).toBe(true);
+  }
 });
 
 test('TAR manifests attach checked photographs and retain calibration limitations', async ({ page }) => {
