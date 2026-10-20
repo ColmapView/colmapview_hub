@@ -1,5 +1,7 @@
 # Dataset catalog
 
+The [October 20 zero-point audit](../docs/zero-point-audit-2026-10-20.md) covers all 357 scenes whose selected launch reported zero points. [zero-point-audit.json.gz](zero-point-audit.json.gz) retains each finding and its source evidence, including nine corrected exports with 1,954,598 points. Confirmed scoped findings can be reused at the same pin and evidence key; five unbound static clouds and three auxiliary-container reviews remain explicit gaps.
+
 `catalog.json` is the production input for source collection metadata, reported licenses and dated audit evidence. `individual-datasets.json` and `individual-datasets/*.json.gz` preserve the research file/model inventory. The public browser projects that inventory into named scene datasets. Generated HTML, scene metadata packs, search indexes and downloadable JSON are rebuilt under `public/hub/datasets/` and are ignored by Git.
 
 ## Coverage follow-up

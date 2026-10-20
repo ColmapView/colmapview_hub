@@ -428,7 +428,7 @@ test('a checked companion PLY cannot qualify a scene or collection for publicati
   }
 });
 
-test('new camera-only and metadata scenes open their checked model with optional photos, never a companion PLY', async ({ page }) => {
+test('camera metadata opens its checked camera source and camera-only scenes retain optional photo prefixes', async ({ page }) => {
   const policy = JSON.parse(readFileSync('data/verified-scenes.json', 'utf8')) as {
     scenes: { sourceId: string; kind: string; path: string; viewerUrl: string; export?: string }[] };
   const modelExports = policy.scenes.filter(scene => scene.export === 'colmap_model');
@@ -446,7 +446,7 @@ test('new camera-only and metadata scenes open their checked model with optional
   await expect(page.locator('main')).toContainText('COLMAP model export SHA-256');
   await expect(page.locator('main')).not.toContainText('Verified original photographs');
   await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('97');
-  await expect(page.locator('[data-stat="points"]')).toHaveText('0');
+  await expect(page.locator('[data-stat="points"]')).toHaveText('100,000');
   const cameraOnly = id('hf:Bugjudger/HDR_Pretrain', 'cameras', 'scenes/102343992/sparse/0');
   const target = await page.request.get(`/hub/datasets/open/${cameraOnly}`, { maxRedirects: 0 });
   expect(target.status()).toBe(302);

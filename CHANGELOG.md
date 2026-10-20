@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.9.11 — 2026-10-20
+
+- Audit all 357 scenes with an effective zero-point count. Correct nine source-verified exports containing 1,954,598 points, including OpenSfM Berlin and eight NeRF companion clouds. Keep missing data, unselected clouds, meshes, other model variants and animated geometry distinct in the dated per-scene ledger.
+- Independently verify embedded OpenSfM XYZ/RGB and reject fabricated observations or reprojection errors.
+
 ## 0.9.10 — 2026-10-20
 
 - Correct the OpenMVG SceauxCastle scene's verified point count to 6,586 after importing its embedded landmarks and 22,564 observations. Independently verify OpenMVG point values and reciprocal image tracks while retaining companion PLY verification for NeRF scenes.

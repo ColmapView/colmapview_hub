@@ -437,16 +437,16 @@
       },
       "loadPath": "dry_ice/transforms_train.json",
       "loadUrl": "https://huggingface.co/datasets/HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting/resolve/46b23520acaaf5d58938fb19b50a3a62d12c55df/dry_ice/transforms_train.json",
-      "checkedAt": "2026-10-19T03:22:53.202Z",
-      "exportSha256": "d21e99e767b38c1217ebc1e061955b4ec1b0d204af4c63a338cffe375cbb611a",
+      "checkedAt": "2026-10-20T11:10:25.925Z",
+      "exportSha256": "569326cfc44746482ba1e2194010a1fdd3be0b1eec1fe44f3816708dee9c4a56",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FHaoqinHong%2FPhysics-Informed-Deformable-Gaussian-Splatting%2Fresolve%2F46b23520acaaf5d58938fb19b50a3a62d12c55df%2Fdry_ice%2Ftransforms_train.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 97,
         "images": 97,
-        "points": 0
+        "points": 100000
       },
       "photos": [],
       "checks": {
@@ -454,7 +454,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -463,8 +464,18 @@
           "bytes": 62819,
           "sha256": "f5e4129f02588fba8a443cb3bc552de37882f7cee4a6b9d6d97db5d922f360e9",
           "browserRead": true
+        },
+        {
+          "path": "dry_ice/points3d.ply",
+          "url": "https://huggingface.co/datasets/HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting/resolve/46b23520acaaf5d58938fb19b50a3a62d12c55df/dry_ice/points3d.ply",
+          "bytes": 2700234,
+          "sha256": "f9a2601f8b96bb7381e8b9086c70d97790c4d93026932e332838e0e9e256c971",
+          "browserRead": true
         }
-      ]
+      ],
+      "companionPointCloud": "dry_ice/points3d.ply",
+      "notes": "Supersedes the zero-point receipt from before companion XYZ support. Every source XYZ/RGB value and original camera pose/calibration was independently compared with the current browser export. Photo qualification remains separate.",
+      "sourceSnapshotSha256": "085688ae794abe9956b1f340cae5d29aec7bbdd8343d551c424d6259f53c975f"
     },
     {
       "sourceId": "hf:hobbyaih/360data1",
@@ -518,16 +529,16 @@
       },
       "loadPath": "datasets_JAX/JAX_004/transforms_train.json",
       "loadUrl": "https://huggingface.co/datasets/jayinnn/Skyfall-GS-datasets/resolve/82bcd8ae044afcf3182d335a47d0694ba2b4daa2/datasets_JAX/JAX_004/transforms_train.json",
-      "checkedAt": "2026-10-19T03:23:00.807Z",
-      "exportSha256": "fda7ac9f53753605b2878b0ab795292cb0cc15710389aff122aa2e67fea2c8ab",
+      "checkedAt": "2026-10-20T11:10:29.290Z",
+      "exportSha256": "6790edd5b8d9ef4e5c489bb841cfabebf051a1ae9ca01af1ffa1872c24071f81",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fjayinnn%2FSkyfall-GS-datasets%2Fresolve%2F82bcd8ae044afcf3182d335a47d0694ba2b4daa2%2Fdatasets_JAX%2FJAX_004%2Ftransforms_train.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 9,
         "images": 9,
-        "points": 0
+        "points": 35355
       },
       "photos": [],
       "checks": {
@@ -535,7 +546,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -544,8 +556,18 @@
           "bytes": 6707,
           "sha256": "fedf0bc7bbeb6552a5d969a25fda29b08e62984c28729292d9714edae298962e",
           "browserRead": true
+        },
+        {
+          "path": "datasets_JAX/JAX_004/points3D.ply",
+          "url": "https://huggingface.co/datasets/jayinnn/Skyfall-GS-datasets/resolve/82bcd8ae044afcf3182d335a47d0694ba2b4daa2/datasets_JAX/JAX_004/points3D.ply",
+          "bytes": 954818,
+          "sha256": "052809e49757610bfe7b034ec56cd89a7d717547cabe5193bf4fc08da1639792",
+          "browserRead": true
         }
-      ]
+      ],
+      "companionPointCloud": "datasets_JAX/JAX_004/points3D.ply",
+      "notes": "Supersedes the zero-point receipt from before companion XYZ support. Every source XYZ/RGB value and original camera pose/calibration was independently compared with the current browser export. Photo qualification remains separate.",
+      "sourceSnapshotSha256": "59a1a87c1b03c4d0d97517d0f9354cb140e357ec1c5fac677f88a4405f1f9b17"
     },
     {
       "sourceId": "hf:Jiuhe131/refracgs_dataset",
@@ -682,16 +704,16 @@
       },
       "loadPath": "data/mic/transforms_train.json",
       "loadUrl": "https://huggingface.co/datasets/MikolajZ/eks_data/resolve/519715f0f7d9fbfaa3ec5768a0e53626a3a0a17a/data/mic/transforms_train.json",
-      "checkedAt": "2026-10-19T03:25:08.896Z",
-      "exportSha256": "8ac377e163c1cad5c67aad254876fd4cf6626af875c19c9b1473b73f2472b0be",
+      "checkedAt": "2026-10-20T11:10:41.422Z",
+      "exportSha256": "efcb99386ca52b737c52b9f09ae6cb0ac8049da9e57f4cf8054d2fc1b80e8551",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FMikolajZ%2Feks_data%2Fresolve%2F519715f0f7d9fbfaa3ec5768a0e53626a3a0a17a%2Fdata%2Fmic%2Ftransforms_train.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 100,
         "images": 100,
-        "points": 0
+        "points": 786432
       },
       "photos": [],
       "checks": {
@@ -699,7 +721,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -708,8 +731,18 @@
           "bytes": 87968,
           "sha256": "2e3dd0c6a1f9c34fe0cdad9f423c56eaa794c102789ff31058ae396e9f882403",
           "browserRead": true
+        },
+        {
+          "path": "data/mic/sparse_pc.ply",
+          "url": "https://huggingface.co/datasets/MikolajZ/eks_data/resolve/519715f0f7d9fbfaa3ec5768a0e53626a3a0a17a/data/mic/sparse_pc.ply",
+          "bytes": 18874517,
+          "sha256": "fc2281138d2f878e9c1741612b64716d627f46b2a4df9121e4572896a6070b00",
+          "browserRead": true
         }
-      ]
+      ],
+      "companionPointCloud": "data/mic/sparse_pc.ply",
+      "notes": "Supersedes the zero-point receipt from before companion XYZ support. Every source XYZ/RGB value and original camera pose/calibration was independently compared with the current browser export. Photo qualification remains separate.",
+      "sourceSnapshotSha256": "0dd7086e9eb8ca55207f712c083592e73b2cd5b20d854cc9faf07212c66273c7"
     },
     {
       "sourceId": "hf:MikolajZ/eks_demo_data",
@@ -724,16 +757,16 @@
       },
       "loadPath": "data/ficus/transforms_train.json",
       "loadUrl": "https://huggingface.co/datasets/MikolajZ/eks_demo_data/resolve/e5d8c5be4b1019543be04c81ccf51f2cc01fc8fc/data/ficus/transforms_train.json",
-      "checkedAt": "2026-10-19T03:25:12.580Z",
-      "exportSha256": "fc0f0614334928a482297bd38464d4f809d900e2139fae18ca87819b044a8de0",
+      "checkedAt": "2026-10-20T11:10:48.599Z",
+      "exportSha256": "60182bee3556d8ecd566ad8de53c7223f380670aa8a0c36f3d1d5b57c244cfb7",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FMikolajZ%2Feks_demo_data%2Fresolve%2Fe5d8c5be4b1019543be04c81ccf51f2cc01fc8fc%2Fdata%2Fficus%2Ftransforms_train.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 100,
         "images": 100,
-        "points": 0
+        "points": 786432
       },
       "photos": [],
       "checks": {
@@ -741,7 +774,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -750,8 +784,18 @@
           "bytes": 88094,
           "sha256": "27e6a11281fafb8fffdffa22d82317cdc772632deb0032d0a55a2f5c95006c95",
           "browserRead": true
+        },
+        {
+          "path": "data/ficus/sparse_pc.ply",
+          "url": "https://huggingface.co/datasets/MikolajZ/eks_demo_data/resolve/e5d8c5be4b1019543be04c81ccf51f2cc01fc8fc/data/ficus/sparse_pc.ply",
+          "bytes": 18874517,
+          "sha256": "c75abc31b2af9fe77ebfb3dceb9e00cea6b3f2dc704f8cb5633742f4f071f2a6",
+          "browserRead": true
         }
-      ]
+      ],
+      "companionPointCloud": "data/ficus/sparse_pc.ply",
+      "notes": "Supersedes the zero-point receipt from before companion XYZ support. Every source XYZ/RGB value and original camera pose/calibration was independently compared with the current browser export. Photo qualification remains separate.",
+      "sourceSnapshotSha256": "5782128d399fd93a82c28428348ac031be947101cc48230027c3a84d5c7dc976"
     },
     {
       "sourceId": "hf:MiniWan/dl3dv",
@@ -925,16 +969,16 @@
       },
       "loadPath": "transforms_train.json",
       "loadUrl": "https://huggingface.co/datasets/pkupig/dadr_splatting-dataset/resolve/acdd4afd358ac84023fefef01dbeac24c7166b81/transforms_train.json",
-      "checkedAt": "2026-10-19T03:27:06.613Z",
-      "exportSha256": "82c76f9d4ab851033d2da67e990a56581a676968898102aa1754834c8f0b38b9",
+      "checkedAt": "2026-10-20T11:10:31.543Z",
+      "exportSha256": "29d022d6eca7fa4adb9a1a4fa115b195788a0a522133ca1de2b2698558dfc8dc",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fpkupig%2Fdadr_splatting-dataset%2Fresolve%2Facdd4afd358ac84023fefef01dbeac24c7166b81%2Ftransforms_train.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 57,
         "images": 57,
-        "points": 0
+        "points": 100000
       },
       "photos": [],
       "checks": {
@@ -942,7 +986,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -951,8 +996,18 @@
           "bytes": 49170,
           "sha256": "b3411ff706ee1dcd444450c11cbef4e994e50c180b7e603bc7de2c95096e506a",
           "browserRead": true
+        },
+        {
+          "path": "points3d.ply",
+          "url": "https://huggingface.co/datasets/pkupig/dadr_splatting-dataset/resolve/acdd4afd358ac84023fefef01dbeac24c7166b81/points3d.ply",
+          "bytes": 2700234,
+          "sha256": "f9a2601f8b96bb7381e8b9086c70d97790c4d93026932e332838e0e9e256c971",
+          "browserRead": true
         }
-      ]
+      ],
+      "companionPointCloud": "points3d.ply",
+      "notes": "Supersedes the zero-point receipt from before companion XYZ support. Every source XYZ/RGB value and original camera pose/calibration was independently compared with the current browser export. Photo qualification remains separate.",
+      "sourceSnapshotSha256": "5252e0a61110be5b08ca752f2af9fad9bfba3d654e3a6e4e94b060208541c8bc"
     },
     {
       "sourceId": "hf:SHlNDY/HDR-NSFF",
@@ -1043,16 +1098,16 @@
       },
       "loadPath": "quinoa/20221031/transforms.json",
       "loadUrl": "https://huggingface.co/datasets/SimeonOA/GrowSplat-Dataset/resolve/b24983f7d984982b6cee2901d409cd7d01e5545b/quinoa/20221031/transforms.json",
-      "checkedAt": "2026-10-19T03:27:56.538Z",
-      "exportSha256": "fd29abc8ede6cedc4c7e746aa9decd7338f5092e4b1c267cf598de8669d4828d",
+      "checkedAt": "2026-10-20T11:10:34.343Z",
+      "exportSha256": "a54b98e1c65e2333e17d6ded9f598d3df036bebf1f2a30d38e4e139ce6570539",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FSimeonOA%2FGrowSplat-Dataset%2Fresolve%2Fb24983f7d984982b6cee2901d409cd7d01e5545b%2Fquinoa%2F20221031%2Ftransforms.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 15,
         "images": 15,
-        "points": 0
+        "points": 16315
       },
       "photos": [],
       "checks": {
@@ -1060,7 +1115,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -1069,8 +1125,18 @@
           "bytes": 18438,
           "sha256": "9f17d73f7a8d7c168c42f7d4f39c2f42ff2eb69ae7c57fd7a693b54b7b00984b",
           "browserRead": true
+        },
+        {
+          "path": "quinoa/20221031/67-1121-171436754-pointcloud_converted.ply",
+          "url": "https://huggingface.co/datasets/SimeonOA/GrowSplat-Dataset/resolve/b24983f7d984982b6cee2901d409cd7d01e5545b/quinoa/20221031/67-1121-171436754-pointcloud_converted.ply",
+          "bytes": 261282,
+          "sha256": "d39a6431002648d2c937f596d6e4336458f7646c6452183923c840882fc0e6ab",
+          "browserRead": true
         }
-      ]
+      ],
+      "companionPointCloud": "quinoa/20221031/67-1121-171436754-pointcloud_converted.ply",
+      "notes": "Supersedes the zero-point receipt from before companion XYZ support. Every source XYZ/RGB value and original camera pose/calibration was independently compared with the current browser export. Photo qualification remains separate.",
+      "sourceSnapshotSha256": "d3883286fb089423dc723380aacee410b3375e68deb206c7c9bbbfff2f44c893"
     },
     {
       "sourceId": "hf:suvadityamuk/gso-footwear-trellis2-latents",
@@ -1280,16 +1346,16 @@
       },
       "loadPath": "left_scene/mocap_processed/transforms.json",
       "loadUrl": "https://huggingface.co/datasets/uild42/gate-gsplat-assets/resolve/d8bd431972fe4a763ff3e0e4de57f314f2fe7fdb/left_scene/mocap_processed/transforms.json",
-      "checkedAt": "2026-10-19T03:30:25.805Z",
-      "exportSha256": "311b27c5d9cdc849245d9f89028a4448c2b2c04620305a9239b2aa36adf41439",
+      "checkedAt": "2026-10-20T11:10:36.427Z",
+      "exportSha256": "04a407a0a074b1f1f05a60c6694e40e145190e72f9af0c4ee67c8b9b6b1b02cd",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fuild42%2Fgate-gsplat-assets%2Fresolve%2Fd8bd431972fe4a763ff3e0e4de57f314f2fe7fdb%2Fleft_scene%2Fmocap_processed%2Ftransforms.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 242,
         "images": 242,
-        "points": 0
+        "points": 28634
       },
       "photos": [],
       "checks": {
@@ -1297,7 +1363,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -1306,8 +1373,18 @@
           "bytes": 184774,
           "sha256": "200ef55218021bb2cfe069b9d0ab89972e533c470467becd4b9000fda763c57b",
           "browserRead": true
+        },
+        {
+          "path": "left_scene/mocap_processed/sparse_pc.ply",
+          "url": "https://huggingface.co/datasets/uild42/gate-gsplat-assets/resolve/d8bd431972fe4a763ff3e0e4de57f314f2fe7fdb/left_scene/mocap_processed/sparse_pc.ply",
+          "bytes": 429689,
+          "sha256": "03fb69944f4fa461df4b1776da1ed1eb1a586864030a166430424103a4494ba2",
+          "browserRead": true
         }
-      ]
+      ],
+      "companionPointCloud": "left_scene/mocap_processed/sparse_pc.ply",
+      "notes": "Supersedes the zero-point receipt from before companion XYZ support. Every source XYZ/RGB value and original camera pose/calibration was independently compared with the current browser export. Photo qualification remains separate.",
+      "sourceSnapshotSha256": "3c863f95daea597ec60d81b1db2efa929e3a0fe42342a62a44e4efa024e61682"
     },
     {
       "sourceId": "hf:VAST-AI/AniGen-Sample-Dataset",
@@ -1362,16 +1439,16 @@
       },
       "loadPath": "lego/transforms_train.json",
       "loadUrl": "https://huggingface.co/datasets/yaguchi27/EV_hw1_nerf_synthetic/resolve/d90a095eb104f0712de9f499e7bef48a95b78d3b/lego/transforms_train.json",
-      "checkedAt": "2026-10-19T03:33:08.549Z",
-      "exportSha256": "3ffc9fdc60766642f75c597e63c16096d173c372516c19d32dc6728b53bc013b",
+      "checkedAt": "2026-10-20T11:10:38.701Z",
+      "exportSha256": "62fc440cb89f021e5645a54fa380b80367fe675e33bbeae1a8cf93b56173c3b8",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2Fyaguchi27%2FEV_hw1_nerf_synthetic%2Fresolve%2Fd90a095eb104f0712de9f499e7bef48a95b78d3b%2Flego%2Ftransforms_train.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.4",
+      "viewerCommit": "c0b7131fcb8e849a9b6ed63afe1abc7e43ae77a6",
       "export": "colmap_model",
       "counts": {
         "cameras": 100,
         "images": 100,
-        "points": 0
+        "points": 100000
       },
       "photos": [],
       "checks": {
@@ -1379,7 +1456,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -1388,8 +1466,18 @@
           "bytes": 87946,
           "sha256": "82d46cfbd405d7da8562b6fa75b6fb0631a3f941adf66f0c023acb8bf9ea273a",
           "browserRead": true
+        },
+        {
+          "path": "lego/points3d.ply",
+          "url": "https://huggingface.co/datasets/yaguchi27/EV_hw1_nerf_synthetic/resolve/d90a095eb104f0712de9f499e7bef48a95b78d3b/lego/points3d.ply",
+          "bytes": 2700234,
+          "sha256": "f9a2601f8b96bb7381e8b9086c70d97790c4d93026932e332838e0e9e256c971",
+          "browserRead": true
         }
-      ]
+      ],
+      "companionPointCloud": "lego/points3d.ply",
+      "notes": "Supersedes the zero-point receipt from before companion XYZ support. Every source XYZ/RGB value and original camera pose/calibration was independently compared with the current browser export. Photo qualification remains separate.",
+      "sourceSnapshotSha256": "7492435325473203a392f1d12e6a0cdc50f0a7b54a420c70063174b52d457e5e"
     },
     {
       "sourceId": "hf:yimingshao1/refracgs_dataset",
@@ -1607,16 +1695,16 @@
       },
       "loadPath": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
       "loadUrl": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
-      "checkedAt": "2026-10-19T03:33:25.008Z",
-      "exportSha256": "1827e43222e1a9114b9db205c7c28de34a684f1345ef68c09234581fe09815b1",
+      "checkedAt": "2026-10-20T11:16:36.332Z",
+      "exportSha256": "a93d76ca4471b024dcda053faa54e6139e2781f7793f101fccb3ebdf5d71a8b2",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmapillary%2FOpenSfM%2F92381be43cd93ca91e7ef903733a0482440028dd%2Fdata%2Fberlin%2Freconstruction_example.json",
-      "viewerVersion": "0.17.7",
-      "viewerCommit": "fd174248688fecd126aaec9ce194ba9408be163d",
+      "viewerVersion": "0.19.5",
+      "viewerCommit": "c37d0116e352ecc7559218ca1aaa854f85ebe24e",
       "export": "colmap_model",
       "counts": {
         "cameras": 3,
         "images": 3,
-        "points": 0
+        "points": 1430
       },
       "photos": [],
       "checks": {
@@ -1624,7 +1712,8 @@
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
-        "cameraPoses": "passed"
+        "cameraPoses": "passed",
+        "pointValues": "passed"
       },
       "sourceFiles": [
         {
@@ -1635,7 +1724,8 @@
           "browserRead": true
         }
       ],
-      "sourceSnapshotSha256": "1d888f6e2c6fb9f46de758ae5a3a708bfeff9d4a28b80745a0e0ac6b7920375d"
+      "sourceSnapshotSha256": "1d888f6e2c6fb9f46de758ae5a3a708bfeff9d4a28b80745a0e0ac6b7920375d",
+      "notes": "Supersedes the earlier camera-only receipt. The source contains 1,430 colored OpenSfM points; retained without fabricated feature observations or pixel errors. Existing WASM point exports use float32 coordinates."
     },
     {
       "sourceId": "public:[\"MegaScenes\",\"000000 Arc de Berà, component 0\",\"native complete sample\"]",

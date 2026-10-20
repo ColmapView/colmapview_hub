@@ -84,6 +84,29 @@ test('OpenMVG retains its embedded sparse points in API, cards and the pinned vi
   expect(new URL(opened.headers().location).searchParams.get('url')).toBe('https://raw.githubusercontent.com/openMVG/openMVG/6887e7385400f4cca378507296ccc20c8a0837dd/src/software/SfM/python/sfm_viewer/sample_data/sfm_data.json');
 });
 
+test('zero-point audit updates embedded OpenSfM and all eight NeRF companion-cloud statistics',async({page})=>{
+  const index=await(await page.request.get('/hub/datasets/individual/index.json')).json() as {sources:{id:string;sourceId:string}[]};
+  const expected:[string,number][]=[['hf:HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting',100000],
+    ['hf:jayinnn/Skyfall-GS-datasets',35355],['hf:pkupig/dadr_splatting-dataset',100000],
+    ['hf:SimeonOA/GrowSplat-Dataset',16315],['hf:uild42/gate-gsplat-assets',28634],
+    ['hf:yaguchi27/EV_hw1_nerf_synthetic',100000],['hf:MikolajZ/eks_data',786432],['hf:MikolajZ/eks_demo_data',786432]];
+  for(const [sourceId,points] of expected){
+    const source=index.sources.find(item=>item.sourceId===sourceId)!;
+    const result=await(await page.request.get('/hub/datasets/api/entries?dataset='+source.id)).json();
+    expect(result.total).toBe(1);expect(result.entries[0].sceneStats.points).toBe(points);
+    expect(result.entries[0].availableData.point_cloud).toMatchObject({status:'checked',count:points});
+  }
+  const result=await(await page.request.get('/hub/datasets/api/entries?q=Berlin')).json();
+  const berlin=result.entries.find((item:{dataset:{title:string}})=>item.dataset.title.includes('OpenSfM Berlin'));
+  expect(berlin.sceneStats).toEqual({cameraPoses:3,cameraModels:3,points:1430});
+  expect(berlin.availableData.point_cloud).toMatchObject({status:'checked',count:1430});
+  await page.goto('/hub/datasets/?q=Berlin');
+  const card=page.locator('.dataset-card').filter({hasText:'OpenSfM Berlin'});
+  await expect(card.locator('[data-stat="points"]')).toHaveText('1,430');
+  const opened=await page.request.get(berlin.openUrl,{maxRedirects:0});expect(opened.status()).toBe(302);
+  expect(new URL(opened.headers().location).searchParams.get('url')).toBe('https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json');
+});
+
 test('companion ZIP requirements remain explicit and Waymo mappings launch through pinned photo manifests', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     sources: { id: string; sourceId: string }[] };

@@ -76,6 +76,28 @@ def rodrigues(vector):
     cross = np.array([[0, -z, y], [z, 0, -x], [-y, x, 0]])
     return np.eye(3) + math.sin(angle) * cross + (1 - math.cos(angle)) * (cross @ cross)
 
+def verify_opensfm_points(source, model, result):
+    """OpenSfM JSON contains XYZ/RGB, while observations live in tracks.csv."""
+    points = source.get('points', {})
+    if not isinstance(points, dict):
+        raise ValueError('Invalid OpenSfM source points')
+    numeric = all(re.fullmatch(r'0|[1-9][0-9]*', key) and len(key) <= 20 and int(key) < 2**64 - 1 for key in points)
+    indexed = {int(key): value for key, value in points.items()} if numeric else {
+        index + 1: points[key] for index, key in enumerate(sorted(points, key=lambda value: value.encode('utf-16-be', errors='surrogatepass')))}
+    if set(model.points3D) != set(indexed):
+        raise ValueError('OpenSfM source point IDs or count differ')
+    for key, original in indexed.items():
+        point = model.points3D[key]
+        xyz = np.asarray(original['coordinates'], dtype=float)
+        if not (np.array_equal(xyz, point.xyz) or np.array_equal(xyz.astype(np.float32).astype(float), point.xyz)):
+            raise ValueError('OpenSfM point coordinates differ beyond viewer float32 precision')
+        if not np.array_equal(original['color'], point.color) or point.error != 0 or len(point.track.elements):
+            raise ValueError('OpenSfM source colors differ or observations/errors were fabricated')
+    if any(len(image.points2D) for image in model.images.values()):
+        raise ValueError('OpenSfM JSON must not synthesize image observations')
+    result.update(pointValues='passed', pointObservations=0, pointPrecision='source_or_float32')
+
+
 def verify_openmvg_structure(source, model, result):
     """Check every landmark and reciprocal observation, joining by source view ID."""
     landmarks = source.get('structure', [])
@@ -224,8 +246,9 @@ def verify_scene_exports(root, output, frame_coverage):
                             stem = str(Path(image.name).with_suffix('')).replace('\\', '/')
                             if not (name.endswith(image.name) or name.endswith(stem)):
                                 raise ValueError('Original frame reference differs from its exported name')
-                    elif isinstance(source, list) and source and 'shots' in source[0]:
-                        source = source[0]
+                    elif (isinstance(source, list) and source and 'shots' in source[0]
+                          or isinstance(source, dict) and 'shots' in source and 'cameras' in source):
+                        source = source[scene.get('component', 0)] if isinstance(source, list) else source
                         if len(source['shots']) != len(images): raise ValueError('OpenSfM shot count differs')
                         for _, image in images:
                             shot = source['shots'][image.name]; original_camera = source['cameras'][shot['camera']]
@@ -236,6 +259,8 @@ def verify_scene_exports(root, output, frame_coverage):
                             close([width, height], [camera.width, camera.height], 'OpenSfM image dimensions', atol=0, rtol=0)
                             f = original_camera['focal'] * max(width, height)
                             close([f, width / 2, height / 2, original_camera.get('k1', 0), original_camera.get('k2', 0)], camera.params, 'OpenSfM calibration')
+                        verify_opensfm_points(source, model, result)
+                        structure_checked = True
                     elif isinstance(source, dict) and 'views' in source and 'extrinsics' in source:
                         views = {item['value']['ptr_wrapper']['data']['filename']: item['value']['ptr_wrapper']['data'] for item in source['views']}
                         poses = {item['key']: item['value'] for item in source['extrinsics']}
