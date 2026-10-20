@@ -2,7 +2,7 @@
 
 The audit covered all **357 effective zero-point scenes in 45 collections** in catalog generation `8aed9dd7761e4e91fc6b77a72809fbef47c74f38369231e9eb651470ecffcd8c`. Unknown counts were excluded. Sixteen other originally empty COLMAP models already use checked XYZ manifests; their selected point counts are nonzero and they were not failures in this pass. The previous OpenMVG repair is also retained.
 
-The [complete per-scene ledger](../data/zero-point-audit.json.gz) records exact revisions, selected files, inventory receipts, checked scopes, source hashes and independent export results. It distinguishes source geometry from geometry selected by the current launch link. Confirmed results can be reused while their evidence keys and source bytes match; unresolved bindings and auxiliary containers remain explicit follow-ups.
+The [readable scene list](zero-point-scenes-2026-10-20.md) names every audited scene and links to its Hub entry. The [complete evidence ledger](../data/zero-point-audit.json.gz) records exact revisions, selected files, inventory receipts, checked scopes, source hashes and independent export results. It distinguishes source geometry from geometry selected by the current launch link. Confirmed results can be reused while their evidence keys and source bytes match; unresolved bindings and auxiliary containers remain explicit follow-ups.
 
 ## Recovered geometry
 
