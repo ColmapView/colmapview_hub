@@ -64,6 +64,70 @@ class SceneManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'selection-bound'):
             self.reviews()
 
+    def test_camera_only_cloud_binding_preserves_checked_photo_prefix_and_evidence_tier(self):
+        self.review.update(kind='cameras', photos=[], masks=[])
+        self.files.pop('points3d')
+        image = {'path': 'scene/images/', 'registeredName': 'cam/a.png', 'samplePath': 'scene/images/cam/a.png',
+                 'samplePrefixSha256': 'e' * 64, 'browserRead': True, 'dimensionsMatch': True, 'orientation': 1}
+        self.review['imagePrefix'] = image
+        self.row[0] = 'cameras'
+        self.proof.update(photoAvailability='sample_checked', photoAudit={'status': 'sample_checked',
+            'sampleRegisteredName': image['registeredName'], 'samplePath': image['samplePath'], 'samplePrefixSha256': image['samplePrefixSha256']})
+        self.proof['availableData']['images'] = {'status': 'checked'}
+        self.bind(); self.reviews()
+        manifest = json.loads(manifest_assets(self.review, self.entry, hf_url)[self.review['selectionSha256'] + '.manifest.json'])
+        self.assertFalse(manifest['skipImages'])
+        self.assertTrue(manifest['imagesPath'].endswith('/scene/images/'))
+        result, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(result['photoAudit'], self.proof['photoAudit'])
+        self.assertEqual(result['photoAvailability'], 'sample_checked')
+        self.assertEqual(result['sceneManifest']['photoCount'], 0)
+        self.review['imagePrefix']['samplePrefixSha256'] = 'f' * 64
+        with self.assertRaisesRegex(ValueError, 'previously checked'):
+            apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+
+    def metadata_review(self):
+        self.review.update(kind='camera-scene', path='scene', photos=[], masks=[],
+            files={'metadata:scene/transforms.json': 'scene/transforms.json', 'asset:scene/input.ply': 'scene/input.ply'},
+            sourceCounts={'cameras': 1, 'images': 1, 'points': 0})
+        self.review['modelFiles'] = {'metadata': {'sourcePath': 'scene/transforms.json', 'bytes': 100, 'sha256': 'b' * 64}}
+        self.review['points']['sourcePath'] = 'scene/input.ply'
+        self.row = ['camera-scene', 'scene', self.review['files'], None]
+        self.bind()
+
+    def test_metadata_manifest_keeps_source_world_transform_explicit_and_cameras_unchanged(self):
+        self.metadata_review()
+        matrix = [0, 1, 0, 0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1]
+        self.review['points']['transform'] = matrix
+        self.review['modelFiles']['referenceCameras'] = {'sourcePath':'scene/cameras.json','bytes':100,'sha256':'f'*64}
+        self.review['checks']['worldTransform'] = 'passed'
+        self.bind(); self.reviews()
+        manifest = json.loads(manifest_assets(self.review, self.entry, hf_url)[self.review['selectionSha256'] + '.manifest.json'])
+        self.assertEqual(manifest['format'], 'colmapview-camera-dataset')
+        self.assertTrue(manifest['metadataUrl'].endswith('/scene/transforms.json'))
+        self.assertEqual(manifest['pointCloud']['transform'], matrix)
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(updated['sceneCompatibility']['points'], 0)
+        self.assertEqual(updated['sceneManifest']['sourceCounts'], self.review['sourceCounts'])
+        self.review['checks']['worldTransform'] = 'not_checked'; self.bind()
+        with self.assertRaisesRegex(ValueError, 'independently verified'):
+            self.reviews()
+
+    def test_temporal_vertices_require_a_verified_explicit_array_and_matching_frame_subset(self):
+        self.metadata_review()
+        self.review['points'].update(sourcePath='scene/trajectory.npz', format='numpy_frame', array='pos', frame=0)
+        self.review.update(frameIndices=[0], sourceCounts={'cameras': 2, 'images': 2, 'points': 0})
+        self.review['checks']['temporalAlignment'] = 'passed'
+        self.bind(); self.reviews()
+        self.proof['sceneCompatibility'].update(cameras=2, images=2)
+        updated, _ = apply_manifest_evidence(self.entry, self.row, 'a' * 40, self.proof, self.review, hf_url)
+        self.assertEqual(updated['sceneManifest']['counts']['images'], 1)
+        self.assertEqual(updated['sceneManifest']['sourceCounts']['images'], 2)
+        self.assertEqual(updated['sceneManifest']['frameIndices'], [0])
+        self.review['frameIndices'] = [2]; self.bind()
+        with self.assertRaisesRegex(ValueError, 'frame subset'):
+            self.reviews()
+
     def test_root_manifest_keeps_exact_native_files_when_nested_models_exist(self):
         self.files = {'cameras': 'cameras.bin', 'images': 'images.bin', 'points3d': 'points3D.bin',
                       'variant:sparse/0:cameras': 'sparse/0/cameras.bin',

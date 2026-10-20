@@ -51,15 +51,17 @@ NOTES = {
     'alternate_model_only': 'This selected model has no native points. Other reconstruction/training models in the collection contain geometry; it is not borrowed across model or held-out-view boundaries.',
     'auxiliary_container_review': 'No loose static cloud was found. Auxiliary NPZ/NPY containers remain a separate review scope; their names alone do not prove absence of embedded geometry.',
     'no_points_in_checked_scope': 'No static point source was listed in the complete checked scene scope. This is a revision-bound scoped finding, not a claim that no geometry exists anywhere in the collection.',
+    'no_points_in_auxiliary_containers': 'The remaining non-depth auxiliary arrays were inspected at this revision: camera matrices, pose/bounds or two-channel pixel flow, without static XYZ geometry. Source receipts are retained so the same confirmed scope need not be fetched again.',
     'unresolved_geometry_association': 'The existing source evidence cannot confirm a scene-local point source or its absence. Keep the selected-model count separate from collection-wide geometry.',
 }
 
 
-def audit(index, rows, prior, exports=()):
+def audit(index, rows, prior, exports=(), confirmations=()):
     if len(rows) != index['total'] or len({row[0] for row in rows}) != len(rows):
         raise ValueError('Audit requires the complete same-generation scene inventory')
     previous = {row['id']: row for row in prior['scenes']}
     checked = {row['id']: row for row in exports}
+    confirmed = {row['id']: row for row in confirmations}
     sources, source_indices, scenes, seen = [], {}, [], set()
     for row in rows:
         counts = effective_counts(row[7] or {})
@@ -95,7 +97,8 @@ def audit(index, rows, prior, exports=()):
         if exported:
             if (exported.get('status') != 'passed' or exported.get('pointValues') != 'passed'
                     or exported.get('sourceId') != source_id or exported.get('counts', {}).get('points', 0) <= 0
-                    or any(exported['counts'][key] != counts[key] for key in ('images', 'cameras'))
+                    or (any(exported['counts'][key] != counts[key] for key in ('images', 'cameras'))
+                        and not verified_frame_selection(exported, counts))
                     or not all(re.fullmatch('[a-f0-9]{64}', exported.get(key, '')) for key in ('sourceSha256', 'exportSha256'))):
                 raise ValueError('Replacement export lacks independent source-point/camera evidence: ' + scene_id)
             result.update(finding='recovered', counts=exported['counts'], verification=exported)
@@ -103,6 +106,16 @@ def audit(index, rows, prior, exports=()):
         identity = {'sourceId': source_id, 'revision': source_audit['revision'], 'kind': kind, 'path': path, 'files': files,
                     'inventorySha256': source_audit.get('inventorySha256'), 'geometry': result['availableGeometry']}
         result['evidenceKey'] = hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        confirmation = confirmed.get(scene_id)
+        if confirmation:
+            if (result['finding'] != 'auxiliary_container_review' or confirmation.get('sourceId') != source_id
+                    or confirmation.get('revision') != source_audit['revision'] or confirmation.get('evidenceKey') != result['evidenceKey']
+                    or confirmation.get('status') != 'passed' or confirmation.get('conclusion') != 'camera_or_2d_flow_only'
+                    or type(confirmation.get('containers')) is not int or confirmation['containers'] < 1
+                    or not re.fullmatch('[a-f0-9]{64}', confirmation.get('inspectionSha256', ''))):
+                raise ValueError('Auxiliary confirmation differs from its pinned scene and inspected scope')
+            result.update(finding='no_points_in_auxiliary_containers', confirmation=confirmation)
+            result['summary'] = NOTES[result['finding']]
         scenes.append(result)
     return {'schemaVersion': 1, 'checkedAt': datetime.now(timezone.utc).isoformat(),
             'baselineGeneration': index['generation'], 'scope': 'Every published scene with an effective zero point count in the baseline generation; unknown counts are excluded.',
@@ -113,16 +126,29 @@ def audit(index, rows, prior, exports=()):
                         'recoveredPoints': sum(row.get('counts', {}).get('points', 0) for row in scenes)}}
 
 
+def verified_frame_selection(exported, counts):
+    selection = exported.get('frameSelection', {})
+    indices = selection.get('indices')
+    source = selection.get('sourceCounts', {})
+    selected = exported.get('counts', {})
+    return (exported.get('cameraSourceFramesChecked') == 'passed'
+            and all(source.get(key) == counts[key] for key in ('cameras', 'images', 'points'))
+            and isinstance(indices, list) and len(indices) == selected.get('images') == selected.get('cameras')
+            and all(type(index) is int and 0 <= index < counts['images'] for index in indices)
+            and len(set(indices)) == len(indices) and len(indices) > 0)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--index', type=Path, default=Path('public/hub/datasets/individual/index.json'))
     parser.add_argument('--rows', type=Path, help='Complete baseline records JSON; otherwise read the generated packs')
     parser.add_argument('--prior', type=Path, default=Path('data/scene-component-audit.json.gz'))
     parser.add_argument('--exports', type=Path, help='Independently verified model exports')
+    parser.add_argument('--confirmations', type=Path, help='Exact evidence-key-bound auxiliary inspection confirmations')
     parser.add_argument('--output', type=Path, default=Path('.tmp/zero-point-audit/report.json'))
     args = parser.parse_args()
     rows = read(args.rows) if args.rows else [row for file in (args.index.parent / 'packs').glob('*.json') for row in read(file)]
-    report = audit(read(args.index), rows, read(args.prior), read(args.exports) if args.exports else [])
+    report = audit(read(args.index), rows, read(args.prior), read(args.exports) if args.exports else [], read(args.confirmations) if args.confirmations else [])
     body = (json.dumps(report, ensure_ascii=False, indent=2) + '\n').encode()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(gzip.compress(body, mtime=0) if args.output.suffix == '.gz' else body)

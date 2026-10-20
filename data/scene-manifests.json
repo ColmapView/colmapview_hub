@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-10-18T22:53:14.253467+00:00",
-  "scope": "Explicit native/XYZ scene manifests. All listed model bytes, every original photograph and COLMAP exports checked; masks have verified pixels but unknown semantic roles.",
+  "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+  "scope": "Explicit pinned native and camera-metadata scene selections. Model/geometry exports are independently checked. Full-photo exports, checked photo prefixes, samples, selected temporal views and native source counts retain separate evidence scopes.",
   "scenes": [
     {
       "sourceId": "hf:zhaoshiwen/blur-slam-bpn-data",
@@ -6809,6 +6809,997 @@
         "maxObservationPositionDelta": 0.0,
         "observations": 548374,
         "tracks": 344424
+      }
+    },
+    {
+      "sourceId": "hf:turandai/gaussian-surfels-bmvs",
+      "revision": "f762bfce894e5bf9ad4f4a0813c2cece4db1ca51",
+      "kind": "camera-scene",
+      "path": "cow",
+      "files": {
+        "metadata:cow/cameras.npz": "cow/cameras.npz",
+        "asset:cow/gt_pts.ply": "cow/gt_pts.ply"
+      },
+      "points": {
+        "sourcePath": "cow/gt_pts.ply",
+        "bytes": 56097404,
+        "sha256": "e0678ce749ff53422712981cf16ca09d6cc01903228cd8cc6d39a3445186c400",
+        "format": "xyz_ply",
+        "count": 4674767
+      },
+      "counts": {
+        "cameras": 64,
+        "images": 64,
+        "points": 4674767
+      },
+      "photos": [],
+      "masks": [],
+      "modelFiles": {
+        "metadata": {
+          "sourcePath": "cow/cameras.npz",
+          "bytes": 40942,
+          "sha256": "13643d9db52dd42759058e218818f691b938cf886c99ed4f039e5950c761580d"
+        }
+      },
+      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+      "viewerVersion": "0.19.8",
+      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
+      "exportSha256": "acf673fd0656eb31793ec9aa271c802f3b39be24a105f2c09b77e33d4a957b2a",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed"
+      },
+      "sourceCounts": {
+        "cameras": 64,
+        "images": 64,
+        "points": 0
+      },
+      "selectionSha256": "636ec641dc78894d686dc0211c23c3addaffd50bcfda057cdd547bc67f35f4ca",
+      "independentRead": {
+        "id": "data-2e3b09ccb7812f86e4ef4d97",
+        "sourceId": "hf:turandai/gaussian-surfels-bmvs",
+        "status": "passed",
+        "pointValues": "passed",
+        "counts": {
+          "cameras": 64,
+          "images": 64,
+          "points": 4674767
+        },
+        "maxSourceRotationDelta": 1.3322676295501878e-15,
+        "maxCameraCenterDelta": 2.1371793224034263e-15,
+        "sourceSha256": "e0678ce749ff53422712981cf16ca09d6cc01903228cd8cc6d39a3445186c400",
+        "exportSha256": "acf673fd0656eb31793ec9aa271c802f3b39be24a105f2c09b77e33d4a957b2a",
+        "maxPointPositionDelta": 0.0,
+        "sample": {
+          "sourcePath": "cow/image/000.png",
+          "bytes": 608765,
+          "sha256": "2bc422e23cb7427c14b864a81aa259a3d602f8d4c807b7f6b2f86e43e2a20104",
+          "width": 768,
+          "height": 576
+        },
+        "sourceNetworkReads": 0
+      },
+      "browserRead": {
+        "pointDrawCount": 4674767,
+        "sample": {
+          "name": "image/000.png",
+          "sourcePath": "cow/image/000.png",
+          "bytes": 608765,
+          "sha256": "2bc422e23cb7427c14b864a81aa259a3d602f8d4c807b7f6b2f86e43e2a20104",
+          "width": 768,
+          "height": 576
+        },
+        "responses": [
+          {
+            "url": "https://huggingface.co/datasets/turandai/gaussian-surfels-bmvs/resolve/f762bfce894e5bf9ad4f4a0813c2cece4db1ca51/cow/gt_pts.ply",
+            "status": 302
+          },
+          {
+            "url": "https://huggingface.co/datasets/turandai/gaussian-surfels-bmvs/resolve/f762bfce894e5bf9ad4f4a0813c2cece4db1ca51/cow/gt_pts.ply",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "overview": {
+          "position": [
+            -2.051810906781651,
+            -1.9730554192597287,
+            -1.8055432460754939
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            -0.35643680748309403,
+            0.42456562526436065,
+            -0.11016914677693716
+          ],
+          "distance": 3.3907481985971133
+        },
+        "viewerVersion": "0.19.7"
+      }
+    },
+    {
+      "sourceId": "hf:Cloth-splatters/cloth-splatting-folding-scenes",
+      "revision": "0742d32241a9701115b098e9732b3abc4c0322da",
+      "kind": "camera-scene",
+      "path": "TOWEL_00_00",
+      "files": {
+        "metadata:TOWEL_00_00/transforms_test.json": "TOWEL_00_00/transforms_test.json",
+        "metadata:TOWEL_00_00/transforms_train.json": "TOWEL_00_00/transforms_train.json"
+      },
+      "points": {
+        "sourcePath": "TOWEL_00_00/trajectory.npz",
+        "bytes": 593108,
+        "sha256": "7d6343cc24be2199de71d2126ac9555fc1e5b0b44bdbd78b6ceadaa99ca9dc74",
+        "format": "numpy_frame",
+        "count": 2148,
+        "array": "pos",
+        "frame": 0
+      },
+      "counts": {
+        "cameras": 4,
+        "images": 4,
+        "points": 2148
+      },
+      "photos": [
+        {
+          "sourcePath": "TOWEL_00_00/train/r_0_0.png",
+          "bytes": 393959,
+          "sha256": "7af3564b6fcdadda5b8e2e5b5a4b0f7a4e58c04fe1f7362be8ecebce8558fc6f",
+          "width": 800,
+          "height": 800,
+          "name": "train/r_0_0.png"
+        },
+        {
+          "sourcePath": "TOWEL_00_00/train/r_1_0.png",
+          "bytes": 403964,
+          "sha256": "06f82f62f183a862d0a4e650f02fe77d8aebcaf2bd8cbbcd6f88a092968e7f34",
+          "width": 800,
+          "height": 800,
+          "name": "train/r_1_0.png"
+        },
+        {
+          "sourcePath": "TOWEL_00_00/train/r_2_0.png",
+          "bytes": 407218,
+          "sha256": "244516fa697a216beec8e97aaed52547bf6513724721a2609dae30eb4c235bb1",
+          "width": 800,
+          "height": 800,
+          "name": "train/r_2_0.png"
+        },
+        {
+          "sourcePath": "TOWEL_00_00/train/r_3_0.png",
+          "bytes": 411491,
+          "sha256": "36123f9357d4399c2b39cffc3bce34a7ed47040660853a7e727dff64eef2d1d5",
+          "width": 800,
+          "height": 800,
+          "name": "train/r_3_0.png"
+        }
+      ],
+      "masks": [],
+      "modelFiles": {
+        "metadata": {
+          "sourcePath": "TOWEL_00_00/transforms_train.json",
+          "bytes": 84430,
+          "sha256": "f62126f11fcd6cb7e36dbf341eda258fcb0fcf48e478865bd31f22851bb40cfd"
+        }
+      },
+      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+      "viewerVersion": "0.19.8",
+      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
+      "exportSha256": "a865725bb36f9c5d712c092bdafe7832aa7fe8681c4a610d297b6d1072be5cd0",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "temporalAlignment": "passed",
+        "photoDecode": "passed",
+        "originalPhotoHashes": "passed"
+      },
+      "sourceCounts": {
+        "cameras": 92,
+        "images": 92,
+        "points": 0
+      },
+      "frameIndices": [
+        0,
+        23,
+        46,
+        69
+      ],
+      "selectionSha256": "71837a4c5ebbda40927a7eefd00536aab023ce238f82020d84a20f1873844d9e",
+      "independentRead": {
+        "id": "data-e16ab11d39e7a5aff5dbfe39",
+        "sourceId": "hf:Cloth-splatters/cloth-splatting-folding-scenes",
+        "status": "passed",
+        "pointValues": "passed",
+        "counts": {
+          "cameras": 4,
+          "images": 4,
+          "points": 2148
+        },
+        "maxSourceRotationDelta": 7.276020497215541e-08,
+        "maxCameraCenterDelta": 1.3322676295501878e-15,
+        "sourceSha256": "7d6343cc24be2199de71d2126ac9555fc1e5b0b44bdbd78b6ceadaa99ca9dc74",
+        "exportSha256": "a865725bb36f9c5d712c092bdafe7832aa7fe8681c4a610d297b6d1072be5cd0",
+        "maxPointPositionDelta": 0.0,
+        "temporalAlignment": [
+          {
+            "name": "TOWEL_00_00/train/r_0_0.png",
+            "inImageFraction": 1.0,
+            "foregroundFraction": 1.0
+          },
+          {
+            "name": "TOWEL_00_00/train/r_1_0.png",
+            "inImageFraction": 1.0,
+            "foregroundFraction": 1.0
+          },
+          {
+            "name": "TOWEL_00_00/train/r_2_0.png",
+            "inImageFraction": 1.0,
+            "foregroundFraction": 1.0
+          },
+          {
+            "name": "TOWEL_00_00/train/r_3_0.png",
+            "inImageFraction": 1.0,
+            "foregroundFraction": 1.0
+          }
+        ],
+        "sample": {
+          "sourcePath": "TOWEL_00_00/train/r_0_0.png",
+          "bytes": 393959,
+          "sha256": "7af3564b6fcdadda5b8e2e5b5a4b0f7a4e58c04fe1f7362be8ecebce8558fc6f",
+          "width": 800,
+          "height": 800
+        },
+        "sourceNetworkReads": 0
+      },
+      "browserRead": {
+        "pointDrawCount": 2148,
+        "sample": {
+          "name": "train/r_0_0.png",
+          "sourcePath": "TOWEL_00_00/train/r_0_0.png",
+          "bytes": 393959,
+          "sha256": "7af3564b6fcdadda5b8e2e5b5a4b0f7a4e58c04fe1f7362be8ecebce8558fc6f",
+          "width": 800,
+          "height": 800
+        },
+        "responses": [
+          {
+            "url": "https://huggingface.co/datasets/Cloth-splatters/cloth-splatting-folding-scenes/resolve/0742d32241a9701115b098e9732b3abc4c0322da/TOWEL_00_00/trajectory.npz",
+            "status": 302
+          },
+          {
+            "url": "https://huggingface.co/datasets/Cloth-splatters/cloth-splatting-folding-scenes/resolve/0742d32241a9701115b098e9732b3abc4c0322da/TOWEL_00_00/trajectory.npz",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "overview": {
+          "position": [
+            -1.7680671115421838,
+            -2.533412808088813,
+            -0.852888140540863
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            0.3087643683130556,
+            0.403670437485852,
+            1.2239433393143764
+          ],
+          "distance": 4.153662959710479
+        },
+        "viewerVersion": "0.19.7"
+      }
+    },
+    {
+      "sourceId": "hf:ALC901/DL3DV-10K-3dgs",
+      "revision": "b70d68a6ab89117d12bb5287c96c21e33d89af8d",
+      "kind": "camera-scene",
+      "path": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539",
+      "files": {
+        "metadata:2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
+        "asset:2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/input.ply": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/input.ply",
+        "asset:2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/point_cloud/iteration_3000/point_cloud.ply": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/point_cloud/iteration_3000/point_cloud.ply"
+      },
+      "points": {
+        "sourcePath": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/input.ply",
+        "bytes": 1877597,
+        "sha256": "bbec2cfb9371254db9c2919888742c190d592209c1fd906f70f0c1e9501ddd5e",
+        "format": "xyz_ply",
+        "count": 69532,
+        "transform": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "counts": {
+        "cameras": 319,
+        "images": 319,
+        "points": 69532
+      },
+      "photos": [],
+      "masks": [],
+      "modelFiles": {
+        "metadata": {
+          "sourcePath": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/transforms.json",
+          "bytes": 283611,
+          "sha256": "3b0b9f6d3dd4d3df43693b543184abeaead67a494dcbaf866fc673b0deb11ea0"
+        },
+        "referenceCameras": {
+          "sourcePath": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/cameras.json",
+          "bytes": 131089,
+          "sha256": "15c450b3d22602a2e35ea5717bbec58705ae87201d19df095399507bb5d7a3f3"
+        }
+      },
+      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+      "viewerVersion": "0.19.8",
+      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
+      "exportSha256": "60328872782d2743bf780e4219560a03541cd2c3535a38a60ba0f00f1ba1c882",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "worldTransform": "passed"
+      },
+      "sourceCounts": {
+        "cameras": 319,
+        "images": 319,
+        "points": 0
+      },
+      "selectionSha256": "7ad6be00b5659931d7aed2b39a5058c4c743d7fa852a70c744f80813b0830302",
+      "independentRead": {
+        "id": "data-2cbe117bb42a638692c46147",
+        "sourceId": "hf:ALC901/DL3DV-10K-3dgs",
+        "status": "passed",
+        "pointValues": "passed",
+        "counts": {
+          "cameras": 319,
+          "images": 319,
+          "points": 69532
+        },
+        "maxSourceRotationDelta": 8.881784197001252e-16,
+        "maxCameraCenterDelta": 3.9968028886505635e-15,
+        "sourceSha256": "bbec2cfb9371254db9c2919888742c190d592209c1fd906f70f0c1e9501ddd5e",
+        "exportSha256": "60328872782d2743bf780e4219560a03541cd2c3535a38a60ba0f00f1ba1c882",
+        "maxPointPositionDelta": 0.0,
+        "sample": {
+          "sourcePath": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/images_8/frame_00001.png",
+          "bytes": 219761,
+          "sha256": "7523d822174963579c319a0c96a8581435c26ebf78808c76d1b16cc937248167",
+          "width": 480,
+          "height": 270
+        },
+        "sourceNetworkReads": 0
+      },
+      "browserRead": {
+        "pointDrawCount": 69532,
+        "sample": {
+          "name": "images_8/frame_00001.png",
+          "sourcePath": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/images_8/frame_00001.png",
+          "bytes": 219761,
+          "sha256": "7523d822174963579c319a0c96a8581435c26ebf78808c76d1b16cc937248167",
+          "width": 480,
+          "height": 270
+        },
+        "responses": [
+          {
+            "url": "https://huggingface.co/datasets/ALC901/DL3DV-10K-3dgs/resolve/b70d68a6ab89117d12bb5287c96c21e33d89af8d/2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/input.ply",
+            "status": 302
+          },
+          {
+            "url": "https://huggingface.co/datasets/ALC901/DL3DV-10K-3dgs/resolve/b70d68a6ab89117d12bb5287c96c21e33d89af8d/2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/input.ply",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "overview": {
+          "position": [
+            -25.081208056139154,
+            -30.36750786891622,
+            -34.82031271636705
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            -2.106355160474777,
+            2.1238406896591187,
+            -11.845459820702672
+          ],
+          "distance": 45.94970579132875
+        },
+        "viewerVersion": "0.19.7"
+      },
+      "worldAssociation": {
+        "method": "all319_source_3dgs_camera_poses_to_metadata",
+        "maxPoseDelta": 8.881784197001252e-16,
+        "sourceCameraFile": "2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539/3dgs_output/cameras.json",
+        "pointsOnlyTransform": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "resizePolicy": {
+        "factor": 8,
+        "height": 270,
+        "sourceHeight": 2160,
+        "sourceMetadataSha256": "3b0b9f6d3dd4d3df43693b543184abeaead67a494dcbaf866fc673b0deb11ea0",
+        "sourceWidth": 3840,
+        "viewerCommit": "b41b20e290cb5eee12694736e722f93a669a40e9",
+        "viewerVersion": "0.19.2",
+        "width": 480
+      }
+    },
+    {
+      "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
+      "revision": "be158edd8980827092eee06f7fa555c129b69f38",
+      "kind": "cameras",
+      "path": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0",
+      "files": {
+        "cameras": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/cameras.bin",
+        "images": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/images.bin",
+        "asset:benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/s100_linear/ply/iteration_30000/point_cloud.ply": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/s100_linear/ply/iteration_30000/point_cloud.ply",
+        "asset:benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/s100_linear/ply/iteration_7000/point_cloud.ply": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/s100_linear/ply/iteration_7000/point_cloud.ply",
+        "asset:benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/points3D.ply": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/points3D.ply"
+      },
+      "points": {
+        "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/points3D.ply",
+        "bytes": 50140661,
+        "sha256": "82e38b2576c0ede0f6b85adedaedc474ca3cc93065ccce92df03206f013da3dc",
+        "format": "xyz_ply",
+        "count": 983145
+      },
+      "counts": {
+        "cameras": 560,
+        "images": 560,
+        "points": 983145
+      },
+      "photos": [],
+      "masks": [],
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/cameras.bin",
+          "bytes": 31368,
+          "sha256": "890a132d121d573c09140a970c57812f47779acc8af78f78c8844163eacd85c6"
+        },
+        "images": {
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/images.bin",
+          "bytes": 53768,
+          "sha256": "8673091afd7f8e92b92fcdbb88d28ec13b9192bc3ead96fa888eff876ff3922e"
+        }
+      },
+      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+      "viewerVersion": "0.19.8",
+      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
+      "exportSha256": "acedb2fa4a69ebe1202059752b2c4c8b0d0ab42ca5bdd25805077ae6c5eb1ecd",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "samplePhotoDecode": "passed"
+      },
+      "imagePrefix": {
+        "path": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/images/",
+        "registeredName": "42446517_197418.282.png",
+        "samplePath": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/images/42446517_197418.282.png",
+        "samplePrefixSha256": "08934b8a43c747617166a6219c218690bad8c35228eab0aa8c7a6b5046b0c11c",
+        "browserRead": true,
+        "dimensionsMatch": true,
+        "orientation": 1,
+        "decodedSample": {
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/images/42446517_197418.282.png",
+          "bytes": 376824,
+          "sha256": "cc601f3d853bb067b2b0634c5744140354076a9d14d46d38260f775d3976a651",
+          "width": 640,
+          "height": 480
+        }
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.8",
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0
+          }
+        },
+        "viewState": {
+          "position": [
+            -5.524160938653058,
+            -8.946223431342434,
+            -6.70363989690215
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            1.1607518792152405,
+            0.5076709389686584,
+            -0.018727079033851624
+          ],
+          "distance": 13.369825635736596
+        }
+      },
+      "selectionSha256": "259ba5a849c1e198b79ee1285f31b08bda6bab1b71ab77b3e00904fdb0267bd4",
+      "independentRead": {
+        "id": "data-ebfee4a083e682fe67645034",
+        "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
+        "status": "passed",
+        "pointValues": "passed",
+        "counts": {
+          "cameras": 560,
+          "images": 560,
+          "points": 983145
+        },
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "sourceSha256": "82e38b2576c0ede0f6b85adedaedc474ca3cc93065ccce92df03206f013da3dc",
+        "exportSha256": "acedb2fa4a69ebe1202059752b2c4c8b0d0ab42ca5bdd25805077ae6c5eb1ecd",
+        "maxPointPositionDelta": 0.0,
+        "unlinkedSourceObservations": 0,
+        "sample": {
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/images/42446517_197418.282.png",
+          "bytes": 376824,
+          "sha256": "cc601f3d853bb067b2b0634c5744140354076a9d14d46d38260f775d3976a651",
+          "width": 640,
+          "height": 480
+        },
+        "sourceNetworkReads": 0
+      },
+      "browserRead": {
+        "pointDrawCount": 983145,
+        "sample": {
+          "name": "42446517_197418.282.png",
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/images/42446517_197418.282.png",
+          "bytes": 376824,
+          "sha256": "cc601f3d853bb067b2b0634c5744140354076a9d14d46d38260f775d3976a651",
+          "width": 640,
+          "height": 480
+        },
+        "responses": [
+          {
+            "url": "https://huggingface.co/datasets/anonymous-user-submission/Poison-3DGS/resolve/be158edd8980827092eee06f7fa555c129b69f38/benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/points3D.ply",
+            "status": 302
+          },
+          {
+            "url": "https://huggingface.co/datasets/anonymous-user-submission/Poison-3DGS/resolve/be158edd8980827092eee06f7fa555c129b69f38/benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0/points3D.ply",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "overview": {
+          "position": [
+            -5.524160938653058,
+            -8.946223431342434,
+            -6.70363989690215
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            1.1607518792152405,
+            0.5076709389686584,
+            -0.018727079033851624
+          ],
+          "distance": 13.369825635736596
+        },
+        "viewerVersion": "0.19.7"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
+      "revision": "be158edd8980827092eee06f7fa555c129b69f38",
+      "kind": "cameras",
+      "path": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0",
+      "files": {
+        "cameras": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/cameras.bin",
+        "images": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/images.bin",
+        "asset:benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/s100_linear/ply/iteration_30000/point_cloud.ply": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/s100_linear/ply/iteration_30000/point_cloud.ply",
+        "asset:benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/s100_linear/ply/iteration_7000/point_cloud.ply": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/s100_linear/ply/iteration_7000/point_cloud.ply",
+        "asset:benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/points3D.ply": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/points3D.ply"
+      },
+      "points": {
+        "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/points3D.ply",
+        "bytes": 30676562,
+        "sha256": "1647edcee8a07cbabb0bf8749874f961e527ea681d914841add2e3af274a8556",
+        "format": "xyz_ply",
+        "count": 601496
+      },
+      "counts": {
+        "cameras": 477,
+        "images": 477,
+        "points": 601496
+      },
+      "photos": [],
+      "masks": [],
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/cameras.bin",
+          "bytes": 26720,
+          "sha256": "341acf3b4052e2db5803393d4d121fd74d1db9f0a20ab848f2d188b97be7a121"
+        },
+        "images": {
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/images.bin",
+          "bytes": 45800,
+          "sha256": "a4ce7d65ebaa9f9bc34317a41d5152c2d14594d04dce64eb75d6b494e541beb0"
+        }
+      },
+      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+      "viewerVersion": "0.19.8",
+      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
+      "exportSha256": "ccd4d4ef25c639a04e8dcf19a87db99bcb16f977b8f3ab4b48c15b371b319707",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "samplePhotoDecode": "passed"
+      },
+      "imagePrefix": {
+        "path": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/images/",
+        "registeredName": "47895549_455872.607.png",
+        "samplePath": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/images/47895549_455872.607.png",
+        "samplePrefixSha256": "df07dc5c96a5f3a4c5018b1cd3d195ae628151ec6766c1e1df1940bb21a7518e",
+        "browserRead": true,
+        "dimensionsMatch": true,
+        "orientation": 1,
+        "decodedSample": {
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/images/47895549_455872.607.png",
+          "bytes": 340300,
+          "sha256": "9dfb2f088d8fc28564c7936d88fa03e60fc0e61b54d23389cc5c56a5efa0d940",
+          "width": 640,
+          "height": 480
+        }
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.8",
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0
+          }
+        },
+        "viewState": {
+          "position": [
+            -5.903806022232258,
+            -8.54757367551373,
+            -5.963762894695485
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            -0.06285730600357042,
+            -0.2872247838974,
+            -0.12281417846679676
+          ],
+          "distance": 11.681897432457376
+        }
+      },
+      "selectionSha256": "a8b14dbdef793b6fc1e229f262227c4548cf59fc2a4da6f98530057078d2997b",
+      "independentRead": {
+        "id": "data-ab3b0f737ecd74be64152988",
+        "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
+        "status": "passed",
+        "pointValues": "passed",
+        "counts": {
+          "cameras": 477,
+          "images": 477,
+          "points": 601496
+        },
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "sourceSha256": "1647edcee8a07cbabb0bf8749874f961e527ea681d914841add2e3af274a8556",
+        "exportSha256": "ccd4d4ef25c639a04e8dcf19a87db99bcb16f977b8f3ab4b48c15b371b319707",
+        "maxPointPositionDelta": 0.0,
+        "unlinkedSourceObservations": 0,
+        "sample": {
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/images/47895549_455872.607.png",
+          "bytes": 340300,
+          "sha256": "9dfb2f088d8fc28564c7936d88fa03e60fc0e61b54d23389cc5c56a5efa0d940",
+          "width": 640,
+          "height": 480
+        },
+        "sourceNetworkReads": 0
+      },
+      "browserRead": {
+        "pointDrawCount": 601496,
+        "sample": {
+          "name": "47895549_455872.607.png",
+          "sourcePath": "benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/images/47895549_455872.607.png",
+          "bytes": 340300,
+          "sha256": "9dfb2f088d8fc28564c7936d88fa03e60fc0e61b54d23389cc5c56a5efa0d940",
+          "width": 640,
+          "height": 480
+        },
+        "responses": [
+          {
+            "url": "https://huggingface.co/datasets/anonymous-user-submission/Poison-3DGS/resolve/be158edd8980827092eee06f7fa555c129b69f38/benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/points3D.ply",
+            "status": 302
+          },
+          {
+            "url": "https://huggingface.co/datasets/anonymous-user-submission/Poison-3DGS/resolve/be158edd8980827092eee06f7fa555c129b69f38/benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0/points3D.ply",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "overview": {
+          "position": [
+            -5.903806022232258,
+            -8.54757367551373,
+            -5.963762894695485
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            -0.06285730600357042,
+            -0.2872247838974,
+            -0.12281417846679676
+          ],
+          "distance": 11.681897432457376
+        },
+        "viewerVersion": "0.19.7"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 0,
+        "sourceFeatureCoordinates": "retained"
+      }
+    },
+    {
+      "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
+      "revision": "be158edd8980827092eee06f7fa555c129b69f38",
+      "kind": "cameras",
+      "path": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0",
+      "files": {
+        "cameras": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/cameras.bin",
+        "images": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/images.bin",
+        "asset:benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/s100_linear/ply/iteration_30000/point_cloud.ply": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/s100_linear/ply/iteration_30000/point_cloud.ply",
+        "asset:benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/s100_linear/ply/iteration_7000/point_cloud.ply": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/s100_linear/ply/iteration_7000/point_cloud.ply",
+        "asset:benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/points3D.ply": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/points3D.ply"
+      },
+      "points": {
+        "sourcePath": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/points3D.ply",
+        "bytes": 53608509,
+        "sha256": "a0b66e5cb4fee27fd23d14ab57e972ba9d401f274d29a1eda3608d71320e12f9",
+        "format": "xyz_ply",
+        "count": 1051142
+      },
+      "counts": {
+        "cameras": 1,
+        "images": 263,
+        "points": 1051142
+      },
+      "photos": [],
+      "masks": [],
+      "modelFiles": {
+        "cameras": {
+          "sourcePath": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/cameras.bin",
+          "bytes": 64,
+          "sha256": "23bbdd44ed6eb004bfdfa3cfa17c01b8ba9abe0edf22fcbbef183b7c03aecf5a"
+        },
+        "images": {
+          "sourcePath": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/images.bin",
+          "bytes": 33933355,
+          "sha256": "17174cd0bb2ddfa322f3a415c6c6de3c820e9ce796097233c92badfc0b3a2b01"
+        }
+      },
+      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+      "viewerVersion": "0.19.8",
+      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
+      "exportSha256": "ad6c66d8cff37059c4135d89e4138d3ba2e3e2307c2e3f9cc048e32a38c11c9e",
+      "checks": {
+        "browserImport": "passed",
+        "visibleGeometry": "passed",
+        "cameraAlignment": "passed",
+        "modelExport": "passed",
+        "independentColmapRead": "passed",
+        "cameraCalibration": "passed",
+        "cameraPoses": "passed",
+        "pointValues": "passed",
+        "samplePhotoDecode": "passed"
+      },
+      "imagePrefix": {
+        "path": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/images/",
+        "registeredName": "IMG_6292.jpg",
+        "samplePath": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/images/IMG_6292.jpg",
+        "samplePrefixSha256": "58e92a7fc93fd5f5866391afe5c9b849ca9a132fe5dddeca4fe97d27e48316d0",
+        "browserRead": true,
+        "dimensionsMatch": true,
+        "orientation": 1,
+        "decodedSample": {
+          "sourcePath": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/images/IMG_6292.jpg",
+          "bytes": 603709,
+          "sha256": "3b9aae68c29fb2fcb528fe554fa6ecb2f64a091af84875473c1f0d46cc518d43",
+          "width": 1332,
+          "height": 876
+        }
+      },
+      "viewerState": {
+        "version": 1,
+        "viewerVersion": "0.19.8",
+        "config": {
+          "pointCloud": {
+            "showPointCloud": true,
+            "minTrackLength": 0
+          }
+        },
+        "viewState": {
+          "position": [
+            -8.030381875808605,
+            -11.683980374617917,
+            -7.896350842292675
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            0.07999943733215265,
+            -0.21416912555694578,
+            0.21403047084808202
+          ],
+          "distance": 16.220762626281513
+        }
+      },
+      "selectionSha256": "7eb03b59e840f82d27ae65231961a47bb7b0b8b6d61aac82b9a3b2e9573fe0a7",
+      "independentRead": {
+        "id": "data-f6f812cfaf2b1c7c1f5605c9",
+        "sourceId": "hf:anonymous-user-submission/Poison-3DGS",
+        "status": "passed",
+        "pointValues": "passed",
+        "counts": {
+          "cameras": 1,
+          "images": 263,
+          "points": 1051142
+        },
+        "maxSourceRotationDelta": 0.0,
+        "maxCameraCenterDelta": 0.0,
+        "sourceSha256": "a0b66e5cb4fee27fd23d14ab57e972ba9d401f274d29a1eda3608d71320e12f9",
+        "exportSha256": "ad6c66d8cff37059c4135d89e4138d3ba2e3e2307c2e3f9cc048e32a38c11c9e",
+        "maxPointPositionDelta": 0.0,
+        "unlinkedSourceObservations": 338032,
+        "sample": {
+          "sourcePath": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/images/IMG_6292.jpg",
+          "bytes": 603709,
+          "sha256": "3b9aae68c29fb2fcb528fe554fa6ecb2f64a091af84875473c1f0d46cc518d43",
+          "width": 1332,
+          "height": 876
+        },
+        "sourceNetworkReads": 0
+      },
+      "browserRead": {
+        "pointDrawCount": 1051142,
+        "sample": {
+          "name": "IMG_6292.jpg",
+          "sourcePath": "benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/images/IMG_6292.jpg",
+          "bytes": 603709,
+          "sha256": "3b9aae68c29fb2fcb528fe554fa6ecb2f64a091af84875473c1f0d46cc518d43",
+          "width": 1332,
+          "height": 876
+        },
+        "responses": [
+          {
+            "url": "https://huggingface.co/datasets/anonymous-user-submission/Poison-3DGS/resolve/be158edd8980827092eee06f7fa555c129b69f38/benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/points3D.ply",
+            "status": 302
+          },
+          {
+            "url": "https://huggingface.co/datasets/anonymous-user-submission/Poison-3DGS/resolve/be158edd8980827092eee06f7fa555c129b69f38/benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0/points3D.ply",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "overview": {
+          "position": [
+            -8.030381875808605,
+            -11.683980374617917,
+            -7.896350842292675
+          ],
+          "quaternion": [
+            0.8535533905932737,
+            0.14644660940672627,
+            -0.35355339059327373,
+            0.35355339059327384
+          ],
+          "target": [
+            0.07999943733215265,
+            -0.21416912555694578,
+            0.21403047084808202
+          ],
+          "distance": 16.220762626281513
+        },
+        "viewerVersion": "0.19.7"
+      },
+      "observationPolicy": {
+        "type": "untracked_xyz",
+        "sourceReferencesDisconnected": 338032,
+        "sourceFeatureCoordinates": "retained"
       }
     }
   ]

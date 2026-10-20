@@ -1,8 +1,30 @@
 import unittest
-from scripts.audit.audit_zero_point_scenes import audit, effective_counts, finding
+from scripts.audit.audit_zero_point_scenes import audit, effective_counts, finding, verified_frame_selection
 
 
 class ZeroPointAuditTest(unittest.TestCase):
+    def test_temporal_camera_subsets_require_independent_original_frame_evidence(self):
+        original={'cameras':92,'images':92,'points':0}
+        exported={'cameraSourceFramesChecked':'passed','counts':{'cameras':4,'images':4,'points':2148},
+                  'frameSelection':{'sourceCounts':original,'indices':[0,23,46,69]}}
+        self.assertTrue(verified_frame_selection(exported,original))
+        for indices in ([0,23,46,92],[0,23,46,46],[],['0',23,46,69]):
+            self.assertFalse(verified_frame_selection({**exported,'frameSelection':{'sourceCounts':original,'indices':indices}},original))
+        self.assertFalse(verified_frame_selection({**exported,'cameraSourceFramesChecked':'not_checked'},original))
+
+    def test_auxiliary_confirmation_is_reused_only_for_the_exact_evidence_key(self):
+        index={'generation':'snapshot','total':1,'sources':[{'sourceId':'hf:example/data'}]}
+        files={'metadata:scene/cameras.npz':'scene/cameras.npz'}
+        row=['scene',0,'camera-scene','scene','metadata',None,files,{'sceneValidation':{'revision':'a'*40,'cameras':1,'images':2,'points':0}}]
+        prior={'sources':[{'sourceId':'hf:example/data','revision':'a'*40}],
+               'scenes':[{'id':'scene','source':0,'kind':'camera-scene','path':'scene','files':files,'scope':'scene','scopeComplete':True,'findings':{'point_cloud':'container_review'}}]}
+        key=audit(index,[row],prior)['scenes'][0]['evidenceKey']
+        confirmed={'id':'scene','sourceId':'hf:example/data','revision':'a'*40,'evidenceKey':key,'status':'passed',
+                   'conclusion':'camera_or_2d_flow_only','containers':1,'inspectionSha256':'b'*64}
+        result=audit(index,[row],prior,confirmations=[confirmed])
+        self.assertEqual(result['scenes'][0]['finding'],'no_points_in_auxiliary_containers')
+        with self.assertRaisesRegex(ValueError,'confirmation differs'):
+            audit(index,[row],prior,confirmations=[{**confirmed,'evidenceKey':'wrong'}])
     def test_changed_revision_or_unverified_replacement_cannot_reuse_a_confirmed_finding(self):
         index = {'generation': 'snapshot', 'total': 1, 'sources': [{'sourceId': 'hf:example/data'}]}
         files = {'cameras': 'cameras.bin', 'images': 'images.bin'}

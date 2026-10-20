@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.9.12 — 2026-10-20
+
+- Close all five static cloud bindings from the zero-point audit, retaining checked photo prefixes and explicit camera-world transforms. Add a synchronized four-view, 2,148-vertex preview of the cloth trajectory's first frame.
+- Record 7,382,230 newly selected source vertices, source-feature disconnection for untracked PLY, and OpenSfM Berlin's real 3,082 landmark observations, 137 untriangulated features and three original RGB exports.
+- Confirm the HDR flow and DTU camera container scopes, retain their pinned receipts, and reuse these facts without repeated source audits. Keep dynamic archives, meshes and other reconstruction variants distinct from static point counts.
+
 ## 0.9.11 — 2026-10-20
 
 - Audit all 357 scenes with an effective zero-point count. Correct nine source-verified exports containing 1,954,598 points, including OpenSfM Berlin and eight NeRF companion clouds. Keep missing data, unselected clouds, meshes, other model variants and animated geometry distinct in the dated per-scene ledger.

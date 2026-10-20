@@ -55,8 +55,14 @@ def xyz_ply(path, count):
         raise ValueError('This independent verifier requires a binary little-endian XYZ PLY')
     scalar_types = {'float': '<f4', 'double': '<f8', 'uchar': 'u1', 'uint8': 'u1'}
     properties = []
+    vertex = False
     for line in lines:
-        if line.startswith('property '):
+        if line.startswith('element '):
+            _, name, size = line.split()
+            vertex = name == 'vertex'
+            if not vertex and int(size):
+                raise ValueError('XYZ PLY cannot contain nonempty mesh or auxiliary elements')
+        if vertex and line.startswith('property '):
             _, kind, name = line.split()
             properties.append((name, scalar_types[kind]))
     dtype = np.dtype(properties)

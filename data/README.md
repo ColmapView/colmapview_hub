@@ -311,3 +311,12 @@ rescales focal lengths and principal points by 1/8 while preserving poses and
 distortion. All 319 resulting calibrations and poses passed PyCOLMAP 4.0.3, and a
 source photograph decoded in the browser. The existing model-only export tier
 remains separate from full original-photograph export.
+
+The [zero-point audit](../docs/zero-point-audit-2026-10-20.md) closes its five
+static cloud bindings and three auxiliary follow-ups. scene-manifests.json now
+retains 23 checked selections, including a synchronized cloth frame and explicit
+metadata-world transforms. zero-point-auxiliary-inspection.json.gz records the
+inspected camera/flow arrays; unchanged confirmed scopes need no repeat audit.
+The scene ledger contains 15 recoveries (9,336,828 points/vertices) and explains
+all 342 remaining static-model zeros. Berlin also retains its original track
+sidecar and complete original-photo export.

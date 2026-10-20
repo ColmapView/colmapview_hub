@@ -480,7 +480,8 @@ def build(root=Path('.')):
             if kind != 'scene' and (kind, path, archive) in scene_details:
                 item.append(scene_details[(kind, path, archive)])
             pack.append(item)
-            kind_name = 'Gaussian splat' if kind == 'ply' and format_name == 'Gaussian PLY' else KIND_LABELS.get(kind, '3D geometry')
+            selected_kind = 'colmap' if kind == 'cameras' and proof.get('sceneManifest', {}).get('counts', {}).get('points', 0) > 0 else kind
+            kind_name = 'Gaussian splat' if kind == 'ply' and format_name == 'Gaussian PLY' else KIND_LABELS.get(selected_kind, '3D geometry')
             counts[kind_name] += 1
             levels[level] += 1
             deliveries[delivery] += 1

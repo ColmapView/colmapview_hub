@@ -333,6 +333,8 @@ test('selected manifest totals and launch target follow the checked companion wh
     sceneValidation: { ...verified.sceneValidation, cameras: 1, images: 2, points: 0 } };
   assert.equal(render.canOpenIndividual(row(0, { 7: stronger }), source), true);
   assert.equal(render.individualSummary(row(0, { 7: stronger }), source).sceneStats.points, 350710);
+  const supplementedCamera=row(0,{2:'cameras',7:proof});
+  assert.equal(render.individualSummary(supplementedCamera,source).itemKind,'COLMAP reconstruction');
 });
 
 test('malformed or mismatched manifest evidence cannot keep a viewer action', () => {
@@ -358,6 +360,19 @@ test('malformed or mismatched manifest evidence cannot keep a viewer action', ()
   proof.sceneManifest.maskCount = 1;
   assert.equal(render.canOpenIndividual(row(0, { 7: proof }), source), true);
   assert.equal(render.individualSummary(row(0, { 7: proof }), source).sceneStats.points, 0);
+});
+
+test('temporal scene manifests display only their selected views while retaining original model counts',()=>{
+  const proof=explicitManifestProof(),manifest=proof.sceneManifest;
+  manifest.sourceCounts={...proof.sceneCompatibility};
+  manifest.frameIndices=[1];manifest.counts={cameras:1,images:1,points:42};manifest.photoCount=1;manifest.maskCount=0;
+  manifest.pointFormat='numpy_frame';manifest.pointSource='scene/trajectory.npz';
+  assert.equal(render.canOpenIndividual(row(0,{7:proof}),source),true);
+  assert.deepEqual(render.individualSummary(row(0,{7:proof}),source).sceneStats,{cameraModels:1,cameraPoses:1,points:42});
+  for(const indices of [[2],[1,1],[-1],['1'],[]]){
+    manifest.frameIndices=indices;
+    assert.equal(render.canOpenIndividual(row(0,{7:proof}),source),false);
+  }
 });
 
 test('public manifest settings assets have their own static CORS rule', () => {

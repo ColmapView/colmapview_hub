@@ -1,16 +1,16 @@
 # Scenes in the zero-point audit, 2026-10-20
 
-All 357 scenes from the baseline catalog, including nine corrected scenes. Unknown point counts are excluded. These are selected model counts; a collection may contain additional geometry. See the [audit notes](zero-point-audit-2026-10-20.md) for evidence and remaining limitations.
+All 357 scenes from the baseline catalog, including fifteen corrected scenes. Unknown point counts are excluded. These are selected model counts; a collection may contain additional geometry. See the [audit notes](zero-point-audit-2026-10-20.md) for evidence and remaining limitations.
 
 | Collection | Named scene | Points after review | Finding |
 | --- | --- | ---: | --- |
 | 777rain/nerf-synthetic | [nerf_synthetic/lego](https://colmapview.opsiclear.com/hub/datasets/open/data-ce9c0aeda21c40fe182c9961) | 0 | No point source listed in checked scope |
-| ALC901/DL3DV-10K-3dgs | [2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539](https://colmapview.opsiclear.com/hub/datasets/open/data-2cbe117bb42a638692c46147) | 0 | Static cloud needs binding |
+| ALC901/DL3DV-10K-3dgs | [2K/001486e9fac2a00bd4ff24096b88ee0cf07521470062dd234c45e3aa04d04539](https://colmapview.opsiclear.com/hub/datasets/open/data-2cbe117bb42a638692c46147) | 69,532 | Corrected export / loader |
 | anon211/embodied_gaussians | [real/empty/static_scan](https://colmapview.opsiclear.com/hub/datasets/open/data-aff82e0cc19d95f0bd434d01) | 0 | No point source listed in checked scope |
 | Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission | [lego_6_views](https://colmapview.opsiclear.com/hub/datasets/open/data-9d0c522d6e99148c4cc45042) | 0 | Mesh, not sparse points |
-| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ebfee4a083e682fe67645034) | 0 | Static cloud needs binding |
-| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ab3b0f737ecd74be64152988) | 0 | Static cloud needs binding |
-| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-f6f812cfaf2b1c7c1f5605c9) | 0 | Static cloud needs binding |
+| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/arkitscenes/42446517/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ebfee4a083e682fe67645034) | 983,145 | Corrected export / loader |
+| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/arkitscenes/47895549/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ab3b0f737ecd74be64152988) | 601,496 | Corrected export / loader |
+| anonymous-user-submission/Poison-3DGS | [benchmark/stealthattack/poisoned/deep-blending/drjohnson/multi3/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-f6f812cfaf2b1c7c1f5605c9) | 1,051,142 | Corrected export / loader |
 | Bugjudger/HDR_Pretrain | [scenes/102343992/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-ba70c38874f155f7c8e1374e) | 0 | No point source listed in checked scope |
 | Bugjudger/HDR_Pretrain | [scenes/102344022/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-a2304ff370e9c56c9f821b4e) | 0 | No point source listed in checked scope |
 | Bugjudger/HDR_Pretrain | [scenes/102344049/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-d517a2952e5841827b3040bb) | 0 | No point source listed in checked scope |
@@ -179,7 +179,7 @@ All 357 scenes from the baseline catalog, including nine corrected scenes. Unkno
 | Bugjudger/HDR_Pretrain | [scenes/108736851_177263586/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-51e8e3f1d2c6634c465d4703) | 0 | No point source listed in checked scope |
 | Bugjudger/HDR_Pretrain | [scenes/108736872_177263607/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-bd6658dfdd8134e0598e32d5) | 0 | No point source listed in checked scope |
 | Bugjudger/HDR_Pretrain | [scenes/108736884_177263634/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-5956ddc7d82c2ba1cf06954e) | 0 | No point source listed in checked scope |
-| Cloth-splatters/cloth-splatting-folding-scenes | [TOWEL_00_00](https://colmapview.opsiclear.com/hub/datasets/open/data-e16ab11d39e7a5aff5dbfe39) | 0 | Auxiliary container review |
+| Cloth-splatters/cloth-splatting-folding-scenes | [TOWEL_00_00](https://colmapview.opsiclear.com/hub/datasets/open/data-e16ab11d39e7a5aff5dbfe39) | 2,148 | Corrected export / loader |
 | dynamic-maps/hard-intersection-multimodal-sample | [calibration](https://colmapview.opsiclear.com/hub/datasets/open/data-053b8232e1af4b630ba067b2) | 0 | No point source listed in checked scope |
 | Falcary/great-e-nerf | [master/views](https://colmapview.opsiclear.com/hub/datasets/open/data-0666e402f7b78e4ae120fc15) | 0 | No point source listed in checked scope |
 | fantasticoven/youtube-colmap | [job_2/scene_37/sparse/0](https://colmapview.opsiclear.com/hub/datasets/open/data-7769a0e5955c5b9a9415d556) | 0 | No point source listed in checked scope |
@@ -248,14 +248,14 @@ All 357 scenes from the baseline catalog, including nine corrected scenes. Unkno
 | pablovela5620/nerf-synthetic-mirror | [mic](https://colmapview.opsiclear.com/hub/datasets/open/data-d28cbb0f5daf045780e9b015) | 0 | No point source listed in checked scope |
 | phuckstnk63/nerf-synthetic | [nerf_synthetic/lego](https://colmapview.opsiclear.com/hub/datasets/open/data-b8ebbc530e021cca353a9b25) | 0 | No point source listed in checked scope |
 | pkupig/dadr_splatting-dataset | [(dataset root)](https://colmapview.opsiclear.com/hub/datasets/open/data-eee83d18db2ff588bd8e4220) | 100,000 | Corrected export / loader |
-| SHlNDY/HDR-NSFF | [bag/dense](https://colmapview.opsiclear.com/hub/datasets/open/data-9498c7d33ba93e43c27bb139) | 0 | Auxiliary container review |
+| SHlNDY/HDR-NSFF | [bag/dense](https://colmapview.opsiclear.com/hub/datasets/open/data-9498c7d33ba93e43c27bb139) | 0 | Camera / 2D-flow arrays confirmed |
 | SimeonOA/Botany-Bot | [belize](https://colmapview.opsiclear.com/hub/datasets/open/data-d0df8903d18a5231c82a228a) | 0 | No point source listed in checked scope |
 | SimeonOA/GrowSplat-Dataset | [quinoa/20221031](https://colmapview.opsiclear.com/hub/datasets/open/data-082cde7d93154199922d68d3) | 16,315 | Corrected export / loader |
 | suvadityamuk/gso-footwear-trellis2-latents | [renders_cond/0057aaaadf3ad97cd7080aa1f6ade87d4213f6edf07be50d357a3bced4bafa0a](https://colmapview.opsiclear.com/hub/datasets/open/data-f82ddb1c864b85240cac3360) | 0 | No point source listed in checked scope |
 | Tenstorrent/tt-nerf-p150-white | [(dataset root)](https://colmapview.opsiclear.com/hub/datasets/open/data-9424278994e3716d5e28dc51) | 0 | No point source listed in checked scope |
 | tiange/Cap3D | [RenderedImage_perobj_zips/example_zipfile](https://colmapview.opsiclear.com/hub/datasets/open/data-5939a1f34aa05c53a23e5440) | 0 | No point source listed in checked scope |
-| turandai/gaussian-surfels-bmvs | [cow](https://colmapview.opsiclear.com/hub/datasets/open/data-2e3b09ccb7812f86e4ef4d97) | 0 | Static cloud needs binding |
-| turandai/gaussian-surfels-dtu | [scan24](https://colmapview.opsiclear.com/hub/datasets/open/data-4b8a1a825df7432023cb4989) | 0 | Auxiliary container review |
+| turandai/gaussian-surfels-bmvs | [cow](https://colmapview.opsiclear.com/hub/datasets/open/data-2e3b09ccb7812f86e4ef4d97) | 4,674,767 | Corrected export / loader |
+| turandai/gaussian-surfels-dtu | [scan24](https://colmapview.opsiclear.com/hub/datasets/open/data-4b8a1a825df7432023cb4989) | 0 | Camera / 2D-flow arrays confirmed |
 | uild42/gate-gsplat-assets | [left_scene/mocap_processed](https://colmapview.opsiclear.com/hub/datasets/open/data-7dcde70513736e18520c65e0) | 28,634 | Corrected export / loader |
 | Uniiii/eth3d_v2 | [courtyard/distorded_images](https://colmapview.opsiclear.com/hub/datasets/open/data-bb91e65baffc13e16d6ccd08) | 0 | No point source listed in checked scope |
 | Uniiii/eth3d_v2 | [courtyard/undistorded_images](https://colmapview.opsiclear.com/hub/datasets/open/data-eb08fb81b6b4ab51b3c5ba4b) | 0 | No point source listed in checked scope |

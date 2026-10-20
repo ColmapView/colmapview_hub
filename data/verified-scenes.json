@@ -1691,29 +1691,58 @@
       "kind": "scene",
       "path": "OpenSfM Berlin example — Berlin (camera + RGB)",
       "files": {
-        "metadata": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json"
+        "metadata": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
+        "tracks": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/tracks_example.csv"
       },
       "loadPath": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
       "loadUrl": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json",
-      "checkedAt": "2026-10-20T11:16:36.332Z",
-      "exportSha256": "a93d76ca4471b024dcda053faa54e6139e2781f7793f101fccb3ebdf5d71a8b2",
+      "checkedAt": "2026-10-20T13:12:11.750389+00:00",
+      "exportSha256": "dd6a44491fae83a00e7de2ad8ca3c242e1b23d980404b2913243189499ff1cd0",
       "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmapillary%2FOpenSfM%2F92381be43cd93ca91e7ef903733a0482440028dd%2Fdata%2Fberlin%2Freconstruction_example.json",
-      "viewerVersion": "0.19.5",
-      "viewerCommit": "c37d0116e352ecc7559218ca1aaa854f85ebe24e",
-      "export": "colmap_model",
+      "viewerVersion": "0.19.8",
+      "viewerCommit": "12f6e89ef347b5169488ee228fcb86f8a8c6d290",
+      "export": "colmap_images",
       "counts": {
         "cameras": 3,
         "images": 3,
         "points": 1430
       },
-      "photos": [],
+      "photos": [
+        {
+          "name": "01.jpg",
+          "sourcePath": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/images/01.jpg",
+          "bytes": 1414236,
+          "sha256": "4b3fbfb5d2bda883f7e971535fb71ecb7b45c8fcda35606c6d856e1fb923ffce",
+          "width": 3264,
+          "height": 2448
+        },
+        {
+          "name": "02.jpg",
+          "sourcePath": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/images/02.jpg",
+          "bytes": 1267989,
+          "sha256": "d21b2fd5a3b41b9f244a6317400a8e4a44609dd318213598c2e894f9ead9141a",
+          "width": 3264,
+          "height": 2448
+        },
+        {
+          "name": "03.jpg",
+          "sourcePath": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/images/03.jpg",
+          "bytes": 1148129,
+          "sha256": "afec918e18fcf5ec6a66c5e3b2185117d3a04b583c31e8a1371f195a38b45501",
+          "width": 3264,
+          "height": 2448
+        }
+      ],
       "checks": {
         "browserImport": "passed",
         "modelExport": "passed",
         "independentColmapRead": "passed",
         "cameraCalibration": "passed",
         "cameraPoses": "passed",
-        "pointValues": "passed"
+        "pointValues": "passed",
+        "photoExport": "passed",
+        "originalPhotoHashes": "passed",
+        "trackValues": "passed"
       },
       "sourceFiles": [
         {
@@ -1722,10 +1751,24 @@
           "bytes": 477360,
           "sha256": "7dfc2f48ffad36092e0f0b21d1e7275b8cf047a3183d874c460a52fa79469425",
           "browserRead": true
+        },
+        {
+          "path": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/tracks_example.csv",
+          "url": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/tracks_example.csv",
+          "bytes": 204020,
+          "sha256": "a523dea2c86a6527484cbbae907c2092201bbd225c71b429c7b3e10788eb3b1e",
+          "browserRead": true
         }
       ],
-      "sourceSnapshotSha256": "1d888f6e2c6fb9f46de758ae5a3a708bfeff9d4a28b80745a0e0ac6b7920375d",
-      "notes": "Supersedes the earlier camera-only receipt. The source contains 1,430 colored OpenSfM points; retained without fabricated feature observations or pixel errors. Existing WASM point exports use float32 coordinates."
+      "sourceSnapshotSha256": "6894eee27a2ddc2b2f0f9d333e8cbbeb5eb6d34e37264d71656fbf3cbde58011",
+      "notes": "Supersedes the earlier camera-only receipt. The source contains 1,430 colored OpenSfM points; retained without fabricated feature observations or pixel errors. Existing WASM point exports use float32 coordinates.",
+      "sourceTracks": {
+        "path": "https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/tracks_example.csv",
+        "bytes": 204020,
+        "sha256": "a523dea2c86a6527484cbbae907c2092201bbd225c71b429c7b3e10788eb3b1e",
+        "observations": 3082,
+        "untriangulatedFeatures": 137
+      }
     },
     {
       "sourceId": "public:[\"MegaScenes\",\"000000 Arc de Berà, component 0\",\"native complete sample\"]",
@@ -2203,5 +2246,6 @@
       ],
       "companionPointCloud": "scenes/transparent/transparent_03_compose_00830_304f888c85/points_gt.ply"
     }
-  ]
+  ],
+  "checkedAt": "2026-10-20T13:12:11.750389+00:00"
 }

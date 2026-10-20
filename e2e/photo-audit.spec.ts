@@ -22,8 +22,8 @@ test('photo evidence covers every published scene and keeps stronger export chec
   expect(await csv.text()).toContain('launchRouting,photoManifest,listedPhotos,boundNamesChecked');
   expect(audit.routing.photo_inventory_manifest).toBe(1247);
   expect(audit.routing.photo_archive_manifest).toBe(516);
-  expect(audit.routing.prefix_manifest).toBe(238);
-  expect(audit.routing.full_scene_manifest).toBe(17);
+  expect(audit.routing.prefix_manifest).toBe(235);
+  expect(audit.routing.full_scene_manifest).toBe(23);
   expect(audit.repeatAudit.skip_confirmed_facts).toBeGreaterThan(0);
   expect(audit.repeatAudit.review_required).toBeGreaterThanOrEqual(0);
   expect(audit.repeatAudit.skip_confirmed_facts + audit.repeatAudit.review_required).toBe(index.total);
@@ -105,6 +105,27 @@ test('zero-point audit updates embedded OpenSfM and all eight NeRF companion-clo
   await expect(card.locator('[data-stat="points"]')).toHaveText('1,430');
   const opened=await page.request.get(berlin.openUrl,{maxRedirects:0});expect(opened.status()).toBe(302);
   expect(new URL(opened.headers().location).searchParams.get('url')).toBe('https://raw.githubusercontent.com/mapillary/OpenSfM/92381be43cd93ca91e7ef903733a0482440028dd/data/berlin/reconstruction_example.json');
+});
+
+test('all newly bound clouds retain explicit model, photo and temporal selections',async({page})=>{
+  const expected:[string,number,number][]=[['data-2e3b09ccb7812f86e4ef4d97',64,4674767],['data-e16ab11d39e7a5aff5dbfe39',4,2148],
+    ['data-2cbe117bb42a638692c46147',319,69532],['data-ebfee4a083e682fe67645034',560,983145],
+    ['data-ab3b0f737ecd74be64152988',477,601496],['data-f6f812cfaf2b1c7c1f5605c9',263,1051142]];
+  for(const [id,poses,points] of expected){
+    const response=await page.request.get('/hub/datasets/open/'+id,{maxRedirects:0});expect(response.status()).toBe(302);
+    const url=new URL(new URL(response.headers().location).searchParams.get('url')!);
+    expect(url.pathname).toContain('/manifests/');
+    const manifest=await(await page.request.get(url.pathname)).json();
+    const html=await(await page.request.get('/hub/datasets/entry/'+id)).text();
+    expect(html).toContain(`data-stat="points">${points.toLocaleString('en-US')}`);expect(html).toContain(`data-stat="cameraPoses">${poses.toLocaleString('en-US')}`);
+    if(manifest.format==='colmapview-camera-dataset'){
+      expect(manifest.metadataUrl).toContain('/resolve/');expect(manifest.pointCloud.url).toContain('/resolve/');
+      if(id==='data-e16ab11d39e7a5aff5dbfe39')expect(manifest).toMatchObject({frameIndices:[0,23,46,69],pointCloud:{format:'npz',array:'pos',frame:0}});
+      if(id==='data-2cbe117bb42a638692c46147')expect(manifest.pointCloud.transform).toEqual([0,1,0,0,1,0,0,0,0,0,-1,0,0,0,0,1]);
+    }else{
+      expect(manifest.files.points3D).toMatch(/\/sparse\/0\/points3D\.ply$/);expect(manifest.imagesPath).toMatch(/\/multi3\/images\/$/);expect(manifest.skipImages).toBe(false);
+    }
+  }
 });
 
 test('companion ZIP requirements remain explicit and Waymo mappings launch through pinned photo manifests', async ({ page }) => {

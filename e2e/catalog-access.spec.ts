@@ -388,7 +388,7 @@ test('complete-export evidence stays scoped while other model layouts remain loa
   const data = await response.json() as { total: number; entries: { id: string; statusLabel: string; delivery: string; hasViewer: boolean }[] };
   expect(index.total).toBeGreaterThan(policy.scenes.length);
   const completePhotoExports = policy.scenes.filter(scene => scene.export !== 'colmap_model');
-  expect(completePhotoExports).toHaveLength(3);
+  expect(completePhotoExports).toHaveLength(4);
   expect(data.total).toBe(completePhotoExports.length);
   expect(data.entries.every(scene => scene.hasViewer && scene.statusLabel === 'Cameras + photos verified' && scene.delivery === 'browser_readable')).toBe(true);
   for (const scene of completePhotoExports) {
@@ -431,7 +431,9 @@ test('a checked companion PLY cannot qualify a scene or collection for publicati
 test('camera metadata opens its checked camera source and camera-only scenes retain optional photo prefixes', async ({ page }) => {
   const policy = JSON.parse(readFileSync('data/verified-scenes.json', 'utf8')) as {
     scenes: { sourceId: string; kind: string; path: string; viewerUrl: string; export?: string }[] };
-  const modelExports = policy.scenes.filter(scene => scene.export === 'colmap_model');
+  const manifests = JSON.parse(readFileSync('data/scene-manifests.json','utf8')) as {scenes:{sourceId:string;kind:string;path:string}[]};
+  const overridden = new Set(manifests.scenes.map(scene=>id(scene.sourceId,scene.kind,scene.path)));
+  const modelExports = policy.scenes.filter(scene => scene.export === 'colmap_model' && !overridden.has(id(scene.sourceId,scene.kind,scene.path)));
   expect(modelExports.length).toBeGreaterThan(0);
   const result = await (await page.request.get('/hub/datasets/api/entries?status=Camera%20model%20export%20checked')).json();
   expect(result.total).toBe(modelExports.length);

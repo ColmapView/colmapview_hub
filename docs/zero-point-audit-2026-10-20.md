@@ -1,40 +1,50 @@
 # Zero-point scenes, 2026-10-20
 
-The audit covered all **357 effective zero-point scenes in 45 collections** in catalog generation `8aed9dd7761e4e91fc6b77a72809fbef47c74f38369231e9eb651470ecffcd8c`. Unknown counts were excluded. Sixteen other originally empty COLMAP models already use checked XYZ manifests; their selected point counts are nonzero and they were not failures in this pass. The previous OpenMVG repair is also retained.
+The audit covers all **357 effective zero-point scenes in 45 collections** from generation 8aed9dd7761e4e91fc6b77a72809fbef47c74f38369231e9eb651470ecffcd8c. Fifteen scenes now select **9,336,828 verified source points/vertices**. All five static cloud bindings and all three auxiliary-container follow-ups from the first pass are resolved. Unknown counts were excluded. Sixteen already working native/XYZ manifests and the previous OpenMVG repair are preserved.
 
-The [readable scene list](zero-point-scenes-2026-10-20.md) names every audited scene and links to its Hub entry. The [complete evidence ledger](../data/zero-point-audit.json.gz) records exact revisions, selected files, inventory receipts, checked scopes, source hashes and independent export results. It distinguishes source geometry from geometry selected by the current launch link. Confirmed results can be reused while their evidence keys and source bytes match; unresolved bindings and auxiliary containers remain explicit follow-ups.
+The [readable scene list](zero-point-scenes-2026-10-20.md) links every audited scene. The [evidence ledger](../data/zero-point-audit.json.gz) retains exact revisions, selections, source hashes and independent export results. The [auxiliary inspection](../data/zero-point-auxiliary-inspection.json.gz) records array shapes and byte-range receipts. Confirmed facts can be reused at unchanged pins and evidence keys without a global source scan.
 
-## Recovered geometry
+## Closed loading gaps
 
-| Collection / scene | Points | Correction |
+| Collection / selected scene | Points | Verified selection |
 | --- | ---: | --- |
-| OpenSfM Berlin | 1,430 | Import embedded `points` XYZ/RGB. Fix the native worker's rejection of null buffers for empty tracks. |
-| HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting — dry_ice | 100,000 | Refresh the old export receipt; the current loader selects `points3d.ply`. |
-| jayinnn/Skyfall-GS-datasets — JAX_004 | 35,355 | Refresh the receipt for `points3D.ply`. |
-| pkupig/dadr_splatting-dataset | 100,000 | Refresh the receipt for `points3d.ply`. |
-| SimeonOA/GrowSplat-Dataset — quinoa/20221031 | 16,315 | Follow the declared `ply_file_path`. |
-| uild42/gate-gsplat-assets — left_scene/mocap_processed | 28,634 | Follow the declared `sparse_pc.ply`. |
-| yaguchi27/EV_hw1_nerf_synthetic — lego | 100,000 | Refresh the receipt for `points3d.ply`. |
-| MikolajZ/eks_data — data/mic | 786,432 | Refresh the receipt for `sparse_pc.ply`. |
-| MikolajZ/eks_demo_data — data/ficus | 786,432 | Refresh the receipt for `sparse_pc.ply`. |
+| Poison-3DGS — ARKit 42446517 / multi3 | 983,145 | Same-folder points3D.ply; existing multi3/images/ prefix retained. |
+| Poison-3DGS — ARKit 47895549 / multi3 | 601,496 | Same-folder points3D.ply; existing multi3/images/ prefix retained. |
+| Poison-3DGS — drjohnson / multi3 | 1,051,142 | Same-folder PLY; retain feature coordinates and disconnect 338,032 references to the absent original point table. |
+| ALC901/DL3DV-10K-3dgs | 69,532 | Explicit 3dgs_output/input.ply and cloud-only world transform. All 319 source 3DGS camera poses agree, maximum delta 8.9e-16. Existing images_8 routing and 1/8 pixel calibration remain intact. |
+| turandai/gaussian-surfels-bmvs — cow | 4,674,767 | gt_pts.ply already uses the normalized world reconstructed from world_mat × scale_mat. Source BMVS evaluation compares ground truth directly in this frame. No inverse scale is applied twice. |
+| Cloth-splatters — TOWEL_00_00, frame 0 | 2,148 | trajectory.npz array pos, frame 0, with metadata indices [0,23,46,69]: four views at time zero. All vertices project within all four photos and onto their foreground. All four original PNGs survived export unchanged. |
 
-All nine model exports passed independent PyCOLMAP comparisons: **1,954,598 points**, original camera calibration and poses, and source XYZ/RGB. Embedded OpenSfM coordinates retain the existing viewer's float32 export precision. The selected JSON/PLY files contain no feature observations; none were fabricated. Berlin also lists `tracks_example.csv` at this pin (204,020 bytes, Git blob `04f8ffbc9e4a6d855bb1cec2228500ad0599b630`); that optional observation sidecar is not imported by the JSON loader. This is a remaining feature gap, not missing source data. Photograph evidence remains separate from model export evidence.
+These six selections add **7,382,230 vertices**. Actual browser imports, point draw calls, original calibration/poses, every XYZ/RGB value and untracked COLMAP exports were checked. PLY vertex numbers do not identify original COLMAP landmarks; unrelated source image references must never be joined to them. Native COLMAP observations remain unchanged when a native point table is selected. Native image prefixes retain sample-level evidence rather than claiming complete photo exports.
 
-The Berlin cloud and all three photographs were also rendered, and the three original JPEG byte hashes survived export unchanged. The existing reset view frames camera centers, so geometry ahead of a tight camera cluster can initially fall outside the viewport; zooming out reveals it. This is a framing limitation, separate from a zero model count. Empty observation tracks also require a zero track threshold; imported OpenSfM geometry now sets that initial threshold explicitly.
+Camera metadata manifests now declare nonstandard cloud paths, cloud-to-camera-world similarities, or bounded numeric NPZ vertex frames with matching NeRF view subsets. This does not merge time sequences into one static cloud. Mesh faces, Gaussian properties, object/pickle arrays, ambiguous selections and invalid transforms are rejected.
 
-## Remaining zero counts
+## OpenSfM observations and framing
 
-| Scenes | Finding | Meaning |
-| ---: | --- | --- |
-| 262 | No point source listed in the checked scene scope | Complete pinned scope inventory checked. This does not establish global absence elsewhere in the collection. |
-| 28 | Another reconstruction contains geometry | Fifteen BMVS seed/calibration models and thirteen TwinWorld test models remain separate from other reconstruction/training variants. Their selected point counts are correctly zero. |
-| 47 | danceNet3D geometry sequences in separate archives | Static COLMAP cameras, time-indexed splats and point-cloud archives are distinct. Frame selection and alignment require their own support. |
-| 5 | Static cloud needs an explicit binding | Three Poison-3DGS models omit their same-folder `points3D.ply` from their photo-prefix launch manifests. ALC901 has a nested `3dgs_output/input.ply`; BMVS surfels has `cow/gt_pts.ply` beside DTU matrices. File existence is confirmed; camera-world association/export for these selections is not. |
-| 3 | Mesh available | ExtremeOcc-3D, AniGen and the anonymous ACMMM Lego example contain meshes. Mesh vertex counts are not published as sparse point counts. |
-| 3 | Auxiliary container review | Cloth trajectory NPZ, HDR-NSFF flow NPY/NPZ and DTU camera NPZ are not loose static clouds. Their uninspected auxiliary payloads prevent an absolute absence claim. |
+Berlin retains **1,430 XYZ/RGB landmarks**, **3,082 reciprocal landmark observations**, **137 untriangulated 2D features**, and all three original JPEGs. The native tracks_example.csv sidecar is imported. Its 204,020 bytes have SHA-256 a523dea2c86a6527484cbbae907c2092201bbd225c71b429c7b3e10788eb3b1e. Independent checks compare point IDs and pixel centers, recompute reprojection errors and reject altered observations. The earlier JSON-only zero-observation export remains historical evidence, superseded for the current launch.
 
-The five unbound static clouds are recorded as loading gaps, not as missing source data. Preserve the existing image prefix when adding a cloud selection. The nested Nerfstudio cloud and DTU ground-truth cloud also require explicit frame/scale checks; filename proximity alone is insufficient.
+Initial/reset bounds include the camera trajectory and central point extents. A bounded sample of up to 8,192 vertices and 1st–99th coordinate percentiles keeps distant outliers from shrinking the subject. Point-only scenes retain their full bounds. Source geometry is unchanged, and saved dataset views retain precedence. The new native manifests have checked overviews. Viewer 0.19.8 includes this correction and retains the explicit manifest when sharing a scene. The earlier 0.19.6 and 0.19.7 release candidates were cancelled before deployment.
 
-## Reproducing the offline audit
+## Earlier recovered scenes
 
-`python -m scripts.audit.audit_zero_point_scenes` audits current generated packs against the pinned component ledger without network requests. For this dated snapshot, `--index`, `--rows` and `--exports` selected the same-generation baseline and the nine independently verified browser exports. Every baseline zero scene has a finding; repeated complete source audits are unnecessary when the confirmed evidence has not changed.
+The first pass also corrected eight NeRF companion-cloud receipts: dry_ice (100,000), Skyfall JAX_004 (35,355), dadr_splatting (100,000), GrowSplat quinoa/20221031 (16,315), gate-gsplat left_scene (28,634), synthetic Lego (100,000), eks_data mic (786,432), and eks_demo_data ficus (786,432). With Berlin, these account for the earlier **1,954,598 points**. Their pinned source facts are retained without repeated downloads.
+
+## Correct remaining zero counts
+
+| Scenes | Confirmed disposition |
+| ---: | --- |
+| 262 | No static point source listed in the complete checked scene scope. This is scoped evidence, not collection-wide absence. |
+| 2 | Auxiliary scope has no static XYZ. All 70 HDR flow NPZ indexes contain only two-channel flow and masks, both NPY sequences contain 2D flow, and poses_bounds.npy is a camera array. DTU scan24/cameras.npz contains 294 camera/scale/inverse matrices. Thirty-six depth arrays were excluded under the requested non-depth scope. |
+| 28 | Other reconstruction/training variants have geometry; selected BMVS seed/calibration and TwinWorld held-out models remain separate. |
+| 47 | danceNet3D geometry uses separate time-indexed archives, including multi-gigabyte TAR/Zstandard sequences. Static COLMAP launches do not attach arbitrary temporal frames. Archive timeline loading remains a separate unsupported feature. |
+| 3 | Mesh geometry exists. Mesh vertices are not reported as sparse reconstruction points. |
+
+These **342 remaining zeros** are explained rather than unresolved static-path failures. Usable cameras/poses still qualify without photographs or sparse points. Existing masks, splats, previews, original links, other variants and scene identities are retained.
+
+## Reproduction
+
+The offline command "python -m scripts.audit.audit_zero_point_scenes" summarizes same-generation packs and pinned component receipts. Optional --exports adds independent recoveries; --confirmations reuses auxiliary inspections only when the evidence key and revision match. Its sourceNetworkReads: 0 describes the summary step, not historical source inspections.
+
+"python -m scripts.audit.verify_companion_scene_exports --scene <scene-id> --browser <browser-results.json> --exports <zip-directory> --cache <url-hash-cache> --output <results.json>" verifies selected scene manifests offline with NumPy, Pillow and PyCOLMAP. It compares large point streams in chunks, camera calibration/poses, retained feature coordinates, synchronized frame selection, source world associations and original photo hashes. Source bytes and browser exports remain local operator receipts; compact evidence is published. OpenSfM sidecars are checked by verify_camera_model_exports and verify_opensfm_tracks.
+
+Source conventions were checked against [OpenSfM pixel normalization](https://github.com/mapillary/OpenSfM/blob/92381be43cd93ca91e7ef903733a0482440028dd/opensfm/features.py), [native track serialization](https://github.com/mapillary/OpenSfM/blob/92381be43cd93ca91e7ef903733a0482440028dd/opensfm/src/map/src/tracks_manager.cc), [Gaussian Surfels camera matrices](https://github.com/turandai/gaussian_surfels/blob/main/scene/dataset_readers.py), and [BMVS evaluation](https://github.com/turandai/gaussian_surfels/blob/main/eval.py).

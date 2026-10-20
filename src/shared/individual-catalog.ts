@@ -90,8 +90,9 @@ const failedDelivery = new Set(['gated', 'access_denied', 'not_found', 'browser_
 function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): proof is IndividualProof & { sceneManifest: SceneManifestEvidence } {
   if (!proof || !isSceneManifestEvidence(proof.sceneManifest) || !manifestViewerUrlMatches(proof.viewerUrl, proof.sceneManifest)) return false;
   const native = proof.sceneCompatibility ?? proof.sceneValidation;
-  return native?.cameras === proof.sceneManifest.counts.cameras && native.images === proof.sceneManifest.counts.images
-    && (proof.sceneManifest.pointFormat === 'xyz_ply' ? native.points === 0 : native.points === proof.sceneManifest.counts.points);
+  const original = proof.sceneManifest.sourceCounts ?? proof.sceneManifest.counts;
+  return native?.cameras === original.cameras && native.images === original.images
+    && (['xyz_ply', 'numpy_frame'].includes(proof.sceneManifest.pointFormat) ? native.points === 0 : native.points === proof.sceneManifest.counts.points);
 }
 
 export function canOpenIndividual(row: IndividualRecord, source: IndividualSource): boolean {
@@ -122,7 +123,8 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
 
 export function individualSummary(row: IndividualRecord, source: IndividualSource): CatalogSummary {
   const [id, , kind, path, format, archive, , proof] = row;
-  const kindLabel = individualKind(kind, format);
+  const selectedKind = kind === 'cameras' && hasCheckedSceneManifest(proof) && proof.sceneManifest.counts.points > 0 ? 'colmap' : kind;
+  const kindLabel = individualKind(selectedKind, format);
   const gated = source.access === 'gated' || proof?.delivery === 'gated';
   const statusLabel = gated ? 'Access required' : proof?.statusLabel || (archive ? 'Extraction required; load unverified' : 'Files listed; load not checked');
   const title = ['colmap', 'cameras'].includes(kind) ? path.replace(/(?:^|\/)(?:(?:colmap\/)?sparse(?:\/\d+)?|known_pose_model|triangulated_model|triangulated_text)$/i, '') || source.label : path || source.label;
@@ -186,6 +188,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ...(proof.sceneManifest.pointSource ? [{ label: 'Selected point cloud', value: proof.sceneManifest.pointSource, url: file(proof.sceneManifest.pointSource) }] : []),
         { label: 'Selected scene export SHA-256', value: proof.sceneManifest.exportSha256 },
         { label: 'Manifest viewer build', value: `${proof.sceneManifest.viewerVersion} (${proof.sceneManifest.viewerCommit})` },
+        ...(proof.sceneManifest.frameIndices ? [{label: 'Selected temporal views', value: `${proof.sceneManifest.counts.images} of ${proof.sceneManifest.sourceCounts!.images} source frames`}]: []),
         ...(proof.sceneManifest.maskCount && proof.sceneManifest.maskRole === 'unknown'
           ? [{ label: 'Mask export', value: 'Masks display in the viewer. Their role is unverified, so they are not qualified as COLMAP feature masks.' }] : []),
       ] : []),

@@ -17,20 +17,26 @@ import numpy as np
 import pycolmap
 from PIL import Image
 from .verify_scene_manifest_exports import verify_points
+from .verify_opensfm_tracks import verify_tracks
 
 
 def close(expected, actual, label, atol=1e-9, rtol=1e-12):
     if not np.allclose(expected, actual, atol=atol, rtol=rtol):
         raise ValueError(label + ' differs; max delta ' + str(np.max(np.abs(np.asarray(expected) - np.asarray(actual)))))
 
-def params(root, frame, camera, reference_size=None):
+def params(root, frame, camera, reference_size=None, resize_factor=1):
     values = {**root, **frame}
     width, height = int(values.get('w', camera.width)), int(values.get('h', camera.height))
     if 'w' not in values or 'h' not in values:
         if reference_size is None:
             raise ValueError('Undeclared calibration dimensions lack an original photo header')
         close([width, height], reference_size, 'Original photograph dimensions', atol=0, rtol=0)
-    close([width, height], [camera.width, camera.height], 'Declared calibration dimensions', atol=0, rtol=0)
+    if resize_factor == 1:
+        close([width, height], [camera.width, camera.height], 'Declared calibration dimensions', atol=0, rtol=0)
+    elif (resize_factor not in (2, 4, 8, 16, 32, 64) or reference_size != (camera.width, camera.height)
+            or not math.floor(width / resize_factor) <= camera.width <= math.ceil(width / resize_factor)
+            or not math.floor(height / resize_factor) <= camera.height <= math.ceil(height / resize_factor)):
+        raise ValueError('Resized calibration lacks a matching original photo and power-of-two scale')
     def focal(axis, pixels):
         if 'fl_' + axis in values:
             return values['fl_' + axis]
@@ -43,7 +49,7 @@ def params(root, frame, camera, reference_size=None):
     fx, fy = fx if fx is not None else fy, fy if fy is not None else fx
     distortion = [float(values.get(key, 0)) for key in ['k1', 'k2', 'k3', 'k4', 'p1', 'p2']]
     model = values.get('camera_model', 'OPENCV_FISHEYE' if values.get('is_fisheye') else 'OPENCV' if any(distortion) else 'PINHOLE')
-    expected = [fx, fy, values.get('cx', width / 2), values.get('cy', height / 2)]
+    expected = [value / resize_factor for value in [fx, fy, values.get('cx', width / 2), values.get('cy', height / 2)]]
     if model in ('PINHOLE', 'SIMPLE_PINHOLE'):
         model = 'PINHOLE'
     elif model == 'OPENCV_FISHEYE':
@@ -76,7 +82,7 @@ def rodrigues(vector):
     cross = np.array([[0, -z, y], [z, 0, -x], [-y, x, 0]])
     return np.eye(3) + math.sin(angle) * cross + (1 - math.cos(angle)) * (cross @ cross)
 
-def verify_opensfm_points(source, model, result):
+def verify_opensfm_points(source, model, result, tracks_text=None):
     """OpenSfM JSON contains XYZ/RGB, while observations live in tracks.csv."""
     points = source.get('points', {})
     if not isinstance(points, dict):
@@ -91,11 +97,15 @@ def verify_opensfm_points(source, model, result):
         xyz = np.asarray(original['coordinates'], dtype=float)
         if not (np.array_equal(xyz, point.xyz) or np.array_equal(xyz.astype(np.float32).astype(float), point.xyz)):
             raise ValueError('OpenSfM point coordinates differ beyond viewer float32 precision')
-        if not np.array_equal(original['color'], point.color) or point.error != 0 or len(point.track.elements):
+        if not np.array_equal(original['color'], point.color) or tracks_text is None and (point.error != 0 or len(point.track.elements)):
             raise ValueError('OpenSfM source colors differ or observations/errors were fabricated')
-    if any(len(image.points2D) for image in model.images.values()):
+    if tracks_text is None and any(len(image.points2D) for image in model.images.values()):
         raise ValueError('OpenSfM JSON must not synthesize image observations')
     result.update(pointValues='passed', pointObservations=0, pointPrecision='source_or_float32')
+    if tracks_text is not None:
+        keys = list(points) if numeric else sorted(points, key=lambda value: value.encode('utf-16-be', errors='surrogatepass'))
+        ids = {key: int(key) if numeric else index + 1 for index, key in enumerate(keys)}
+        result.update(verify_tracks(source, model, tracks_text, ids))
 
 
 def verify_openmvg_structure(source, model, result):
@@ -259,7 +269,14 @@ def verify_scene_exports(root, output, frame_coverage):
                             close([width, height], [camera.width, camera.height], 'OpenSfM image dimensions', atol=0, rtol=0)
                             f = original_camera['focal'] * max(width, height)
                             close([f, width / 2, height / 2, original_camera.get('k1', 0), original_camera.get('k2', 0)], camera.params, 'OpenSfM calibration')
-                        verify_opensfm_points(source, model, result)
+                        tracks_text = None
+                        tracks = scene.get('tracksReceipt')
+                        if tracks:
+                            tracks_bytes = (root / 'model-source' / (scene['id'] + '.tracks.csv')).read_bytes()
+                            if tracks.get('browserRead') is not True or len(tracks_bytes) != tracks.get('bytes') or hashlib.sha256(tracks_bytes).hexdigest() != tracks.get('sha256'):
+                                raise ValueError('OpenSfM sidecar source/browser bytes differ')
+                            tracks_text = tracks_bytes.decode('utf-8-sig')
+                        verify_opensfm_points(source, model, result, tracks_text)
                         structure_checked = True
                     elif isinstance(source, dict) and 'views' in source and 'extrinsics' in source:
                         views = {item['value']['ptr_wrapper']['data']['filename']: item['value']['ptr_wrapper']['data'] for item in source['views']}
