@@ -1,6 +1,8 @@
 # Dataset catalog
 
-The [October 20 zero-point audit](../docs/zero-point-audit-2026-10-20.md) covers all 357 scenes whose selected launch reported zero points. [zero-point-audit.json.gz](zero-point-audit.json.gz) retains each finding and its source evidence, including nine corrected exports with 1,954,598 points. Confirmed scoped findings can be reused at the same pin and evidence key; five unbound static clouds and three auxiliary-container reviews remain explicit gaps.
+The current catalog contains **5,583 scenes from 144 collections**. The [October 20 zero-point audit](../docs/zero-point-audit-2026-10-20.md) covers all 357 scenes whose selected launch reported zero points. [zero-point-audit.json.gz](zero-point-audit.json.gz) retains 15 corrected exports with 9,336,828 source points/vertices and explains the 342 remaining zeros. All five static bindings and three auxiliary follow-ups are closed. Confirmed scoped findings can be reused at the same pin and evidence key.
+
+[zero-point-live-verification.json.gz](zero-point-live-verification.json.gz) records seven production browser imports through the published Hub, decoded photographs, retained share sources, actual COLMAP downloads and independent source comparisons. It pins viewer 0.19.9, Hub 0.9.12 and the tested catalog generation; it does not claim full browser imports of every catalog scene.
 
 `catalog.json` is the production input for source collection metadata, reported licenses and dated audit evidence. `individual-datasets.json` and `individual-datasets/*.json.gz` preserve the research file/model inventory. The public browser projects that inventory into named scene datasets. Generated HTML, scene metadata packs, search indexes and downloadable JSON are rebuilt under `public/hub/datasets/` and are ignored by Git.
 

@@ -4,6 +4,8 @@ The audit covers all **357 effective zero-point scenes in 45 collections** from 
 
 The [readable scene list](zero-point-scenes-2026-10-20.md) links every audited scene. The [evidence ledger](../data/zero-point-audit.json.gz) retains exact revisions, selections, source hashes and independent export results. The [auxiliary inspection](../data/zero-point-auxiliary-inspection.json.gz) records array shapes and byte-range receipts. Confirmed facts can be reused at unchanged pins and evidence keys without a global source scan.
 
+Viewer **0.19.9** and Hub **0.9.12** are deployed. The [production verification receipt](../data/zero-point-live-verification.json.gz) records all six new selections and Berlin loading through their published Hub links, visible geometry, decoded photographs, retained share sources and successful COLMAP downloads. Independent checks matched all 7,382,230 newly selected vertices, calibration/poses, the cloth photographs and Berlin's source observations and three original JPEGs. Reopening the cloth share link retained its four synchronized views and selected vertex frame. Catalog regression checks preserved all 5,583 scene identities, previews, masks and splats; 5,577 launch routes are unchanged.
+
 ## Closed loading gaps
 
 | Collection / selected scene | Points | Verified selection |
