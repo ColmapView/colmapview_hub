@@ -38,6 +38,7 @@ export function manifestLaunchUrl(viewerUrl) {
 export async function manifestPlan(root, schemas) {
   const directory = resolve(root, 'public/hub/datasets/individual');
   const index = await json(resolve(directory, 'index.json'));
+  const selections = new Set((await json(resolve(root, 'data/scene-manifests.json'))).scenes.map(scene => scene.selectionSha256 + '.manifest.json'));
   const references = new Map();
   const add = row => {
     const url = manifestLaunchUrl(row[7]?.viewerUrl);
@@ -75,13 +76,14 @@ export async function manifestPlan(root, schemas) {
     // Explicit scene selections use a digest of their complete selection receipt
     // as the filename, while other manifests use a digest of the JSON bytes.
     // Their separate, published body checksum is the integrity contract.
+    if (!selections.has(file) && file !== sha256 + '.manifest.json') errors.push('Manifest filename is neither its content digest nor a recorded selection digest');
     for (const entry of entries) if (entry.manifestSha256 && entry.manifestSha256 !== sha256) errors.push(`${entry.id}: manifest body disagrees with its evidence checksum`);
     for (const key of ['cameras', 'images', 'points', 'splats']) {
       const counts = new Set(entries.map(entry => entry.expected?.[key]).filter(value => value != null));
       if (counts.size > 1) errors.push(`Entries disagree about selected ${key} count`);
     }
     manifests.push({ file, url, sha256, requiresSplat: Boolean(manifest?.geometryFiles?.some(file => file.role === 'splat')),
-      addressing: file === sha256 + '.manifest.json' ? 'content' : 'selection',
+      addressing: selections.has(file) ? 'selection' : 'content',
       bytes: bytes.length, version: manifest?.version, format: manifest?.format ?? 'colmap', entries, errors });
     references.delete(url);
   }

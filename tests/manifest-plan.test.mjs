@@ -48,6 +48,8 @@ test('manifest plans include retained assets and variant references and detect m
   const save = async (path, value) => writeFile(resolve(directory, path), JSON.stringify(value));
   try {
     for (const folder of ['packs', 'variants', 'manifests']) await mkdir(resolve(directory, folder), { recursive: true });
+    await mkdir(resolve(root, 'data'));
+    await writeFile(resolve(root, 'data/scene-manifests.json'), JSON.stringify({ scenes: [{ selectionSha256: 'a'.repeat(64) }, { selectionSha256: 'b'.repeat(64) }] }));
     const body = { version: 1 }, digest = manifestHash(JSON.stringify(body));
     const filename = 'a'.repeat(64) + '.manifest.json'; // Selection digest differs from body digest.
     const url = `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${filename}`;
@@ -71,6 +73,8 @@ test('manifest plans include retained assets and variant references and detect m
     proof.viewerUrl = proof.viewerUrl.replace(filename, 'd'.repeat(64) + '.manifest.json');
     await save('packs/0.json', [row]);
     assert.equal((await manifestPlan(root, schemas)).missing.length, 1);
+    await save('manifests/' + 'e'.repeat(64) + '.manifest.json', body);
+    assert.match((await manifestPlan(root, schemas)).manifests.at(-1).errors[0], /neither its content digest nor a recorded selection/);
   } finally {
     assert.ok(resolve(root).startsWith(resolve(tmpdir(), 'colmapview-manifest-plan-')));
     await rm(root, { recursive: true, force: true });
