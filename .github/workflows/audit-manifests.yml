@@ -6,6 +6,10 @@ on:
         description: 'Optional exact source ID (leave empty for every manifest)'
         type: string
         default: ''
+      manifest:
+        description: 'Optional manifest filename for reproducing one load'
+        type: string
+        default: ''
 permissions:
   contents: read
 jobs:
@@ -35,9 +39,11 @@ jobs:
       - name: Load each original manifest and compare parsed scene counts
         env:
           AUDIT_SOURCE: ${{ inputs.source }}
+          AUDIT_MANIFEST: ${{ inputs.manifest }}
         run: |
           args=()
           if [ -n "$AUDIT_SOURCE" ]; then args+=(--source "$AUDIT_SOURCE"); fi
+          if [ -n "$AUDIT_MANIFEST" ]; then args+=(--manifest "$AUDIT_MANIFEST"); fi
           npm run catalog:manifests -- --viewer-root .tmp/manifest-viewer --load --shard ${{ matrix.shard }}/4 "${args[@]}"
       - name: Preserve every loading result
         if: always()

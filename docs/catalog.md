@@ -52,6 +52,8 @@ Use `--manifest HASH.manifest.json`, `--source hf:owner/repo`, `--offset N` or `
 
 CI also runs `npm run test:manifest-runner` with `COLMAPVIEW_AUDIT_VIEWER_ROOT` set to that checkout. These integration checks start a quiet CI server with an empty shard, verify that it releases its port, and reject an occupied developer port before making requests. They require Chromium but download no source datasets.
 
+The manual workflow accepts optional source and manifest-filename inputs, so a reported link can be reproduced independently of the full sweep.
+
 ### Photo routing manifests
 
 The initial `data/photo-routing.json.gz` cohort added explicit v1 photo inventories for **1,246 native scenes** against released viewer **0.17.7**, bringing manifest launches to **1,501**. The continuation below added one native photo inventory and 516 companion archive manifests, bringing that audit snapshot to **2,018**. Later point/frame selections have their own receipts; the per-manifest plan enumerates current and retained assets. Other scenes retain their native/importer routes, archive requirements or unresolved associations. A photo-routing manifest does not upgrade native model parsing, point counts or export evidence.
