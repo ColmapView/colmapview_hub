@@ -1,5 +1,32 @@
 import { expect, test } from '@playwright/test';
 
+test('refinement variants have one scene card while historical model links keep their exact selections', async ({ page }) => {
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  const source = index.sources.find((item: { sourceId: string }) => item.sourceId === 'hf:Bluefish2333/ScannetPoseRefine');
+  const result = await (await page.request.get(`/hub/datasets/api/entries?dataset=${source.id}&q=scene0000_00`)).json();
+  expect(result.total).toBe(1);
+  expect(result.entries[0].title).toBe('scene0000_00');
+  const selected = await page.request.get(result.entries[0].openUrl, { maxRedirects: 0 });
+  expect(selected.status()).toBe(302);
+  expect(new URL(selected.headers().location).searchParams.get('url')).toMatch(/\/scene0000_00\/sparse\/refined_aligned$/);
+  const original = await page.request.get('/hub/datasets/open/data-93580dd2921e94e0c8d2e4e6', { maxRedirects: 0 });
+  expect(original.status()).toBe(302);
+  expect(new URL(original.headers().location).searchParams.get('url')).toMatch(/\/scene0000_00\/sparse\/init$/);
+  await page.goto(`/hub/datasets/?dataset=${source.id}&q=scene0000_00`);
+  await expect(page.locator('.dataset-card')).toHaveCount(1);
+  await expect(page.locator('main')).toContainText(`${index.total.toLocaleString('en-US')} scene entries`);
+});
+
+test('the Gaussian scene filter returns the same kind and count reported by its cards', async ({ page }) => {
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  const result = await (await page.request.get('/hub/datasets/api/entries?kind=Gaussian+scene')).json();
+  expect(result.total).toBe(index.kinds['Gaussian scene']);
+  expect(result.total).toBeGreaterThan(0);
+  expect(result.entries.every((entry: { itemKind: string }) => entry.itemKind === 'Gaussian scene')).toBe(true);
+  await page.goto('/hub/datasets/?kind=Gaussian+scene');
+  await expect(page.locator('select[name="kind"]')).toHaveValue('Gaussian scene');
+});
+
 test('feed modes are seeded, paginated and balanced across source collections', async ({ page }) => {
   for (const sort of ['discover', 'random', 'new']) {
     const firstUrl = `/hub/datasets/api/entries?sort=${sort}&seed=12345678`;

@@ -30,8 +30,9 @@ export interface IndividualIndex {
   photoRouting?: Record<string, number>;
   discovery?: { schemaVersion: 1; file: 'feed.json' };
   incompleteCollections: number; scope: string;
+  groupedVariants?: number;
 }
-export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sampleScope?: 'companion_asset';
+export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sceneTitle?: string; sampleScope?: 'companion_asset';
   companionPointCloud?: string;
   sceneManifest?: SceneManifestEvidence;
   photoRouting?: PhotoRoutingEvidence;
@@ -131,7 +132,7 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
   const kindLabel = individualKind(selectedKind, format);
   const gated = source.access === 'gated' || proof?.delivery === 'gated';
   const statusLabel = gated ? 'Access required' : proof?.statusLabel || (archive ? 'Extraction required; load unverified' : 'Files listed; load not checked');
-  const title = ['colmap', 'cameras'].includes(kind) ? path.replace(/(?:^|\/)(?:(?:colmap\/)?sparse(?:\/\d+)?|known_pose_model|triangulated_model|triangulated_text)$/i, '') || source.label : path || source.label;
+  const title = proof?.sceneTitle || (['colmap', 'cameras'].includes(kind) ? path.replace(/(?:^|\/)(?:(?:colmap\/)?sparse(?:\/\d+)?|known_pose_model|triangulated_model|triangulated_text)$/i, '') || source.label : path || source.label);
   return { id, title: title || 'Root reconstruction', provider: source.provider,
     ...(source.sourceUrl ? { sourceUrl: source.sourceUrl } : {}),
     license: source.license, licenseCategory: licenseCategory(source), access: source.access, statusLabel, formats: [format], testOrFixture: false,

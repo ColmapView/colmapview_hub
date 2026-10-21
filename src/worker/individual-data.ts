@@ -12,7 +12,7 @@ type Assets = Pick<Fetcher, 'fetch'>;
 /** Only operator-built, fixed same-origin asset keys are read. Submitted data URLs
  * never enter this reader, and the private share-link bucket is not involved. */
 export async function individualAsset<T>(assets: Assets, origin: string, path: string): Promise<T | null> {
-  if (!/^(?:(?:index|feed)\.json|(?:packs\/\d+|ids\/[a-f0-9]{2}|tokens\/[a-f0-9]{3}|facets\/[a-f0-9]{16}|sources\/[a-z0-9-]+-[a-f0-9]{12})\.json)$/.test(path)) throw new Error('Invalid built catalog key');
+  if (!/^(?:(?:index|feed)\.json|(?:packs\/\d+|(?:ids|variants)\/[a-f0-9]{2}|tokens\/[a-f0-9]{3}|facets\/[a-f0-9]{16}|sources\/[a-z0-9-]+-[a-f0-9]{12})\.json)$/.test(path)) throw new Error('Invalid built catalog key');
   const response = await assets.fetch(new Request(origin + ROOT + path));
   if (response.status === 404) return null;
   if (!response.ok || !response.body) throw new Error('Catalog metadata unavailable');
@@ -38,6 +38,7 @@ export async function individualIndex(assets: Assets, origin: string): Promise<I
   const index = await individualAsset<IndividualIndex>(assets, origin, 'index.json');
   if (!index || index.schemaVersion !== 1 || !Number.isSafeInteger(index.total) || index.total < 1 || index.total > 10000000
     || !Number.isSafeInteger(index.packSize) || index.packSize < 1 || index.packSize > 2048
+    || index.groupedVariants !== undefined && (!Number.isSafeInteger(index.groupedVariants) || index.groupedVariants < 0 || index.groupedVariants > 10000000)
     || !Array.isArray(index.sources) || index.sources.length > 10000
     || index.discovery && (index.discovery.schemaVersion !== 1 || index.discovery.file !== 'feed.json')) throw new Error('Invalid individual catalog index');
   return index;
@@ -176,10 +177,19 @@ export async function readIndividual(assets: Assets, origin: string, index: Indi
   if (!/^data-[a-f0-9]{24}$/.test(id)) return null;
   const map = await individualAsset<Record<string, number>>(assets, origin, `ids/${id.slice(5, 7)}.json`);
   const ordinal = map?.[id];
-  if (!Number.isSafeInteger(ordinal) || ordinal === undefined || ordinal < 0 || ordinal >= index.total) return null;
-  const [row] = await individualRecords(assets, origin, index, [ordinal]);
+  let row: IndividualRecord | undefined;
+  if (Number.isSafeInteger(ordinal) && ordinal !== undefined && ordinal >= 0 && ordinal < index.total) {
+    [row] = await individualRecords(assets, origin, index, [ordinal]);
+  } else if (index.groupedVariants) {
+    // Historical variant links retain the exact original selection and proof,
+    // without inflating browse totals, facets, feeds or collection counts.
+    const variants = await individualAsset<Record<string, IndividualRecord>>(assets, origin, `variants/${id.slice(5, 7)}.json`);
+    row = variants?.[id];
+  }
+  if (!row) return null;
   if (row[0] !== id) throw new Error('Individual identity mismatch');
   const source: IndividualSource = index.sources[row[1]];
+  if (!source) throw new Error('Individual source metadata missing');
   const parent = await individualAsset<CatalogEntry>(assets, origin, `sources/${source.id}.json`);
   if (!parent) throw new Error('Dataset source metadata missing');
   return individualEntry(row, source, parent);

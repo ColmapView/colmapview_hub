@@ -1,0 +1,49 @@
+name: Audit manifest loading
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Optional exact source ID (leave empty for every manifest)'
+        type: string
+        default: ''
+permissions:
+  contents: read
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: ColmapView/Colmapview.github.io
+          ref: v0.20.2
+          path: .tmp/manifest-viewer
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix .tmp/manifest-viewer
+      - run: npm run build:catalog
+      - run: npx playwright install --with-deps chromium
+      - name: Load each original manifest and compare parsed scene counts
+        env:
+          AUDIT_SOURCE: ${{ inputs.source }}
+        run: |
+          args=()
+          if [ -n "$AUDIT_SOURCE" ]; then args+=(--source "$AUDIT_SOURCE"); fi
+          npm run catalog:manifests -- --viewer-root .tmp/manifest-viewer --load --shard ${{ matrix.shard }}/4 "${args[@]}"
+      - name: Preserve every loading result
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: manifest-loading-results-${{ matrix.shard }}
+          path: .tmp/manifest-audit/
+          if-no-files-found: warn
+          retention-days: 30

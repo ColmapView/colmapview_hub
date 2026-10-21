@@ -27,7 +27,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const shuffle = new URLSearchParams(filters);
   shuffle.set('seed', [...crypto.getRandomValues(new Uint8Array(8))].map(byte => byte.toString(16).padStart(2, '0')).join(''));
   shuffle.delete('page');
-  return page(location, 'Public datasets', '<div class="catalog-index">' + intro('Public datasets', `${number(index.total)} named scene datasets · ${number(index.sources.filter(source => source.count).length)} source collections`)
+  return page(location, 'Public datasets', '<div class="catalog-index">' + intro('Public datasets', `${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources`)
     + '<p class="catalog-hint">Explore camera and reconstruction datasets. Original photographs are optional; each scene records its photo availability and loading evidence.</p>'
     + '<section id="shared-datasets" class="shared-datasets" aria-label="Shared on Hub"><h2>Shared on Hub</h2>'
     + '<p role="status">Loading shared datasets…</p><div class="dataset-grid" aria-label="Shared datasets"></div>'

@@ -17,7 +17,7 @@ import urllib.parse
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from .scene_datasets import scene_records
+from .scene_datasets import scene_records, named_variant_groups, MAX_SCENE_FILE_LINKS
 from .scene_qualification import launch_manifest_asset, native_launch_manifest, native_evidence, native_scene_reviews, public_launch_manifest, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
 from .scene_photos import apply_photo_evidence, photo_scene_reviews
 from .scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
@@ -333,7 +333,7 @@ def build(root=Path('.')):
         if path.is_symlink():
             raise ValueError('Manifest asset must be a regular generated file')
         path.write_bytes(body)
-    for name in ['packs', 'ids', 'tokens', 'facets', 'sources']:
+    for name in ['packs', 'ids', 'variants', 'tokens', 'facets', 'sources']:
         directory = output / name
         directory.mkdir(exist_ok=True)
         # Fixed generated directories, immediate generated files only. No recursive
@@ -351,6 +351,8 @@ def build(root=Path('.')):
     by_dataset = {row['datasetId']: row for row in registry['sources']}
     postings, facets = {}, defaultdict(dict)
     ids = defaultdict(dict)
+    retained_variants = defaultdict(dict)
+    grouped_variants = 0
     sources, pack, total = [], [], 0
     counts, levels, deliveries = Counter(), Counter(), Counter()
     photos = Counter()
@@ -406,6 +408,7 @@ def build(root=Path('.')):
                   'provider': entry['provider'], 'license': entry['license'],
                   **({'licenseCategory': entry['licenseCategory']} if 'licenseCategory' in entry else {}), 'access': entry['access'],
                   'start': total, 'count': 0, 'listingComplete': complete}
+        qualified = []
         for row in rows:
             kind, path, files, archive = row
             review_key = scene_key(entry['sourceId'], kind, path, archive)
@@ -457,6 +460,29 @@ def build(root=Path('.')):
                 proof['photoAudit']['policyNote'] = (proof['photoAudit'].get('policyNote', '')
                     + f" Photo-manifest audit ({routing_policy['checkedAt']}, viewer {routing_policy['viewerVersion']}): {unresolved['reason']}. The existing model launch is retained.")
                 matched_unresolved.add(review_key)
+            qualified.append((row, proof, format_name, review, review_key))
+        variants = named_variant_groups([item[0] for item in qualified])
+        for row, proof, format_name, review, review_key in qualified:
+            kind, path, files, archive = row
+            item_id = identity(entry['sourceId'], row)
+            group = variants.get((kind, path, archive))
+            if group:
+                primary, scene_title, members = group
+                if row is not primary:
+                    retained_variants[item_id[5:7]][item_id] = [item_id, source_index, kind, path, format_name, archive, files, proof]
+                    if proof.get('thumbnail'):
+                        thumbnails.add(proof['thumbnail']['url'].split('/')[-1])
+                    grouped_variants += 1
+                    continue
+                # The card opens the refined selection. Original variants keep
+                # their own proofs and URLs and remain addressable by old IDs.
+                files = dict(files or {})
+                for member in members:
+                    if member is not primary:
+                        for role, value in (member[2] or {}).items():
+                            if value not in files.values() and len(files) < MAX_SCENE_FILE_LINKS:
+                                files['variant:' + member[1] + ':' + role] = value
+                proof = {**proof, 'sceneTitle': scene_title}
             contents.update(proof['availableData'].keys())
             if proof.get('thumbnail'):
                 thumbnails.add(proof['thumbnail']['url'].split('/')[-1])
@@ -468,7 +494,6 @@ def build(root=Path('.')):
             if not source['count']:
                 sources.append(source)
             source['count'] += 1
-            item_id = identity(entry['sourceId'], row)
             if item_id in ids[item_id[-24:-22]]:
                 raise ValueError('Duplicate individual model identity')
             ids[item_id[-24:-22]][item_id] = total
@@ -480,9 +505,11 @@ def build(root=Path('.')):
             for component in proof['availableData']:
                 add_posting(facets['data'], component, total)
             if kind != 'scene' and (kind, path, archive) in scene_details:
-                item.append(scene_details[(kind, path, archive)])
+                item.append({**scene_details[(kind, path, archive)], 'listedAssets': len(set(files.values())),
+                             'linkedAssets': len(files), 'linksTruncated': False} if group else scene_details[(kind, path, archive)])
             pack.append(item)
-            selected_kind = 'colmap' if kind == 'cameras' and proof.get('sceneManifest', {}).get('counts', {}).get('points', 0) > 0 else kind
+            selected_kind = ('splat-scene' if proof.get('sceneManifest', {}).get('frameGeometry', {}).get('role') == 'splat'
+                             else 'colmap' if kind == 'cameras' and proof.get('sceneManifest', {}).get('counts', {}).get('points', 0) > 0 else kind)
             kind_name = 'Gaussian splat' if kind == 'ply' and format_name == 'Gaussian PLY' else KIND_LABELS.get(selected_kind, '3D geometry')
             counts[kind_name] += 1
             levels[level] += 1
@@ -515,7 +542,7 @@ def build(root=Path('.')):
                 pack = []
         if source['count']:
             source_entry = {**verified_source_entry(entry, source_proofs, source_formats), 'facts': [({**fact, 'label': 'Listed 3D assets and model file sets'} if fact['label'] == 'Individual model or scene entries listed' else fact)
-                                              for fact in entry['facts']] + [{'label': 'Supported named scene datasets', 'value': str(source['count'])}]}
+                                              for fact in entry['facts']] + [{'label': 'Published scene entries', 'value': str(source['count'])}]}
             source_entry['availableData'] = {}
             for proof in source_proofs:
                 for kind, evidence in proof['availableData'].items():
@@ -547,6 +574,8 @@ def build(root=Path('.')):
     for shard, mapping in ids.items():
         write(f'ids/{shard}.json', mapping)
     del ids
+    for shard, mapping in retained_variants.items():
+        write(f'variants/{shard}.json', mapping)
     token_shards = defaultdict(dict)
     for token, values in postings.items():
         shard = hashlib.sha256(token.encode()).hexdigest()[:3]
@@ -576,8 +605,9 @@ def build(root=Path('.')):
                 'photoRouting': dict(routing_counts),
                 'discovery': {'schemaVersion': 1, 'file': 'feed.json'},
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
+                'groupedVariants': grouped_variants,
                 'unit': 'named_scene',
-                'scope': 'Named scenes with checked native camera/model layouts or stronger complete-scene evidence. Original photographs may be present, partial, absent or unverified. Full rendering and export checks are separate evidence tiers. Standalone geometry, inaccessible and known unsupported cases are excluded.'}
+                'scope': 'Scene entries grouped within each source and archive, including explicit initialization/refinement variants. Copies across repositories are not globally deduplicated. Native camera/model layouts or stronger complete-scene evidence are checked; full rendering, every photograph and export require separate loading checks. Standalone geometry, inaccessible and known unsupported cases are excluded.'}
     write('feed.json', {'schemaVersion': 1, 'generation': generation, 'rows': discovery})
     write('index.json', manifest)
     write('verified-scenes.json', {'schemaVersion': 1, 'generation': generation, 'scope': manifest['scope'], 'scenes': published_reviews})

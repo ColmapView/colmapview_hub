@@ -14,6 +14,29 @@ PRIORITY = {'colmap': 0, 'cameras': 1, 'camera-metadata': 2, 'camera-scene': 2, 
 MAX_SCENE_FILE_LINKS = 32
 
 
+def named_variant_groups(rows):
+    """Group explicit initialization/refinement pairs after each has qualified.
+
+    Do not infer identity from basenames or cross archive/repository boundaries.
+    Other sparse subfolders may be genuinely different captures. Keep every
+    original row available for old links; only the browse projection is grouped.
+    """
+    groups = defaultdict(list)
+    for row in rows:
+        kind, path, _, archive = row
+        match = re.fullmatch(r'(.+)/sparse/(init|refined_aligned)', path)
+        if kind in ('colmap', 'cameras') and match:
+            groups[(archive, match[1])].append(row)
+    result = {}
+    for (_, root), variants in groups.items():
+        if len(variants) != 2 or {row[1].rsplit('/', 1)[-1] for row in variants} != {'init', 'refined_aligned'}:
+            continue
+        primary = next(row for row in variants if row[1].endswith('/refined_aligned'))
+        for row in variants:
+            result[(row[0], row[1], row[3])] = (primary, root, variants)
+    return result
+
+
 def scene_root(kind, path):
     if kind in ('colmap', 'cameras'):
         return re.sub(r'(?:^|/)(?:(?:colmap/)?sparse(?:/\d+)?|known_pose_model|triangulated_model|triangulated_text)$', '', path, flags=re.I)

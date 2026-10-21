@@ -14,6 +14,15 @@ jobs:
       - run: npm ci
       - run: cp .dev.vars.example .dev.vars
       - run: npm run check
+      - name: Check manifest compatibility with the released viewer
+        uses: actions/checkout@v6
+        with:
+          repository: ColmapView/Colmapview.github.io
+          ref: v0.20.2
+          path: .tmp/manifest-viewer
+          persist-credentials: false
+      - run: npm ci --prefix .tmp/manifest-viewer --ignore-scripts
+      - run: npm run catalog:manifests -- --viewer-root .tmp/manifest-viewer
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - name: Preserve browser failure evidence
@@ -22,5 +31,13 @@ jobs:
         with:
           name: hub-browser-results
           path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Preserve manifest validation evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: hub-manifest-validation
+          path: .tmp/manifest-audit/plan.json
           if-no-files-found: ignore
           retention-days: 7

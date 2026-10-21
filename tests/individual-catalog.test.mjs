@@ -779,6 +779,23 @@ test('stable entry lookup returns only its source metadata and invalid IDs canno
   assert.ok(keys.includes(`sources/${source.id}.json`));
 });
 
+test('grouped variants retain exact old selections without changing browse totals', async () => {
+  const { index, binding } = fixture();
+  index.groupedVariants = 1;
+  const id = 'data-' + 'f'.repeat(24);
+  const original = row(0, { 0: id, 3: 'scene0000_00/sparse/init', 7: nativePhotoProof('not_included') });
+  const assets = { fetch: async request => new URL(request.url).pathname.endsWith('/variants/ff.json')
+    ? Response.json({ [id]: original }) : binding.fetch(request) };
+  const entry = await render.readIndividual(assets, 'https://colmapview.opsiclear.com', index, id);
+  assert.equal(entry.id, id);
+  assert.equal(entry.viewerUrl, original[7].viewerUrl);
+  assert.ok(entry.sourceId.endsWith(':scene0000_00/sparse/init'));
+  const browse = await render.searchIndividuals(assets, 'https://colmapview.opsiclear.com', index, new URLSearchParams());
+  assert.equal(browse.total, index.total);
+  assert.ok(browse.entries.every(entry => entry.id !== id));
+  assert.equal(render.individualSummary(row(0, { 7: { ...original[7], sceneTitle: 'scene0000_00' } }), source).title, 'scene0000_00');
+});
+
 test('search bounds work before reading metadata and pagination remains shareable without JavaScript', () => {
   assert.throws(() => render.individualFilters(new URLSearchParams('q=one two three four five six seven')), /six search/);
   assert.throws(() => render.individualFilters(new URLSearchParams('page=-1')), /Invalid dataset page/);

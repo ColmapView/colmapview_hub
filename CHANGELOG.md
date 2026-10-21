@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.10.4 — 2026-10-20
+
+- Count 4,070 scene entries across 144 sources by grouping 1,513 ScanNetPoseRefine initialization/refinement pairs. Preserve exact original selections at every historical variant link.
+- Keep Gaussian scene filters and all source, photo, component and evidence totals consistent with the actual cards; fail builds on disagreements.
+- Validate every generated manifest against the released viewer and add resumable Chromium loading tests with parsed count comparisons, bounded transfers and explicit coverage receipts.
+
 ## 0.10.3 — 2026-10-20
 
 - Keep catalog notes and their audit links stationary when an in-flight scene page finishes loading. Resume automatic loading when the notes close.

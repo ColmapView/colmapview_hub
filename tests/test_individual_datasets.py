@@ -9,7 +9,7 @@ from scripts.audit.prepare_individual_datasets import individual_records, group_
 from scripts.catalog.build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, reviewed_scene_exclusions, tokens
 from scripts.catalog.scene_qualification import REQUIRED_CHECKS, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
 from scripts.catalog.sampled_individuals import supplement_rows
-from scripts.catalog.scene_datasets import MAX_SCENE_FILE_LINKS, scene_records
+from scripts.catalog.scene_datasets import MAX_SCENE_FILE_LINKS, scene_records, named_variant_groups
 
 
 class IndividualDatasetsTests(unittest.TestCase):
@@ -406,6 +406,23 @@ class IndividualDatasetsTests(unittest.TestCase):
     def test_loose_model_files_cannot_establish_scene_datasets(self):
         rows = [[kind, f'data/Hourglass.{kind}', None, None] for kind in ['stl', 'ply', 'spz', 'sog', 'obj', 'glb']]
         self.assertEqual(scene_records(rows), [])
+
+    def test_named_refinements_group_only_qualified_pairs_in_the_same_container(self):
+        rows = [['colmap', f'scene0000_00/sparse/{variant}', {'cameras': variant + '/cameras.bin'}, None]
+                for variant in ['init', 'refined_aligned']]
+        before = json.dumps(rows)
+        groups = named_variant_groups(rows)
+        self.assertEqual(len(groups), 2)
+        primary, title, members = groups[('colmap', rows[0][1], None)]
+        self.assertIs(primary, rows[1])
+        self.assertEqual(title, 'scene0000_00')
+        self.assertEqual(members, rows)
+        self.assertEqual(json.dumps(rows), before)
+        # Missing/failed refinements, unrelated sparse folders, or other archives
+        # cannot remove a valid standalone scene from browsing.
+        self.assertEqual(named_variant_groups(rows[:1]), {})
+        self.assertEqual(named_variant_groups([rows[0], [*rows[1][:3], 'other.zip']]), {})
+        self.assertEqual(named_variant_groups([rows[0], ['colmap', 'scene0000_00/sparse/other_capture', None, None]]), {})
 
     def test_seed_and_triangulated_copies_are_one_scene_with_geometry_as_primary(self):
         rows = [['colmap', 'colmap/scene/' + variant,
