@@ -31,7 +31,8 @@ Existing scene identities, model counts, launch URLs, thumbnails and immutable
 manifest bodies are preserved. New entries do not require thumbnails: their
 original photo hash, decoded dimensions and browser receipt bind the routing
 review independently. The public catalog now contains **4,418 scene entries from
-144 source records**, including 420 AstroVision cards. Copies across source repositories remain separate.
+144 source records**, including 420 AstroVision cards. Copies across source
+repositories remain separate.
 
 The Itokawa segment declares one camera model, 560 registered poses and 396,245
 points. Its selected native files total 2,895,221,423 bytes before photographs.
@@ -45,24 +46,37 @@ track statistics replace redundant pairwise Map updates when a bounded bitset
 calculation is cheaper. The source files, calibrations, poses, point counts and
 observation IDs are preserved. In a temporary regular Chromium profile, Itokawa
 loaded its original 1 camera model, 560 poses and 396,245 points in 98.7 seconds.
+The deployed 0.20.4 production viewer also loaded that exact immutable selection
+through its public Hub redirect in 248 seconds, without browser exceptions.
 The preceding attempt parsed the model but timed out computing statistics at 600
 seconds. Private-context Blob storage failures retain a separate resource scope;
 these results do not certify every photograph, alignment or complete large export.
 
-The first complete source sweep attempted all 423 original manifests with viewer
-0.20.2: **352 full model imports passed and 71 exceeded the 256 MiB limit**, with
-no model/count failures in the bounded sweep. All 423 deployed manifest bodies,
-CORS headers, ETags and direct-open routes passed separate serving checks. The
-larger Itokawa run raises verified model coverage to 353, leaving 70 models outside
-that successful full-import coverage. Three of these —
+Both complete bounded sweeps attempted all 423 original manifests, first with
+viewer 0.20.2 and again with the fixed 0.20.3 runtime: **352 full model imports
+passed and 71 exceeded the 256 MiB transfer limit** in each sweep. The release
+0.20.4 changes only version/changelog metadata and Node 22 test interoperability
+from that rerun; its parser, download, worker and statistics code is unchanged.
+
+Higher-budget retries completed the remaining coverage. The Itokawa run plus all
+67 other previously byte-limited published selections passed in temporary regular
+Chromium profiles. Across all 423 reconstructions, **420 full imports passed and
+three aborted in the native decoder**. Every published AstroVision scene now has
+a successful full-import receipt with matching original source and camera, pose
+and point counts. A byte-budget stop is never counted as a successful import.
+
 `segments/cas_dione/opus`, `segments/cas_rhea/opus` and
-`segments/cas_tethys/opus` — completed their original 4.98–7.36 GB downloads
-but aborted in the native decoder in temporary regular profiles (viewer 0.20.3,
-8 GiB transfer budget, 600 s deadline). Their exact failure cause remains
+`segments/cas_tethys/opus` completed their original 4.98–7.36 GB downloads but
+aborted before committing a reconstruction (viewer 0.20.3, temporary regular
+profiles, 8 GiB transfer budget, 600 s deadline). Their exact failure cause remains
 unclassified. Their cards are withheld; immutable manifests and all audit evidence
-remain available. The remaining 67 models retain byte-budget exclusions rather
-than inferred successful loads. The receipt preserves individual attempts and viewer
-revisions instead of counting a resource exclusion as a pass.
+remain available. These failures are separate from photo routing or HTTP access.
+
+All 423 retained production manifest bodies passed hash, CORS and ETag checks.
+All 420 published direct-open routes returned the exact viewer selection, the
+catalog reported 4,418 entries and 144 sources, and the catalog landing redirect
+and stylesheet passed separate serving checks. Individual attempt generations,
+viewer revisions, byte budgets and browser contexts remain in the receipt.
 
 The durable public evidence is
 [`data/astrovision-audit-2026-10-21.json.gz`](../data/astrovision-audit-2026-10-21.json.gz).

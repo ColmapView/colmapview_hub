@@ -6,7 +6,7 @@
 
 - Withhold AstroVision Dione, Rhea and Tethys scene cards after complete downloads aborted in the native decoder. Preserve their original immutable manifests, complete discovery and explicit failure evidence.
 - Publish 420 AstroVision scenes and 4,418 catalog entries across 144 sources. Record full-source loading coverage separately from header and sampled-media checks.
-- Pin manifest validation to viewer 0.20.4, including the verified Itokawa large-file import fix.
+- Pin manifest validation to viewer 0.20.4, including the verified Itokawa large-file import fix. Complete full-model loading coverage for all 423 source reconstructions: 420 pass and three confirmed decoder failures remain withheld. Verify the production Itokawa import and every retained manifest asset/published direct launch.
 
 ## 0.10.5 — 2026-10-21
 
