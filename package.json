@@ -24,6 +24,7 @@
     "test:catalog": "node --test tests/catalog.test.mjs tests/individual-catalog.test.mjs tests/native-text-counts.test.mjs tests/photo-routing-records.test.mjs tests/manifest-plan.test.mjs",
     "test:python": "node scripts/run-python.mjs -m unittest discover -s tests -p \"test_*.py\"",
     "test:browser": "playwright test --workers=1",
+    "test:manifest-runner": "node --test tests/manifest-runner.test.mjs",
     "check": "npm run check:code && npm run test:catalog && npm run test:python && npm test && npm run build",
     "deploy": "npm run build:assets && wrangler deploy"
   },

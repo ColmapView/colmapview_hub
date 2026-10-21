@@ -71,5 +71,8 @@ test('manifest plans include retained assets and variant references and detect m
     proof.viewerUrl = proof.viewerUrl.replace(filename, 'd'.repeat(64) + '.manifest.json');
     await save('packs/0.json', [row]);
     assert.equal((await manifestPlan(root, schemas)).missing.length, 1);
-  } finally { await rm(root, { recursive: true, force: true }); }
+  } finally {
+    assert.ok(resolve(root).startsWith(resolve(tmpdir(), 'colmapview-manifest-plan-')));
+    await rm(root, { recursive: true, force: true });
+  }
 });

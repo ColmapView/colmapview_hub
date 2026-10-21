@@ -4,6 +4,7 @@ import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { execFileSync, spawn } from 'node:child_process';
 import { parseArgs } from 'node:util';
+import { createServer } from 'node:net';
 import { manifestPlan, viewerManifestSchemas, compareManifestCounts, manifestHash, manifestLoadSummary, providerRetryDelay } from './manifest-plan.mjs';
 
 const { values } = parseArgs({ options: {
@@ -30,7 +31,8 @@ if (options.jobs > 8 || options.port > 65535 || options.timeout < 1000 || option
 const shard = values.shard ? /^(\d{1,2})\/(\d{1,2})$/.exec(values.shard) : null;
 if (values.shard && (!shard || Number(shard[1]) < 1 || Number(shard[1]) > Number(shard[2]))) throw new Error('Use a shard such as 1/4');
 const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: viewer, encoding: 'utf8' }).trim();
-if (execFileSync('git', ['status', '--porcelain', '--', 'src'], { cwd: viewer, encoding: 'utf8' }).trim()) throw new Error('Commit viewer source changes before recording a reproducible audit');
+if (execFileSync('git', ['status', '--porcelain', '--', 'src', 'public/wasm', 'public/workers', 'package.json', 'package-lock.json', 'vite.config.ts'],
+  { cwd: viewer, encoding: 'utf8' }).trim()) throw new Error('Commit viewer source, runtime assets and dependency changes before recording a reproducible audit');
 await mkdir(scratch, { recursive: true });
 const plan = await manifestPlan(process.cwd(), await viewerManifestSchemas(viewer));
 await writeFile(resolve(scratch, 'plan.json'), JSON.stringify({ ...plan, viewerCommit: commit }, null, 2) + '\n');
@@ -66,9 +68,16 @@ if (invalid.length || plan.missing.length) {
         || compareManifestCounts(previous.actual, item.entries).length || item.requiresSplat && !previous.splatDecoded;
     });
   }
-  const origin = `http://localhost:${options.port}`;
+  const origin = `http://127.0.0.1:${options.port}`;
+  // Verify ownership before spawning, including when Vite suppresses its banner
+  // in CI. An existing developer server must never satisfy our readiness probe.
+  await new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.once('error', reject);
+    probe.listen(options.port, '127.0.0.1', () => probe.close(error => error ? reject(error) : resolve()));
+  });
   // Spawn only this audit's server; never attach to or stop a developer's server.
-  const server = spawn(process.execPath, [resolve(viewer, 'node_modules/vite/bin/vite.js'), '--host', 'localhost', '--port', String(options.port), '--strictPort'],
+  const server = spawn(process.execPath, [resolve(viewer, 'node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', String(options.port), '--strictPort'],
     { cwd: viewer, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
   let serverLog = '';
   server.stdout.on('data', chunk => { serverLog = (serverLog + chunk).slice(-4000); });
@@ -95,7 +104,7 @@ if (invalid.length || plan.missing.length) {
     let ready = false;
     const deadline = Date.now() + 60000;
     while (Date.now() < deadline && server.exitCode === null) {
-      ready = serverLog.includes('Local:') && await fetch(origin, { signal: AbortSignal.timeout(1000) }).then(response => response.ok).catch(() => false);
+      ready = await fetch(origin, { signal: AbortSignal.timeout(1000) }).then(response => response.ok).catch(() => false);
       if (ready) break;
       await new Promise(resolve => setTimeout(resolve, 250));
     }

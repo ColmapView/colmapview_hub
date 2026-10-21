@@ -24,6 +24,9 @@ jobs:
       - run: npm ci --prefix .tmp/manifest-viewer --ignore-scripts
       - run: npm run catalog:manifests -- --viewer-root .tmp/manifest-viewer
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:manifest-runner
+        env:
+          COLMAPVIEW_AUDIT_VIEWER_ROOT: .tmp/manifest-viewer
       - run: npm run test:browser
       - name: Preserve browser failure evidence
         if: always()
