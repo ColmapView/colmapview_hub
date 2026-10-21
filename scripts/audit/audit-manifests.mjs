@@ -47,8 +47,9 @@ if (invalid.length || plan.missing.length) {
   const matching = plan.manifests.filter(item => (!values.source || item.entries.some(entry => entry.source === values.source))
     && (!requested || requested.includes(item.file)));
   if (!matching.length) throw new Error('No manifests matched');
-  let selection = matching.filter((_, i) => !shard || i % Number(shard[2]) === Number(shard[1]) - 1)
+  const targets = matching.filter((_, i) => !shard || i % Number(shard[2]) === Number(shard[1]) - 1)
     .slice(options.offset, options.offset + options.limit);
+  let selection = targets;
   if (!selection.length && !shard) throw new Error('No manifests in the requested range');
   const receipt = resolve(scratch, 'loads.jsonl');
   const prior = new Map();
@@ -145,14 +146,19 @@ if (invalid.length || plan.missing.length) {
     server.kill();
     await writeFile(resolve(scratch, 'server.log'), serverLog);
   }
+  const rows = [...prior.values(), ...results];
+  const selected = manifestLoadSummary({ ...plan, manifests: targets }, rows, commit);
   const summary = { checkedAt: new Date().toISOString(), generation: plan.generation, viewerCommit: commit,
-    ...manifestLoadSummary(plan, [...prior.values(), ...results], commit), ...(values.shard ? { shard: values.shard } : {}), attemptsThisRun: results.length,
+    ...manifestLoadSummary(plan, rows, commit), selected, ...(values.shard ? { shard: values.shard } : {}), attemptsThisRun: results.length,
     manifestsAttemptedThisRun: new Set(results.map(row => row.manifest)).size,
     ...(providerBlocked ? { stopped: 'Provider throttled the same manifest three times despite cooldowns; resume later.' } : {}),
     scope: 'Original immutable manifests fetched in Chromium; real viewer imports and parsed camera/pose/point counts, Gaussian frame counts, canvas, and required splat decoder validation. Optional photographs/masks and exports are not exhaustively tested. Budget/timeout/provider failures never count as passes.' };
   await writeFile(resolve(scratch, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
   console.log(JSON.stringify(summary));
-  if (results.some(row => row.status !== 'passed')) process.exitCode = 1;
+  // A recovered retry must not fail an otherwise complete audit. Conversely,
+  // retained budget exclusions or provider-stopped, unattempted targets must
+  // never turn a resumed run green merely because it made no new attempts.
+  if (selected.statuses.passed !== selected.total) process.exitCode = 1;
 }
 
 async function loadManifest(context, origin, item, options, onRateLimit) {

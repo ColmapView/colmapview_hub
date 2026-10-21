@@ -50,7 +50,9 @@ HTTP 429 responses pause the shared loading queue according to `Retry-After` or 
 
 Use `--manifest HASH.manifest.json`, `--source hf:owner/repo`, `--offset N` or `--limit N` for focused runs, or `--shard 1/4` for disjoint batches. Defaults are two browsers, 256 MiB of external response bytes per manifest and a 120-second load timeout; `--jobs`, `--max-mib`, `--timeout-ms` and `--scratch` are explicit overrides. HEAD metadata for a lazy archive does not spend its entire container size as response bytes. Large-data exclusions, provider errors and timeouts are never passes. Do not remove or upgrade publication evidence merely because a bounded operator run could not complete. Normal asset builds remain offline. CI checks every manifest against the pinned released viewer; the separate manual manifest-audit workflow performs live loads in four disjoint shards and retains receipts. Update the viewer tag in both workflows when adopting a newer loader contract.
 
-CI also runs `npm run test:manifest-runner` with `COLMAPVIEW_AUDIT_VIEWER_ROOT` set to that checkout. These integration checks start a quiet CI server with an empty shard, verify that it releases its port, and reject an occupied developer port before making requests. They require Chromium but download no source datasets.
+The receipt includes both whole-plan coverage and `selected` coverage for the requested range or shard. The command exits successfully only when every selected manifest has a current passing receipt. Recovered retries can pass; retained byte-budget exclusions and provider-stopped, unattempted targets keep the run incomplete.
+
+CI also runs `npm run test:manifest-runner` with `COLMAPVIEW_AUDIT_VIEWER_ROOT` set to that checkout. These integration checks start a quiet CI server with an empty shard, verify that it releases its port, keep a resumed budget exclusion incomplete, and reject an occupied developer port before making requests. They require Chromium but download no source datasets.
 
 The manual workflow accepts optional source and manifest-filename inputs, so a reported link can be reproduced independently of the full sweep.
 
