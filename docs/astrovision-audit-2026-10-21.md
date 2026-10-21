@@ -39,6 +39,24 @@ Across the source, native models total 72,500,640,345 bytes; the largest individ
 pose file is 5,490,849,273 bytes. Header and media-routing checks do not establish
 that these largest models fit every browser's memory limits.
 
+Viewer **0.20.3** fixes the Itokawa import's single-buffer limit with a bounded
+pose index and original observation reads in the browser worker. Exact dense
+track statistics replace redundant pairwise Map updates when a bounded bitset
+calculation is cheaper. The source files, calibrations, poses, point counts and
+observation IDs are preserved. In a temporary regular Chromium profile, Itokawa
+loaded its original 1 camera model, 560 poses and 396,245 points in 98.7 seconds.
+The preceding attempt parsed the model but timed out computing statistics at 600
+seconds. Private-context Blob storage failures retain a separate resource scope;
+these results do not certify every photograph, alignment or complete large export.
+
+The first complete source sweep attempted all 423 original manifests with viewer
+0.20.2: **352 full model imports passed and 71 exceeded the 256 MiB limit**, with
+no model/count failures in the bounded sweep. All 423 deployed manifest bodies,
+CORS headers, ETags and direct-open routes passed separate serving checks. The
+larger Itokawa run raises verified model coverage to 353, leaving 70 models outside
+that full-import coverage. The receipt preserves individual attempts and viewer
+revisions instead of counting a resource exclusion as a pass.
+
 The durable public evidence is
 [`data/astrovision-audit-2026-10-21.json.gz`](../data/astrovision-audit-2026-10-21.json.gz).
 It retains source-directory receipts, exact file selections, native response

@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: ColmapView/Colmapview.github.io
-          ref: v0.20.2
+          ref: v0.20.3
           path: .tmp/manifest-viewer
           persist-credentials: false
       - run: npm ci --prefix .tmp/manifest-viewer --ignore-scripts

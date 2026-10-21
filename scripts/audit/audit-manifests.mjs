@@ -1,7 +1,7 @@
 /** Validate every manifest locally; optionally load every one through the real viewer. */
 import { chromium } from '@playwright/test';
-import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { appendFile, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { basename, dirname, resolve } from 'node:path';
 import { execFileSync, spawn } from 'node:child_process';
 import { parseArgs } from 'node:util';
 import { createServer } from 'node:net';
@@ -12,6 +12,7 @@ const { values } = parseArgs({ options: {
   scratch: { type: 'string', default: '.tmp/manifest-audit' },
   load: { type: 'boolean' }, resume: { type: 'boolean' },
   'retry-budget': { type: 'boolean' },
+  'disk-profile': { type: 'boolean' },
   limit: { type: 'string' }, offset: { type: 'string', default: '0' },
   source: { type: 'string' }, manifest: { type: 'string', multiple: true },
   shard: { type: 'string' },
@@ -20,7 +21,7 @@ const { values } = parseArgs({ options: {
   help: { type: 'boolean' },
 } });
 if (values.help) {
-  console.log('Usage: npm run catalog:manifests -- --viewer-root PATH [--load] [--resume] [--retry-budget] [--source hf:owner/repo] [--manifest HASH.manifest.json] [--shard 1/4] [--limit N] [--offset N] [--jobs 2] [--max-mib 256] [--timeout-ms 120000] [--scratch PATH]');
+  console.log('Usage: npm run catalog:manifests -- --viewer-root PATH [--load] [--resume] [--retry-budget] [--source hf:owner/repo] [--manifest HASH.manifest.json] [--shard 1/4] [--limit N] [--offset N] [--jobs 2] [--disk-profile --jobs 1] [--max-mib 256] [--timeout-ms 120000] [--scratch PATH]');
   process.exit(0);
 }
 const viewer = resolve(values['viewer-root']), scratch = resolve(values.scratch);
@@ -28,6 +29,7 @@ const options = { jobs: Number(values.jobs), offset: Number(values.offset), limi
   maxBytes: Number(values['max-mib']) * 1024 * 1024, timeout: Number(values['timeout-ms']), port: Number(values.port) };
 for (const key of ['jobs', 'offset', 'maxBytes', 'timeout', 'port']) if (!Number.isSafeInteger(options[key]) || options[key] < (key === 'offset' ? 0 : 1)) throw new Error(`Invalid ${key}`);
 if (options.jobs > 8 || options.port > 65535 || options.timeout < 1000 || options.limit !== Infinity && (!Number.isSafeInteger(options.limit) || options.limit < 1)) throw new Error('Invalid audit limits');
+if (values['disk-profile'] && options.jobs !== 1) throw new Error('--disk-profile requires --jobs 1 and creates an isolated temporary regular browser profile');
 const shard = values.shard ? /^(\d{1,2})\/(\d{1,2})$/.exec(values.shard) : null;
 if (values.shard && (!shard || Number(shard[1]) < 1 || Number(shard[1]) > Number(shard[2]))) throw new Error('Use a shard such as 1/4');
 const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: viewer, encoding: 'utf8' }).trim();
@@ -84,6 +86,7 @@ if (invalid.length || plan.missing.length) {
   server.stdout.on('data', chunk => { serverLog = (serverLog + chunk).slice(-4000); });
   server.stderr.on('data', chunk => { serverLog = (serverLog + chunk).slice(-4000); });
   let browser;
+  let persistentContext, profile;
   const results = [];
   let cooldownUntil = 0, providerBlocked = false;
   const cooldownFile = resolve(scratch, 'cooldowns.jsonl');
@@ -110,15 +113,20 @@ if (invalid.length || plan.missing.length) {
       await new Promise(resolve => setTimeout(resolve, 250));
     }
     if (!ready || server.exitCode !== null) throw new Error('Audit viewer server did not start: ' + serverLog);
-    browser = await chromium.launch({ args: ['--enable-webgl', '--use-gl=angle', '--ignore-gpu-blocklist',
+    const launchOptions = { args: ['--enable-webgl', '--use-gl=angle', '--ignore-gpu-blocklist',
       // Match the viewer's Linux software-WebGPU test configuration so archive
       // Gaussian counts are observable even on CI runners without a hardware GPU.
-      ...(process.platform === 'linux' ? ['--enable-unsafe-webgpu', '--enable-webgpu-developer-features', '--enable-features=Vulkan', '--use-vulkan=swiftshader'] : [])] });
+      ...(process.platform === 'linux' ? ['--enable-unsafe-webgpu', '--enable-webgpu-developer-features', '--enable-features=Vulkan', '--use-vulkan=swiftshader'] : [])] };
+    if (values['disk-profile']) {
+      profile = await mkdtemp(resolve(scratch, 'browser-profile-'));
+      persistentContext = await chromium.launchPersistentContext(profile, { ...launchOptions, viewport: { width: 1000, height: 720 } });
+      browser = persistentContext.browser();
+    } else browser = await chromium.launch(launchOptions);
     let position = 0;
     await Promise.all(Array.from({ length: Math.min(options.jobs, selection.length) }, async () => {
       // Keep HTTP/compiled-resource caches warm without retaining an app page,
       // credentials, persisted preferences or a previous reconstruction.
-      const context = await browser.newContext({ viewport: { width: 1000, height: 720 } });
+      const context = persistentContext ?? await browser.newContext({ viewport: { width: 1000, height: 720 } });
       await context.addInitScript(() => { globalThis.localStorage.clear(); globalThis.sessionStorage.clear(); });
       try {
         while (position < selection.length && !providerBlocked) {
@@ -130,7 +138,7 @@ if (invalid.length || plan.missing.length) {
             if (providerBlocked) break;
             await context.clearCookies();
             const result = await loadManifest(context, origin, item, options, rateLimited);
-            const row = { ...result, sha256: item.sha256, manifest: item.file, viewerCommit: commit, generation: plan.generation, checkedAt: new Date().toISOString() };
+            const row = { ...result, browserContext: persistentContext ? 'temporary_regular_profile' : 'incognito', sha256: item.sha256, manifest: item.file, viewerCommit: commit, generation: plan.generation, checkedAt: new Date().toISOString() };
             await appendFile(receipt, JSON.stringify(row) + '\n');
             if (row.retryAfterMs) await appendFile(cooldownFile, JSON.stringify({ until: cooldownUntil }) + '\n');
             results.push(row);
@@ -139,11 +147,12 @@ if (invalid.length || plan.missing.length) {
             if (attempt === 2) providerBlocked = true;
           }
         }
-      } finally { await context.close(); }
+      } finally { if (context !== persistentContext) await context.close(); }
     }));
   } finally {
-    await browser?.close();
+    if (persistentContext) await persistentContext.close(); else await browser?.close();
     server.kill();
+    await cleanupProfile(profile, scratch);
     await writeFile(resolve(scratch, 'server.log'), serverLog);
   }
   const rows = [...prior.values(), ...results];
@@ -161,6 +170,18 @@ if (invalid.length || plan.missing.length) {
   if (selected.statuses.passed !== selected.total) process.exitCode = 1;
 }
 
+async function cleanupProfile(profile, scratch) {
+  if (!profile) return;
+  try {
+    const actual = await realpath(profile), root = await realpath(scratch);
+    if (dirname(actual) !== root || !basename(actual).startsWith('browser-profile-')) throw new Error('Refusing cleanup outside this audit scratch directory');
+    await rm(actual, { recursive: true, force: true, maxRetries: 3 });
+  } catch (error) {
+    console.error('Temporary audit profile cleanup failed: ' + error.message);
+    process.exitCode = 1;
+  }
+}
+
 async function loadManifest(context, origin, item, options, onRateLimit) {
   const started = Date.now();
   const page = await context.newPage();
@@ -169,9 +190,14 @@ async function loadManifest(context, origin, item, options, onRateLimit) {
   const external = new Set();
   const methods = new Map();
   let bytes = 0, budget = false, budgetReason, expired = false, retryAfterMs = 0, manifestBody, decoder = false, decodedSplats, decoderError;
-  const pageErrors = [], httpErrors = [];
+  const pageErrors = [], httpErrors = [], diagnostics = [];
+  let lastProgress;
   page.on('pageerror', error => pageErrors.push(error.message.slice(0, 500)));
   page.on('console', message => {
+    if (/\[(?:WASM|Reconstruction|URL Loader|Parser)\]/.test(message.text())) {
+      diagnostics.push(message.text().replace(/https?:\/\/[^\s"<>]+/g, url => { try { const parsed = new URL(url); return parsed.origin + parsed.pathname; } catch { return '[URL]'; } }).slice(0, 1000));
+      if (diagnostics.length > 20) diagnostics.shift();
+    }
     if (/\[Splats\] Validated|\[WebGPU Splats\] Loaded/.test(message.text())) {
       decoder = true;
       const count = /\b([0-9][0-9,]*) (?:gaussians|splats)\b/.exec(message.text());
@@ -212,9 +238,11 @@ async function loadManifest(context, origin, item, options, onRateLimit) {
         const { useReconstructionStore } = await import(module);
         const state = useReconstructionStore.getState(), rec = state.reconstruction;
         return { loading: state.loading || state.urlLoading || state.urlLoadActive, error: state.error || state.urlError,
+          progress: state.urlProgress?.message,
           counts: rec ? { cameras: rec.cameras.size, images: rec.images.size, points: rec.globalStats.totalPoints } : null,
           splat: Boolean(state.loadedFiles?.splatFile), sourceUrl: state.sourceUrl };
       });
+      if (state.progress) lastProgress = state.progress;
       if (!state.loading && (state.counts || state.error)) break;
       await page.waitForTimeout(250);
     } while (Date.now() < deadline);
@@ -259,6 +287,7 @@ async function loadManifest(context, origin, item, options, onRateLimit) {
     }
     result.elapsedMs = Date.now() - started;
     result.httpErrors = httpErrors;
+    if (result.status !== 'passed') { result.lastProgress = lastProgress; result.diagnostics = diagnostics; }
     await page.close();
   }
   return result;

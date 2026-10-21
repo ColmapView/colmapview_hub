@@ -56,6 +56,8 @@ Use `--manifest HASH.manifest.json`, `--source hf:owner/repo`, `--offset N` or `
 
 The receipt includes both whole-plan coverage and `selected` coverage for the requested range or shard. The command exits successfully only when every selected manifest has a current passing receipt. Recovered retries can pass; retained byte-budget exclusions and provider-stopped, unattempted targets keep the run incomplete.
 
+Use `--disk-profile --jobs 1` for a large-data check in a temporary regular Chromium profile. Private contexts can exhaust their Blob memory quota even when a regular browser can spill the same public data to disk. The command creates its own empty profile below the audit scratch directory, records the context type, closes it and removes only that verified temporary path. It never opens a user's Chrome profile. Default sweeps retain isolated private contexts and bounded transfers. Failed attempts also retain their last progress stage and bounded, URL-query-redacted import diagnostics.
+
 CI also runs `npm run test:manifest-runner` with `COLMAPVIEW_AUDIT_VIEWER_ROOT` set to that checkout. These integration checks start a quiet CI server with an empty shard, verify that it releases its port, keep a resumed budget exclusion incomplete, and reject an occupied developer port before making requests. They require Chromium but download no source datasets.
 
 The manual workflow accepts optional source and manifest-filename inputs, so a reported link can be reproduced independently of the full sweep.
