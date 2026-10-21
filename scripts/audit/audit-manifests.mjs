@@ -4,12 +4,13 @@ import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { execFileSync, spawn } from 'node:child_process';
 import { parseArgs } from 'node:util';
-import { manifestPlan, viewerManifestSchemas, compareManifestCounts, manifestHash, manifestLoadSummary } from './manifest-plan.mjs';
+import { manifestPlan, viewerManifestSchemas, compareManifestCounts, manifestHash, manifestLoadSummary, providerRetryDelay } from './manifest-plan.mjs';
 
 const { values } = parseArgs({ options: {
   'viewer-root': { type: 'string', default: '../colmap-webview' },
   scratch: { type: 'string', default: '.tmp/manifest-audit' },
   load: { type: 'boolean' }, resume: { type: 'boolean' },
+  'retry-budget': { type: 'boolean' },
   limit: { type: 'string' }, offset: { type: 'string', default: '0' },
   source: { type: 'string' }, manifest: { type: 'string', multiple: true },
   shard: { type: 'string' },
@@ -18,7 +19,7 @@ const { values } = parseArgs({ options: {
   help: { type: 'boolean' },
 } });
 if (values.help) {
-  console.log('Usage: npm run catalog:manifests -- --viewer-root PATH [--load] [--resume] [--source hf:owner/repo] [--manifest HASH.manifest.json] [--shard 1/4] [--limit N] [--offset N] [--jobs 2] [--max-mib 256] [--timeout-ms 120000] [--scratch PATH]');
+  console.log('Usage: npm run catalog:manifests -- --viewer-root PATH [--load] [--resume] [--retry-budget] [--source hf:owner/repo] [--manifest HASH.manifest.json] [--shard 1/4] [--limit N] [--offset N] [--jobs 2] [--max-mib 256] [--timeout-ms 120000] [--scratch PATH]');
   process.exit(0);
 }
 const viewer = resolve(values['viewer-root']), scratch = resolve(values.scratch);
@@ -58,6 +59,9 @@ if (invalid.length || plan.missing.length) {
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
     selection = selection.filter(item => {
       const previous = prior.get(item.file);
+      if (previous?.status === 'budget_exceeded' && previous.sha256 === item.sha256 && previous.maxBytes >= options.maxBytes
+        && (previous.budgetReason || /^(?:Response declares \d+ bytes|Received more than \d+ external response bytes)/.test(previous.message || ''))
+        && !values['retry-budget']) return false;
       return !previous || previous.status !== 'passed' || previous.sha256 !== item.sha256 || previous.sourceUrl !== item.url || !previous.actual
         || compareManifestCounts(previous.actual, item.entries).length || item.requiresSplat && !previous.splatDecoded;
     });
@@ -71,6 +75,22 @@ if (invalid.length || plan.missing.length) {
   server.stderr.on('data', chunk => { serverLog = (serverLog + chunk).slice(-4000); });
   let browser;
   const results = [];
+  let cooldownUntil = 0, providerBlocked = false;
+  const cooldownFile = resolve(scratch, 'cooldowns.jsonl');
+  try {
+    for (const line of (await readFile(cooldownFile, 'utf8')).trim().split('\n').filter(Boolean)) {
+      const until = JSON.parse(line).until;
+      if (Number.isSafeInteger(until)) cooldownUntil = Math.max(cooldownUntil, until);
+    }
+  } catch (error) { if (error.code !== 'ENOENT') { server.kill(); throw error; } }
+  const waitForProvider = async () => {
+    while (Date.now() < cooldownUntil && !providerBlocked) await new Promise(resolve => setTimeout(resolve, Math.min(1000, cooldownUntil - Date.now())));
+  };
+  const rateLimited = delay => {
+    const until = Date.now() + delay;
+    if (until > cooldownUntil + 1000) console.warn(`Provider rate limit: pausing new loads for ${Math.ceil(delay / 1000)} seconds.`);
+    cooldownUntil = Math.max(cooldownUntil, until);
+  };
   try {
     let ready = false;
     const deadline = Date.now() + 60000;
@@ -91,14 +111,23 @@ if (invalid.length || plan.missing.length) {
       const context = await browser.newContext({ viewport: { width: 1000, height: 720 } });
       await context.addInitScript(() => { globalThis.localStorage.clear(); globalThis.sessionStorage.clear(); });
       try {
-        while (position < selection.length) {
+        while (position < selection.length && !providerBlocked) {
+          await waitForProvider();
+          if (position >= selection.length || providerBlocked) break;
           const item = selection[position++];
-          await context.clearCookies();
-          const result = await loadManifest(context, origin, item, options);
-          const row = { ...result, sha256: item.sha256, manifest: item.file, viewerCommit: commit, generation: plan.generation, checkedAt: new Date().toISOString() };
-          await appendFile(receipt, JSON.stringify(row) + '\n');
-          results.push(row);
-          console.log(`${results.length}/${selection.length} ${row.status}: ${item.file}${row.message ? ' ' + row.message.slice(0, 150) : ''}`);
+          for (let attempt = 0; attempt < 3; attempt++) {
+            await waitForProvider();
+            if (providerBlocked) break;
+            await context.clearCookies();
+            const result = await loadManifest(context, origin, item, options, rateLimited);
+            const row = { ...result, sha256: item.sha256, manifest: item.file, viewerCommit: commit, generation: plan.generation, checkedAt: new Date().toISOString() };
+            await appendFile(receipt, JSON.stringify(row) + '\n');
+            if (row.retryAfterMs) await appendFile(cooldownFile, JSON.stringify({ until: cooldownUntil }) + '\n');
+            results.push(row);
+            console.log(`Attempt ${results.length} (${position}/${selection.length} selected): ${row.status}: ${item.file}${row.message ? ' ' + row.message.slice(0, 150) : ''}`);
+            if (row.reason !== 'rate_limited') break;
+            if (attempt === 2) providerBlocked = true;
+          }
         }
       } finally { await context.close(); }
     }));
@@ -108,21 +137,23 @@ if (invalid.length || plan.missing.length) {
     await writeFile(resolve(scratch, 'server.log'), serverLog);
   }
   const summary = { checkedAt: new Date().toISOString(), generation: plan.generation, viewerCommit: commit,
-    ...manifestLoadSummary(plan, [...prior.values(), ...results], commit), ...(values.shard ? { shard: values.shard } : {}), attemptedThisRun: results.length,
+    ...manifestLoadSummary(plan, [...prior.values(), ...results], commit), ...(values.shard ? { shard: values.shard } : {}), attemptsThisRun: results.length,
+    manifestsAttemptedThisRun: new Set(results.map(row => row.manifest)).size,
+    ...(providerBlocked ? { stopped: 'Provider throttled the same manifest three times despite cooldowns; resume later.' } : {}),
     scope: 'Original immutable manifests fetched in Chromium; real viewer imports and parsed camera/pose/point counts, Gaussian frame counts, canvas, and required splat decoder validation. Optional photographs/masks and exports are not exhaustively tested. Budget/timeout/provider failures never count as passes.' };
   await writeFile(resolve(scratch, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
   console.log(JSON.stringify(summary));
   if (results.some(row => row.status !== 'passed')) process.exitCode = 1;
 }
 
-async function loadManifest(context, origin, item, options) {
+async function loadManifest(context, origin, item, options, onRateLimit) {
   const started = Date.now();
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send('Network.enable');
   const external = new Set();
   const methods = new Map();
-  let bytes = 0, budget = false, budgetReason, expired = false, manifestBody, decoder = false, decodedSplats, decoderError;
+  let bytes = 0, budget = false, budgetReason, expired = false, retryAfterMs = 0, manifestBody, decoder = false, decodedSplats, decoderError;
   const pageErrors = [], httpErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message.slice(0, 500)));
   page.on('console', message => {
@@ -144,6 +175,10 @@ async function loadManifest(context, origin, item, options) {
     if (new URL(response.url).origin === origin || !/^https?:/.test(response.url)) return;
     external.add(requestId);
     if (response.status >= 400) httpErrors.push({ status: response.status, url: response.url.split('?')[0] });
+    if (response.status === 429) {
+      retryAfterMs = Math.max(retryAfterMs, providerRetryDelay(response.headers));
+      onRateLimit(retryAfterMs);
+    }
     const size = Number(response.headers['content-length'] ?? response.headers['Content-Length']);
     // A multi-GB lazy archive may need only a tiny range. HEAD declares the
     // container size, not bytes transferred, and must not spend that budget.
@@ -199,6 +234,14 @@ async function loadManifest(context, origin, item, options) {
   } finally {
     clearTimeout(timer);
     result.bytes = bytes;
+    if (budgetReason) result.budgetReason = budgetReason;
+    if (retryAfterMs) {
+      result.retryAfterMs = retryAfterMs;
+      if (result.status !== 'passed' && result.status !== 'budget_exceeded') {
+        result.status = 'inconclusive';
+        result.reason = 'rate_limited';
+      }
+    }
     result.elapsedMs = Date.now() - started;
     result.httpErrors = httpErrors;
     await page.close();

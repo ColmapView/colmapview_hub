@@ -7,6 +7,17 @@ import { build } from 'esbuild';
 export const manifestHash = bytes => createHash('sha256').update(bytes).digest('hex');
 const json = async path => JSON.parse(await readFile(path, 'utf8'));
 
+/** HF documents seconds-to-reset in RateLimit; also honor standard Retry-After.
+ * https://huggingface.co/docs/hub/rate-limits#http-headers */
+export function providerRetryDelay(headers, now = Date.now()) {
+  const values = Object.fromEntries(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), String(value).trim()]));
+  const reset = /(?:^|;)\s*t=(\d+)/.exec(values.ratelimit || '');
+  const after = values['retry-after'];
+  const explicit = after === undefined ? NaN : /^\d+(?:\.\d+)?$/.test(after) ? Number(after) * 1000 : Date.parse(after) - now;
+  const delays = [reset ? Number(reset[1]) * 1000 : NaN, explicit].filter(Number.isFinite);
+  return Math.max(1000, delays.length ? Math.max(...delays) : 300000);
+}
+
 export async function viewerManifestSchemas(viewerRoot) {
   const result = await build({ stdin: { contents: [
     `export { ColmapManifestSchema } from ${JSON.stringify(resolve(viewerRoot, 'src/types/manifest.ts'))};`,

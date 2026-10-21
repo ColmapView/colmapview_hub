@@ -3,7 +3,15 @@ import { test } from 'node:test';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
-import { manifestLaunchUrl, manifestPlan, compareManifestCounts, manifestHash, manifestLoadSummary } from '../scripts/audit/manifest-plan.mjs';
+import { manifestLaunchUrl, manifestPlan, compareManifestCounts, manifestHash, manifestLoadSummary, providerRetryDelay } from '../scripts/audit/manifest-plan.mjs';
+
+test('provider cooldown honors quota reset, Retry-After seconds and dates, with a conservative fallback', () => {
+  assert.equal(providerRetryDelay({ RateLimit: '"resolvers";r=0;t=42' }), 42000);
+  assert.equal(providerRetryDelay({ 'Retry-After': '90', RateLimit: '"api";r=0;t=12' }), 90000);
+  assert.equal(providerRetryDelay({ 'retry-after': 'Thu, 01 Jan 2026 00:02:00 GMT' }, Date.parse('2026-01-01T00:00:00Z')), 120000);
+  assert.equal(providerRetryDelay({ RateLimit: '"api";r=0;t=0' }), 1000);
+  assert.equal(providerRetryDelay({}), 300000);
+});
 
 test('loading coverage counts distinct manifest URLs, latest attempts and the current viewer and generation', () => {
   const manifests = ['a', 'b', 'c'].map(file => ({ file, sha256: 'identical-body', url: `https://example.com/${file}`, entries: [] }));
