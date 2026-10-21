@@ -21,7 +21,7 @@ ASSETS = {'.ply': 'ply', '.spz': 'spz', '.sog': 'sog', '.splat': 'splat', '.kspl
           '.obj': 'obj', '.glb': 'glb', '.gltf': 'gltf', '.pcd': 'pcd', '.las': 'las',
           '.laz': 'laz', '.off': 'off', '.stl': 'stl', '.usd': 'usd', '.usdz': 'usdz'}
 CAMERA = re.compile(r'(?:^|/)(?:transforms(?:_[^/]*)?\.json|poses_bounds\.npy|cameras(?:_[^/]*)?\.npz|cameras\.json|reconstruction(?:_[^/]*)?\.json|sfm_data\.json|bundle\.out)$', re.I)
-MEDIA = re.compile(r'^(?:images?(?:_\d+)?|rgb|rgba|photos?|masks?|depth|depths|normal|normals|videos?|frames)$', re.I)
+MEDIA = re.compile(r'^(?:images?(?:_\d+)?|rgb|rgba|photos?|masks?|depth(?:s|_maps)?|normal(?:s|_maps)?|videos?|frames)$', re.I)
 
 
 def read(path):
@@ -98,6 +98,47 @@ def group_components(rows):
     return sorted(retained, key=lambda row: (row[3] or '', row[1], row[0]))
 
 
+def directory_listing(repo, revision, path, network):
+    """Read every metadata page of one exact pinned directory."""
+    base = f'https://huggingface.co/api/datasets/{urllib.parse.quote(repo, safe="/")}/tree/{revision}'
+    initial = base + ('/' + urllib.parse.quote(path, safe='/') if path else '')
+    expected = urllib.parse.urlsplit(initial)
+    url = initial + '?recursive=false&expand=false&limit=1000'
+    children, files, entries, pages, seen = [], [], {}, [], set()
+    while url:
+        parsed = urllib.parse.urlsplit(url)
+        if (parsed.scheme != 'https' or parsed.netloc != 'huggingface.co' or parsed.fragment
+                or urllib.parse.unquote(parsed.path) != urllib.parse.unquote(expected.path)):
+            raise ValueError('Unexpected metadata pagination URL')
+        # HF next links may encode the repository slash as %2F. Preserve
+        # this exact directory and normalize that equivalent URL form.
+        url = urllib.parse.urlunsplit(('https', 'huggingface.co', expected.path, parsed.query, ''))
+        page_key = tuple(sorted(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)))
+        if page_key in seen:
+            raise ValueError('Repeated metadata pagination cursor')
+        seen.add(page_key)
+        body, headers, _, _ = network.fetch(url, limit=4 * 1024 * 1024, api=True)
+        page = json.loads(body)
+        if not isinstance(page, list):
+            raise ValueError('Expected a public repository directory listing')
+        pages.append({'url': url, 'sha256': hashlib.sha256(body).hexdigest(), 'entries': len(page)})
+        for entry in page:
+            name = entry.get('path')
+            prefix = path + '/' if path else ''
+            if (not isinstance(name, str) or not name.startswith(prefix) or not name[len(prefix):]
+                    or '/' in name[len(prefix):] or '\\' in name or name[len(prefix):] in ('.', '..')):
+                raise ValueError('Metadata entry escaped its listed directory')
+            if entry.get('type') == 'directory':
+                children.append(name)
+            elif entry.get('type') == 'file':
+                files.append(name)
+                entries[name] = {key: entry[key] for key in ('size', 'oid', 'lfs') if key in entry}
+        match = re.search(r'<([^>]+)>;\s*rel="next"', headers.get('link', ''))
+        url = match.group(1) if match else None
+    return children, files, entries, {'path': path, 'pages': pages}
+
+
+
 def refresh_model_listing(repo, revision, network, cache):
     """Walk folders without the API's 100,000-sibling cap; omit media-only folders.
 
@@ -107,37 +148,22 @@ def refresh_model_listing(repo, revision, network, cache):
     """
     target = cache / (hashlib.sha256((repo + '@' + revision).encode()).hexdigest() + '.json.gz')
     if target.exists():
-        return read(target)
-    base = f'https://huggingface.co/api/datasets/{urllib.parse.quote(repo, safe="/")}/tree/{revision}'
+        cached = read(target)
+        if (cached.get('modelWalkVersion') == 2 and cached.get('id') == repo
+                and cached.get('revision') == revision and cached.get('listingComplete') is True):
+            return cached
     pending, paths, skipped = [''], [], []
-
-    def folder(path):
-        url = base + ('/' + urllib.parse.quote(path, safe='/') if path else '') + '?recursive=false&expand=false&limit=1000'
-        children, files = [], []
-        while url:
-            parsed = urllib.parse.urlsplit(url)
-            if parsed.netloc != 'huggingface.co' or not parsed.path.startswith(urllib.parse.urlsplit(base).path):
-                raise ValueError('Unexpected metadata pagination URL')
-            body, headers, _, _ = network.fetch(url, limit=4 * 1024 * 1024, api=True)
-            page = json.loads(body)
-            if not isinstance(page, list):
-                raise ValueError('Expected a public repository directory listing')
-            for entry in page:
-                if entry.get('type') == 'directory':
-                    children.append(entry['path'])
-                elif entry.get('type') == 'file':
-                    files.append(entry['path'])
-            match = re.search(r'<([^>]+)>;\s*rel="next"', headers.get('link', ''))
-            url = match.group(1) if match else None
-        return children, files
+    file_entries, directory_receipts = {}, []
 
     visited = 0
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
         while pending:
             batch, pending = pending[:64], pending[64:]
-            for children, files in pool.map(folder, batch):
+            for children, files, entries, receipt in pool.map(lambda path: directory_listing(repo, revision, path, network), batch):
                 visited += 1
                 paths.extend(files)
+                file_entries.update(entries)
+                directory_receipts.append(receipt)
                 for child in children:
                     if MEDIA.fullmatch(child.rsplit('/', 1)[-1]):
                         skipped.append(child)
@@ -145,9 +171,12 @@ def refresh_model_listing(repo, revision, network, cache):
                         pending.append(child)
             if visited > 20000:
                 raise ValueError('Model directory walk exceeded its explicit bound')
+            print(f'Model directories: {visited}; queued: {len(pending)}; files: {len(paths)}', flush=True)
     result = {'id': repo, 'revision': revision, 'checkedAt': now(), 'paths': sorted(set(paths)),
               'listingComplete': True, 'scope': 'Model-directory walk; photograph, mask, depth, and video directories omitted.',
-              'omittedMediaDirectories': len(skipped), 'visitedDirectories': visited}
+              'modelWalkVersion': 2, 'omittedMediaDirectories': len(skipped), 'visitedDirectories': visited,
+              'omittedMediaPaths': sorted(set(skipped)), 'files': file_entries,
+              'directories': sorted(directory_receipts, key=lambda item: item['path'])}
     cache.mkdir(parents=True, exist_ok=True)
     write_pack(target, result)
     return result

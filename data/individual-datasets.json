@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-10-16",
+  "checkedAt": "2026-10-21",
   "sources": [
     {
       "datasetId": "hf-chhsiao93-hicss-splat-5f82d0192b45",
@@ -6259,14 +6259,14 @@
       "datasetId": "hf-travisdriver-astrovision-data-e96b9b03c2e5",
       "sourceId": "hf:travisdriver/astrovision-data",
       "file": "hf-travisdriver-astrovision-data-e96b9b03c2e5.json.gz",
-      "sha256": "01c0d78196031a99e231a1611996709aeca1d58ef7161388ee33109ac1c26d8f",
-      "count": 72,
-      "listingComplete": false,
+      "sha256": "181dc0a701f85db0a273e1e5b12555723ee5f0b09a351bdfdb95bfe094e40b46",
+      "count": 435,
+      "listingComplete": true,
       "revision": "43af772130675058f894824d50cbe2b390315061",
-      "checkedAt": "2026-10-16",
-      "scope": "Public repository sibling listing; capped listings remain incomplete.",
-      "looseColmapCount": 72,
-      "plyFileCount": 0
+      "checkedAt": "2026-10-21",
+      "scope": "Complete pinned model-directory walk; photographs, masks and depth maps are omitted from model discovery. Separate photo/mask inventories and browser samples are recorded in the AstroVision audit.",
+      "looseColmapCount": 423,
+      "plyFileCount": 12
     },
     {
       "datasetId": "hf-travisdriver-phomo-data-c002ebc0bf46",
@@ -26227,7 +26227,7 @@
   "counts": {
     "camera-metadata": 59094,
     "cameras": 304,
-    "colmap": 7528,
+    "colmap": 7879,
     "glb": 477248,
     "gltf": 8380,
     "ksplat": 470,
@@ -26236,7 +26236,7 @@
     "obj": 256398,
     "off": 17666,
     "pcd": 204231,
-    "ply": 786324,
+    "ply": 786336,
     "scene": 3,
     "sog": 387,
     "splat": 608,
@@ -26246,5 +26246,5 @@
     "usd": 26888,
     "usdz": 14434
   },
-  "individualEntries": 2158070
+  "individualEntries": 2158433
 }

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.10.5 — 2026-10-21
+
+- Complete AstroVision discovery at its existing source revision: 423 reconstructions, including 351 omitted cluster/mission scenes. Publish exact photo/mask manifests while preserving all prior scene links and previews.
+- Audit every AstroVision model's calibration, native prefixes, browser access and decoded registered photo/mask sample; retain full-loading coverage separately.
+- Allow checked original-photo receipts to qualify photo routing without generating a Hub thumbnail. Keep incomplete registered-name checks explicitly scoped.
+
 ## 0.10.4 — 2026-10-20
 
 - Count 4,070 scene entries across 144 sources by grouping 1,513 ScanNetPoseRefine initialization/refinement pairs. Preserve exact original selections at every historical variant link.

@@ -132,9 +132,15 @@ def apply_routing(entry, row, revision, proof, review, hf_url):
     previous_names = audit.get('nameCheck', {})
     if previous_names.get('scope') != 'prefix' and previous_names.get('registered', 0) > review['nameCheck']['inspected']:
         raise ValueError('Photo routing cannot discard stronger registered-name evidence; inspect the complete metadata')
+    thumbnail = proof.get('thumbnail')
+    sample_matches = (thumbnail.get('sourceSha256') == sample['sha256']
+                      and thumbnail.get('originalWidth') == sample['width']
+                      and thumbnail.get('originalHeight') == sample['height']) if thumbnail else (
+        audit.get('sampleSha256') == sample['sha256'] and audit.get('sampleWidth') == sample['width']
+        and audit.get('sampleHeight') == sample['height'] and audit.get('samplePixels') == 'decoded'
+        and audit.get('sampleDimensionsMatch') is True and audit.get('sampleRegisteredName') == sample['name'])
     if (audit.get('samplePath') != sample['path'] or not audit.get('sampleBrowserRead')
-            or proof.get('thumbnail', {}).get('sourceSha256') != sample['sha256']
-            or proof['thumbnail'].get('originalWidth') != sample['width'] or proof['thumbnail'].get('originalHeight') != sample['height']
+            or not sample_matches
             or proof.get('sceneCompatibility', {}).get('images') not in (None, review['nameCheck']['registered'])):
         raise ValueError('Photo routing must use this scene\'s checked photograph bytes')
     name, body = routing_asset(review, entry, hf_url)

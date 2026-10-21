@@ -53,9 +53,9 @@
     {
       "kind": "individual-listings",
       "name": "individual-datasets.json",
-      "checkedAt": "2026-10-16",
-      "sha256": "ddc5dfe73db373d1220b96e258a4b0849159f55d42f9765adf99774dd4dd37e4",
-      "rowCount": 2158070
+      "checkedAt": "2026-10-21",
+      "sha256": "6420bb22b18d329fe3a4fcf304f398f3ff52352a2ff3737347199250842edb13",
+      "rowCount": 2158433
     },
     {
       "kind": "license-categories",
@@ -73195,23 +73195,23 @@
         },
         {
           "label": "Individual model or scene entries listed",
-          "value": "72"
+          "value": "435"
         },
         {
           "label": "Individual listing scope",
-          "value": "Public repository sibling listing; capped listings remain incomplete."
+          "value": "Complete pinned model-directory walk; photographs, masks and depth maps are omitted from model discovery. Separate photo/mask inventories and browser samples are recorded in the AstroVision audit."
         },
         {
           "label": "Individual listing coverage",
-          "value": "Incomplete source listing; additional models may exist."
+          "value": "Model paths enumerated. Uninspected archives may contain additional models."
         },
         {
           "label": "Complete COLMAP models listed",
-          "value": "72"
+          "value": "423"
         },
         {
           "label": "PLY files listed",
-          "value": "0"
+          "value": "12"
         }
       ],
       "audits": [
@@ -300335,9 +300335,9 @@
     }
   },
   "individualSummary": {
-    "checkedAt": "2026-10-16",
-    "entries": 2158158,
+    "checkedAt": "2026-10-21",
+    "entries": 2158521,
     "sourceEntriesWithModels": 1087,
-    "incompleteCollections": 52
+    "incompleteCollections": 51
   }
 }

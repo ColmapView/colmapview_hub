@@ -75,6 +75,19 @@ class PhotoRoutingTests(unittest.TestCase):
         self.assertEqual(manifest['images'], self.item['photos'])
         self.assertEqual(manifest['baseUrl'], hf_url(self.entry, 'a' * 40, '') + '/')
 
+    def test_checked_original_photo_does_not_require_a_published_thumbnail(self):
+        self.proof.pop('thumbnail')
+        self.proof['photoAudit'].update(sampleSha256='c' * 64, sampleWidth=80, sampleHeight=60,
+            samplePixels='decoded', sampleDimensionsMatch=True, sampleRegisteredName='front/a.png')
+        self.assertNotIn('thumbnail', self.apply())
+        original = copy.deepcopy(self.proof)
+        for field, value in [('sampleSha256', 'e' * 64), ('sampleWidth', 160), ('samplePixels', 'deferred'),
+                             ('sampleDimensionsMatch', False), ('sampleRegisteredName', 'different.png')]:
+            self.proof = copy.deepcopy(original)
+            self.proof['photoAudit'][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'checked photograph bytes'):
+                self.apply()
+
     def test_selection_edits_require_reaudit(self):
         self.bind()
         for key, value in [('photos', ['unreviewed/a.png']), ('scope', ''), ('sourceViewerUrl', 'different'), ('nameToPath', {'a.png': 'scene/images/front/b.png'})]:
