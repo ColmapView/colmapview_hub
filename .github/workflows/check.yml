@@ -16,3 +16,11 @@ jobs:
       - run: npm run check
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - name: Preserve browser failure evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: hub-browser-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

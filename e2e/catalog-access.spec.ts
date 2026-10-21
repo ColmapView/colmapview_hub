@@ -91,6 +91,32 @@ test('failed automatic loading pauses until an explicit retry', async ({ page })
   await expect(page.locator('.dataset-card')).toHaveCount(48);
 });
 
+test('reading catalog notes defers an in-flight append until the notes close', async ({ page }) => {
+  let release: () => void = () => {};
+  let requested: () => void = () => {};
+  const held = new Promise<void>(resolve => { release = resolve; });
+  const started = new Promise<void>(resolve => { requested = resolve; });
+  await page.route('**/hub/datasets/api/entries?**', async route => {
+    if (new URL(route.request().url()).searchParams.get('page') !== '2') return route.continue();
+    const response = await route.fetch();
+    requested();
+    await held;
+    await route.fulfill({ response });
+  });
+  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  await started;
+  await page.getByText('About this catalog', { exact: true }).click();
+  const response = page.waitForResponse(value => new URL(value.url()).searchParams.get('page') === '2');
+  release();
+  await (await response).finished();
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  await expect(page.getByRole('link', { name: 'Audit and coverage', exact: true })).toBeVisible();
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  await page.getByText('About this catalog', { exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(48);
+});
+
 test('duplicate response pages never append repeated cards', async ({ page }) => {
   const original = await (await page.request.get('/hub/datasets/api/entries?sort=random&seed=12345678')).json();
   await page.route('**/hub/datasets/api/entries?**', async route => {

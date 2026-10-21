@@ -322,6 +322,7 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await page.getByRole('link', { name: '← All datasets', exact: true }).click();
   await page.getByText('About this catalog', { exact: true }).click();
   await page.getByRole('link', { name: 'Audit and coverage', exact: true }).click();
+  await expect(page).toHaveURL(origin + '/hub/datasets/audit');
   await expect(page.getByRole('heading', { name: 'Dataset audit', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Download verified scene checks (JSON)', exact: true })).toHaveAttribute('href', '/hub/datasets/individual/verified-scenes.json');
   await expect(page.getByRole('link', { name: 'Download public audit records (JSON)', exact: true })).toHaveAttribute('href', '/hub/datasets/dataset-audit.json');

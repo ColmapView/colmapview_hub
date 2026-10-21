@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.10.3 — 2026-10-20
+
+- Keep catalog notes and their audit links stationary when an in-flight scene page finishes loading. Resume automatic loading when the notes close.
+- Preserve browser screenshots and traces in CI for failed navigation checks.
+
 ## 0.10.2 — 2026-10-20
 
 - Require an explicitly selected Hugging Face COLMAP file to exist before approving a public Hub submission.

@@ -89,6 +89,8 @@ numbers and mismatched feed selections cannot append to the current ordering.
 A catalog-generation change starts a fresh first page rather than mixing versions.
 If a search completes while a scene information panel is open, defer replacing
 its cards until the panel closes so its links and keyboard interaction stay usable.
+Automatic loading also pauses while catalog notes are open. An in-flight page
+waits for the notes to close before inserting cards, keeping the audit links stationary.
 
 Preview images are lazy loaded, uncropped and dimensioned. Offscreen cards defer
 layout with `content-visibility`; full 3D scenes are opened only through a viewer

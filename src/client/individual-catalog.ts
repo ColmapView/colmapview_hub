@@ -20,6 +20,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const savedFilters = document.querySelector<HTMLElement>('#catalog-saved-filters')!;
   const end = document.querySelector<HTMLElement>('#catalog-end')!;
   const sentinel = document.querySelector<HTMLElement>('#catalog-sentinel')!;
+  const notes = document.querySelector<HTMLDetailsElement>('.catalog-notes');
   const fields = [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[name],select[name]')];
   const navigation = catalogHistory(form);
   let pending: AbortController | undefined;
@@ -181,19 +182,21 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
         refreshed.delete('page');
         return await load(refreshed);
       }
-      // A result may already be on screen when the user starts typing and opens
-      // its information panel. Keep that panel and its links connected while a
-      // replacement search completes; commit the new cards after it closes.
-      const panel = !options.append ? results.querySelector<HTMLDialogElement>('.dataset-metadata[open]') : null;
+      // Preserve an open metadata panel during a replacement search, and keep
+      // catalog notes stationary if an in-flight append finishes while reading.
+      const panel = options.append ? (notes?.open ? notes : null)
+        : results.querySelector<HTMLDialogElement>('.dataset-metadata[open]');
       const panelEntry = panel?.closest<HTMLElement>('[data-entry-id]')?.dataset.entryId;
       if (panel) {
+        const closeEvent = options.append ? 'toggle' : 'close';
         await new Promise<void>(resolve => {
           const finish = () => {
-            panel.removeEventListener('close', finish);
+            if (panel.open && !controller.signal.aborted) return;
+            panel.removeEventListener(closeEvent, finish);
             controller.signal.removeEventListener('abort', finish);
             resolve();
           };
-          panel.addEventListener('close', finish, { once: true });
+          panel.addEventListener(closeEvent, finish);
           controller.signal.addEventListener('abort', finish, { once: true });
           if (!panel.open || controller.signal.aborted) finish();
         });
@@ -294,11 +297,15 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     void load(values, { append: true, focus });
   };
   const continueAutomatic = () => {
-    if (!nearEnd || automaticPaused || document.hidden) return;
+    if (!nearEnd || automaticPaused || document.hidden || notes?.open) return;
     const bounds = sentinel.getBoundingClientRect();
     if (bounds.top <= innerHeight + 600 && bounds.bottom >= -600) appendMore();
   };
-  more.addEventListener('click', event => { automaticPaused = false; appendMore(event.detail === 0); });
+  more.addEventListener('click', event => {
+    if (notes) notes.open = false;
+    automaticPaused = false; appendMore(event.detail === 0);
+  });
+  notes?.addEventListener('toggle', () => { if (!notes.open) continueAutomatic(); });
   previous.addEventListener('click', event => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
