@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.10.2 — 2026-10-20
+
+- Require an explicitly selected Hugging Face COLMAP file to exist before approving a public Hub submission.
+- Verify exact folder selections without trailing slashes and paths with encoded spaces, preserving those selections in pinned viewer links.
+
 ## 0.10.1 — 2026-10-20
 
 - Use the Workers-supported manual redirect mode for Turnstile verification, rejecting redirects without forwarding the secret. Verify the request options in the real Workers test runtime.

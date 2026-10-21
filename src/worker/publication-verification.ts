@@ -71,9 +71,9 @@ export async function verifyPublicationSource(viewerUrl: string, env: Env, origi
   const match = source.origin === 'https://huggingface.co' && /^\/datasets\/([A-Za-z0-9][A-Za-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._-]*)(?:\/(?:resolve|tree|blob)\/([^/]+)(?:\/(.*))?)?\/?$/.exec(source.pathname);
   if (!match) return pending('Public access and supported dataset files need an operator review.');
   const [, repo, revision, path = ''] = match;
-  if (path && !path.endsWith('/') && !/(?:^|\/)(?:cameras|images|points3D)\.bin$/.test(path)) {
-    return pending('This file format needs an operator review.');
-  }
+  let requestedPath: string;
+  try { requestedPath = decodeURIComponent(path); }
+  catch { throw new InputError('The Hugging Face dataset path is invalid.'); }
   const signal = AbortSignal.timeout(15000);
   try {
     const api = `https://huggingface.co/api/datasets/${repo}${revision ? `/revision/${revision}` : ''}`;
@@ -84,11 +84,16 @@ export async function verifyPublicationSource(viewerUrl: string, env: Env, origi
     }
     if (!Array.isArray(info.siblings)) return pending('The repository file inventory needs review.');
     const files = new Set(info.siblings.flatMap(item => isObject(item) && typeof item.rfilename === 'string' ? [item.rfilename] : []));
-    const requestedDirectory = path && !path.endsWith('/') ? path.slice(0, path.lastIndexOf('/') + 1) : path;
+    const selectedFile = files.has(requestedPath);
+    const nativeFile = /(?:^|\/)(?:cameras|images|points3D)\.bin$/.test(requestedPath);
+    if (nativeFile && !selectedFile) throw new InputError('The selected COLMAP file is missing from this public repository.', 422);
+    if (selectedFile && !nativeFile) return pending('This file format needs an operator review.');
+    const requestedDirectory = selectedFile ? requestedPath.slice(0, requestedPath.lastIndexOf('/') + 1)
+      : requestedPath && !requestedPath.endsWith('/') ? `${requestedPath}/` : requestedPath;
     const cameras = [...files].filter(file => file.startsWith(requestedDirectory) && /(?:^|\/)cameras\.bin$/.test(file)
       && !file.split('/').some(segment => !segment || segment === '.' || segment === '..'));
     const pairs = cameras.filter(file => files.has(file.replace(/cameras\.bin$/, 'images.bin')));
-    const cameraPath = path && !path.endsWith('/') ? pairs.find(file => file === `${requestedDirectory}cameras.bin`)
+    const cameraPath = selectedFile ? pairs.find(file => file === `${requestedDirectory}cameras.bin`)
       : pairs.length === 1 ? pairs[0] : undefined;
     if (!cameraPath) return pending('The exact camera and image model selection needs review.');
     const fileUrl = (file: string) => `https://huggingface.co/datasets/${repo}/resolve/${info.sha}/${file.split('/').map(encodeURIComponent).join('/')}`;
@@ -112,7 +117,8 @@ export async function verifyPublicationSource(viewerUrl: string, env: Env, origi
     }
     // Keep the source shape and folder selection, but pin mutable repository references to the checked revision.
     const pinned = new URL(viewerUrl);
-    pinned.searchParams.set('url', `https://huggingface.co/datasets/${repo}/resolve/${info.sha}/${path}`);
+    const pinnedPath = (selectedFile ? requestedPath : requestedDirectory).split('/').map(encodeURIComponent).join('/');
+    pinned.searchParams.set('url', `https://huggingface.co/datasets/${repo}/resolve/${info.sha}/${pinnedPath}`);
     return { viewerUrl: pinned.href, verification: { method: 'hf_colmap_headers', checkedAt, revision: info.sha, cameras: count, registeredImages } };
   } catch (error) {
     if (error instanceof InputError) {

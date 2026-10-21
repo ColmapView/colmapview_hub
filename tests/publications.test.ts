@@ -24,12 +24,13 @@ function modelHeader(images = false): Uint8Array {
   return bytes;
 }
 
-function successfulReads() {
+function successfulReads(files = ['sparse/0/cameras.bin', 'sparse/0/images.bin']) {
   return vi.mocked(fetch).mockImplementation(async (value) => {
     const url = String(value instanceof Request ? value.url : value);
     if (url === 'https://challenges.cloudflare.com/turnstile/v0/siteverify') return Response.json({ success: true, hostname: new URL(origin).hostname, action: 'hub-publication' });
-    if (url === 'https://huggingface.co/api/datasets/owner/scene') return Response.json({ private: false, gated: false, sha: revision,
-      siblings: [{ rfilename: 'sparse/0/cameras.bin' }, { rfilename: 'sparse/0/images.bin' }] });
+    if (url === 'https://huggingface.co/api/datasets/owner/scene' || url === 'https://huggingface.co/api/datasets/owner/scene/revision/main') {
+      return Response.json({ private: false, gated: false, sha: revision, siblings: files.map(rfilename => ({ rfilename })) });
+    }
     if (url.endsWith('/cameras.bin')) return new Response(modelHeader());
     if (url.endsWith('/images.bin')) return new Response(modelHeader(true));
     throw new Error('Unexpected request');
@@ -113,6 +114,31 @@ describe('public Hub submissions', () => {
     expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(0);
     expect((await (await request('/api/publications')).json<{ entries: unknown[] }>()).entries).toEqual([]);
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it('does not approve a missing selected COLMAP file because its sibling model exists', async () => {
+    successfulReads();
+    const response = await submit(body({ viewerUrl: `${origin}/?url=${encodeURIComponent(`${source}/resolve/main/sparse/0/points3D.bin`)}` }));
+    expect(response.status).toBe(422);
+    expect((await response.json<{ error: string }>()).error).toMatch(/selected COLMAP file is missing/);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(0);
+    expect((await env.LINKS.list({ prefix: 'pending-publications/' })).objects).toHaveLength(0);
+  });
+  it.each([
+    { path: 'tree/main/sparse/0', directory: 'sparse/0/', pinnedPath: 'sparse/0/' },
+    { path: 'resolve/main/room%20one/sparse/0/', directory: 'room one/sparse/0/', pinnedPath: 'room%20one/sparse/0/' },
+    { path: 'blob/main/room%20one/sparse/0/images.bin', directory: 'room one/sparse/0/', pinnedPath: 'room%20one/sparse/0/images.bin' },
+    { path: 'resolve/main/sparse/0/points3D.bin', directory: 'sparse/0/', pinnedPath: 'sparse/0/points3D.bin' },
+  ])('verifies the intended model at $path and preserves its pinned selection', async ({ path, directory, pinnedPath }) => {
+    successfulReads([`${directory}cameras.bin`, `${directory}images.bin`, `${directory}points3D.bin`, 'another/cameras.bin', 'another/images.bin']);
+    const response = await submit(body({ viewerUrl: `${origin}/?url=${encodeURIComponent(`${source}/${path}`)}` }));
+    expect(response.status).toBe(201);
+    const result = await response.json<{ id: string }>();
+    const record = await (await env.LINKS.get(recordKey(result.id)))!.json<{ viewerUrl: string }>();
+    expect(new URL(record.viewerUrl).searchParams.get('url')).toBe(`${source}/resolve/${revision}/${pinnedPath}`);
+    const reads = vi.mocked(fetch).mock.calls.map(([value]) => String(value));
+    expect(reads).toContain(`${source}/resolve/${revision}/${directory.split('/').map(encodeURIComponent).join('/')}cameras.bin`);
+    expect(reads.some(url => url.includes('/another/'))).toBe(false);
   });
   it.each([{ private: true, gated: false }, { private: false, gated: 'auto' }])('rejects a private or gated HF source: %j', async access => {
     const reads = successfulReads();
