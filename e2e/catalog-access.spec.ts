@@ -27,7 +27,7 @@ test('the Gaussian scene filter returns the same kind and count reported by its 
   await expect(page.locator('select[name="kind"]')).toHaveValue('Gaussian scene');
 });
 
-test('feed modes are seeded, paginated and balanced across source collections', async ({ page }) => {
+test('feed modes are seeded, paginated and respect collection balance or chronology', async ({ page }) => {
   for (const sort of ['discover', 'random', 'new']) {
     const firstUrl = `/hub/datasets/api/entries?sort=${sort}&seed=12345678`;
     const first = await (await page.request.get(firstUrl)).json();
@@ -35,9 +35,20 @@ test('feed modes are seeded, paginated and balanced across source collections', 
     const second = await (await page.request.get(firstUrl + '&page=2')).json();
     expect(first.feed).toEqual({ mode: sort, seed: '12345678' });
     expect(first.entries.map((entry: { id: string }) => entry.id)).toEqual(repeat.entries.map((entry: { id: string }) => entry.id));
-    const ids = [...first.entries, ...second.entries].map((entry: { id: string }) => entry.id);
+    const ids: string[] = [...first.entries, ...second.entries].map((entry: { id: string }) => entry.id);
     expect(new Set(ids).size).toBe(48);
-    expect(new Set(first.entries.slice(0, 20).map((entry: { dataset: { id: string } }) => entry.dataset.id)).size).toBeGreaterThanOrEqual(10);
+    if (sort === 'new') {
+      // A newly published collection may own the entire newest cohort. Verify
+      // dates against public metadata instead of requiring unrelated older data.
+      const feed = await (await page.request.get('/hub/datasets/individual/feed.json')).json();
+      const shards = new Map(await Promise.all([...new Set(ids.map(id => id.slice(5, 7)))].map(async shard =>
+        [shard, await (await page.request.get(`/hub/datasets/individual/ids/${shard}.json`)).json()] as const)));
+      const days = ids.map(id => feed.rows[shards.get(id.slice(5, 7))[id]][2]);
+      expect(days[0]).toBe(Math.max(...feed.rows.map((row: number[]) => row[2])));
+      expect(days).toEqual([...days].sort((a, b) => b - a));
+    } else {
+      expect(new Set(first.entries.slice(0, 20).map((entry: { dataset: { id: string } }) => entry.dataset.id)).size).toBeGreaterThanOrEqual(10);
+    }
     expect(first.entries.every((entry: { hasViewer: boolean }) => entry.hasViewer)).toBe(true);
   }
   const cameras = await (await page.request.get('/hub/datasets/api/entries?kind=Cameras+and+poses&data=cameras&sort=random&seed=12345678')).json();
