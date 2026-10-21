@@ -511,6 +511,29 @@
           "path": "sparse/0"
         }
       ]
+    },
+    {
+      "sourceId": "hf:travisdriver/astrovision-data",
+      "revision": "43af772130675058f894824d50cbe2b390315061",
+      "checkedAt": "2026-10-21",
+      "viewerVersion": "0.20.3",
+      "viewerCommit": "a6ca223fbfa1f5e181b572d9ea7ce134b1128109",
+      "reason": "native_decoder_abort",
+      "summary": "Full original downloads completed in temporary regular Chromium profiles, with an 8 GiB transfer budget and 600 s deadline, but the native decoder aborted before committing a reconstruction. Exact cause is unclassified. Retain original manifest assets and evidence; withhold these scene cards until a successful full import is recorded. See data/astrovision-audit-2026-10-21.json.gz.",
+      "scenes": [
+        {
+          "kind": "colmap",
+          "path": "segments/cas_dione/opus"
+        },
+        {
+          "kind": "colmap",
+          "path": "segments/cas_rhea/opus"
+        },
+        {
+          "kind": "colmap",
+          "path": "segments/cas_tethys/opus"
+        }
+      ]
     }
   ]
 }

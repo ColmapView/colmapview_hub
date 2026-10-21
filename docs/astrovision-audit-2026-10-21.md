@@ -30,8 +30,8 @@ No stronger full-model or photograph-export tier is inferred from these checks.
 Existing scene identities, model counts, launch URLs, thumbnails and immutable
 manifest bodies are preserved. New entries do not require thumbnails: their
 original photo hash, decoded dimensions and browser receipt bind the routing
-review independently. The public catalog now contains **4,421 scene entries from
-144 source records**. Copies across source repositories remain separate.
+review independently. The public catalog now contains **4,418 scene entries from
+144 source records**, including 420 AstroVision cards. Copies across source repositories remain separate.
 
 The Itokawa segment declares one camera model, 560 registered poses and 396,245
 points. Its selected native files total 2,895,221,423 bytes before photographs.
@@ -39,7 +39,7 @@ Across the source, native models total 72,500,640,345 bytes; the largest individ
 pose file is 5,490,849,273 bytes. Header and media-routing checks do not establish
 that these largest models fit every browser's memory limits.
 
-Viewer **0.20.3** fixes the Itokawa import's single-buffer limit with a bounded
+Viewer **0.20.4** fixes the Itokawa import's single-buffer limit with a bounded
 pose index and original observation reads in the browser worker. Exact dense
 track statistics replace redundant pairwise Map updates when a bounded bitset
 calculation is cheaper. The source files, calibrations, poses, point counts and
@@ -54,7 +54,14 @@ The first complete source sweep attempted all 423 original manifests with viewer
 no model/count failures in the bounded sweep. All 423 deployed manifest bodies,
 CORS headers, ETags and direct-open routes passed separate serving checks. The
 larger Itokawa run raises verified model coverage to 353, leaving 70 models outside
-that full-import coverage. The receipt preserves individual attempts and viewer
+that successful full-import coverage. Three of these —
+`segments/cas_dione/opus`, `segments/cas_rhea/opus` and
+`segments/cas_tethys/opus` — completed their original 4.98–7.36 GB downloads
+but aborted in the native decoder in temporary regular profiles (viewer 0.20.3,
+8 GiB transfer budget, 600 s deadline). Their exact failure cause remains
+unclassified. Their cards are withheld; immutable manifests and all audit evidence
+remain available. The remaining 67 models retain byte-budget exclusions rather
+than inferred successful loads. The receipt preserves individual attempts and viewer
 revisions instead of counting a resource exclusion as a pass.
 
 The durable public evidence is

@@ -593,7 +593,9 @@ def build(root=Path('.')):
             facet_manifest[field][value] = {'file': key, 'count': len(ordinals)}
     if matched_manifests != set(manifest_reviews):
         raise ValueError('A scene manifest no longer matches a published scene; recheck its selection')
-    if matched_routing != set(photo_routing) or matched_unresolved != set(unresolved_routing):
+    # Withheld scenes keep their immutable routing assets and audit evidence.
+    if (matched_routing != set(photo_routing) - scene_exclusions
+            or matched_unresolved != set(unresolved_routing) - scene_exclusions):
         raise ValueError('Photo routing no longer matches the published scenes; rerun the audit')
     if matched_archives != set(photo_archives):
         raise ValueError('Companion routing no longer matches the published selections')

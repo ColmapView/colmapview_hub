@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.10.6 — 2026-10-21
+
+- Withhold AstroVision Dione, Rhea and Tethys scene cards after complete downloads aborted in the native decoder. Preserve their original immutable manifests, complete discovery and explicit failure evidence.
+- Publish 420 AstroVision scenes and 4,418 catalog entries across 144 sources. Record full-source loading coverage separately from header and sampled-media checks.
+- Pin manifest validation to viewer 0.20.4, including the verified Itokawa large-file import fix.
+
 ## 0.10.5 — 2026-10-21
 
 - Complete AstroVision discovery at its existing source revision: 423 reconstructions, including 351 omitted cluster/mission scenes. Publish exact photo/mask manifests while preserving all prior scene links and previews.
