@@ -453,11 +453,15 @@ test('complete-export evidence stays scoped while other model layouts remain loa
   expect(index.total).toBeGreaterThan(policy.scenes.length);
   const completePhotoExports = policy.scenes.filter(scene => scene.export !== 'colmap_model');
   expect(completePhotoExports).toHaveLength(4);
-  expect(data.total).toBe(completePhotoExports.length);
+  const reviews = await (await page.request.get('/hub/datasets/api/entries?status=Calibration+needs+review')).json() as typeof data;
+  expect(reviews.total).toBe(9);
+  expect(reviews.entries.every(scene => scene.hasViewer && scene.statusLabel === 'Calibration needs review')).toBe(true);
+  const reviewedIds = new Set(reviews.entries.map(scene => scene.id));
+  expect(data.total).toBe(completePhotoExports.filter(scene => !reviewedIds.has(id(scene.sourceId, scene.kind, scene.path))).length);
   expect(data.entries.every(scene => scene.hasViewer && scene.statusLabel === 'Cameras + photos verified' && scene.delivery === 'browser_readable')).toBe(true);
   for (const scene of completePhotoExports) {
     const sceneId = id(scene.sourceId, scene.kind, scene.path);
-    expect(data.entries.some(row => row.id === sceneId)).toBe(true);
+    expect([...data.entries, ...reviews.entries].some(row => row.id === sceneId)).toBe(true);
     const open = await page.request.get(`/hub/datasets/open/${sceneId}`, { maxRedirects: 0 });
     expect(open.status()).toBe(302);
     expect(open.headers().location).toBe(scene.viewerUrl);
@@ -465,6 +469,10 @@ test('complete-export evidence stays scoped while other model layouts remain loa
     await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveAttribute('href', scene.viewerUrl);
     await expect(page.locator('main')).toContainText('Verified original photographs');
     await expect(page.locator('main')).toContainText(`${scene.counts.images} posed original photographs`);
+    if (reviewedIds.has(sceneId)) {
+      await expect(page.locator('main')).toContainText('Calibration review');
+      await expect(page.locator('main')).toContainText('Pixel-aspect calibration is unverified');
+    }
   }
   const catalogResponse = await page.request.get('/hub/datasets/catalog.json');
   const catalog = await catalogResponse.json() as { entries: { id: string; viewerUrl?: string; dataUrl: string; sourceUrl: string }[] };

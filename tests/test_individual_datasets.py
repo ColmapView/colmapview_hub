@@ -7,12 +7,40 @@ from pathlib import Path
 
 from scripts.audit.prepare_individual_datasets import individual_records, group_components
 from scripts.catalog.build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, retained_scene_selection, reviewed_scene_exclusions, tokens
-from scripts.catalog.scene_qualification import REQUIRED_CHECKS, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
+from scripts.catalog.scene_qualification import REQUIRED_CHECKS, apply_calibration_review, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
 from scripts.catalog.sampled_individuals import supplement_rows
 from scripts.catalog.scene_datasets import MAX_SCENE_FILE_LINKS, scene_records, named_variant_groups
 
 
 class IndividualDatasetsTests(unittest.TestCase):
+    def test_calibration_warnings_are_revision_bound_and_preserve_export_evidence(self):
+        entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface', 'access': 'public',
+                 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
+        files = {'cameras': 'scene/cameras.bin', 'images': 'scene/images.bin', 'points3d': 'scene/points3D.bin'}
+        warning = {'status': 'suspect', 'checkedAt': '2026-10-22', 'cameraFileSha256': 'c' * 64,
+                   'summary': 'Source calibration needs review; original values are preserved.'}
+        records = {'cameraRecordChecked': True, 'poseRecordChecked': True, 'calibrationReview': warning}
+        model = ['scene', files, 1, 2, 0, 'not_checked', '2026-10-22', records]
+        policy = {'schemaVersion': 1, 'sources': [{'sourceId': entry['sourceId'], 'revision': 'a' * 40, 'models': [model]}]}
+        review = next(iter(native_scene_reviews({'entries': [entry]}, policy).values()))
+        proof = {'level': 'scene_verified', 'viewerUrl': 'unchanged', 'summary': 'Full export compared.',
+                 'sceneValidation': {'exportSha256': 'd' * 64}, 'photoAvailability': 'complete_export_checked'}
+        updated = apply_calibration_review(proof, review['calibrationReview'])
+        self.assertEqual(updated['sceneValidation'], proof['sceneValidation'])
+        self.assertEqual(updated['viewerUrl'], proof['viewerUrl'])
+        self.assertEqual(updated['level'], proof['level'])
+        self.assertEqual(updated['photoAvailability'], proof['photoAvailability'])
+        self.assertTrue(updated['summary'].startswith(warning['summary']))
+        self.assertNotIn('calibrationReview', proof)
+        for field, value in [('status', 'verified'), ('cameraFileSha256', 'bad'), ('summary', ''), ('checkedAt', None)]:
+            invalid = json.loads(json.dumps(policy))
+            invalid['sources'][0]['models'][0][7]['calibrationReview'][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'Calibration review requires'):
+                native_scene_reviews({'entries': [entry]}, invalid)
+        policy['sources'][0]['revision'] = 'b' * 40
+        with self.assertRaisesRegex(ValueError, 'revision changed'):
+            native_scene_reviews({'entries': [entry]}, policy)
+
     def test_complete_discovery_can_preserve_only_a_present_export_checked_selection(self):
         files = {'metadata:scene/transforms.json': 'scene/transforms.json', 'asset:scene/output/input.ply': 'scene/output/input.ply'}
         row = ['camera-scene', 'scene', {'metadata:scene/transforms.json': 'scene/transforms.json'}, None]

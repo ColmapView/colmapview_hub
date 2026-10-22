@@ -9,6 +9,27 @@ import { applyDatasetLabels } from '../scripts/catalog/dataset-labels.mjs';
 const render = await catalogRenderer();
 const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));
 
+test('calibration and resolution reviews stay visible without replacing verified model actions', () => {
+  const note = 'Source focal ratio is unverified; original calibration is preserved.';
+  const proof = { ...nativePhotoProof('sample_checked'), statusLabel: 'Calibration needs review', summary: note,
+    calibrationReview: { status: 'unverified', checkedAt: '2026-10-22', cameraFileSha256: 'c'.repeat(64), summary: note },
+    photoAudit: { status: 'sample_checked', checkedAt: '2026-10-22', listingComplete: true, policy: 'native_scene',
+      summary: 'Resolution mapping remains unverified.', sceneRoot: 'scene', policyNote: '', samplePath: 'scene/a.png',
+      sampleBrowserRead: true, samplePixels: 'decoded', sampleWidth: 640, sampleHeight: 480, sampleDimensionsMatch: false,
+      sampleCalibration: { width: 1280, height: 960, sha256: 'c'.repeat(64) } } };
+  const record = row(0, { 7: proof });
+  assert.equal(render.canOpenIndividual(record, source), true);
+  const summary = render.individualSummary(record, source);
+  assert.match(render.catalogCard(summary), /Calibration needs review/);
+  const entry = render.individualEntry(record, source, parent);
+  assert.equal(entry.viewerUrl, proof.viewerUrl);
+  assert.ok(entry.facts.some(fact => fact.label === 'Photo / camera resolution' && fact.value === '640 × 480 / 1280 × 960 pixels'));
+  const html = render.catalogEntryPage(entry);
+  assert.match(html, /Calibration review/);
+  assert.match(html, /image-to-camera resolution mapping remains unverified/);
+  assert.doesNotMatch(html, /All registered originals checked/);
+});
+
 test('seeded discovery is a stable, complete permutation and pagination does not repeat scenes', () => {
   const sources = Array.from({ length: 32 }, (_, i) => ({ id: `source-${i}`, provider: 'huggingface', start: i ? 300 + (i - 1) * 5 : 0, count: i ? 5 : 300 }));
   const asset = { schemaVersion: 1, generation: 'catalog', rows: Array.from({ length: 455 }, () => [1, 0, 20000]) };

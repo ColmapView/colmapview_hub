@@ -18,6 +18,7 @@ export interface CatalogVerification {
   sourceImages?: { status: 'not_included'; summary: string; sourceUrl: string };
   photoAvailability?: PhotoStatus;
   photoAudit?: ScenePhotoAudit;
+  calibrationReview?: { status: 'suspect' | 'unverified'; checkedAt: string; cameraFileSha256: string; summary: string };
   availableData?: SceneContents;
   thumbnail?: SceneThumbnail;
   opening?: { status: 'access_required' | 'extraction_required' | 'load_failed'; summary: string };

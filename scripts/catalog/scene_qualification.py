@@ -178,14 +178,31 @@ def native_scene_reviews(catalog, policy):
                             or type(evidence.get('bytes')) is not int or evidence['bytes'] < 0
                             or not re.fullmatch('[a-f0-9]{64}', evidence.get('sha256', ''))):
                         raise ValueError('Scene totals must match the exact complete model files')
+            calibration = records.get('calibrationReview')
+            if calibration is not None:
+                if (not isinstance(calibration, dict) or calibration.get('status') not in ('suspect', 'unverified')
+                        or not isinstance(calibration.get('checkedAt'), str) or not calibration['checkedAt']
+                        or not isinstance(calibration.get('summary'), str) or not 1 <= len(calibration['summary']) <= 1000
+                        or not re.fullmatch('[a-f0-9]{64}', calibration.get('cameraFileSha256', ''))):
+                    raise ValueError('Calibration review requires a dated, scoped note and exact camera file digest')
+                camera_receipt = (count_audit or {}).get('files', {}).get('cameras')
+                if camera_receipt and camera_receipt['sha256'] != calibration['cameraFileSha256']:
+                    raise ValueError('Calibration review camera digest differs from the native file receipt')
             reviews[key] = {'sourceId': source['sourceId'], 'revision': revision, 'path': path, 'files': dict(files),
                             'cameras': cameras, 'images': poses, 'points': points, 'photos': photos, 'checkedAt': checked_at,
                             **({'kind': kind} if camera_only else {}),
                             **({'imagePrefix': records['imagePrefix']} if records.get('imagePrefix') else {}),
                             **({'skipImages': True} if records.get('skipImages') else {}),
                             **({'viewerVersion': records['viewerVersion']} if records.get('viewerVersion') else {}),
-                            **({'countAudit': count_audit} if count_audit else {})}
+                            **({'countAudit': count_audit} if count_audit else {}),
+                            **({'calibrationReview': dict(calibration)} if calibration else {})}
     return reviews
+
+
+def apply_calibration_review(proof, review):
+    """Keep import/export evidence while exposing unresolved physical calibration."""
+    return {**proof, 'calibrationReview': dict(review), 'statusLabel': 'Calibration needs review',
+            'summary': review['summary'] + ' ' + proof['summary']}
 
 
 def native_evidence(entry, row, revision, review, hf_url):

@@ -40,4 +40,7 @@ export interface ScenePhotoAudit {
   sampleRegisteredName?: string;
   samplePrefixSha256?: string;
   sampleDimensionsMatch?: boolean;
+  sampleWidth?: number;
+  sampleHeight?: number;
+  sampleCalibration?: { width: number; height: number; sha256: string };
 }

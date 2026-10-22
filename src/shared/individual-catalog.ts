@@ -214,6 +214,9 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
       ...(proof?.photoAvailability ? [{ label: 'Original photographs', value: proof.photoAvailability === 'complete_export_checked'
         ? 'All registered originals checked in a complete export' : proof.photoAvailability === 'not_included'
           ? 'Not included by publisher' : photoLabel(proof.photoAvailability) }] : []),
+      ...(proof?.calibrationReview ? [{ label: 'Calibration review', value: proof.calibrationReview.summary },
+        { label: 'Reviewed camera file SHA-256', value: proof.calibrationReview.cameraFileSha256 },
+        { label: 'Calibration reviewed on', value: proof.calibrationReview.checkedAt }] : []),
       ...(proof?.photoAudit ? [
         { label: 'Photo availability check', value: proof.photoAudit.summary },
         { label: 'Current media scope', value: proof.photoAudit.sceneRoot || '(repository root)' },
@@ -229,6 +232,11 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ...(proof.photoAudit.proposedNameCheck ? [{ label: 'Photo names matched with proposed scope', value: `${proof.photoAudit.proposedNameCheck.matched}/${proof.photoAudit.proposedNameCheck.registered}. This media configuration is not applied by the current scene link.` }] : []),
         ...(proof.photoAudit.samplePath ? [{ label: 'Checked photo sample', value: proof.photoAudit.samplePath, url: file(proof.photoAudit.samplePath) },
           { label: 'Photo sample browser read', value: proof.photoAudit.samplePixels === 'decoded' ? 'Photograph pixels decoded; other images checked separately.' : 'Photograph bytes readable; pixel decoding deferred by the audit size bound.' }] : []),
+        ...(proof.photoAudit.sampleCalibration ? [{ label: 'Photo / camera resolution',
+          value: `${proof.photoAudit.sampleWidth} × ${proof.photoAudit.sampleHeight} / ${proof.photoAudit.sampleCalibration.width} × ${proof.photoAudit.sampleCalibration.height} pixels` },
+          { label: 'Photo alignment', value: proof.photoAudit.sampleDimensionsMatch
+            ? 'Sample dimensions match; complete coverage and export checked separately.'
+            : 'Sample dimensions differ. The image-to-camera resolution mapping remains unverified.' }] : []),
         ...(proof.photoAudit.archive ? [{ label: 'Separate image archive', value: proof.photoAudit.archive.path, url: file(proof.photoAudit.archive.path) },
           { label: 'Archive photo evidence', value: `${proof.photoAudit.archive.inventoryComplete === false ? 'At least ' : ''}${proof.photoAudit.archive.photos} image member${proof.photoAudit.archive.photos === 1 ? '' : 's'} listed; a registered name matched; browser range read checked. Every image and combined scene loading remain separate checks.` },
           ...(proof.photoAudit.archive.sample ? [{ label: 'Checked archive photograph', value: `${proof.photoAudit.archive.sample.path} → ${proof.photoAudit.archive.sample.registeredName}. Photograph pixels decoded; ${proof.photoAudit.archive.sample.dimensionsMatch ? 'camera dimensions match' : 'camera dimensions differ; calibration or image conversion needs review'}.` }] : [])] : []),

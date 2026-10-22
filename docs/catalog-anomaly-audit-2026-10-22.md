@@ -1,5 +1,7 @@
 # Dataset count and calibration review — October 22, 2026
 
+The [corrections and validation follow-up](catalog-calibration-fixes-2026-10-22.md) fixes the signed-focal viewer limitation, exposes source review notes and resolves the 30 photo-camera lookups. The original observations below remain the historical review snapshot.
+
 The review covers all **4,559 published scene entries across 144 source collections** in Hub 0.10.11, generation `d11109b976d53df16024df9e6d2d2f890f1d3a70971a422d54d7f2a5ed19129c`, against viewer 0.20.5 (`2196486c078c26ff851a51a6e503dd0186311221`). It finds no count mismatch in the tested comparisons, but identifies six suspect source calibrations, three unresolved pixel-aspect outliers, and a viewer limitation affecting valid signed camera intrinsics in 68 AstroVision entries. Known photograph-resolution differences remain a separate qualification limit.
 
 This is a review receipt. It changes no catalog selection, source value or deployed code. The [machine-readable evidence](../data/catalog-anomaly-audit-2026-10-22.json.gz) retains every scene's selected counts, exact source URLs, revisions, read sizes and hashes, candidate dispositions, complete targeted-model checks and projection samples.

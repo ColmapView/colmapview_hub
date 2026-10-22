@@ -18,6 +18,27 @@ class ScenePhotoTests(unittest.TestCase):
     def review(self):
         return next(iter(photo_scene_reviews({'entries': [self.entry]}, self.policy).values()))
 
+    def test_photo_resolution_mismatches_cannot_claim_matching_dimensions_or_complete_export(self):
+        self.audit.update(sampleWidth=640, sampleHeight=480, sampleDimensionsMatch=False,
+                          sampleCalibration={'width': 1280, 'height': 960, 'sha256': 'c' * 64})
+        review = self.review()
+        row = ['colmap', self.scene['path'], self.files, None]
+        proof = {'level': 'native_layout_checked', 'viewerUrl': 'unchanged'}
+        updated = apply_photo_evidence(self.entry, row, 'a' * 40, proof, review)
+        self.assertEqual(updated['photoAvailability'], 'sample_checked')
+        self.assertEqual(updated['viewerUrl'], 'unchanged')
+        self.assertFalse(updated['photoAudit']['sampleDimensionsMatch'])
+        with self.assertRaisesRegex(ValueError, 'conflicts with a complete'):
+            apply_photo_evidence(self.entry, row, 'a' * 40, {**proof, 'photoAvailability': 'complete_export_checked'}, review)
+        for field, value in [('sampleDimensionsMatch', True), ('sampleWidth', 0), ('sampleHeight', True)]:
+            invalid = copy.deepcopy(self.policy)
+            invalid['sources'][0]['scenes'][0]['audit'][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'Photo resolution evidence'):
+                photo_scene_reviews({'entries': [self.entry]}, invalid)
+        self.audit['sampleCalibration']['sha256'] = 'bad'
+        with self.assertRaisesRegex(ValueError, 'Photo resolution evidence'):
+            self.review()
+
     def test_exact_revision_and_files_are_required(self):
         review = self.review()
         proof = {'level': 'native_layout_checked', 'photoAvailability': 'not_checked'}

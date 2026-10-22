@@ -42,6 +42,22 @@ def photo_scene_reviews(catalog, policy):
             if status in SAMPLE_STATES and (not audit.get('samplePath') or audit.get('sampleBrowserRead') is not True
                                            or audit.get('samplePixels') not in ('decoded', 'deferred')):
                 raise ValueError('Found photographs require a matching browser-readable sample')
+            calibration = audit.get('sampleCalibration')
+            if calibration is not None:
+                archive_sample = (audit.get('archive') or {}).get('sample') or {}
+                sample_read = (audit.get('samplePath') and audit.get('sampleBrowserRead') is True
+                               or status == 'companion_archive' and archive_sample.get('path')
+                               and archive_sample.get('pixels') == 'decoded' and audit['archive'].get('browserRangeRead') is True)
+                if (not isinstance(calibration, dict)
+                        or any(type(value) is not int or value < 1 for value in
+                               (calibration.get('width'), calibration.get('height'), audit.get('sampleWidth'), audit.get('sampleHeight')))
+                        or not re.fullmatch('[a-f0-9]{64}', calibration.get('sha256', ''))
+                        or not sample_read
+                        or type(audit.get('sampleDimensionsMatch')) is not bool
+                        or audit['sampleDimensionsMatch'] != (calibration['width'] == audit['sampleWidth']
+                                                             and calibration['height'] == audit['sampleHeight'])
+                        or archive_sample and archive_sample.get('dimensionsMatch') != audit['sampleDimensionsMatch']):
+                    raise ValueError('Photo resolution evidence must match its dimensions and exact camera file digest')
             for field in ('nameCheck', 'proposedNameCheck', 'mappingCheck'):
                 check = audit.get(field)
                 if not check:
@@ -97,7 +113,7 @@ def apply_photo_evidence(entry, row, revision, proof, review):
     result = deepcopy(proof)
     audit = deepcopy(review['audit'])
     if result.get('photoAvailability') == 'complete_export_checked':
-        if audit['status'] not in ('sample_checked',):
+        if audit['status'] not in ('sample_checked',) or audit.get('sampleDimensionsMatch') is False:
             raise ValueError('Photo evidence conflicts with a complete original-photo export')
     else:
         result['photoAvailability'] = audit['status']
