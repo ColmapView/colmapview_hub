@@ -7,12 +7,65 @@ from pathlib import Path
 
 from scripts.audit.prepare_individual_datasets import individual_records, group_components
 from scripts.catalog.build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, retained_scene_selection, reviewed_scene_exclusions, tokens
-from scripts.catalog.scene_qualification import REQUIRED_CHECKS, apply_calibration_review, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
+from scripts.catalog.scene_qualification import REQUIRED_CHECKS, apply_calibration_review, apply_source_integrity_review, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
 from scripts.catalog.sampled_individuals import supplement_rows
 from scripts.catalog.scene_datasets import MAX_SCENE_FILE_LINKS, scene_records, named_variant_groups
 
 
 class IndividualDatasetsTests(unittest.TestCase):
+    def test_source_integrity_reviews_are_bound_to_native_files_and_keep_geometry_actions(self):
+        entry = {'sourceId': 'hf:owner/data', 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
+        files = {'cameras': 'scene/cameras.bin', 'images': 'scene/images.bin', 'points3d': 'scene/points3D.bin'}
+        warning = {'status': 'inconsistent', 'scope': 'sampled_relationships', 'checkedAt': '2026-10-22',
+                   'summary': 'Checked source tracks name different observation IDs.', 'receiptSha256': 'd' * 64,
+                   'files': {role: {'path': files[role], 'sha256': 'b' * 64, 'bytes': 200, 'scope': 'prefix'} for role in ('images', 'points3d')}}
+        model = ['scene', files, 1, 2, 3, 'not_checked', '2026-10-22',
+                 {'cameraRecordChecked': True, 'poseRecordChecked': True, 'sourceIntegrityReview': warning}]
+        policy = {'schemaVersion': 1, 'sources': [{'sourceId': entry['sourceId'], 'revision': 'a' * 40, 'models': [model]}]}
+        review = next(iter(native_scene_reviews({'entries': [entry]}, policy).values()))
+        proof = {'level': 'native_model_checked', 'viewerUrl': 'unchanged', 'summary': 'Native camera and point counts checked.',
+                 'sceneCompatibility': {'images': 2, 'points': 3}, 'photoAvailability': 'sample_checked'}
+        updated = apply_source_integrity_review(proof, review['sourceIntegrityReview'])
+        self.assertEqual(updated['statusLabel'], 'Feature links need review')
+        for key in proof.keys() - {'summary'}:
+            self.assertEqual(updated[key], proof[key])
+        self.assertTrue(updated['summary'].startswith(warning['summary']))
+        self.assertNotIn('sourceIntegrityReview', proof)
+        for field, value in [('status', 'verified'), ('scope', 'all_scenes'), ('summary', ''), ('checkedAt', None), ('receiptSha256', 'bad')]:
+            invalid = json.loads(json.dumps(policy))
+            invalid['sources'][0]['models'][0][7]['sourceIntegrityReview'][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'Source integrity review requires'):
+                native_scene_reviews({'entries': [entry]}, invalid)
+        for field, value in [('path', 'other/images.bin'), ('sha256', 'bad'), ('bytes', 0), ('scope', 'complete')]:
+            invalid = json.loads(json.dumps(policy))
+            invalid['sources'][0]['models'][0][7]['sourceIntegrityReview']['files']['images'][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'exact native files'):
+                native_scene_reviews({'entries': [entry]}, invalid)
+
+    def test_published_source_integrity_reviews_match_the_immutable_relationship_audit(self):
+        root = Path(__file__).resolve().parents[1]
+        receipt_bytes = (root / 'data/catalog-observation-audit-2026-10-22.json.gz').read_bytes()
+        receipt = json.loads(gzip.decompress(receipt_bytes))
+        finding = receipt['findings'][0]
+        reviews = native_scene_reviews(json.loads((root / 'data/catalog.json').read_text(encoding='utf8')),
+                                       json.loads(gzip.decompress((root / 'data/native-layouts.json.gz').read_bytes())))
+        flagged = {identity(review['sourceId'], ['colmap', review['path'], review['files'], None]): review
+                   for review in reviews.values() if review.get('sourceIntegrityReview')}
+        self.assertEqual(sorted(flagged), finding['affectedIds'])
+        full = {row['id']: row for row in receipt['completeModels']}
+        ranges = {(row['id'], row['role']): row for row in receipt['additionalRangeReceipts']}
+        self.assertEqual(len(full), 4)
+        self.assertEqual(len(flagged) - len(full), 21)
+        for scene_id, review in flagged.items():
+            warning = review['sourceIntegrityReview']
+            self.assertEqual(review['revision'], finding['revision'])
+            self.assertEqual(warning['receiptSha256'], hashlib.sha256(receipt_bytes).hexdigest())
+            self.assertEqual(warning['scope'], 'complete_model' if scene_id in full else 'sampled_relationships')
+            for role, evidence in warning['files'].items():
+                source = next(row for row in full[scene_id]['sourceFiles'] if row['role'] == role) if scene_id in full else ranges[(scene_id, role)]
+                self.assertEqual((evidence['sha256'], evidence['bytes']), (source['sha256'], source['bytes']))
+                self.assertTrue(source['url'].endswith('/' + evidence['path']))
+
     def test_calibration_warnings_are_revision_bound_and_preserve_export_evidence(self):
         entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface', 'access': 'public',
                  'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}

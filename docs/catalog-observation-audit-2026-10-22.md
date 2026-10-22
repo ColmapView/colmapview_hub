@@ -1,5 +1,7 @@
 # Incremental observation audit — October 22, 2026
 
+Follow-up: the [source-integrity safeguards](catalog-source-integrity-fixes-2026-10-22.md) implement the viewer warning/matching/export guard and the 25 scoped Hub reviews. The evidence below records the original audit baseline; original source files remain unchanged.
+
 This pass reuses the [previous verification](catalog-calibration-fixes-2026-10-22.md) and checks new observation/track relationships and saved-state compatibility. Runtime code and catalog selections are unchanged. Baselines are Hub commit `26471ae83217fa06194d8354fd834e44d85bd737`, viewer `7e1419ddcf697977a5cef48137aaf2543be21929`, and generation `e3cd6257a816fb06c73694250ac42ffe77bb74a586c73b2640030bf3dc7b7be2`.
 
 The [receipt](../data/catalog-observation-audit-2026-10-22.json.gz) records original source identities, exact sample bounds/hashes, all affected IDs and independent complete-file results. An executed inspection notebook and checking programs are retained locally at `.tmp/catalog-delta-audit-20261022/audit.ipynb`.

@@ -19,6 +19,8 @@ export interface CatalogVerification {
   photoAvailability?: PhotoStatus;
   photoAudit?: ScenePhotoAudit;
   calibrationReview?: { status: 'suspect' | 'unverified'; checkedAt: string; cameraFileSha256: string; summary: string };
+  sourceIntegrityReview?: { status: 'inconsistent'; scope: 'complete_model' | 'sampled_relationships'; checkedAt: string; summary: string;
+    receiptSha256: string; files: Record<'images' | 'points3d', { path: string; sha256: string; bytes: number; scope: 'complete' | 'prefix' }> };
   availableData?: SceneContents;
   thumbnail?: SceneThumbnail;
   opening?: { status: 'access_required' | 'extraction_required' | 'load_failed'; summary: string };

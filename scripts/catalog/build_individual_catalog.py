@@ -18,7 +18,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from .scene_datasets import scene_records, named_variant_groups, MAX_SCENE_FILE_LINKS
-from .scene_qualification import apply_calibration_review, launch_manifest_asset, native_launch_manifest, native_evidence, native_scene_reviews, public_launch_manifest, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
+from .scene_qualification import apply_calibration_review, apply_source_integrity_review, launch_manifest_asset, native_launch_manifest, native_evidence, native_scene_reviews, public_launch_manifest, qualified_evidence, scene_key, verified_scene_reviews, verified_source_entry
 from .scene_photos import apply_photo_evidence, photo_scene_reviews
 from .scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
 from .scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
@@ -496,6 +496,8 @@ def build(root=Path('.')):
                 matched_unresolved.add(review_key)
             if native and native.get('calibrationReview'):
                 proof = apply_calibration_review(proof, native['calibrationReview'])
+            if native and native.get('sourceIntegrityReview'):
+                proof = apply_source_integrity_review(proof, native['sourceIntegrityReview'])
             qualified.append((row, proof, format_name, review, review_key))
         if retained_selections:
             raise ValueError('Retained scene selection is absent from its pinned source inventory')

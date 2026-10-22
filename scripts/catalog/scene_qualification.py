@@ -188,6 +188,21 @@ def native_scene_reviews(catalog, policy):
                 camera_receipt = (count_audit or {}).get('files', {}).get('cameras')
                 if camera_receipt and camera_receipt['sha256'] != calibration['cameraFileSha256']:
                     raise ValueError('Calibration review camera digest differs from the native file receipt')
+            integrity = records.get('sourceIntegrityReview')
+            if integrity is not None:
+                if (not isinstance(integrity, dict) or integrity.get('status') != 'inconsistent'
+                        or integrity.get('scope') not in ('complete_model', 'sampled_relationships')
+                        or not isinstance(integrity.get('checkedAt'), str) or not integrity['checkedAt']
+                        or not isinstance(integrity.get('summary'), str) or not 1 <= len(integrity['summary']) <= 1000
+                        or not re.fullmatch('[a-f0-9]{64}', integrity.get('receiptSha256', ''))
+                        or not isinstance(integrity.get('files'), dict) or set(integrity['files']) != {'images', 'points3d'}):
+                    raise ValueError('Source integrity review requires dated, scoped relationship evidence and receipt digest')
+                for role, evidence in integrity['files'].items():
+                    if (not isinstance(evidence, dict) or role not in files or evidence.get('path') != files[role]
+                            or not re.fullmatch('[a-f0-9]{64}', evidence.get('sha256', ''))
+                            or type(evidence.get('bytes')) is not int or evidence['bytes'] < 1
+                            or evidence.get('scope') != ('complete' if integrity['scope'] == 'complete_model' else 'prefix')):
+                        raise ValueError('Source integrity review must identify the exact native files and read bounds')
             reviews[key] = {'sourceId': source['sourceId'], 'revision': revision, 'path': path, 'files': dict(files),
                             'cameras': cameras, 'images': poses, 'points': points, 'photos': photos, 'checkedAt': checked_at,
                             **({'kind': kind} if camera_only else {}),
@@ -195,13 +210,20 @@ def native_scene_reviews(catalog, policy):
                             **({'skipImages': True} if records.get('skipImages') else {}),
                             **({'viewerVersion': records['viewerVersion']} if records.get('viewerVersion') else {}),
                             **({'countAudit': count_audit} if count_audit else {}),
-                            **({'calibrationReview': dict(calibration)} if calibration else {})}
+                            **({'calibrationReview': dict(calibration)} if calibration else {}),
+                            **({'sourceIntegrityReview': dict(integrity)} if integrity else {})}
     return reviews
 
 
 def apply_calibration_review(proof, review):
     """Keep import/export evidence while exposing unresolved physical calibration."""
     return {**proof, 'calibrationReview': dict(review), 'statusLabel': 'Calibration needs review',
+            'summary': review['summary'] + ' ' + proof['summary']}
+
+
+def apply_source_integrity_review(proof, review):
+    """Keep usable native geometry while making inconsistent feature links explicit."""
+    return {**proof, 'sourceIntegrityReview': dict(review), 'statusLabel': 'Feature links need review',
             'summary': review['summary'] + ' ' + proof['summary']}
 
 

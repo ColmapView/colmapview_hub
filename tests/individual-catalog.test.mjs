@@ -9,6 +9,23 @@ import { applyDatasetLabels } from '../scripts/catalog/dataset-labels.mjs';
 const render = await catalogRenderer();
 const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));
 
+test('inconsistent native feature links stay visible on cards and details while preserving direct viewing', () => {
+  const note = 'Source track targets name different points. Only bounded samples were checked.';
+  const proof = { ...nativePhotoProof('sample_checked'), statusLabel: 'Feature links need review', summary: note,
+    sourceIntegrityReview: { status: 'inconsistent', scope: 'sampled_relationships', checkedAt: '2026-10-22', summary: note,
+      receiptSha256: 'a'.repeat(64), files: Object.fromEntries(['images', 'points3d'].map(role => [role,
+        { path: `${role}.bin`, sha256: 'b'.repeat(64), bytes: 1024, scope: 'prefix' }])) } };
+  const record = row(0, { 7: proof });
+  assert.equal(render.canOpenIndividual(record, source), true);
+  assert.match(render.catalogCard(render.individualSummary(record, source)), /Feature links need review/);
+  const entry = render.individualEntry(record, source, parent);
+  assert.equal(entry.viewerUrl, proof.viewerUrl);
+  assert.match(render.catalogEntryPage(entry), /Source feature links/);
+  assert.ok(entry.facts.some(fact => fact.label === 'Relationship check scope' && /Bounded.*unverified/.test(fact.value)));
+  proof.sourceIntegrityReview.scope = 'complete_model';
+  assert.ok(render.individualEntry(record, source, parent).facts.some(fact => fact.label === 'Relationship check scope' && fact.value === 'Complete original model'));
+});
+
 test('calibration and resolution reviews stay visible without replacing verified model actions', () => {
   const note = 'Source focal ratio is unverified; original calibration is preserved.';
   const proof = { ...nativePhotoProof('sample_checked'), statusLabel: 'Calibration needs review', summary: note,
