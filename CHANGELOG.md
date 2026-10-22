@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Reconcile all 432 current zero-point scenes with pinned scope receipts, including the 138 recent WildCity additions. Let the offline audit combine refreshed reports while rejecting changed model identities.
+- Recheck every published scene's photo/point metadata and all 2,479 thumbnail assets, including live bytes and browser decoding. Record the remaining photo-association and discovery limits separately from successful checks.
+
 ## 0.10.8 — 2026-10-22
 
 - Fill 496 missing scene previews from checked source photographs: 138 WildCity, 348 AstroVision, seven NL3D and three nerf-gs-datasets scenes. Retain existing previews and keep unsupported models excluded.

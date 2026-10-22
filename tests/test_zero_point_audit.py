@@ -1,8 +1,55 @@
+import copy
 import unittest
-from scripts.audit.audit_zero_point_scenes import audit, effective_counts, finding, verified_frame_selection
+from scripts.audit.audit_zero_point_scenes import audit, effective_counts, finding, merge_component_audits, verified_frame_selection
 
 
 class ZeroPointAuditTest(unittest.TestCase):
+    def test_new_scoped_receipts_refresh_only_the_same_pinned_model(self):
+        source = {'sourceId': 'hf:example/data', 'revision': 'a' * 40, 'inventorySha256': 'b' * 64}
+        scene = {'id': 'one', 'source': 0, 'kind': 'cameras', 'path': 'scene',
+                 'files': {'cameras': 'scene/cameras.txt', 'images': 'scene/images.txt'},
+                 'scope': 'scene', 'scopeComplete': True}
+        historical = {'sources': [source], 'scenes': [scene]}
+        refreshed = {'sources': [{**source, 'inventorySha256': 'c' * 64}],
+                     'scenes': [{**scene, 'findings': {'point_cloud': 'not_listed_in_checked_scope'}},
+                                {**scene, 'id': 'two', 'path': 'second'}]}
+        merged = merge_component_audits([historical, refreshed])
+        self.assertEqual(len(merged['scenes']), 2)
+        first = next(row for row in merged['scenes'] if row['id'] == 'one')
+        self.assertEqual(merged['sources'][first['source']]['inventorySha256'], 'c' * 64)
+        self.assertEqual(first['findings']['point_cloud'], 'not_listed_in_checked_scope')
+        self.assertNotIn('findings', historical['scenes'][0])
+        for field, value in [('revision', 'd' * 40), ('sourceId', 'hf:peer/data')]:
+            changed = copy.deepcopy(refreshed)
+            changed['sources'][0][field] = value
+            with self.assertRaisesRegex(ValueError, 'model selection changed'):
+                merge_component_audits([historical, changed])
+        for field, value in [('kind', 'colmap'), ('path', 'peer'), ('files', {'images': 'peer/images.txt'})]:
+            changed = copy.deepcopy(refreshed)
+            changed['scenes'][0][field] = value
+            with self.assertRaisesRegex(ValueError, 'model selection changed'):
+                merge_component_audits([historical, changed])
+        with self.assertRaisesRegex(ValueError, 'Duplicate scene'):
+            merge_component_audits([{'sources': [source], 'scenes': [scene, scene]}])
+        with self.assertRaisesRegex(ValueError, 'Invalid component audit source'):
+            merge_component_audits([{'sources': [source], 'scenes': [{**scene, 'source': -1}]}])
+
+    def test_partial_refresh_keeps_each_scenes_own_inventory_receipt(self):
+        source = {'sourceId': 'hf:example/data', 'revision': 'a' * 40}
+        files = {'cameras': 'scene/cameras.txt', 'images': 'scene/images.txt'}
+        counts = {'cameras': 1, 'images': 2, 'points': 0, 'revision': source['revision']}
+        scenes = [{'id': name, 'source': 0, 'kind': 'cameras', 'path': name, 'files': files,
+                   'scope': name, 'scopeComplete': True, 'findings': {'point_cloud': 'not_listed_in_checked_scope'}}
+                  for name in ('one', 'two')]
+        historical = {'sources': [{**source, 'inventorySha256': 'b' * 64}], 'scenes': scenes}
+        refreshed = {'sources': [{**source, 'inventorySha256': 'c' * 64}], 'scenes': [scenes[1]]}
+        rows = [[scene['id'], 0, 'cameras', scene['path'], 'COLMAP', None, files, {'sceneCompatibility': counts}]
+                for scene in scenes]
+        result = audit({'generation': 'current', 'total': 2, 'sources': [source]}, rows,
+                       merge_component_audits([historical, refreshed]))
+        self.assertEqual([result['sources'][scene['source']]['inventorySha256'] for scene in result['scenes']],
+                         ['b' * 64, 'c' * 64])
+
     def test_loaded_gaussians_keep_zero_sparse_points_and_need_independent_frame_world_evidence(self):
         index = {'generation': 'snapshot', 'total': 1, 'sources': [{'sourceId': 'hf:example/data'}]}
         files = {'cameras': 'cameras.bin', 'images': 'images.bin'}

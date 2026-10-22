@@ -62,6 +62,8 @@ These **294 remaining zeros** comprise 262 scoped non-listings, two inspected no
 
 ## Reproduction
 
+This is the October 20 snapshot. The [October 22 repeat audit](catalog-reaudit-2026-10-22.md) covers all 432 zero-point selections in the later 4,559-scene catalog, including 138 additional WildCity scenes. The default command now combines this historical component inventory with `data/scene-component-additions.json.gz`; repeated `--prior` arguments select other scoped reports explicitly. Independent export and auxiliary confirmations remain separate inputs.
+
 The offline command "python -m scripts.audit.audit_zero_point_scenes" summarizes same-generation packs and pinned component receipts. Optional --exports adds independent recoveries; --confirmations reuses auxiliary inspections only when the evidence key and revision match. Its sourceNetworkReads: 0 describes the summary step, not historical source inspections.
 
 "python -m scripts.audit.verify_companion_scene_exports --scene <scene-id> --browser <browser-results.json> --exports <zip-directory> --cache <url-hash-cache> --output <results.json>" verifies selected scene manifests offline with NumPy, Pillow and PyCOLMAP. It compares large point streams in chunks, camera calibration/poses, retained feature coordinates, synchronized frame selection, source world associations and original photo hashes. Source bytes and browser exports remain local operator receipts; compact evidence is published. OpenSfM sidecars are checked by verify_camera_model_exports and verify_opensfm_tracks.

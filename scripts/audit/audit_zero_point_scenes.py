@@ -25,6 +25,31 @@ def effective_counts(proof):
             or proof.get('sceneValidation') or proof.get('sceneCompatibility') or {})
 
 
+def merge_component_audits(reports):
+    """Refresh scoped receipts without borrowing evidence from changed models."""
+    sources, scenes = [], {}
+    for report in reports:
+        offset = len(sources)
+        sources.extend(report['sources'])
+        seen = set()
+        for scene in report['scenes']:
+            if scene['id'] in seen:
+                raise ValueError('Duplicate scene in component audit: ' + scene['id'])
+            seen.add(scene['id'])
+            ordinal = scene['source']
+            if type(ordinal) is not int or not 0 <= ordinal < len(report['sources']):
+                raise ValueError('Invalid component audit source: ' + scene['id'])
+            source = report['sources'][ordinal]
+            previous = scenes.get(scene['id'])
+            if previous:
+                old_source = sources[previous['source']]
+                if (any(old_source.get(key) != source.get(key) for key in ('sourceId', 'revision'))
+                        or any(previous.get(key) != scene.get(key) for key in ('kind', 'path', 'files', 'archive'))):
+                    raise ValueError('Supplemental audit model selection changed: ' + scene['id'])
+            scenes[scene['id']] = {**scene, 'source': offset + ordinal}
+    return {'sources': sources, 'scenes': list(scenes.values())}
+
+
 def finding(source_id, proof, previous):
     data = proof.get('availableData', {})
     cloud = data.get('point_cloud', {})
@@ -83,11 +108,12 @@ def audit(index, rows, prior, exports=(), confirmations=()):
                 or old['path'] != path or old['files'] != files or archive):
             raise ValueError('Prior audit source/model selection changed: ' + scene_id)
         source_id = source['sourceId']
-        if source_id not in source_indices:
-            source_indices[source_id] = len(sources)
+        source_key = (source_id, source_audit['revision'], source_audit.get('inventorySha256'))
+        if source_key not in source_indices:
+            source_indices[source_key] = len(sources)
             sources.append(source_audit)
         status = finding(source_id, proof, old)
-        result = {'id': scene_id, 'source': source_indices[source_id], 'kind': kind, 'path': path,
+        result = {'id': scene_id, 'source': source_indices[source_key], 'kind': kind, 'path': path,
                   'files': files, 'previousCounts': counts, 'finding': status,
                   'scope': old['scope'], 'scopeComplete': old['scopeComplete'],
                   'inventoryFinding': old.get('findings', {}).get('point_cloud'),
@@ -150,13 +176,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--index', type=Path, default=Path('public/hub/datasets/individual/index.json'))
     parser.add_argument('--rows', type=Path, help='Complete baseline records JSON; otherwise read the generated packs')
-    parser.add_argument('--prior', type=Path, default=Path('data/scene-component-audit.json.gz'))
+    parser.add_argument('--prior', type=Path, action='append',
+                        help='Scoped component report; repeat in refresh order. Defaults to the historical report and current additions.')
     parser.add_argument('--exports', type=Path, help='Independently verified model exports')
     parser.add_argument('--confirmations', type=Path, help='Exact evidence-key-bound auxiliary inspection confirmations')
     parser.add_argument('--output', type=Path, default=Path('.tmp/zero-point-audit/report.json'))
     args = parser.parse_args()
     rows = read(args.rows) if args.rows else [row for file in (args.index.parent / 'packs').glob('*.json') for row in read(file)]
-    report = audit(read(args.index), rows, read(args.prior), read(args.exports) if args.exports else [], read(args.confirmations) if args.confirmations else [])
+    priors = args.prior or [Path('data/scene-component-audit.json.gz'), Path('data/scene-component-additions.json.gz')]
+    report = audit(read(args.index), rows, merge_component_audits(read(path) for path in priors),
+                   read(args.exports) if args.exports else [], read(args.confirmations) if args.confirmations else [])
     body = (json.dumps(report, ensure_ascii=False, indent=2) + '\n').encode()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(gzip.compress(body, mtime=0) if args.output.suffix == '.gz' else body)
