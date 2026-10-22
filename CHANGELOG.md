@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.12 — 2026-10-22
+
+- Flag 25 scenes with inconsistent source feature links: four complete-model findings and 21 bounded-sample findings. Preserve direct viewer links, original files and native camera/point counts.
+- Expose nine source-calibration reviews and structured evidence for all 210 known photo-resolution differences. Resolve the 30 earlier multi-calibration photo lookups against their exact camera dimensions.
+- Record the count, calibration and observation audits and their verification limits. Preserve all 4,559 scenes across 144 sources, 2,610 manifests and 80 saved-state bodies.
+
 ## 0.10.11 — 2026-10-22
 
 - Restore all 60 Dunhuang photographs through the exact first-frame text-model association. Check every camera, pose and 134,788 observations against the unchanged native binary model, plus all 11,115 points' reciprocal tracks. Exclude the archive's inconsistent binary representation.
