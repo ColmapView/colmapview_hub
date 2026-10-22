@@ -10,6 +10,7 @@ import gzip
 import hashlib
 import json
 import re
+import tempfile
 import urllib.parse
 from collections import Counter
 from pathlib import Path
@@ -139,6 +140,41 @@ def directory_listing(repo, revision, path, network):
 
 
 
+def cached_directory_listing(repo, revision, path, network, cache):
+    """Checkpoint only complete directory reads, independently of the full walk."""
+    key = hashlib.sha256((repo + '@' + revision + '/' + path).encode()).hexdigest()
+    directory = cache / 'directories'
+    target = directory / (key + '.json.gz')
+    try:
+        item = read(target)
+        prefix = path + '/' if path else ''
+        names = [*item.get('children', []), *item.get('files', [])]
+        safe_names = all(isinstance(name, str) and name.startswith(prefix)
+                         and name[len(prefix):] not in ('', '.', '..')
+                         and '/' not in name[len(prefix):] and '\\' not in name for name in names)
+        if (item.get('schemaVersion') == 1 and item.get('id') == repo and item.get('revision') == revision
+                and item.get('path') == path and item.get('listingComplete') is True
+                and isinstance(item.get('children'), list) and isinstance(item.get('files'), list)
+                and isinstance(item.get('entries'), dict) and set(item['entries']) == set(item['files'])
+                and len(names) == len(set(names)) and safe_names
+                and item.get('receipt', {}).get('path') == path and item['receipt'].get('pages')):
+            return item['children'], item['files'], item['entries'], item['receipt']
+    except (OSError, ValueError, EOFError, TypeError, AttributeError):
+        pass
+    children, files, entries, receipt = directory_listing(repo, revision, path, network)
+    item = {'schemaVersion': 1, 'id': repo, 'revision': revision, 'path': path,
+            'listingComplete': True, 'children': children, 'files': files, 'entries': entries, 'receipt': receipt}
+    directory.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(prefix=key + '-', suffix='.tmp', dir=directory, delete=False) as temporary:
+        pending = Path(temporary.name)
+    try:
+        write_pack(pending, item)
+        pending.replace(target)
+    finally:
+        pending.unlink(missing_ok=True)
+    return children, files, entries, receipt
+
+
 def refresh_model_listing(repo, revision, network, cache):
     """Walk folders without the API's 100,000-sibling cap; omit media-only folders.
 
@@ -148,7 +184,10 @@ def refresh_model_listing(repo, revision, network, cache):
     """
     target = cache / (hashlib.sha256((repo + '@' + revision).encode()).hexdigest() + '.json.gz')
     if target.exists():
-        cached = read(target)
+        try:
+            cached = read(target)
+        except (OSError, ValueError, EOFError):
+            cached = {}
         if (cached.get('modelWalkVersion') == 2 and cached.get('id') == repo
                 and cached.get('revision') == revision and cached.get('listingComplete') is True):
             return cached
@@ -159,7 +198,7 @@ def refresh_model_listing(repo, revision, network, cache):
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
         while pending:
             batch, pending = pending[:64], pending[64:]
-            for children, files, entries, receipt in pool.map(lambda path: directory_listing(repo, revision, path, network), batch):
+            for children, files, entries, receipt in pool.map(lambda path: cached_directory_listing(repo, revision, path, network, cache), batch):
                 visited += 1
                 paths.extend(files)
                 file_entries.update(entries)

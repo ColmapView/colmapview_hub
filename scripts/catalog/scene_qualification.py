@@ -19,15 +19,21 @@ LAUNCH_ASSETS = 'https://colmapview.opsiclear.com/hub/datasets/individual/manife
 
 def native_launch_manifest(entry, review, hf_url):
     image = review.get('imagePrefix')
-    if not image:
+    skip_images = review.get('skipImages')
+    if skip_images is not None and (skip_images is not True or image or review.get('photos') != 'unresolved'):
+        raise ValueError('Skipping native photos requires an unresolved photo review without an image prefix')
+    if not image and not skip_images:
         return None
+    files = {role: hf_url(entry, review['revision'], review['files'][key])
+             for role, key in [('cameras', 'cameras'), ('images', 'images'), ('points3D', 'points3d')] if key in review['files']}
+    if skip_images:
+        return {'version': 1, 'baseUrl': LAUNCH_ASSETS, 'files': files,
+                'skipImages': True, 'images': [], 'masks': [], 'splats': []}
     if (not isinstance(image, dict) or not image.get('registeredName') or not image.get('samplePath')
             or not re.fullmatch('[a-f0-9]{64}', image.get('samplePrefixSha256', ''))
             or image.get('browserRead') is not True or image.get('dimensionsMatch') is not True
             or image.get('orientation') != 1):
         raise ValueError('Native image prefix requires an exact registered photo and calibration check')
-    files = {role: hf_url(entry, review['revision'], review['files'][key])
-             for role, key in [('cameras', 'cameras'), ('images', 'images'), ('points3D', 'points3d')] if key in review['files']}
     prefix = image.get('path')
     if (not isinstance(prefix, str) or prefix.startswith('/') or '\\' in prefix
             or any(part in ('', '.', '..') for part in prefix.rstrip('/').split('/'))
@@ -145,6 +151,8 @@ def native_scene_reviews(catalog, policy):
                     or photos not in ('sample_checked', 'not_checked', 'unresolved')):
                 raise ValueError('Native layout evidence requires camera/pose headers, exact model files and scoped photo evidence')
             kind = 'cameras' if camera_only else 'colmap'
+            if 'skipImages' in records and (records['skipImages'] is not True or records.get('imagePrefix') or photos != 'unresolved'):
+                raise ValueError('Skipping native photos requires an unresolved photo review without an image prefix')
             key = scene_key(source['sourceId'], kind, path)
             if key in reviews:
                 raise ValueError('Duplicate native layout evidence')
@@ -174,6 +182,7 @@ def native_scene_reviews(catalog, policy):
                             'cameras': cameras, 'images': poses, 'points': points, 'photos': photos, 'checkedAt': checked_at,
                             **({'kind': kind} if camera_only else {}),
                             **({'imagePrefix': records['imagePrefix']} if records.get('imagePrefix') else {}),
+                            **({'skipImages': True} if records.get('skipImages') else {}),
                             **({'viewerVersion': records['viewerVersion']} if records.get('viewerVersion') else {}),
                             **({'countAudit': count_audit} if count_audit else {})}
     return reviews

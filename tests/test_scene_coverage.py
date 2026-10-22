@@ -59,6 +59,36 @@ class SceneCoverageTests(unittest.TestCase):
             with self.subTest(field), self.assertRaises(ValueError):
                 native_launch_manifest(self.entry, broken, hf_url)
 
+    def test_unresolved_photos_can_be_skipped_without_changing_native_files(self):
+        model = copy.deepcopy(self.model)
+        model[5] = 'unresolved'
+        model[7]['skipImages'] = True
+        review = self.native(model)
+        manifest = native_launch_manifest(self.entry, review, hf_url)
+        self.assertTrue(manifest['skipImages'])
+        self.assertEqual(manifest['images'], [])
+        self.assertEqual(manifest['masks'], [])
+        self.assertEqual(manifest['splats'], [])
+        self.assertNotIn('imagesPath', manifest)
+        self.assertEqual(manifest['files'], {role: hf_url(self.entry, 'a' * 40, path) for role, path in self.files.items()})
+        proof, _ = native_evidence(self.entry, ['cameras', model[0], self.files, None], 'a' * 40, review, hf_url)
+        self.assertIn(launch_manifest_asset(manifest)[0], proof['viewerUrl'])
+        self.assertEqual(proof['photoAvailability'], 'unresolved')
+
+    def test_skipping_photos_cannot_conflict_with_a_checked_prefix_or_photo_status(self):
+        for change in ('value', 'status', 'prefix'):
+            model = copy.deepcopy(self.model)
+            model[5] = 'unresolved'
+            model[7]['skipImages'] = True
+            if change == 'value':
+                model[7]['skipImages'] = 'true'
+            elif change == 'status':
+                model[5] = 'sample_checked'
+            else:
+                model[7]['imagePrefix'] = {'path': 'capture/images'}
+            with self.subTest(change), self.assertRaisesRegex(ValueError, 'unresolved photo review'):
+                self.native(model)
+
     def model_review(self, public=False):
         path = 'capture/transforms.json'
         url = hf_url(self.entry, 'a' * 40, path)

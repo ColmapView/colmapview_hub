@@ -79,6 +79,54 @@ class ModelListingTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'escaped'):
                 refresh_model_listing('owner/repo', self.revision, Network(), Path(directory))
 
+    def test_interrupted_walk_resumes_completed_directories(self):
+        calls = []
+        base = self.base
+
+        class Network:
+            def fetch(self, url, **kwargs):
+                path = url.removeprefix(base).split('?')[0].lstrip('/')
+                calls.append(path)
+                if not path:
+                    return b'[{"type":"directory","path":"scene"}]', {}, 200, False
+                if calls.count('scene') == 1:
+                    raise RuntimeError('interrupted request')
+                return b'[{"type":"file","path":"scene/cameras.bin","size":64}]', {}, 200, False
+
+        with tempfile.TemporaryDirectory() as directory:
+            cache = Path(directory)
+            with self.assertRaisesRegex(RuntimeError, 'interrupted'):
+                refresh_model_listing('owner/repo', self.revision, Network(), cache)
+            self.assertEqual(list(cache.glob('*.json.gz')), [])
+            result = refresh_model_listing('owner/repo', self.revision, Network(), cache)
+        self.assertEqual(calls, ['', 'scene', 'scene'])
+        self.assertEqual(result['paths'], ['scene/cameras.bin'])
+        self.assertTrue(result['listingComplete'])
+
+    def test_incomplete_pagination_is_never_checkpointed(self):
+        calls = []
+        base = self.base
+
+        class Network:
+            def fetch(self, url, **kwargs):
+                second = 'cursor=second' in url
+                calls.append(second)
+                if not second:
+                    return (b'[{"type":"file","path":"cameras.bin","size":64}]',
+                            {'link': '<' + base + '?cursor=second>; rel="next"'}, 200, False)
+                if calls.count(True) == 1:
+                    raise RuntimeError('interrupted page')
+                return b'[{"type":"file","path":"images.bin","size":80}]', {}, 200, False
+
+        with tempfile.TemporaryDirectory() as directory:
+            cache = Path(directory)
+            with self.assertRaisesRegex(RuntimeError, 'interrupted page'):
+                refresh_model_listing('owner/repo', self.revision, Network(), cache)
+            self.assertEqual(list(cache.rglob('*.json.gz')), [])
+            result = refresh_model_listing('owner/repo', self.revision, Network(), cache)
+        self.assertEqual(calls, [False, True, False, True])
+        self.assertEqual(result['paths'], ['cameras.bin', 'images.bin'])
+
 
 if __name__ == '__main__':
     unittest.main()
