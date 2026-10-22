@@ -13,6 +13,13 @@ export function applyIndividualListings(snapshot, registry) {
       entry.facts = entry.facts.filter(fact => fact.label !== label);
       entry.facts.push({ label, value: String(value) });
     };
+    // A later model-only enumeration cannot upgrade the older media scan.
+    const scanLabels = new Map([
+      ['Image files listed in repository', 'Image files listed at source scan'],
+      ['Archives listed', 'Archives listed at source scan'],
+      ['Other splat files listed', 'Other splat files listed at source scan'],
+    ]);
+    for (const fact of entry.facts) if (scanLabels.has(fact.label)) fact.label = scanLabels.get(fact.label);
     update('Individual model or scene entries listed', source.count);
     update('Individual listing scope', source.scope || 'Public source file listing; archive contents may be incomplete.');
     update('Individual listing coverage', source.listingComplete ? 'Model paths enumerated. Uninspected archives may contain additional models.' : 'Incomplete source listing; additional models may exist.');

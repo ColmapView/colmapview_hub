@@ -77,6 +77,8 @@ Metadata packs contain 24 scene records, matching an unfiltered results page. La
 
 Search postings iterate sorted tokens so Python hash randomization cannot reorder index files between builds. The catalog generation includes the projection and policy source bytes to invalidate caches when those rules change.
 
+The build refreshes source-detail inventory facts from the pinned registry even when the Python scene projection is cached. Source-detail JSON and the catalog snapshot share those refreshed facts. Media counts from the original source scan retain that scope; model enumeration does not upgrade them into new photograph checks. Source-metadata writers participate in the generation hash.
+
 Evidence, photograph availability, licensing and complete export proof have separate meanings. Use the existing publication fixtures across JavaScript and Python when changing qualification rules. See [catalog behavior](catalog.md) and [input evidence](../data/README.md) before refreshing data.
 
 Generated assets under `public/hub/assets/` and `public/hub/datasets/` are Git-ignored. Do not edit them directly or commit local reports, credentials, private word lists or generated runtime state.

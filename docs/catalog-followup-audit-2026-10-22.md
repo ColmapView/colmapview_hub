@@ -15,6 +15,8 @@ The machine-readable [audit receipts](../data/catalog-followup-audit-2026-10-22.
 
 Each enumeration used the exact existing 40-character catalog commit. Anonymous Git fetches used `--depth=1 --filter=blob:none`; a complete recursive `git ls-tree -r -z --full-tree COMMIT` supplied paths and object IDs without downloading photographs or model bodies. The receipt records each root tree ID and the SHA-256 of the complete NUL-delimited tree output. Completed paginated directory responses are also checkpointed independently; partial pages never become complete-cache entries.
 
+Source detail files and the catalog snapshot now refresh inventory totals and coverage from the same pinned registry on every build. Older image, archive and other-splat counts are labeled as source-scan observations. The projection generation includes the source-metadata writers so their changes invalidate cached metadata.
+
 All previous inventory rows in these sources remain present and unchanged. The complete inventories add 2,115 research records, reaching 2,160,548 file/model records across 2,018 HF inventories. Geometry files and metadata documents do not each become a Hub scene. Existing scene-boundary grouping projects gs-pool's 201 native file sets into 121 named scenes. Other source inventories and archive coverage retain their existing limitations.
 
 ## Model and photograph evidence

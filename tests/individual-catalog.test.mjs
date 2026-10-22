@@ -816,6 +816,30 @@ test('individual counts and dataset labels refresh metadata without transferring
   assert.throws(() => applyIndividualListings(snapshot, { schemaVersion: 1, sources: [{ datasetId: parent.id, sourceId: parent.sourceId, revision: 'new' }] }), /revision changed/);
 });
 
+test('cached source metadata refreshes inventory facts idempotently and retains media-scan provenance', () => {
+  const snapshot = { entries: [structuredClone(parent)] };
+  snapshot.entries[0].facts.push(
+    { label: 'Complete COLMAP models listed', value: '1' },
+    { label: 'Individual listing coverage', value: 'Incomplete source listing' },
+    { label: 'Image files listed in repository', value: '100' },
+  );
+  const registry = { schemaVersion: 1, checkedAt: '2026-10-22', sources: [{ datasetId: parent.id,
+    sourceId: parent.sourceId, revision: 'abc', count: 64, looseColmapCount: 64, plyFileCount: 70,
+    listingComplete: true, scope: 'Complete pinned model paths; media are separate.' }] };
+  applyIndividualListings(snapshot, registry);
+  const first = structuredClone(snapshot);
+  applyIndividualListings(snapshot, registry);
+  assert.deepEqual(snapshot, first);
+  const facts = snapshot.entries[0].facts;
+  assert.equal(facts.find(fact => fact.label === 'Complete COLMAP models listed').value, '64');
+  assert.equal(facts.find(fact => fact.label === 'PLY files listed').value, '70');
+  assert.match(facts.find(fact => fact.label === 'Individual listing coverage').value, /Model paths enumerated/);
+  assert.equal(facts.find(fact => fact.label === 'Image files listed at source scan').value, '100');
+  assert.ok(!facts.some(fact => fact.label === 'Image files listed in repository'));
+  assert.equal(new Set(facts.map(fact => fact.label)).size, facts.length);
+  assert.equal(snapshot.entries[0].viewerUrl, parent.viewerUrl);
+});
+
 test('public archive models retain their source URL and extraction path without inventing an HF URL', () => {
   const publicParent = { ...parent, provider: 'public', sourceId: 'audit:public:neuman', sourceUrl: 'https://example.org/neuman',
     dataUrl: 'https://example.org/neuman.zip', facts: [], viewerUrl: undefined };

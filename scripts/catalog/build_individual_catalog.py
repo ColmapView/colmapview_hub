@@ -309,6 +309,9 @@ def build(root=Path('.')):
                                 + archive_bytes + decision_bytes
                                 + Path(__file__).with_name('archive_routing.py').read_bytes()
                                 + Path(__file__).with_name('photo_decisions.py').read_bytes()
+                                + Path(__file__).with_name('individual-listings.mjs').read_bytes()
+                                + Path(__file__).with_name('catalog-publication.mjs').read_bytes()
+                                + (Path(__file__).parent.parent / 'build/catalog.mjs').read_bytes()
                                 + history_bytes + Path(__file__).with_name('scene_discovery.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
     if (output / 'manifests').is_symlink():

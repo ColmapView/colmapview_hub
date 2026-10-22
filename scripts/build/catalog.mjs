@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { catalogRenderer } from './renderer.mjs';
 import { publicUrl } from '../catalog/catalog-import.mjs';
 import { publicationSnapshot } from '../catalog/catalog-publication.mjs';
+import { applyIndividualListings } from '../catalog/individual-listings.mjs';
 import { applyLicenseCategories } from '../catalog/license-categories.mjs';
 import { runPython } from '../lib/python.mjs';
 
@@ -18,7 +19,9 @@ const catalog = await json('data/catalog.json');
 // Use the exact-scene projection for source metadata too. Historical collection
 // samples must never restore an unqualified PLY or sibling-model launch.
 const sourceEntries = await Promise.all(sceneIndex.sources.map(source => json(`public/hub/datasets/individual/sources/${source.id}.json`)));
-const { snapshot, audit } = publicationSnapshot({ ...catalog, entries: sourceEntries }, await json('data/dataset-audit.json'), await json('data/individual-datasets.json'), sceneIndex);
+const registry = await json('data/individual-datasets.json');
+const currentSources = applyIndividualListings({ ...catalog, entries: sourceEntries }, registry);
+const { snapshot, audit } = publicationSnapshot(currentSources, await json('data/dataset-audit.json'), registry, sceneIndex);
 snapshot.photoAudit = { checkedAt: sceneIndex.checkedAt, scenes: sceneIndex.total, photos: sceneIndex.photos || {} };
 if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.entries) || !snapshot.sources?.length || !snapshot.importSummary) throw new Error('Invalid catalog snapshot');
 // Fail stale snapshots rather than publishing disagreeing collection/model labels.
@@ -98,7 +101,10 @@ await mkdir(output, { recursive: true });
 for (const file of await readdir(output, { withFileTypes: true })) {
   if (file.isFile() && /^(?:index\.html|collections\.html|audit\.html|dataset-audit\.json|(?:collection-)?page-\d+\.html|[a-z0-9-]+-[a-f0-9]{12}(?:\.html|\.manifest\.json)|catalog(?:-index)?\.json)$/.test(file.name)) await unlink(resolve(output, file.name));
 }
-for (const entry of snapshot.entries) if (entry.modelManifest) await writeFile(resolve(output, `${entry.id}.manifest.json`), JSON.stringify(entry.modelManifest));
+for (const entry of snapshot.entries) {
+  await writeFile(resolve(output, 'individual/sources', `${entry.id}.json`), JSON.stringify(entry));
+  if (entry.modelManifest) await writeFile(resolve(output, `${entry.id}.manifest.json`), JSON.stringify(entry.modelManifest));
+}
 await writeFile(resolve(output, 'catalog-index.json'), JSON.stringify(snapshot.entries.map(catalogSummary)));
 await writeFile(resolve(output, 'catalog.json'), JSON.stringify(snapshot));
 if (snapshot.auditSummary) {
