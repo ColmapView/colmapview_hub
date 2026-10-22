@@ -1,6 +1,6 @@
 # Camera calibration corrections and validation, October 22
 
-This follow-up fixes the viewer defect and clarifies the metadata findings from the [count and calibration review](catalog-anomaly-audit-2026-10-22.md). It prepares local changes; no release or deployment is performed. The [machine-readable receipt](../data/catalog-calibration-fixes-2026-10-22.json.gz) records the exact scene IDs, source revisions, camera hashes, comparisons and test scope.
+This follow-up fixes the viewer defect and clarifies the metadata findings from the [count and calibration review](catalog-anomaly-audit-2026-10-22.md). It records local validation before release; the subsequent [production verification](source-integrity-release-2026-10-22.md) records deployment of Hub 0.10.12 and viewer 0.20.6. The [machine-readable receipt](../data/catalog-calibration-fixes-2026-10-22.json.gz) records the exact scene IDs, source revisions, camera hashes, comparisons and test scope.
 
 ## Viewer correction
 
@@ -19,7 +19,7 @@ Chromium also loaded both complete pinned original models below, decoded their s
 
 Nine exact native selections now expose **Calibration needs review** in their cards and retain a dated, camera-file-bound review in their details. Six are suspect: four YouTube calibrations and the two PRISM mirrors. Three have unresolved focal-component ratios above 2:1. Their original numbers are retained because the source evidence does not establish a physically justified replacement. A successful import/export comparison remains visible separately; it does not establish physical calibration.
 
-All **210 known photo-resolution differences** now carry explicit sample width/height, camera width/height, the exact camera-file digest, and a false dimension-match flag. Cards disclose the resolution mapping limit, and details show the two resolutions and unverified alignment. Existing source-specific path/archive restrictions remain. A contradictory dimension claim or a mismatching sample combined with a complete-photo-export claim fails the offline build.
+All **210 known native photo-resolution differences** now carry explicit sample width/height, camera width/height, the exact camera-file digest, and a false dimension-match flag. Cards disclose the resolution mapping limit, and details show the two resolutions and unverified alignment. Existing source-specific path/archive restrictions remain. A contradictory dimension claim or a mismatching sample combined with a complete-photo-export claim fails the offline build.
 
 The earlier 30 multi-calibration lookup limits are resolved. Exact registered-name lookups match all 30 photo samples to cameras with matching dimensions. Seven complete pose files were freshly read and matched their existing complete-file hashes; the other lookups reused retained source bodies. The native photo sample comparison therefore covers **2,736 samples: 2,526 matching resolutions and 210 differences**. Dimensions alone do not prove a resize/crop mapping, all-image alignment, or complete export.
 

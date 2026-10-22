@@ -2,7 +2,7 @@
 
 The [observation audit](catalog-observation-audit-2026-10-22.md) found inconsistent native feature/point links in 25 NewtPhys/DL3DV scenes. The viewer now detects these relationships, warns on the committed scene, suppresses feature matching and blocks COLMAP export. Cameras and point geometry remain viewable, and PLY export remains available. The Hub exposes the exact review on the affected cards and detail pages.
 
-These are local changes. Viewer commit `a1b4ad6a93fb2bc3de60efd54eda6409243d7989` follows `7e1419ddcf697977a5cef48137aaf2543be21929`; the Hub baseline is `7b829e5`. No push, release tag or deployment was performed.
+This document records local validation before release. Viewer commit `a1b4ad6a93fb2bc3de60efd54eda6409243d7989` follows `7e1419ddcf697977a5cef48137aaf2543be21929`; the Hub baseline is `7b829e5`. No push, release tag or deployment was performed during that validation. The subsequent [production verification](source-integrity-release-2026-10-22.md) records Hub 0.10.12 and viewer 0.20.6.
 
 The [validation receipt](../data/catalog-source-integrity-fixes-2026-10-22.json.gz) has SHA-256 `e78605eddfc454b6ae408e37183b8605f76e50e4e44fdae763d7262ebe113ee7`. It reuses the immutable source audit at SHA-256 `6705d7a628aeb4878287c927852c70df521373fa332ab88bfeee5c61382158e1`; no additional provider reads were needed.
 
