@@ -99,7 +99,7 @@ export function sceneContentsHtml(contents?: SceneContents): string {
     checked: 'Presence checked. Complete loading and alignment have separate evidence.',
     listed: 'Listed in this scene. Complete loading and alignment have separate evidence.',
     needs_setup: 'Data exists but needs the recorded path setup or format conversion.',
-    archive: 'This data is inside a separate archive. Extraction or combining sources is required; the viewer link does not attach it automatically.',
+    archive: 'This data is stored in an archive. Check the scene’s loading details for automatic loading or source-access requirements.',
     partial: 'Some registered images are available; the photo audit records the coverage.',
   };
   return '<ul class="dataset-contents" aria-label="Available data">'

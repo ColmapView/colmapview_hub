@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.11 — 2026-10-22
+
+- Restore all 60 Dunhuang photographs through the exact first-frame text-model association. Check every camera, pose and 134,788 observations against the unchanged native binary model, plus all 11,115 points' reciprocal tracks. Exclude the archive's inconsistent binary representation.
+- Allow an exact decoded archive-photo receipt to bind a scene without hosting a preview, preserving source terms and keeping photographs at the publisher. Validate calibration, registered names and source hashes independently of thumbnail publication.
+- Record RotaryKiln's verified original ZIP mapping and distinguish it from browser delivery. Preserve 4,559 scenes across 144 sources and all earlier immutable manifests; Dunhuang adds the 2,610th manifest.
+- Correct the archive badge hint so automatically attached photographs are not described as requiring extraction. Let photo-statistics browser checks accept resolved categories with zero scenes.
+
 ## 0.10.10 — 2026-10-22
 
 - Bound shuffled catalog pages to four simultaneous metadata-pack reads and retain only requested scene rows. Decode bounded JSON incrementally and release owned body readers, reducing temporary buffers and retained neighboring records.

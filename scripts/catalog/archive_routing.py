@@ -90,9 +90,18 @@ def apply_archive_routing(entry, row, revision, proof, review, hf_url):
             or archive.get('indexBytes') != review['archive'].get('indexBytes')
             or archive.get('format', 'zip') == 'tar' and archive.get('sample', {}).get('dimensionsMatch') is not True):
         raise ValueError('Companion routing cannot replace another model, archive, calibration or export')
-    if (thumbnail.get('sourceArchive') != archive['path'] or thumbnail.get('sourceSha256') != sample['sha256']
-            or thumbnail.get('registeredName') != sample['registeredName']
-            or thumbnail.get('originalWidth') != sample['width'] or thumbnail.get('originalHeight') != sample['height']):
+    if thumbnail:
+        sample_matches = (thumbnail.get('sourceArchive') == archive['path'] and thumbnail.get('sourceSha256') == sample['sha256']
+                          and thumbnail.get('registeredName') == sample['registeredName']
+                          and thumbnail.get('originalWidth') == sample['width'] and thumbnail.get('originalHeight') == sample['height'])
+    else:
+        original = archive.get('sample', {})
+        sample_matches = (archive.get('format') == 'tar' and original.get('path') == sample['memberPath']
+                          and original.get('registeredName') == sample['registeredName']
+                          and original.get('sha256') == sample['sha256'] and original.get('pixels') == 'decoded'
+                          and original.get('dimensionsMatch') is True
+                          and original.get('width') == sample['width'] and original.get('height') == sample['height'])
+    if not sample_matches:
         raise ValueError('Companion routing must retain the checked photograph bytes and calibration dimensions')
     name, body = archive_asset(review, entry, hf_url)
     result = deepcopy(proof)
@@ -109,7 +118,7 @@ def apply_archive_routing(entry, row, revision, proof, review, hf_url):
     result['photoAudit']['summary'] = 'A version 2 manifest attaches this scene\'s own photo archive to the exact native model. A named photograph and its calibration were checked.'
     result['photoAudit']['policyNote'] = 'Archive members are indexed and read lazily. The sampled name, pixels and dimensions retain their original receipts; complete name/photo coverage and export remain separate checks.'
     if review['archive'].get('indexBytes') is not None:
-        result['photoAudit']['policyNote'] += ' Only the complete selected first-frame prefix is indexed. Its source camera and pose bytes match this model; later temporal frames stay outside the launch.'
+        result['photoAudit']['policyNote'] += ' Only the complete selected first-frame prefix is indexed. Its source camera and pose metadata matches this model; later temporal frames stay outside the launch.'
     result['summary'] = ('Native model files and a registered photograph from the companion archive checked. '
         'The launch manifest attaches both; full photo coverage and export remain separate checks.')
     return result

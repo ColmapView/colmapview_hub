@@ -1,5 +1,7 @@
 # Catalog source resolution — October 22, 2026
 
+Follow-up: the [source mapping review](catalog-source-mapping-2026-10-22.md) resolves Dunhuang through its archive text metadata and finds RotaryKiln's matching original ZIP. This document and its receipt retain the earlier 0.10.10 audit snapshot; its Dunhuang limitation is superseded by that review.
+
 This follow-up addresses the 32 unconfirmed photograph associations and four incomplete published collection inventories in the [preceding repeat audit](catalog-reaudit-2026-10-22.md). Eighteen scenes gain exact photo routing and attributed previews. Thirteen others have confirmed, scoped source omissions. Dunhuang remains open because the available source archive has different calibration and poses.
 
 The catalog retains **4,559 scenes across 144 sources**. All existing scene IDs, selected native files and camera/pose/point counts are preserved. Only the 18 recovered photo launches change. All 2,591 previous immutable manifest bodies remain byte-identical; 18 new manifests bring the retained total to 2,609. There are now 2,781 scene previews using 2,482 distinct JPEGs. Three new JPEG bodies contain checked source photographs with source terms/credits and no original EXIF.

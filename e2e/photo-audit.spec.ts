@@ -8,12 +8,17 @@ test('photo evidence covers every published scene and keeps stronger export chec
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     total: number; generation: string; sources: unknown[]; photos: Record<string, number>; photoRouting: Record<string, number> };
   expect(index.total).toBeGreaterThan(0);
-  expect(Object.keys(index.photos).sort()).toEqual(['sample_checked', 'path_policy_required', 'review_required', 'not_found',
-    'not_included', 'companion_archive', 'partial', 'complete_export_checked'].sort());
+  const photoStates = ['sample_checked', 'path_policy_required', 'review_required', 'not_found',
+    'not_included', 'companion_archive', 'partial', 'complete_export_checked'];
+  for (const [status, count] of Object.entries(index.photos)) {
+    expect(photoStates).toContain(status);
+    expect(Number.isSafeInteger(count) && count >= 0).toBe(true);
+  }
   expect(Object.values(index.photos).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const available = await (await page.request.get('/hub/datasets/api/entries?photos=available')).json() as {
     total: number; entries: { photoStatus: string }[] };
-  expect(available.total).toBe(index.photos.complete_export_checked + index.photos.sample_checked + index.photos.partial);
+  expect(available.total).toBe(['complete_export_checked', 'sample_checked', 'partial']
+    .reduce((sum, status) => sum + (index.photos[status] ?? 0), 0));
   expect(available.entries.every(entry => ['complete_export_checked', 'sample_checked', 'partial'].includes(entry.photoStatus))).toBe(true);
   const audit = await (await page.request.get('/hub/datasets/individual/photo-audit.json')).json();
   expect(audit).toMatchObject({ generation: index.generation, scenes: index.total, collections: index.sources.length, photos: index.photos });
@@ -197,6 +202,16 @@ test('TAR manifests attach checked photographs and retain calibration limitation
   expect(manifest.version).toBe(2);
   expect(manifest.files.cameras).toContain('/ground_truths/m360_bicycle/cameras.bin');
   expect(manifest.mediaArchives[0].stripPrefix).toBe('m360_bicycle');
+  const dunhuang = await page.request.get('/hub/datasets/open/data-f330ea4fdfd07c8466468e10', { maxRedirects: 0 });
+  expect(dunhuang.status()).toBe(302);
+  const dunhuangUrl = new URL(new URL(dunhuang.headers().location).searchParams.get('url')!);
+  const capture = await (await page.request.get(dunhuangUrl.pathname)).json();
+  expect(capture.files.cameras).toContain('/native_ply/dunhuang/cam/sparse/0/cameras.bin');
+  expect(capture.mediaArchives[0]).toMatchObject({ bytes: 11167590400, indexBytes: 52564992,
+    stripPrefix: 'Dance_Dunhuang_Pair_1080/frame000000/images' });
+  await page.goto('/hub/datasets/entry/data-f330ea4fdfd07c8466468e10');
+  await expect(page.locator('main')).toContainText('Photos in a separate archive');
+  await expect(page.locator('.dataset-thumbnail')).toHaveCount(0);
   await page.goto('/hub/datasets/entry/data-0c5127dab3fe12c39f4c4660');
   await expect(page.locator('main')).toContainText('camera dimensions differ');
   await expect(page.locator('main')).toContainText('extraction and renaming alone do not establish correct projection');

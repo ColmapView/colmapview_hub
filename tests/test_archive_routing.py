@@ -72,6 +72,34 @@ class ArchiveRoutingTests(unittest.TestCase):
         self.assertNotIn('sceneManifest', result)
         self.assertEqual(routing_coverage(result, 'colmap')['launchRouting'], 'photo_archive_manifest')
 
+    def test_checked_original_can_bind_an_archive_without_a_hosted_preview(self):
+        self.proof.pop('thumbnail')
+        self.proof['photoAudit']['archive']['sample'].update(path='capture/a.png',
+            registeredName='dslr_images_undistorted/a.png', sha256='c' * 64,
+            pixels='decoded', width=80, height=60)
+        original = copy.deepcopy(self.proof)
+        result = self.apply()
+        self.assertEqual(result['sceneCompatibility'], original['sceneCompatibility'])
+        self.assertEqual(result['photoArchiveRouting']['sampleMemberPath'], 'capture/a.png')
+        self.assertNotIn('thumbnail', result)
+        self.assertEqual(self.proof, original)
+        _, body = archive_asset(self.review(), self.entry, hf_url)
+        self.assertEqual(json.loads(body)['files']['cameras'], hf_url(self.entry, 'a' * 40, self.files['cameras']))
+
+    def test_previewless_archive_requires_the_exact_decoded_original_and_calibration(self):
+        self.proof.pop('thumbnail')
+        sample = self.proof['photoAudit']['archive']['sample']
+        sample.update(path='capture/a.png', registeredName='dslr_images_undistorted/a.png',
+            sha256='c' * 64, pixels='decoded', width=80, height=60)
+        original = copy.deepcopy(self.proof)
+        for change in ({'path': 'other/a.png'}, {'registeredName': 'b.png'}, {'sha256': 'd' * 64},
+                       {'pixels': 'header_only'}, {'width': 160}, {'height': 120}, {'dimensionsMatch': False}):
+            with self.subTest(change=change):
+                self.proof = copy.deepcopy(original)
+                self.proof['photoAudit']['archive']['sample'].update(change)
+                with self.assertRaises(ValueError):
+                    self.apply()
+
     def test_changed_archive_selection_photo_bytes_or_calibration_cannot_inherit_binding(self):
         original = copy.deepcopy(self.proof)
         for mutate in [lambda p: p.update(viewerUrl='different'), lambda p: p['thumbnail'].update(sourceSha256='e' * 64),
