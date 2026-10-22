@@ -8,6 +8,8 @@ The catalog retains **4,559 scenes across 144 sources**. All existing scene IDs,
 
 Sixteen `zhaoshiwen/blur-slam-bpn-data` ablation/ground-truth models now attach their exact `data/evssm_deblurred_i2slam/<scene>/` directory. Pinned source manifests, `project.ini`, and the publisher's preparation scripts identify this representation; complete native camera/pose comparisons agree. All **5,917 registered names** occur in the declared directories. Four distinct originals decoded in anonymous Chromium at the exact 1296 × 968 camera dimensions. These are EVSSM-deblurred training inputs; raw ScanNet inputs are a separate representation.
 
+The publisher's [ground-truth preparation script](https://huggingface.co/zhaoshiwen/blur-slam-bpn-code/blob/d8cdb94b955b3647353df0c6f5fcca7d68afb129/scripts/build_i2slam_gtpose_scenes.py) and [color variant](https://huggingface.co/zhaoshiwen/blur-slam-bpn-code/blob/d8cdb94b955b3647353df0c6f5fcca7d68afb129/scripts/build_i2slam_gtpose_scenes_evssmcolor.py) are pinned independently. Their Git blob IDs and complete body hashes are retained in the receipt. These public source files were inspected as text, not executed.
+
 `LeeXiangNO1/DyNativeGaussian_sequence` VRU_dg4 and VRU_gz now attach **frame000000** from their own source TARs. Both archived camera and pose files match the selected native files byte for byte, and all 34 registered names per scene occur in that frame. These checks establish capture identity rather than relying on repeated `cam00.png` filenames.
 
 | Source TAR | Original bytes | Complete first-frame prefix |
@@ -50,6 +52,16 @@ ALC901's expanded inventory exposes a nested camera anchor that would otherwise 
 
 ## Validation and limits
 
-The full Hub check passes 89 catalog, 163 Python and 232 Worker tests plus type/lint/style checks and the production build. Viewer checks pass 6,609 unit tests, the production build and all 102 supported-path browser cases; one initial pre-mount timeout passed its focused rerun. Additional deployed asset checks and browser results are recorded separately.
+The full Hub check passes 89 catalog, 163 Python and 236 Worker tests plus type/lint/style checks and the production build. Viewer checks pass 6,609 unit tests, the production build and all 102 supported-path browser cases; one initial pre-mount timeout passed its focused rerun. Viewer CI additionally passes 335 browser tests with 22 conditional skips.
+
+The production 0.10.9 sweep checked all 2,609 manifest response bodies against their retained hashes, all 190 metadata packs, all 4,559 API entries across 190 pages, all 32 changed direct/metadata routes, four completed-source metadata records and three new preview bodies. All 18 newly published manifest URLs also passed complete native imports and exact count comparisons. Production gallery samples decoded in both viewer hosts; the GitHub Pages root preserves the manifest URL when redirecting to `/latest/`. Initial release verification timed out while GitHub Pages was still publishing; the unchanged release passed its retry after publication.
+
+## Metadata reader bounds
+
+A subsequent production browser request returned Cloudflare's 1102 resource-limit page. It did not recur in 24 follow-up public GETs; eight captured traces reported successful outcomes. The original failure was not captured in a trace, so its exact CPU/memory cause remains unclassified.
+
+Hub 0.10.10 reduces catalog request memory pressure independently of that diagnosis. Pack reads run in batches of at most four, and only requested scene rows remain retained after each pack is decoded. JSON decoding keeps the existing five-MiB byte limit, preserves split UTF-8 characters and releases the owned reader. A failed batch settles its owned reads before returning and does not schedule later packs.
+
+Four fixed-seed queries against the complete real catalog produce identical page JSON before and after the change. The broad queries previously started 8, 15 or 21 pack reads together; the revised reader caps these at four. Targeted tests cover ordering, repeated ordinals, oversized streams, UTF-8 boundaries, cleanup and failed batches. These checks establish the reader bounds; they do not prove a cause for the earlier one-off platform error or constitute a full traffic load test. Post-deployment results are recorded separately in the machine-readable receipt.
 
 The three known AstroVision decoder failures remain withheld. Earlier alternative-calibration cases, full exports, temporal playback and real Safari checks retain their existing limits. This follow-up does not claim complete pixel/export coverage of every catalog scene.

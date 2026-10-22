@@ -7,6 +7,7 @@ import { FEED_MODES, defaultFeedSeed, discoveryOrder, feedMode, isDiscoveryAsset
 
 const ROOT = '/hub/datasets/individual/';
 const MAX_ASSET_BYTES = 5 * 1024 * 1024;
+const MAX_PARALLEL_PACK_READS = 4;
 type Assets = Pick<Fetcher, 'fetch'>;
 
 /** Only operator-built, fixed same-origin asset keys are read. Submitted data URLs
@@ -17,7 +18,8 @@ export async function individualAsset<T>(assets: Assets, origin: string, path: s
   if (response.status === 404) return null;
   if (!response.ok || !response.body) throw new Error('Catalog metadata unavailable');
   const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
+  const decoder = new TextDecoder();
+  const parts: string[] = [];
   let length = 0;
   try {
     for (;;) {
@@ -25,13 +27,13 @@ export async function individualAsset<T>(assets: Assets, origin: string, path: s
       if (done) break;
       length += value.byteLength;
       if (length > MAX_ASSET_BYTES) throw new Error('Built catalog asset exceeds the reader bound');
-      chunks.push(value);
+      parts.push(decoder.decode(value, { stream: true }));
     }
-  } finally { await reader.cancel(); }
-  const bytes = new Uint8Array(length);
-  let offset = 0;
-  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
-  return JSON.parse(new TextDecoder().decode(bytes)) as T;
+  } finally {
+    try { await reader.cancel(); } finally { reader.releaseLock(); }
+  }
+  parts.push(decoder.decode());
+  return JSON.parse(parts.join('')) as T;
 }
 
 export async function individualIndex(assets: Assets, origin: string): Promise<IndividualIndex> {
@@ -98,14 +100,29 @@ async function tokenShard(token: string): Promise<string> {
 }
 
 export async function individualRecords(assets: Assets, origin: string, index: IndividualIndex, ordinals: number[]): Promise<IndividualRecord[]> {
-  const numbers = [...new Set(ordinals.map(value => Math.floor(value / index.packSize)))];
-  const packs = await Promise.all(numbers.map(async number => [number, await individualAsset<IndividualRecord[]>(assets, origin, `packs/${number}.json`)] as const));
-  const byNumber = new Map(packs);
-  return ordinals.map(ordinal => {
-    const row = byNumber.get(Math.floor(ordinal / index.packSize))?.[ordinal % index.packSize];
-    if (!row || !index.sources[row[1]]) throw new Error('Individual metadata record missing');
-    return row;
-  });
+  const groups = new Map<number, Set<number>>();
+  for (const ordinal of ordinals) {
+    if (!Number.isSafeInteger(ordinal) || ordinal < 0 || ordinal >= index.total) throw new Error('Invalid individual metadata ordinal');
+    const number = Math.floor(ordinal / index.packSize);
+    const group = groups.get(number) || new Set<number>();
+    group.add(ordinal);
+    groups.set(number, group);
+  }
+  const numbers = [...groups.keys()], selected = new Map<number, IndividualRecord>();
+  // A shuffled page can touch 24 different packs. Bound simultaneous response
+  // buffers and retain only requested rows, rather than every neighboring row.
+  for (let start = 0; start < numbers.length; start += MAX_PARALLEL_PACK_READS) {
+    const batch = await Promise.allSettled(numbers.slice(start, start + MAX_PARALLEL_PACK_READS).map(async number => {
+      const rows = await individualAsset<IndividualRecord[]>(assets, origin, `packs/${number}.json`);
+      for (const ordinal of groups.get(number)!) {
+        const row = rows?.[ordinal % index.packSize];
+        if (!row || !index.sources[row[1]]) throw new Error('Individual metadata record missing');
+        selected.set(ordinal, row);
+      }
+    }));
+    for (const result of batch) if (result.status === 'rejected') throw result.reason;
+  }
+  return ordinals.map(ordinal => selected.get(ordinal)!);
 }
 
 export async function searchIndividuals(assets: Assets, origin: string, index: IndividualIndex, filters: URLSearchParams): Promise<IndividualPage> {

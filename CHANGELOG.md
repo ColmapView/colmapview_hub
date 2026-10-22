@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.10 — 2026-10-22
+
+- Bound shuffled catalog pages to four simultaneous metadata-pack reads and retain only requested scene rows. Decode bounded JSON incrementally and release owned body readers, reducing temporary buffers and retained neighboring records.
+- Preserve scene order, repeated ordinals, metadata byte limits and all existing catalog selections. Add reader regression coverage for UTF-8 chunk boundaries, oversized stream cancellation and bounded concurrent reads.
+
 ## 0.10.9 — 2026-10-22
 
 - Attach exact source photographs and attributed previews to 16 Blur-SLAM ablation/ground-truth scenes and two VRU captures. Check all 5,917 Blur photo names, byte-identical VRU source models and every photograph in both selected VRU frames.
