@@ -1,5 +1,7 @@
 # Catalog repeat audit — October 22, 2026
 
+This is the earlier 0.10.8 snapshot. The [source-resolution follow-up](catalog-source-resolution-2026-10-22.md) completes its four collection inventories, attaches photographs for 18 of its 32 review cases, and records the remaining source limitations.
+
 The production Hub 0.10.8 catalog has **4,559 named scene entries across 144 source collections**. Its generation is `10c271423b8cd6a22102a87dad32d166a2f77494077be213febd82bcfa24f19e`. Copies across repositories are separate entries; this is not a count of every COLMAP dataset on the internet.
 
 ## Checked coverage

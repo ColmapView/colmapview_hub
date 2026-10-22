@@ -6,13 +6,32 @@ import unittest
 from pathlib import Path
 
 from scripts.audit.prepare_individual_datasets import individual_records, group_components
-from scripts.catalog.build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, reviewed_scene_exclusions, tokens
+from scripts.catalog.build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, retained_scene_selection, reviewed_scene_exclusions, tokens
 from scripts.catalog.scene_qualification import REQUIRED_CHECKS, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
 from scripts.catalog.sampled_individuals import supplement_rows
 from scripts.catalog.scene_datasets import MAX_SCENE_FILE_LINKS, scene_records, named_variant_groups
 
 
 class IndividualDatasetsTests(unittest.TestCase):
+    def test_complete_discovery_can_preserve_only_a_present_export_checked_selection(self):
+        files = {'metadata:scene/transforms.json': 'scene/transforms.json', 'asset:scene/output/input.ply': 'scene/output/input.ply'}
+        row = ['camera-scene', 'scene', {'metadata:scene/transforms.json': 'scene/transforms.json'}, None]
+        review = {'files': files, 'exportSha256': 'a' * 64, 'loadPath': 'scene/transforms.json'}
+        selection = {'kind': 'camera-scene', 'path': 'scene', 'archive': None, 'files': files, 'exportSha256': 'a' * 64}
+        inventory = [['camera-metadata', 'scene/transforms.json', None, None],
+                     ['camera-metadata', 'scene/output/cameras.json', None, None], ['ply', 'scene/output/input.ply', None, None]]
+        self.assertEqual(retained_scene_selection(row, selection, review, inventory)[2], files)
+        self.assertEqual(len(row[2]), 1)
+        for change in ({'exportSha256': 'b' * 64}, {'path': 'peer'}, {'files': {'metadata:other': 'other'}}):
+            with self.assertRaisesRegex(ValueError, 'exact export receipt'):
+                retained_scene_selection(row, {**selection, **change}, review, inventory)
+        with self.assertRaisesRegex(ValueError, 'lost source files'):
+            retained_scene_selection(row, selection, review, inventory[:-1])
+        with self.assertRaisesRegex(ValueError, 'lost source files'):
+            retained_scene_selection([*row[:2], {'metadata:peer': 'peer/transforms.json'}, None], selection, review, inventory)
+        with self.assertRaisesRegex(ValueError, 'exact export receipt'):
+            retained_scene_selection(row, selection, None, inventory)
+
     def test_catalog_native_totals_are_present_and_text_counts_have_exact_file_audits(self):
         root = Path(__file__).resolve().parents[1]
         catalog = json.loads((root / 'data/catalog.json').read_text(encoding='utf8'))

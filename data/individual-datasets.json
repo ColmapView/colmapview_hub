@@ -331,14 +331,14 @@
       "datasetId": "hf-alc901-dl3dv-10k-3dgs-9bee1933e961",
       "sourceId": "hf:ALC901/DL3DV-10K-3dgs",
       "file": "hf-alc901-dl3dv-10k-3dgs-9bee1933e961.json.gz",
-      "sha256": "634f86b9b5a94a187e723d81fd22b6c91b4a6b5755004c99b23916373119534c",
-      "count": 863,
-      "listingComplete": false,
+      "sha256": "3edabcd48e977a95f9b53bc5e05ef62bfc10d6cea35b01f4e833ae7167471fd0",
+      "count": 2027,
+      "listingComplete": true,
       "revision": "b70d68a6ab89117d12bb5287c96c21e33d89af8d",
-      "checkedAt": "2026-10-16",
-      "scope": "Public repository sibling listing; capped listings remain incomplete.",
+      "checkedAt": "2026-10-22",
+      "scope": "Complete pinned recursive Git file inventory. Archived members retain only their earlier checked scope; camera-metadata discovery does not qualify new viewer scenes.",
       "looseColmapCount": 0,
-      "plyFileCount": 576
+      "plyFileCount": 1014
     },
     {
       "datasetId": "hf-alessandrolumiad-aerosplat-4d-105670871921",
@@ -7130,14 +7130,14 @@
       "datasetId": "hf-yinyue27-refref-additional-07f68c8efa9b",
       "sourceId": "hf:yinyue27/RefRef_additional",
       "file": "hf-yinyue27-refref-additional-07f68c8efa9b.json.gz",
-      "sha256": "c1b9793bf12b35fe2631d24d9619765543ff5946b1668f4b243430f0acb561f2",
-      "count": 335,
-      "listingComplete": false,
+      "sha256": "6392180092653f56043c4333f10a948d1156b06f72a63d7081f599a2180513a2",
+      "count": 658,
+      "listingComplete": true,
       "revision": "df1d9b23d06ae6906c0a59a7c96b0a005be7756f",
-      "checkedAt": "2026-10-16",
-      "scope": "Public repository sibling listing; capped listings remain incomplete.",
+      "checkedAt": "2026-10-22",
+      "scope": "Complete pinned recursive Git file inventory. Archived members retain only their earlier checked scope; camera-metadata discovery does not qualify new viewer scenes.",
       "looseColmapCount": 0,
-      "plyFileCount": 0
+      "plyFileCount": 71
     },
     {
       "datasetId": "hf-yiwen-ntu-gaussianeditor-result-d058e0661096",
@@ -13773,12 +13773,12 @@
       "datasetId": "hf-jiajinrang-panoworld-33ac7bdb384a",
       "sourceId": "hf:JiaJinrang/PanoWorld",
       "file": "hf-jiajinrang-panoworld-33ac7bdb384a.json.gz",
-      "sha256": "482efdc9af1525aeaa73d67e2785b022c60440df481276a8f88b0c7d6df3a4e9",
-      "count": 3986,
-      "listingComplete": false,
+      "sha256": "74faeae582604040ba675468905074af0dfd68f1f4fbe8863ff893a936f60104",
+      "count": 39822,
+      "listingComplete": true,
       "revision": "5c2352a189d99e56665069f1b56309c6013b9123",
-      "checkedAt": "2026-10-16",
-      "scope": "Public repository sibling listing; capped listings remain incomplete.",
+      "checkedAt": "2026-10-22",
+      "scope": "Complete pinned recursive Git file inventory. Archived members retain only their earlier checked scope; camera-metadata discovery does not qualify new viewer scenes.",
       "looseColmapCount": 0,
       "plyFileCount": 0
     },
@@ -26213,19 +26213,19 @@
       "datasetId": "hf-turandai-gaussian-surfels-dtu-53a58900b5a9",
       "sourceId": "hf:turandai/gaussian-surfels-dtu",
       "file": "hf-turandai-gaussian-surfels-dtu-53a58900b5a9.json.gz",
-      "sha256": "c416683b9a8a6f802824298a8d8538cc39f0b797b10be902824230f42ab60db0",
-      "count": 1,
-      "listingComplete": false,
+      "sha256": "8f4af05c68597e5f535926a6e8e50b2f4c500b765384b4d57867313e844ace78",
+      "count": 15,
+      "listingComplete": true,
       "revision": "70ec15cd824556d17493e1c18e7e6c8b79f3ad94",
-      "checkedAt": "2026-10-19T03:50:00Z",
-      "scope": "Selected checked scan24 camera metadata; not a complete collection inventory.",
+      "checkedAt": "2026-10-22",
+      "scope": "Complete pinned recursive Git file inventory. Archived members retain only their earlier checked scope; camera-metadata discovery does not qualify new viewer scenes.",
       "looseColmapCount": 0,
       "plyFileCount": 0
     }
   ],
   "scope": "Individual listed model folders and standalone 3D assets; no complete load certification. Archive and capped-listing coverage is recorded per collection.",
   "counts": {
-    "camera-metadata": 60139,
+    "camera-metadata": 96967,
     "cameras": 442,
     "colmap": 7882,
     "glb": 477345,
@@ -26236,7 +26236,7 @@
     "obj": 256405,
     "off": 17666,
     "pcd": 204231,
-    "ply": 787161,
+    "ply": 787670,
     "scene": 3,
     "sog": 387,
     "splat": 608,
@@ -26246,5 +26246,5 @@
     "usd": 26888,
     "usdz": 14434
   },
-  "individualEntries": 2160548
+  "individualEntries": 2197885
 }

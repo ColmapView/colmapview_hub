@@ -1,5 +1,7 @@
 # Dataset catalog
 
+The [October 22 source-resolution follow-up](../docs/catalog-source-resolution-2026-10-22.md) completes the last four published collection inventories and recovers 18 photo sets without changing the 4,559 scene identities or native counts. Its [receipt](catalog-source-resolution-audit-2026-10-22.json.gz) separates exact photo associations, scoped source omissions, Dunhuang's remaining camera mismatch, source format checks and loading evidence. The catalog has 2,781 previews using 2,482 JPEGs and 2,609 retained immutable manifests; newly discovered research candidates require separate qualification.
+
 The [October 22 repeat audit](../docs/catalog-reaudit-2026-10-22.md) reconciles the current 4,559 entries, all 432 zero-point selections and all 2,763 scene previews (2,479 distinct JPEGs). Every published preview passed live byte/hash/header checks and Chromium decoding. `scene-component-additions.json.gz` supplements the historical component audit with the completed 200-scene WildCity inventory and native parses, so the offline zero-point command also covers the 138 recent additions. Dated source/export evidence is reused at the same pinned selection; this repeat pass does not claim to download and import every model again.
 
 The [October 22 preview and point follow-up](../docs/scene-preview-points-audit-2026-10-22.md) fills all 496 published gaps with checked loose-photo samples: 138 WildCity, 348 AstroVision, seven NL3D and three nerf-gs-datasets previews. Complete parsing of all 400 WildCity camera/pose files and its pinned inventory confirms 200 camera/pose scenes with zero supplied points, separate depth maps and 50 listed sky masks per scene. Previews retain source terms and attribution; the three withheld AstroVision decoder failures remain excluded. Original scene IDs, launch URLs and counts are preserved.
@@ -320,6 +322,14 @@ images lazily with validated byte ranges; cancellation, replacement and reset
 close the owned readers. Twenty-one other Fastmap samples retain their recorded
 calibration mismatch and model-only launch. Archive sample checks do not certify
 all archive members or a full export.
+
+Two later VRU routes use complete first-frame TAR prefixes and require viewer
+0.20.5 or newer. Their optional `archive.indexBytes` is a positive, 512-aligned
+boundary inside the original archive size. Photo evidence must retain a complete
+selected prefix, exact native camera/pose identity, registered names and a checked
+sample. The manifest retains the full archive byte size for HTTP range validation;
+it does not download or index later temporal frames. See the source-resolution
+follow-up for exact bounds and scoped photo coverage.
 
 The Dynamic Maps camera-only export omits empty observation lines. The corrected
 reader preserves 896 poses instead of 448, and an explicit photo manifest binds

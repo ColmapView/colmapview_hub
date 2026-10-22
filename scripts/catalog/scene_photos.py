@@ -80,6 +80,10 @@ def photo_scene_reviews(catalog, policy):
                             or re.fullmatch('[a-f0-9]{64}', sample.get('sha256', '')) is None
                             or sample.get('pixels') != 'decoded' or type(sample.get('dimensionsMatch')) is not bool):
                         raise ValueError('TAR photos require exact sampled member bounds, bytes and decoded pixels')
+                    prefix = archive.get('indexBytes')
+                    if prefix is not None and (type(prefix) is not int or prefix % 512
+                            or not data_start + size <= prefix <= total or archive.get('prefixComplete') is not True):
+                        raise ValueError('TAR photo prefix must be complete and contain its checked sample')
             key = scene_key(source['sourceId'], scene['kind'], scene['path'], scene.get('archive'))
             if key in reviews:
                 raise ValueError('Duplicate scene photo evidence')

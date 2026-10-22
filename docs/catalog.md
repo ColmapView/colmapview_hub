@@ -44,6 +44,13 @@ Run `npm run catalog:counts -- --viewer-root PATH_TO_CLEAN_VIEWER --apply` to fi
 
 Current photo and component totals are generated from the published scene projection, rather than copied into documentation. Download every scene's availability, launch-manifest URL, inspected-name scope and remaining routing issue at `/hub/datasets/individual/photo-audit.csv`; totals are at `/hub/datasets/individual/photo-audit.json` and `index.json`. Historical full-export receipts remain in `data/verified-scenes.json` and `data/scene-manifests.json`; their exact selections and dates remain distinct from current browser loading tests.
 
+Two VRU captures additionally use checked complete first-frame TAR prefixes with
+viewer 0.20.5's optional `mediaArchives[].indexBytes`. The original archive size
+still validates every HTTP range; only the selected prefix is indexed. Source
+camera/pose files match the native models byte for byte. The
+[source-resolution audit](catalog-source-resolution-2026-10-22.md) records the
+frame boundaries, all registered photo checks and remaining source limitations.
+
 ### Per-manifest loading checks
 
 `npm run catalog:manifests -- --viewer-root PATH_TO_COMMITTED_VIEWER` validates every generated and retained manifest against that viewer's actual Zod schemas. It also checks referenced asset existence, evidence checksums and agreement between entries sharing a manifest. Selection-digest filenames and content-digest filenames are both supported. The local report is `.tmp/manifest-audit/plan.json`; this is schema/evidence validation, not a successful browser load.

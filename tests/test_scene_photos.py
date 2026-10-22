@@ -74,6 +74,15 @@ class ScenePhotoTests(unittest.TestCase):
                    'inventoryComplete': False, 'sample': sample, 'nameSampleMatched': True, 'browserRangeRead': True}
         self.audit.update(status='companion_archive', archive=archive)
         self.assertIs(self.review()['audit']['archive']['inventoryComplete'], False)
+        archive.update(indexBytes=2560, prefixComplete=True)
+        self.review()
+        for changes in ({'indexBytes': 2048}, {'indexBytes': 2561}, {'indexBytes': 4608}, {'prefixComplete': False}):
+            modified = copy.deepcopy(self.policy)
+            modified['sources'][0]['scenes'][0]['audit']['archive'].update(changes)
+            with self.assertRaisesRegex(ValueError, 'prefix must be complete'):
+                photo_scene_reviews({'entries': [self.entry]}, modified)
+        archive.pop('indexBytes')
+        archive.pop('prefixComplete')
         for field, value in [('path', '../a.jpg'), ('dataOffset', 4096), ('sha256', 'not a digest'),
                              ('pixels', 'deferred'), ('bytes', 0), ('dimensionsMatch', None)]:
             with self.subTest(field=field):

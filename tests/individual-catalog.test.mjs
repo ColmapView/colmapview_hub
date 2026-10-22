@@ -93,6 +93,14 @@ test('companion archive manifests preserve native gates and keep sample evidence
   const html = render.catalogEntryPage(entry);
   assert.match(html, /at least 10 photographs/);
   assert.doesNotMatch(html, /COLMAP \+ images export SHA-256/);
+  const selected = { ...proof, photoArchiveRouting: { ...proof.photoArchiveRouting, archivePath: 'scene/images.tar',
+    format: 'tar', indexBytes: 4096, viewerVersion: '0.20.5' } };
+  assert.equal(render.canOpenIndividual(row(0, { 7: selected }), source), true);
+  for (const changes of [{ indexBytes: 513 }, { indexBytes: 8704 }, { format: 'zip', archivePath: 'scene/images.zip' },
+    { viewerVersion: '0.20.4' }, { viewerVersion: 'bad' }]) {
+    assert.equal(render.canOpenIndividual(row(0, { 7: { ...selected,
+      photoArchiveRouting: { ...selected.photoArchiveRouting, ...changes } } }), source), false);
+  }
   for (const mutated of [{ ...proof, viewerUrl: 'https://example.com/' }, { ...proof, photoAvailability: 'sample_checked' },
     { ...proof, sceneValidation: verified.sceneValidation },
     { ...proof, photoArchiveRouting: { ...proof.photoArchiveRouting, viewerVersion: '0.19.1' } }]) {

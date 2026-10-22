@@ -8,6 +8,25 @@ from scripts.catalog.build_individual_catalog import hf_url
 
 
 class ArchiveRoutingTests(unittest.TestCase):
+    def test_selected_first_frame_prefix_requires_matching_native_models_and_reader_support(self):
+        self.item['viewerVersion'] = '0.20.5'
+        self.item['archive']['indexBytes'] = 4096
+        self.item['checks']['prefixModelIdentity'] = True
+        _, body = archive_asset(self.review(), self.entry, hf_url)
+        self.assertEqual(json.loads(body)['mediaArchives'][0]['indexBytes'], 4096)
+        self.proof['photoAudit']['archive']['indexBytes'] = 4096
+        self.assertEqual(self.apply()['photoArchiveRouting']['indexBytes'], 4096)
+        original = copy.deepcopy(self.item)
+        for mutate in [lambda r: r.update(viewerVersion='0.20.4'),
+                       lambda r: r['archive'].update(indexBytes=513),
+                       lambda r: r['archive'].update(indexBytes=8704),
+                       lambda r: r['archive'].update(format='zip', path='photos/capture.zip'),
+                       lambda r: r['checks'].update(prefixModelIdentity=False)]:
+            self.item = copy.deepcopy(original)
+            mutate(self.item)
+            with self.assertRaisesRegex(ValueError, 'selected TAR prefix'):
+                self.review()
+
     def setUp(self):
         self.entry = {'sourceId': 'hf:owner/data', 'provider': 'huggingface', 'access': 'public',
             'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}

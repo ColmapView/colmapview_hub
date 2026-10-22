@@ -125,6 +125,22 @@ def identity(source_id, row):
     return 'data-' + hashlib.sha256('\0'.join([source_id, kind, archive or '', path]).encode()).hexdigest()[:24]
 
 
+def retained_scene_selection(row, selection, review, inventory):
+    """Keep a checked selection explicit when discovery adds other scene anchors."""
+    if (not review or selection.get('files') != review['files']
+            or selection.get('exportSha256') != review['exportSha256']
+            or any(selection.get(key) != value for key, value in zip(('kind', 'path', 'archive'), (row[0], row[1], row[3])))):
+        raise ValueError('Retained scene selection lacks its exact export receipt')
+    files = selection['files']
+    physical = {path for item in inventory if item[3] == row[3]
+                for path in [item[1], *(item[2] or {}).values()]}
+    if (not files or any(path not in physical for path in files.values())
+            or any((row[2] or {}).get(role) != files.get(role) for role in ('cameras', 'images', 'points3d'))
+            or row[0] == 'camera-scene' and review.get('loadPath') not in (row[2] or {}).values()):
+        raise ValueError('Retained scene selection changed its model or lost source files')
+    return [row[0], row[1], dict(files), row[3]]
+
+
 def hf_url(entry, revision, path, tree=False):
     repo = urllib.parse.quote(entry['sourceId'][3:], safe='/')
     return f'https://huggingface.co/datasets/{repo}/{"tree" if tree else "resolve"}/{revision}' + ('/' + urllib.parse.quote(path, safe='/') if path else '')
@@ -383,6 +399,7 @@ def build(root=Path('.')):
         revision = None
         scene_details = {}
         source_proofs, source_formats = [], []
+        retained_selections = {}
         if registered:
             if registered['file'] != entry['id'] + '.json.gz':
                 raise ValueError('Individual listing file does not match its dataset identity')
@@ -397,6 +414,11 @@ def build(root=Path('.')):
                 raise ValueError(f'Individual listing revision changed: {entry["sourceId"]}')
             rows = scene_records(listing['items'], scene_details,
                                  result.get('sceneRootAliases') if result.get('revision') == revision else None)
+            for selected in listing.get('sceneSelections', []):
+                key = scene_key(entry['sourceId'], selected['kind'], selected['path'], selected.get('archive'))
+                if key in retained_selections:
+                    raise ValueError('Duplicate retained scene selection')
+                retained_selections[key] = selected
             complete = listing['listingComplete']
         elif entry['provider'] == 'public' and any(fact['label'] == 'Collection' for fact in entry['facts']):
             # Existing public entries already identify a scene/subset/variant.
@@ -417,6 +439,15 @@ def build(root=Path('.')):
             review_key = scene_key(entry['sourceId'], kind, path, archive)
             review = verified_scenes.get(review_key)
             native = native_scenes.get(review_key)
+            if review_key in retained_selections:
+                detail = scene_details[(kind, path, archive)]
+                if detail['linksTruncated']:
+                    raise ValueError('Retained scene selection needs an exact untruncated asset inventory')
+                discovered_files = set((row[2] or {}).values())
+                row = retained_scene_selection(row, retained_selections.pop(review_key), review, listing['items'])
+                files = row[2]
+                listed = len(discovered_files | set(files.values()))
+                detail.update(listedAssets=listed, linkedAssets=len(files), linksTruncated=listed > len(files))
             if not review and not native:
                 continue
             if native:
@@ -464,6 +495,8 @@ def build(root=Path('.')):
                     + f" Photo-manifest audit ({routing_policy['checkedAt']}, viewer {routing_policy['viewerVersion']}): {unresolved['reason']}. The existing model launch is retained.")
                 matched_unresolved.add(review_key)
             qualified.append((row, proof, format_name, review, review_key))
+        if retained_selections:
+            raise ValueError('Retained scene selection is absent from its pinned source inventory')
         variants = named_variant_groups([item[0] for item in qualified])
         for row, proof, format_name, review, review_key in qualified:
             kind, path, files, archive = row

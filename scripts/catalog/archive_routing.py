@@ -19,6 +19,7 @@ def archive_reviews(catalog, policy):
         parent = parents.get(item.get('sourceId'))
         revision = next((fact['value'] for fact in (parent or {}).get('facts', []) if fact['label'] == 'Pinned revision'), None)
         archive, sample = item.get('archive', {}), item.get('sample', {})
+        version = item.get('viewerVersion', '')
         if (not parent or parent.get('provider') != 'huggingface' or parent.get('access') != 'public'
                 or item.get('revision') != revision or re.fullmatch('[a-f0-9]{40}', revision or '') is None
                 or item.get('kind') not in ('colmap', 'cameras') or item.get('selectionSha256') != selection_digest(item)
@@ -26,7 +27,8 @@ def archive_reviews(catalog, policy):
                 or not isinstance(item.get('files'), dict) or not {'cameras', 'images'} <= item['files'].keys()
                 or any(not source_path(path) for path in item['files'].values())
                 or re.fullmatch('[a-f0-9]{40}', item.get('viewerCommit', '')) is None
-                or item.get('viewerVersion') != '0.19.2' or not item.get('checkedAt')):
+                or not isinstance(version, str) or re.fullmatch(r'\d+\.\d+\.\d+', version) is None
+                or tuple(map(int, version.split('.'))) < (0, 19, 2) or not item.get('checkedAt')):
             raise ValueError('Companion routing requires the exact pinned native selection and viewer receipt')
         if (archive.get('format') not in ('zip', 'tar') or not source_path(archive.get('path'))
                 or not archive['path'].lower().endswith('.' + archive['format'])
@@ -41,6 +43,12 @@ def archive_reviews(catalog, policy):
                 or not all(item.get('checks', {}).get(key) is True for key in
                     ('nameSampleMatched', 'sampleDimensionsMatch', 'browserRangeRead', 'manifestBinding', 'modelSelectionPreserved'))):
             raise ValueError('Companion routing requires checked archive size, member, calibration and binding')
+        index_bytes = archive.get('indexBytes')
+        if index_bytes is not None and (archive['format'] != 'tar' or type(index_bytes) is not int
+                or not 0 < index_bytes <= archive['bytes'] or index_bytes % 512
+                or tuple(map(int, version.split('.'))) < (0, 20, 5)
+                or item.get('checks', {}).get('prefixModelIdentity') is not True):
+            raise ValueError('A selected TAR prefix requires a complete block boundary and checked matching model in a supported viewer')
         prefix = archive.get('stripPrefix', '')
         if prefix and not sample['memberPath'].startswith(prefix + '/'):
             raise ValueError('Archive sample is outside the stripped capture prefix')
@@ -64,6 +72,9 @@ def archive_asset(review, entry, hf_url):
         'mediaArchives': [{'url': hf_url(entry, review['revision'], archive['path']), 'bytes': archive['bytes'],
             'mountPath': archive['mountPath'], 'stripPrefix': archive.get('stripPrefix', ''), 'role': 'images'}],
         'imageNameToPath': {review['sample']['registeredName']: review['sample']['mountedPath']}}
+    if archive.get('indexBytes') is not None:
+        manifest['mediaArchives'][0]['indexBytes'] = archive['indexBytes']
+        manifest['splats'] = []
     body = json_bytes(manifest)
     return hashlib.sha256(body).hexdigest() + '.manifest.json', body
 
@@ -76,6 +87,7 @@ def apply_archive_routing(entry, row, revision, proof, review, hf_url):
             or proof.get('photoAvailability') != 'companion_archive' or archive.get('path') != review['archive']['path']
             or any(proof.get(key) for key in ('photoRouting', 'sceneManifest', 'sceneValidation'))
             or not archive.get('nameSampleMatched') or not archive.get('browserRangeRead')
+            or archive.get('indexBytes') != review['archive'].get('indexBytes')
             or archive.get('format', 'zip') == 'tar' and archive.get('sample', {}).get('dimensionsMatch') is not True):
         raise ValueError('Companion routing cannot replace another model, archive, calibration or export')
     if (thumbnail.get('sourceArchive') != archive['path'] or thumbnail.get('sourceSha256') != sample['sha256']
@@ -91,9 +103,13 @@ def apply_archive_routing(entry, row, revision, proof, review, hf_url):
         'photoLowerBound': review['archive']['photosLowerBound'], 'sampleRegisteredName': review['sample']['registeredName'],
         'sampleMemberPath': review['sample']['memberPath'], 'checkedAt': review['checkedAt'],
         'viewerVersion': review['viewerVersion'], 'viewerCommit': review['viewerCommit']}
+    if review['archive'].get('indexBytes') is not None:
+        result['photoArchiveRouting']['indexBytes'] = review['archive']['indexBytes']
     result['photoAudit']['policy'] = 'automatic_companion_archive'
     result['photoAudit']['summary'] = 'A version 2 manifest attaches this scene\'s own photo archive to the exact native model. A named photograph and its calibration were checked.'
     result['photoAudit']['policyNote'] = 'Archive members are indexed and read lazily. The sampled name, pixels and dimensions retain their original receipts; complete name/photo coverage and export remain separate checks.'
+    if review['archive'].get('indexBytes') is not None:
+        result['photoAudit']['policyNote'] += ' Only the complete selected first-frame prefix is indexed. Its source camera and pose bytes match this model; later temporal frames stay outside the launch.'
     result['summary'] = ('Native model files and a registered photograph from the companion archive checked. '
         'The launch manifest attaches both; full photo coverage and export remain separate checks.')
     return result

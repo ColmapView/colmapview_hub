@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.10.9 — 2026-10-22
+
+- Attach exact source photographs and attributed previews to 16 Blur-SLAM ablation/ground-truth scenes and two VRU captures. Check all 5,917 Blur photo names, byte-identical VRU source models and every photograph in both selected VRU frames.
+- Support checked first-frame TAR prefixes in curated media routing, requiring viewer 0.20.5 and preserving the original archive size for range validation. Keep native model selections and all previous immutable manifests.
+- Complete all four remaining published collection inventories at their existing pins. Keep newly found raw research candidates separate from qualified scene cards and preserve ALC901's exact export-checked selection when nested metadata anchors appear.
+- Record 13 scoped source-photo omissions and Dunhuang's remaining source calibration/pose mismatch with explicit next actions. Publish 4,559 scenes across 144 sources, with 2,781 previews and 2,609 retained manifests.
 
 - Reconcile all 432 current zero-point scenes with pinned scope receipts, including the 138 recent WildCity additions. Let the offline audit combine refreshed reports while rejecting changed model identities.
 - Recheck every published scene's photo/point metadata and all 2,479 thumbnail assets, including live bytes and browser decoding. Record the remaining photo-association and discovery limits separately from successful checks.

@@ -31,7 +31,7 @@ export interface ScenePhotoAudit {
   nameCheck?: { registered: number; matched: number; missing: number; ambiguous: number; scope?: 'prefix'; totalRegistered?: number };
   proposedNameCheck?: { registered: number; matched: number };
   archive?: { path: string; photos: number; nameSampleMatched: true; browserRangeRead: true;
-    format?: 'zip' | 'tar'; inventoryComplete?: boolean; bytes?: number;
+    format?: 'zip' | 'tar'; inventoryComplete?: boolean; bytes?: number; indexBytes?: number; prefixComplete?: boolean;
     sample?: { path: string; registeredName: string; headerOffset: number; dataOffset: number; bytes: number;
       sha256: string; pixels: 'decoded'; dimensionsMatch: boolean } };
   samplePath?: string;
