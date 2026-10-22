@@ -6,7 +6,7 @@ The machine-readable [audit receipts](../data/catalog-followup-audit-2026-10-22.
 
 ## Discovery and counts
 
-| Source | Previous native models | Complete native models | Previous published scenes | New published scenes |
+| Source | Previous native models | Complete native models | Published scenes before | Published scenes now |
 | --- | ---: | ---: | ---: | ---: |
 | boazkg/gs-pool-paslcd | 201 | 201 | 121 | 121 |
 | rishitdagli/nerf-gs-datasets | 61 | 64 | 61 | 64 |
@@ -37,6 +37,18 @@ The 1,030 GSO keyed intrinsics/extrinsics dictionaries in stream3d are unrecogni
 
 ## Loading coverage and limits
 
-The earlier audit's 42 non-AstroVision byte-budget cases are retried separately with an 8 GiB transfer budget, temporary regular browser profiles and longer deadlines. The receipt retains each original attempt, current result, timeout or provider limitation; a budget stop or timeout never counts as a pass. The three already withheld AstroVision decoder failures remain separate from these cases.
+All 42 non-AstroVision cases that reached the earlier audit's byte budget now pass complete immutable-manifest imports with matching native counts and a rendering canvas in viewer 0.20.4. Retries used an 8 GiB transfer budget, temporary regular browser profiles and longer deadlines. The receipt retains each original attempt, current result and superseded timeout; a budget stop or timeout never counts as a pass. The three already withheld AstroVision decoder failures remain separate from these cases.
+
+Trevi is a substantial performance limitation despite its passing result: its final import took 1,901,903 ms (about 32 minutes), transferred 904,014,487 bytes, and matched 3,191 camera definitions, 3,191 poses and 580,673 points. Earlier attempts reached their deadlines while displaying `Computing statistics...` after native parsing. This result establishes a complete import in the tested environment; photographs and exports retain their separate coverage limits.
 
 Native imports and scoped photo checks do not establish complete RGB or mask export. Collection-reported licenses remain the source of the Hub's license categories. Source copies across repositories are counted separately; the catalog is a list of qualified named scenes, not a claim of globally unique real-world captures.
+
+## Deployed verification
+
+Hub 0.10.7 publishes generation `4847fd62c99ad264acd7a3e7c42a3d7875167c947d2254fa604405e30ec3fd8d`. A complete live sweep checked all 2,591 immutable manifest bodies against local SHA-256 values, HTTP 200 responses, ETags and CORS headers. All 6,072 launch routes (4,559 current scenes and 1,513 retained historical variants) redirect to their exact recorded viewer selections. All 144 source metadata responses match the refreshed local projection. The paginated API returned each of the 4,559 scene IDs exactly once, with matching counts, labels and reported license categories; all 141 new metadata pages opened. `/hub/` reaches the catalog and `/hub/styles.css` returns 200 with an ETag.
+
+Production browser checks loaded trex, truck and WildCity Scene155 through both `colmapview.opsiclear.com` and the GitHub Pages root. All six reconstructed and rendered in released viewer 0.20.4 without page errors. Native production count logs matched trex and truck; WildCity's exact counts are established by its separate complete manifest import.
+
+The live Hub browser also appended all 200 WildCity cards without duplicates or replacing earlier cards. Truck's card displays 251 poses and 137,414 points, keeps its direct launch link, and exposes the photograph dimension limitation in its metadata. These browsing checks caused no provider requests or page errors; the new card has no thumbnail.
+
+These checks exposed a GitHub Pages root launcher that discarded the dataset query. The root now preserves the encoded query and view fragment when forwarding to `/latest/`. Its focused browser checks also retain existing share-link handling and unrelated 404 behavior. Root publication changed only `index.html` and `share-redirect.js`; production and `/latest/` viewer runtime artifacts remain 0.20.4. The audit receipts include the source and Pages commits, published asset hashes and separate runtime identities.
