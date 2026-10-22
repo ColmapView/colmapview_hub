@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.10.8 — 2026-10-22
+
+- Fill 496 missing scene previews from checked source photographs: 138 WildCity, 348 AstroVision, seven NL3D and three nerf-gs-datasets scenes. Retain existing previews and keep unsupported models excluded.
+- Verify every WildCity camera/pose file and the complete pinned inventory. All 200 scenes have 50 poses and no supplied point-cloud file; depth maps remain separate from sparse points. Add the 50 listed sky masks per scene without changing viewer selections or feature-mask semantics.
+- Attribute all 200 WildCity previews using the publisher's scene-to-city map, model credits and reported image terms. Strip original EXIF from new previews and serve them from the Hub.
+
 ## 0.10.7 — 2026-10-22
 
 - Complete pinned discovery for four previously capped repositories. Add 138 WildCity camera/pose scenes and three nerf-gs-datasets reconstructions after exact-manifest imports and count checks pass, bringing the catalog to 4,559 scenes across 144 sources.
