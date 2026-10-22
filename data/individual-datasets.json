@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-10-21",
+  "checkedAt": "2026-10-22",
   "sources": [
     {
       "datasetId": "hf-chhsiao93-hicss-splat-5f82d0192b45",
@@ -825,14 +825,14 @@
       "datasetId": "hf-boazkg-gs-pool-paslcd-e987dd4f6d89",
       "sourceId": "hf:boazkg/gs-pool-paslcd",
       "file": "hf-boazkg-gs-pool-paslcd-e987dd4f6d89.json.gz",
-      "sha256": "e313800ee1f1d543809449994089439086bf5a9b2ddddfbb56f872ba1ef7e26d",
-      "count": 855,
-      "listingComplete": false,
+      "sha256": "382996a18ba693885ed678f432c82dcf8529f49722fa091244a477e3cc78c2fc",
+      "count": 1641,
+      "listingComplete": true,
       "revision": "8344b8bc14828d2f8badb77717be954b75ccf534",
-      "checkedAt": "2026-10-16",
-      "scope": "Public repository sibling listing; capped listings remain incomplete.",
+      "checkedAt": "2026-10-22",
+      "scope": "Complete anonymous recursive Git path tree at the pinned commit; dataset file bodies and archived contents are not enumerated by discovery. Loading and photograph checks are recorded separately.",
       "looseColmapCount": 201,
-      "plyFileCount": 654
+      "plyFileCount": 1440
     },
     {
       "datasetId": "hf-bobh62-slabim-1cda88ad5323",
@@ -5531,14 +5531,14 @@
       "datasetId": "hf-rishitdagli-nerf-gs-datasets-7e4a5be59ab2",
       "sourceId": "hf:rishitdagli/nerf-gs-datasets",
       "file": "hf-rishitdagli-nerf-gs-datasets-7e4a5be59ab2.json.gz",
-      "sha256": "4a875b491a5122d7561428c7263805b423b28788a15f7151bdb7662e4a71d863",
-      "count": 185,
-      "listingComplete": false,
+      "sha256": "5db94733ea64d06d7e402928e8af329a3564427a5ff6d12bd97d5c42dc0b68c9",
+      "count": 201,
+      "listingComplete": true,
       "revision": "ba2938ee53ed123b179e1fc1b1adad58ae83c97e",
-      "checkedAt": "2026-10-16",
-      "scope": "Public repository sibling listing; capped listings remain incomplete.",
-      "looseColmapCount": 61,
-      "plyFileCount": 69
+      "checkedAt": "2026-10-22",
+      "scope": "Complete anonymous recursive Git path tree at the pinned commit; dataset file bodies and archived contents are not enumerated by discovery. Loading and photograph checks are recorded separately.",
+      "looseColmapCount": 64,
+      "plyFileCount": 70
     },
     {
       "datasetId": "hf-roman-apollo-3dgs-d8daea0160fd",
@@ -6727,14 +6727,14 @@
       "datasetId": "hf-walkerch-stream3d-4cfa6ec5f948",
       "sourceId": "hf:WalkerCH/stream3d",
       "file": "hf-walkerch-stream3d-4cfa6ec5f948.json.gz",
-      "sha256": "7304fc32a7a4dca85581e59d4586da1048922f97970e7681f0e77b446ebf69e9",
-      "count": 1746,
-      "listingComplete": false,
+      "sha256": "915334eb7c67e09e7c9b6a9828e4e9e24e17db8e8be98b690563bdd7589e7918",
+      "count": 2921,
+      "listingComplete": true,
       "revision": "0499fa46dacafd32beb5ac52cb09acbfa2295767",
-      "checkedAt": "2026-10-16",
-      "scope": "Public repository sibling listing; capped listings remain incomplete.",
+      "checkedAt": "2026-10-22",
+      "scope": "Complete anonymous recursive Git path tree at the pinned commit; dataset file bodies and archived contents are not enumerated by discovery. Loading and photograph checks are recorded separately.",
       "looseColmapCount": 16,
-      "plyFileCount": 518
+      "plyFileCount": 556
     },
     {
       "datasetId": "hf-warmstones-vr27-3dgs-b99f4f97e710",
@@ -23757,12 +23757,12 @@
       "datasetId": "hf-yutofurutani-wildcity-4795d65a2966",
       "sourceId": "hf:yutofurutani/WildCity",
       "file": "hf-yutofurutani-wildcity-4795d65a2966.json.gz",
-      "sha256": "671827792bddd62f2d6129f88cbd62143dddda53f1973d20ba75f27f1d31e9af",
-      "count": 62,
-      "listingComplete": false,
+      "sha256": "0a9c5b72c6c44db175ca27c7ce0782287cdbdd5d09624bec5a7bb8f260984745",
+      "count": 200,
+      "listingComplete": true,
       "revision": "6d1be815f55fa4ac900e464b53510cc282b05c29",
-      "checkedAt": "2026-10-16",
-      "scope": "Public repository sibling listing; capped listings remain incomplete.",
+      "checkedAt": "2026-10-22",
+      "scope": "Complete anonymous recursive Git path tree at the pinned commit; dataset file bodies and archived contents are not enumerated by discovery. Loading and photograph checks are recorded separately.",
       "looseColmapCount": 0,
       "plyFileCount": 0
     },
@@ -26225,18 +26225,18 @@
   ],
   "scope": "Individual listed model folders and standalone 3D assets; no complete load certification. Archive and capped-listing coverage is recorded per collection.",
   "counts": {
-    "camera-metadata": 59094,
-    "cameras": 304,
-    "colmap": 7879,
-    "glb": 477248,
+    "camera-metadata": 60139,
+    "cameras": 442,
+    "colmap": 7882,
+    "glb": 477345,
     "gltf": 8380,
     "ksplat": 470,
     "las": 502,
     "laz": 2707,
-    "obj": 256398,
+    "obj": 256405,
     "off": 17666,
     "pcd": 204231,
-    "ply": 786336,
+    "ply": 787161,
     "scene": 3,
     "sog": 387,
     "splat": 608,
@@ -26246,5 +26246,5 @@
     "usd": 26888,
     "usdz": 14434
   },
-  "individualEntries": 2158433
+  "individualEntries": 2160548
 }

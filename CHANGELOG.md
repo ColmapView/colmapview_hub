@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.10.7 — 2026-10-22
+
+- Complete pinned discovery for four previously capped repositories. Add 138 WildCity camera/pose scenes and three nerf-gs-datasets reconstructions after exact-manifest imports and count checks pass, bringing the catalog to 4,559 scenes across 144 sources.
+- Disable mismatched truck photographs while preserving its original calibration, poses and points. Recheck Trevi photo routing after discovering its companion PLY; preserve existing immutable manifest bytes.
+- Record rejected camera metadata and large-manifest loading outcomes separately from qualified scenes. Checkpoint complete metadata directories so interrupted operator scans can resume safely.
+
 ## 0.10.6 — 2026-10-21
 
 - Withhold AstroVision Dione, Rhea and Tethys scene cards after complete downloads aborted in the native decoder. Preserve their original immutable manifests, complete discovery and explicit failure evidence.

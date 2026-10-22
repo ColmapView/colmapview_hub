@@ -534,6 +534,141 @@
           "path": "segments/cas_tethys/opus"
         }
       ]
+    },
+    {
+      "sourceId": "hf:WalkerCH/stream3d",
+      "revision": "0499fa46dacafd32beb5ac52cb09acbfa2295767",
+      "checkedAt": "2026-10-22",
+      "viewerVersion": "0.20.4",
+      "reason": "conflicting_camera_metadata",
+      "summary": "All 30 pinned GSO30 transforms files declare different global and per-frame focal lengths. Viewer 0.20.4 rejects the first-frame fl_x conflict. Their 3,000 frame_*.png references are also absent from the listed metadata folders; model/*.png files require a separately verified association. Original source files remain unchanged.",
+      "scenes": [
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/bell/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/backpack/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/alarm/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/blocks/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/chicken/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/cream/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/elephant/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/grandmother/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/grandfather/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/hat/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/leather/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/lion/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/lunch_bag/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/mario/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/oil/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/school_bus2/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/school_bus1/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/shoe/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/shoe1/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/shoe2/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/shoe3/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/soap/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/sofa/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/sorter/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/sorting_board/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/stucking_cups/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/teapot/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/toaster/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/train/render_spiral_100"
+        },
+        {
+          "kind": "camera-scene",
+          "path": "GSO30/turtle/render_spiral_100"
+        }
+      ],
+      "proof": {
+        "viewerCommit": "79315be5f556115bca59c89afce4f0c181617ef2",
+        "report": "data/catalog-followup-audit-2026-10-22.json.gz",
+        "browserMetadataHashChecks": 30
+      }
     }
   ]
 }
