@@ -160,7 +160,8 @@ test('cards show content roles, load same-origin photos and open metadata only o
   const caption = (await first.locator('.dataset-card-body').boundingBox())!;
   expect(Math.abs(bounds.x - caption.x)).toBeLessThan(1);
   expect(Math.abs(bounds.width - caption.width)).toBeLessThan(1);
-  expect(bounds.y + bounds.height).toBeLessThanOrEqual(caption.y + 1);
+  expect(caption.y).toBeGreaterThan(bounds.y);
+  expect(Math.abs(bounds.y + bounds.height - caption.y - caption.height)).toBeLessThan(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('combobox', { name: 'License category', exact: true }).selectOption('non-commercial');
   await expect(page.locator('.dataset-thumbnail')).toHaveCount(0);

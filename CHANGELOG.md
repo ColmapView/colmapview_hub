@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.17 — 2026-10-23
+
+- Extend the gallery to the page edges and place readable titles, collection labels and counts over the bottom of each photograph. Keep fewer columns, direct opening, hover metadata and full touch targets.
+
 ## 0.10.16 — 2026-10-23
 
 - Fill each gallery frame edge to edge, matching the caption width. Use three columns on regular desktops, four on wide screens, two on tablets and one on phones. Keep uncropped previews on dataset detail pages.
