@@ -2,6 +2,7 @@ import { ID_PATTERN, isListedId } from '../shared/model';
 import { isSourceVerification, publicationSource, type SharedDataset, type SharedDatasetPage } from '../shared/publication';
 import { classifyLicense, LICENSE_CATEGORY_LABELS } from '../shared/license-categories';
 import { assetLine } from '../shared/asset-summary';
+import { icon } from '../shared/icons';
 
 /** Safe DOM construction: all user-supplied metadata remains text, and links come from a checked record ID. */
 function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
@@ -28,7 +29,8 @@ function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
   panel.setAttribute('aria-label', `Metadata for ${entry.title}`);
   const header = document.createElement('div'); header.className = 'dataset-metadata-header';
   const panelTitle = document.createElement('h2'); panelTitle.textContent = 'Dataset information';
-  const close = document.createElement('button'); close.type = 'button'; close.className = 'dataset-metadata-close'; close.textContent = 'Close';
+  const close = document.createElement('button'); close.type = 'button'; close.className = 'dataset-metadata-close icon-button';
+  close.setAttribute('aria-label', 'Close'); close.title = 'Close'; close.innerHTML = icon('close');
   header.append(panelTitle, close);
   const content = document.createElement('div'); content.className = 'dataset-metadata-content';
   const name = document.createElement('p'); name.className = 'dataset-metadata-title'; name.textContent = entry.title;

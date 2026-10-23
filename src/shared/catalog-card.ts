@@ -4,6 +4,7 @@ import { escapeHtml as escape } from './html';
 import { licenseCategory, LICENSE_CATEGORY_LABELS } from './license-categories';
 import { photoLabel } from './scene-photos';
 import { catalogCardTitle } from './catalog-title';
+import { icon } from './icons';
 import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
 
 export function catalogCardHtml(entry: CatalogSummary): string {
@@ -35,7 +36,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + (!canOpen ? '<p class="dataset-link-note">Source only</p>' : !entry.hasViewer ? '<p class="dataset-link-note">Try · unchecked ↗</p>' : '')
     + '</div>'
     + `<dialog class="dataset-metadata" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
-    + '<div class="dataset-metadata-header"><h2>Dataset information</h2><button type="button" class="dataset-metadata-close" autofocus>Close</button></div>'
+    + `<div class="dataset-metadata-header"><h2>Dataset information</h2><button type="button" class="dataset-metadata-close icon-button" aria-label="Close" title="Close" autofocus>${icon('close')}</button></div>`
     + '<div class="dataset-metadata-content">'
     + `<p class="dataset-metadata-title">${escape(entry.title)}</p><dl>${facts.map(([label, value]) => `<div><dt>${label}</dt><dd${label === 'Photographs' && entry.photoStatus ? ` data-photo-status="${escape(entry.photoStatus)}"` : label === 'Camera models' ? ' data-stat="cameraModels"' : ''}>${escape(value)}</dd></div>`).join('')}</dl>`
     + (preview ? `<p class="dataset-photo-credit">Photo: ${sceneThumbnailCreditHtml(entry.thumbnail!)}${entry.thumbnail!.crop === 'center_square' ? ' · Cropped' : ''}</p>` : '')

@@ -3,6 +3,7 @@ import type { CardRecord, ListedLink } from '../shared/model';
 import { escapeHtml } from '../shared/html';
 import { HUB_UI_VERSION } from '../shared/ui-version';
 import { assetLine } from '../shared/asset-summary';
+import { icon } from '../shared/icons';
 export { assetLine } from '../shared/asset-summary';
 export { escapeHtml } from '../shared/html';
 
@@ -34,10 +35,12 @@ const header = (path: string) => [
   '<header class="site-header">',
   `<a class="brand" href="${escapeHtml(path)}/datasets/">ColmapView <span>Hub</span></a>`,
   '<nav class="site-nav" aria-label="Main navigation">',
-  `<a href="${escapeHtml(path)}/datasets/">Datasets</a>`,
-  `<a href="${VIEWER}/">Open viewer</a>`,
+  `<a class="button icon-button" href="${escapeHtml(path)}/datasets/" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
+  `<a class="button icon-button" href="${VIEWER}/" aria-label="Open viewer" title="Open viewer">${icon('viewer')}</a>`,
   '</nav>',
-  '<label class="hub-theme"><span class="sr-only">Appearance</span><select id="hub-theme" aria-label="Appearance" disabled><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label>',
+  '<button type="button" class="button icon-button hub-theme" id="hub-theme" aria-label="Appearance: Dark. Switch to Light." title="Appearance: Dark. Switch to Light." data-theme="dark" disabled>',
+  ...(['dark', 'light', 'system'] as const).map(theme => `<span data-theme-icon="${theme}"${theme === 'dark' ? '' : ' hidden'}>${icon(theme)}</span>`),
+  '</button>',
   '</header>',
 ].join('');
 

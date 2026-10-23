@@ -175,6 +175,11 @@ test('cards show content roles, load same-origin photos and open metadata only o
     const target = (await info.boundingBox())!;
     expect(target.width).toBeGreaterThanOrEqual(44);
     expect(target.height).toBeGreaterThanOrEqual(44);
+    for (const control of await phone.locator('.icon-button').filter({ visible: true }).all()) {
+      const bounds = (await control.boundingBox())!;
+      expect(bounds.width).toBeGreaterThanOrEqual(44);
+      expect(bounds.height).toBeGreaterThanOrEqual(44);
+    }
     await info.tap();
     await expect(phone.getByRole('dialog')).toBeVisible();
     expect(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

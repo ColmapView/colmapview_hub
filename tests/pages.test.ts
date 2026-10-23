@@ -33,8 +33,10 @@ describe('Hub pages', () => {
     for (const path of [`/${link.id}`, '/missing-frame']) {
       const html = await (await request(path)).text();
     expect(html).toContain('<a class="brand" href="/hub/datasets/">ColmapView <span>Hub</span></a>');
-      expect(html).toContain('<a href="/hub/datasets/">Datasets</a>');
-      for (const [href, label] of [['/', 'Open viewer'], ['/about.html', 'About'], ['/privacy.html', 'Privacy'], ['/terms.html', 'Terms']]) {
+      for (const [href, label] of [['/hub/datasets/', 'Datasets'], ['https://colmapview.opsiclear.com/', 'Open viewer']]) {
+        expect(html).toContain(`href="${href}" aria-label="${label}" title="${label}"`);
+      }
+      for (const [href, label] of [['/about.html', 'About'], ['/privacy.html', 'Privacy'], ['/terms.html', 'Terms']]) {
         expect(html).toContain(`<a href="https://colmapview.opsiclear.com${href}">${label}</a>`);
       }
       expect(html).toContain('<p>ColmapView · Maintained by OpsiClear LLC</p>');
@@ -42,7 +44,7 @@ describe('Hub pages', () => {
       expect(html).toContain('<p class="eyebrow">ColmapView Hub</p>');
       expect(html.indexOf('/hub/colmapview.css')).toBeLessThan(html.indexOf('/hub/styles.css'));
       expect(html).toContain(`/hub/assets/theme.js?v=${HUB_UI_VERSION}`);
-      expect(html).toContain('aria-label="Appearance"');
+      expect(html).toContain('id="hub-theme" aria-label="Appearance: Dark. Switch to Light."');
       expect(html).toContain('<link rel="icon" href="/hub/favicon.ico">');
       expect(html).toMatch(/<title>[^<]+ · ColmapView Hub<\/title>/);
     }

@@ -8,6 +8,7 @@ import { escapeHtml as escape, page } from './pages';
 import type { HubLocation } from './pages';
 import { HUB_UI_VERSION } from '../shared/ui-version';
 import { SCENE_DATA_LABELS } from '../shared/scene-contents';
+import { icon } from '../shared/icons';
 
 const number = (value: number) => value.toLocaleString('en-US');
 export function individualBrowseUrl(filters: URLSearchParams, pageNumber = 1): string {
@@ -34,9 +35,9 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''), true)
     + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })), true)
     + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }], true)
-    + '<button type="submit" class="button button-primary catalog-icon-button" aria-label="Search" title="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>'
-    + `<a id="catalog-shuffle" class="button catalog-icon-button" href="${escape(individualBrowseUrl(shuffle))}" aria-label="Shuffle" title="Shuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 6h3c5 0 7 12 12 12h3M3 18h3c2 0 3.5-2 5-4.5M13 10.5C14.5 8 16 6 18 6h3m-4-4 4 4-4 4m0 4 4 4-4 4"/></svg></a>`
-    + '<a id="catalog-reset" class="button" href="/hub/datasets/">Reset</a></div>'
+    + `<button type="submit" class="button button-primary icon-button" aria-label="Search" title="Search">${icon('search')}</button>`
+    + `<a id="catalog-shuffle" class="button icon-button" href="${escape(individualBrowseUrl(shuffle))}" aria-label="Shuffle" title="Shuffle">${icon('shuffle')}</a>`
+    + `<a id="catalog-reset" class="button icon-button" href="/hub/datasets/" aria-label="Reset" title="Reset filters">${icon('reset')}</a></div>`
     + `<details class="catalog-advanced"${advanced ? ' open' : ''}><summary>More filters</summary><div class="catalog-secondary">`
     + select('kind', 'Type', 'All scene types', values(Object.keys(index.kinds)))
     + select('provider', 'Source', 'All sources', [{ value: 'huggingface', label: 'Hugging Face' }, { value: 'public', label: 'Public sources' }])

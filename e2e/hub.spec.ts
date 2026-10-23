@@ -215,6 +215,31 @@ for (const colorScheme of ['dark', 'light'] as const) {
   });
 }
 
+test('the appearance icon supports keyboard cycling, persistence and system and cross-tab changes', async ({ page, context }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto('/hub/datasets/?q=SceauxCastle');
+  const theme = page.getByRole('button', { name: /^Appearance:/ });
+  const root = page.locator('html');
+  await expect(theme).toHaveAccessibleName('Appearance: Dark. Switch to Light.');
+  await theme.press('Enter');
+  await expect(root).toHaveAttribute('data-ui-theme', 'light');
+  await page.reload();
+  await expect(theme).toHaveAccessibleName('Appearance: Light. Switch to System.');
+  await expect(root).toHaveAttribute('data-ui-theme', 'light');
+  await theme.press('Space');
+  await expect(theme).toHaveAccessibleName('Appearance: System. Switch to Dark.');
+  await expect(root).toHaveAttribute('data-ui-theme', 'dark');
+  await page.emulateMedia({ colorScheme: 'light' });
+  await expect(root).toHaveAttribute('data-ui-theme', 'light');
+  const other = await context.newPage();
+  try {
+    await other.goto('/hub/datasets/?q=SceauxCastle');
+    await other.getByRole('button', { name: 'Appearance: System. Switch to Dark.', exact: true }).click();
+    await expect(theme).toHaveAccessibleName('Appearance: Dark. Switch to Light.');
+    await expect(root).toHaveAttribute('data-ui-theme', 'dark');
+  } finally { await other.close(); }
+});
+
 test('gives the primary and danger buttons the type of link buttons', async ({ page }) => {
   const link = await createLink(page);
   const type = (selector: string) => page.locator(selector).evaluate(element =>
@@ -285,7 +310,7 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await page.goto('/hub/');
   await expect(page).toHaveURL(/\/hub\/datasets\/$/);
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
-  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link')).toHaveText(['Datasets', 'Open viewer']);
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Datasets', exact: true })).toHaveAttribute('href', '/hub/datasets/');
   await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Contact']);
   await expect(page.getByLabel('Collection', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Public datasets', exact: true })).toBeVisible();

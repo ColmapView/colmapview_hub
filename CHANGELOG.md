@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.18 — 2026-10-23
+
+- Use consistent icon controls for appearance, navigation, search, shuffle, reset and closing metadata. Keep tooltips, accessible names, keyboard operation and full touch targets; fit the phone header on one row.
+- Cycle appearance through Dark, Light and System while preserving saved preferences, system changes and cross-tab updates.
+
 ## 0.10.17 — 2026-10-23
 
 - Extend the gallery to the page edges and place readable titles, collection labels and counts over the bottom of each photograph. Keep fewer columns, direct opening, hover metadata and full touch targets.
