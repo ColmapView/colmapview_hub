@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.15 — 2026-10-22
+
+- Enlarge gallery previews and reduce desktop columns, with four columns at 1280 px. Blend captions into the page by removing card borders and backgrounds, while preserving photo proportions, hover metadata and touch controls.
+
 ## 0.10.14 — 2026-10-22
 
 - Preserve the full 44 px metadata-button target in touch layouts by correcting its flex basis. Verify tapping the metadata drawer with touch emulation in the browser suite.
