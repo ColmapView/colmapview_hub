@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.16 — 2026-10-23
+
+- Fill each gallery frame edge to edge, matching the caption width. Use three columns on regular desktops, four on wide screens, two on tablets and one on phones. Keep uncropped previews on dataset detail pages.
+
 ## 0.10.15 — 2026-10-22
 
 - Enlarge gallery previews and reduce desktop columns, with four columns at 1280 px. Blend captions into the page by removing card borders and backgrounds, while preserving photo proportions, hover metadata and touch controls.

@@ -156,8 +156,11 @@ test('cards show content roles, load same-origin photos and open metadata only o
   expect(await panel.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
   await panel.getByRole('button', { name: 'Close', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
-  const bounds = await image.boundingBox();
-  expect(Math.abs(bounds!.width - bounds!.height)).toBeLessThan(1);
+  const bounds = (await image.boundingBox())!;
+  const caption = (await first.locator('.dataset-card-body').boundingBox())!;
+  expect(Math.abs(bounds.x - caption.x)).toBeLessThan(1);
+  expect(Math.abs(bounds.width - caption.width)).toBeLessThan(1);
+  expect(bounds.y + bounds.height).toBeLessThanOrEqual(caption.y + 1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('combobox', { name: 'License category', exact: true }).selectOption('non-commercial');
   await expect(page.locator('.dataset-thumbnail')).toHaveCount(0);

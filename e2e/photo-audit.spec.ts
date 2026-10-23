@@ -61,7 +61,7 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   expect(providerRequests).toEqual([]);
 });
 
-test('Dynamic Maps keeps all pose statistics and displays the complete photograph frame', async ({ page }) => {
+test('Dynamic Maps keeps all pose statistics and an uncropped detail preview', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:dynamic-maps/hard-intersection-multimodal-sample');
   const result = await (await page.request.get('/hub/datasets/api/entries?dataset=' + source.id)).json();
@@ -72,7 +72,18 @@ test('Dynamic Maps keeps all pose statistics and displays the complete photograp
   await expect(thumbnail).toBeVisible();
   await expect(thumbnail).toHaveJSProperty('naturalWidth', 320);
   await expect(thumbnail).toHaveJSProperty('naturalHeight', 234);
-  const box = (await thumbnail.boundingBox())!;
+  const card = page.locator('.dataset-card');
+  const imageBox = (await thumbnail.boundingBox())!;
+  const captionBox = (await card.locator('.dataset-card-body').boundingBox())!;
+  expect(Math.abs(imageBox.x - captionBox.x)).toBeLessThan(1);
+  expect(Math.abs(imageBox.width - captionBox.width)).toBeLessThan(1);
+  await card.getByRole('button', { name: /Metadata for/ }).click();
+  await card.getByRole('link', { name: 'Full metadata', exact: true }).click();
+  const preview = page.locator('.dataset-overview .dataset-thumbnail');
+  await expect(preview).toBeVisible();
+  await expect(preview).toHaveJSProperty('naturalWidth', 320);
+  await expect(preview).toHaveJSProperty('naturalHeight', 234);
+  const box = (await preview.boundingBox())!;
   expect(Math.abs(box.width / box.height - 320 / 234)).toBeLessThan(0.01);
 });
 
