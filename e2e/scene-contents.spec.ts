@@ -75,7 +75,7 @@ test('a scene manifest attaches the exact sibling-photo model and selected cloud
   expect(read[1].viewState.target).toHaveLength(3);
 });
 
-test('cards show content roles, load same-origin photos and open metadata only on activation', async ({ page }) => {
+test('cards show content roles, load same-origin photos and open metadata only on activation', async ({ page, browser }) => {
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com|wikimedia\.org/.test(request.url())) providerRequests.push(request.url()); });
   await page.goto('/hub/datasets/?q=scene0024_01&licenseCategory=commercial&photos=available&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9');
@@ -162,6 +162,19 @@ test('cards show content roles, load same-origin photos and open metadata only o
   await page.getByRole('combobox', { name: 'License category', exact: true }).selectOption('non-commercial');
   await expect(page.locator('.dataset-thumbnail')).toHaveCount(0);
   expect(providerRequests).toEqual([]);
+  const touch = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  try {
+    const phone = await touch.newPage();
+    await phone.goto(new URL('/hub/datasets/?q=scene0024_01&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9', page.url()).href);
+    const info = phone.getByRole('button', { name: /Metadata for/ }).first();
+    await expect(info).toBeVisible();
+    const target = (await info.boundingBox())!;
+    expect(target.width).toBeGreaterThanOrEqual(44);
+    expect(target.height).toBeGreaterThanOrEqual(44);
+    await info.tap();
+    await expect(phone.getByRole('dialog')).toBeVisible();
+    expect(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally { await touch.close(); }
 });
 
 test('previews cover custom and non-commercial licenses while preserving the reported terms', async ({ page }) => {

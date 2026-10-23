@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.14 — 2026-10-22
+
+- Preserve the full 44 px metadata-button target in touch layouts by correcting its flex basis. Verify tapping the metadata drawer with touch emulation in the browser suite.
+
 ## 0.10.13 — 2026-10-22
 
 - Bring the Hub closer to the viewer with a compact search toolbar, full-width photo grid and two-column phone layout. Show content and license details on hover or keyboard focus while keeping the complete metadata drawer available.

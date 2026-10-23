@@ -220,7 +220,7 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
   .button, .site-nav a, .footer-links a, .brand, input, select, .catalog-advanced summary, .catalog-notes summary, .dataset-metadata-close { min-height: 44px; }
   .catalog-icon-button { width: 44px; }
   .catalog-primary { column-gap: var(--sp-2); }
-  .dataset-info { width: 44px; min-height: 44px; top: 0; right: 0; }
+  .dataset-info { flex-basis: 44px; width: 44px; min-height: 44px; top: 0; right: 0; }
   .dataset-metadata-links a { min-height: 44px; display: inline-flex; align-items: center; }
 }
 .shared-datasets { margin-block: var(--sp-3); }
