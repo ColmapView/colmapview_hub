@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.1 — 2026-10-23
+
+- Keep browser-test startup compatible with quiet CI by using HTTP readiness there, while preserving the Windows ready-banner check and development-port protection.
+
 ## 0.11.0 — 2026-10-23
 
 - Bind 1,349 per-camera videos across all 47 danceNet3D scenes to matching static frames in viewer 0.21.1. Preserve native models, selected geometry, old immutable manifests, and separate model/export evidence.
