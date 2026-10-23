@@ -304,8 +304,8 @@ test('ZIP photo previews retain image credits and describe automatic archive loa
 });
 
 for (const selected of [
-  { id: 'data-ebc089e808b20c73bbbfa268', sequence: 's4/HouseFootwork', role: 'points3D', frame: '0000242', points: 62455, count: 62455 },
-  { id: 'data-b41ab2a34430b23d25428e3c', sequence: 's4/3PointStep', role: 'splat', frame: '0000001', points: 0, count: 18280 },
+  { id: 'data-ebc089e808b20c73bbbfa268', sequence: 's4/HouseFootwork', role: 'points3D', frame: '0000242', timestamp: 241, points: 62455, count: 62455 },
+  { id: 'data-b41ab2a34430b23d25428e3c', sequence: 's4/3PointStep', role: 'splat', frame: '0000001', timestamp: 0, points: 0, count: 18280 },
 ]) test(`selected ${selected.role} archive frame retains native cameras and truthful sparse counts`, async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:nyuvideolab/danceNet3D');
@@ -328,8 +328,13 @@ for (const selected of [
   expect(opened.status()).toBe(302);
   const target = new URL(new URL(opened.headers().location).searchParams.get('url')!);
   const manifest = await (await page.request.get(target.pathname)).json();
-  expect(manifest.version).toBe(3);
-  expect(manifest.skipImages).toBe(true);
+  expect(manifest.version).toBe(4);
+  expect(manifest.skipImages).toBeUndefined();
+  expect(Object.keys(manifest.videoImages)).toHaveLength(29);
+  for (const video of Object.values(manifest.videoImages) as { url: string; timestamp: number }[]) {
+    expect(video.url).toContain('/' + selected.sequence + '/');
+    expect(video.timestamp).toBe(selected.timestamp);
+  }
   expect(manifest.files.points3D).toBeUndefined();
   expect(manifest.geometryFiles).toHaveLength(1);
   expect(manifest.geometryFiles[0]).toMatchObject({ role: selected.role, format: selected.role === 'splat' ? 'zip' : 'tar.zst', member: { path: selected.frame + '.ply' } });

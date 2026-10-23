@@ -1,6 +1,12 @@
 # Dataset catalog
 
-Hub 0.10.12 and viewer 0.20.6 are deployed. The [production verification](../docs/source-integrity-release-2026-10-22.md) records exact release identities, live metadata checks and production browser exports; historical receipts below retain their original local-validation scope.
+The [source-integrity production verification](../docs/source-integrity-release-2026-10-22.md) records Hub 0.10.12 / viewer 0.20.6 release identities and browser exports. Later receipts below retain their own release and validation scope.
+
+`video-frame-routing.json.gz` adds matching video imagery for 47 danceNet3D scenes
+without changing the earlier model-only receipts. See the [video frame audit and
+operator workflow](../docs/camera-video-frames-2026-10-23.md). Its complete name/time
+mapping and one decoded sample per scene are distinct from original-photo or full
+photo-export evidence.
 
 The [October 22 source-integrity safeguards](../docs/catalog-source-integrity-fixes-2026-10-22.md) close the viewer warning, feature-matching and COLMAP export gaps below. The Hub now flags exactly 25 affected scenes with complete-model or bounded-sample scopes. Cameras, point viewing and PLY export remain available. All 4,559 scenes, source totals and 2,690 launch JSON bodies are preserved. The [validation receipt](catalog-source-integrity-fixes-2026-10-22.json.gz) records the local tests; the production follow-up above records deployment.
 

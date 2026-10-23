@@ -22,9 +22,10 @@ from .scene_qualification import apply_calibration_review, apply_source_integrit
 from .scene_photos import apply_photo_evidence, photo_scene_reviews
 from .scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
 from .scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
+from .video_frames import apply_video_frames, video_frame_asset, video_frame_reviews
 from .photo_routing import apply_routing, routing_asset, routing_coverage, routing_failures, routing_reviews
 from .archive_routing import archive_reviews, archive_asset, apply_archive_routing
-from .photo_decisions import decision_records, decision_coverage
+from .photo_decisions import decision_records, decision_coverage, selection_key
 from .scene_discovery import HISTORY, load_history, discovery_row
 
 # A normal results page must not parse thousands of unrelated scene records.
@@ -270,6 +271,9 @@ def build(root=Path('.')):
     manifest_bytes = (root / 'data/scene-manifests.json').read_bytes()
     manifest_policy = json.loads(manifest_bytes)
     manifest_reviews = manifest_scene_reviews(catalog, manifest_policy)
+    video_bytes = (root / 'data/video-frame-routing.json.gz').read_bytes()
+    video_policy = json.loads(gzip.decompress(video_bytes))
+    video_reviews = video_frame_reviews(catalog, video_policy, manifest_reviews, hf_url)
     routing_bytes = (root / 'data/photo-routing.json.gz').read_bytes()
     routing_policy = json.loads(gzip.decompress(routing_bytes))
     archive_bytes = (root / 'data/companion-media-routing.json.gz').read_bytes()
@@ -278,6 +282,12 @@ def build(root=Path('.')):
     decision_bytes = (root / 'data/photo-audit-decisions.json.gz').read_bytes()
     decision_policy = json.loads(gzip.decompress(decision_bytes))
     photo_decisions = decision_records(decision_policy)
+    for key, review in video_reviews.items():
+        selection = selection_key(review['sourceId'], review['revision'], review['kind'], review['path'], manifest_reviews[key]['files'])
+        decision = photo_decisions.get(selection, {})
+        if (decision.get('decision') != 'automatic_video_frames' or decision.get('confirmed') is not True
+                or {'kind': 'camera_video_frames', 'sha256': review['receiptSha256']} not in decision.get('evidence', [])):
+            raise ValueError('Video imagery needs the same receipt in the reusable photo decisions')
     photo_routing = routing_reviews(catalog, routing_policy)
     unresolved_routing = routing_failures(catalog, routing_policy)
     if set(photo_routing) & set(unresolved_routing):
@@ -288,10 +298,14 @@ def build(root=Path('.')):
         raise ValueError('A photo inventory and archive cannot replace the same scene launch')
     matched_unresolved = set()
     matched_manifests = set()
+    matched_videos = set()
     generated_manifests = {}
     parents = {entry['sourceId']: entry for entry in catalog['entries']}
     for review in manifest_reviews.values():
         generated_manifests.update(manifest_assets(review, parents[review['sourceId']], hf_url))
+    for key, review in video_reviews.items():
+        name, body = video_frame_asset(review, manifest_reviews[key], parents[review['sourceId']], hf_url)
+        generated_manifests[name] = body
     for review in photo_routing.values():
         name, body = routing_asset(review, parents[review['sourceId']], hf_url)
         generated_manifests[name] = body
@@ -321,6 +335,7 @@ def build(root=Path('.')):
                                 + Path(__file__).with_name('scene_contents.py').read_bytes()
                                 + Path(__file__).with_name('scene_datasets.py').read_bytes()
                                 + Path(__file__).with_name('scene_manifests.py').read_bytes()
+                                + video_bytes + Path(__file__).with_name('video_frames.py').read_bytes()
                                 + Path(__file__).with_name('photo_routing.py').read_bytes()
                                 + archive_bytes + decision_bytes
                                 + Path(__file__).with_name('archive_routing.py').read_bytes()
@@ -494,6 +509,9 @@ def build(root=Path('.')):
                 proof['photoAudit']['policyNote'] = (proof['photoAudit'].get('policyNote', '')
                     + f" Photo-manifest audit ({routing_policy['checkedAt']}, viewer {routing_policy['viewerVersion']}): {unresolved['reason']}. The existing model launch is retained.")
                 matched_unresolved.add(review_key)
+            if review_key in video_reviews:
+                proof = apply_video_frames(proof, video_reviews[review_key], manifest_review, entry, hf_url)
+                matched_videos.add(review_key)
             if native and native.get('calibrationReview'):
                 proof = apply_calibration_review(proof, native['calibrationReview'])
             if native and native.get('sourceIntegrityReview'):
@@ -556,7 +574,7 @@ def build(root=Path('.')):
             deliveries[delivery] += 1
             photo_status = proof.get('photoAvailability', 'not_checked')
             photos[photo_status] += 1
-            if photo_status in ('complete_export_checked', 'sample_checked', 'partial'):
+            if photo_status in ('complete_export_checked', 'sample_checked', 'partial', 'video_frames'):
                 add_posting(facets['photos'], 'available', total)
             photo_audit = proof.get('photoAudit', {})
             photo_rows.append({'id': item_id, 'source': entry['sourceId'], 'scene': path, 'revision': revision,
@@ -633,13 +651,15 @@ def build(root=Path('.')):
             facet_manifest[field][value] = {'file': key, 'count': len(ordinals)}
     if matched_manifests != set(manifest_reviews):
         raise ValueError('A scene manifest no longer matches a published scene; recheck its selection')
+    if matched_videos != set(video_reviews):
+        raise ValueError('A video frame layer no longer matches a published native scene')
     # Withheld scenes keep their immutable routing assets and audit evidence.
     if (matched_routing != set(photo_routing) - scene_exclusions
             or matched_unresolved != set(unresolved_routing) - scene_exclusions):
         raise ValueError('Photo routing no longer matches the published scenes; rerun the audit')
     if matched_archives != set(photo_archives):
         raise ValueError('Companion routing no longer matches the published selections')
-    checked_at = max([registry['checkedAt'], native_policy.get('checkedAt', ''), photo_policy.get('checkedAt', ''), content_policy['checkedAt'], manifest_policy['checkedAt'], routing_policy['checkedAt'], archive_policy['checkedAt'], decision_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
+    checked_at = max([registry['checkedAt'], native_policy.get('checkedAt', ''), photo_policy.get('checkedAt', ''), content_policy['checkedAt'], manifest_policy['checkedAt'], video_policy['checkedAt'], routing_policy['checkedAt'], archive_policy['checkedAt'], decision_policy['checkedAt'], *[review['checkedAt'] for review in verified_scenes.values()]])
     manifest = {'schemaVersion': 1, 'generation': generation, 'checkedAt': checked_at, 'total': total,
                 'packSize': PACK_SIZE, 'sources': sources, 'facets': facet_manifest, 'kinds': dict(counts),
                 'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos), 'contents': dict(contents),

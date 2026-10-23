@@ -75,6 +75,18 @@ test('manifest plans include retained assets and variant references and detect m
     assert.equal((await manifestPlan(root, schemas)).missing.length, 1);
     await save('manifests/' + 'e'.repeat(64) + '.manifest.json', body);
     assert.match((await manifestPlan(root, schemas)).manifests.at(-1).errors[0], /neither its content digest nor a recorded selection/);
+    const videoBody = { version: 4, videoImages: { '0028.png': { timestamp: 240 } } }, videoDigest = manifestHash(JSON.stringify(videoBody));
+    const videoFile = videoDigest + '.manifest.json';
+    await save('manifests/' + videoFile, videoBody);
+    proof.videoFrameRouting = { sha256: videoDigest };
+    proof.viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(`https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${videoFile}`);
+    await save('packs/0.json', [row]);
+    const videoPlan = (await manifestPlan(root, schemas)).manifests.find(item => item.file === videoFile);
+    assert.deepEqual(videoPlan.errors, []); // The old model-only body checksum must not be applied to the video layer.
+    assert.deepEqual(videoPlan.entries[0].expected, proof.sceneManifest.counts);
+    proof.videoFrameRouting.sha256 = 'c'.repeat(64);
+    await save('packs/0.json', [row]);
+    assert.match((await manifestPlan(root, schemas)).manifests.find(item => item.file === videoFile).errors[0], /checksum/);
   } finally {
     assert.ok(resolve(root).startsWith(resolve(tmpdir(), 'colmapview-manifest-plan-')));
     await rm(root, { recursive: true, force: true });

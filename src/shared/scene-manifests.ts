@@ -88,7 +88,7 @@ export function isSceneManifestEvidence(value: unknown): value is SceneManifestE
     && typeof item.viewerVersion === 'string' && /^\d+\.\d+\.\d+$/.test(item.viewerVersion);
 }
 
-export function manifestViewerUrlMatches(viewerUrl: string | undefined, manifest: SceneManifestEvidence): boolean {
+export function manifestViewerUrlMatches(viewerUrl: string | undefined, manifest: Pick<SceneManifestEvidence, 'url'>): boolean {
   try {
     const url = new URL(viewerUrl ?? '');
     return url.origin === 'https://colmapview.opsiclear.com' && url.pathname === '/' && !url.hash

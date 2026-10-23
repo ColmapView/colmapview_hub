@@ -205,7 +205,7 @@ describe('public Hub submissions', () => {
     expect(cancel).toHaveBeenCalledOnce();
   });
   it('checks a curated manifest through its fixed asset binding without an external request', async () => {
-    const assets = { fetch: vi.fn(async () => Response.json({ version: 3 })) };
+    const assets = { fetch: vi.fn(async () => Response.json({ version: 4 })) };
     const checked = await verifyPublicationSource(`${origin}/?url=${encodeURIComponent(`${origin}/hub/datasets/individual/manifests/${'a'.repeat(64)}.manifest.json`)}`,
       { ...env, CATALOG_ASSETS: assets } as unknown as Env, origin);
     expect(checked.verification?.method).toBe('catalog_manifest'); expect(fetch).not.toHaveBeenCalled();

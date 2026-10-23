@@ -8,7 +8,7 @@ export const SCENE_DATA_LABELS = {
 export type SceneDataKind = keyof typeof SCENE_DATA_LABELS;
 export type SceneDataStatus = 'checked' | 'listed' | 'needs_setup' | 'archive' | 'partial';
 export type SceneContents = Partial<Record<SceneDataKind, { status: SceneDataStatus; count?: number; samplePath?: string;
-  archiveMember?: string; archiveFormat?: 'zip' | 'tar.zst'; encoding?: 'compressed_ply'; requiresConversion?: true }>>;
+  archiveMember?: string; archiveFormat?: 'zip' | 'tar.zst'; sourceFormat?: 'video'; encoding?: 'compressed_ply'; requiresConversion?: true }>>;
 export interface SceneStatistics { cameraPoses: number | null; cameraModels: number | null; points: number | null }
 const statisticFields = [
   { key: 'cameraPoses', label: 'Camera poses', note: 'Registered camera poses in the selected reconstruction. Original photographs may be absent.' },
@@ -80,6 +80,7 @@ export function isSceneContents(value: unknown): value is SceneContents {
       && (evidence.samplePath === undefined || typeof evidence.samplePath === 'string')
       && (evidence.archiveMember === undefined || typeof evidence.archiveMember === 'string')
       && (evidence.archiveFormat === undefined || ['zip', 'tar.zst'].includes(String(evidence.archiveFormat)))
+      && (evidence.sourceFormat === undefined || kind === 'images' && evidence.sourceFormat === 'video')
       && (evidence.encoding === undefined && evidence.requiresConversion === undefined
         || kind === 'splats' && evidence.encoding === 'compressed_ply' && evidence.requiresConversion === true && evidence.status === 'needs_setup');
   });
@@ -89,7 +90,7 @@ export function sceneDataText(contents?: SceneContents): string {
   return (Object.keys(SCENE_DATA_LABELS) as SceneDataKind[]).filter(kind => contents?.[kind]).map(kind => {
     const status = contents![kind]!.status;
     const suffix = { checked: '', listed: ' · listed', needs_setup: ' · setup', archive: ' · archive', partial: ' · partial' }[status];
-    return SCENE_DATA_LABELS[kind] + suffix;
+    return SCENE_DATA_LABELS[kind] + (contents![kind]!.sourceFormat === 'video' ? ' · video frames' : suffix);
   }).join(', ');
 }
 
@@ -105,7 +106,8 @@ export function sceneContentsHtml(contents?: SceneContents): string {
   return '<ul class="dataset-contents" aria-label="Available data">'
     + (Object.keys(SCENE_DATA_LABELS) as SceneDataKind[]).filter(kind => contents[kind]).map(kind => {
       const evidence = contents[kind]!;
-      const suffix = { checked: '', listed: ' · listed', needs_setup: ' · setup', archive: ' · archive', partial: ' · partial' }[evidence.status];
+      const suffix = evidence.sourceFormat === 'video' ? ' · video frames'
+        : { checked: '', listed: ' · listed', needs_setup: ' · setup', archive: ' · archive', partial: ' · partial' }[evidence.status];
       const units: Record<SceneDataKind, string> = { images: 'images', cameras: 'camera definitions', point_cloud: 'points',
         splats: 'splat files', masks: 'masks', meshes: 'mesh files', geometry: 'model files' };
       const count = evidence.count ? `${evidence.count.toLocaleString('en-US')} ${units[kind]}. ` : '';

@@ -48,7 +48,7 @@ export async function manifestPlan(root, schemas) {
     const expected = evidence ? Object.fromEntries(['cameras', 'images', 'points'].map(key => [key, evidence[key] ?? null])) : null;
     if (expected && proof.sceneManifest?.frameGeometry?.role === 'splat') expected.splats = proof.sceneManifest.frameGeometry.count;
     const list = references.get(url) ?? [];
-    const manifestSha256 = proof.sceneManifest?.sha256 ?? proof.photoRouting?.sha256 ?? proof.photoArchiveRouting?.sha256;
+    const manifestSha256 = proof.videoFrameRouting?.sha256 ?? proof.sceneManifest?.sha256 ?? proof.photoRouting?.sha256 ?? proof.photoArchiveRouting?.sha256;
     list.push({ id: row[0], source: index.sources[row[1]].sourceId, path: row[3], expected, ...(manifestSha256 ? { manifestSha256 } : {}) });
     references.set(url, list);
   };

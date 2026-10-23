@@ -9,7 +9,7 @@ test('photo evidence covers every published scene and keeps stronger export chec
     total: number; generation: string; sources: unknown[]; photos: Record<string, number>; photoRouting: Record<string, number> };
   expect(index.total).toBeGreaterThan(0);
   const photoStates = ['sample_checked', 'path_policy_required', 'review_required', 'not_found',
-    'not_included', 'companion_archive', 'partial', 'complete_export_checked'];
+    'not_included', 'companion_archive', 'partial', 'complete_export_checked', 'video_frames'];
   for (const [status, count] of Object.entries(index.photos)) {
     expect(photoStates).toContain(status);
     expect(Number.isSafeInteger(count) && count >= 0).toBe(true);
@@ -17,19 +17,20 @@ test('photo evidence covers every published scene and keeps stronger export chec
   expect(Object.values(index.photos).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const available = await (await page.request.get('/hub/datasets/api/entries?photos=available')).json() as {
     total: number; entries: { photoStatus: string }[] };
-  expect(available.total).toBe(['complete_export_checked', 'sample_checked', 'partial']
+  expect(available.total).toBe(['complete_export_checked', 'sample_checked', 'partial', 'video_frames']
     .reduce((sum, status) => sum + (index.photos[status] ?? 0), 0));
-  expect(available.entries.every(entry => ['complete_export_checked', 'sample_checked', 'partial'].includes(entry.photoStatus))).toBe(true);
+  expect(available.entries.every(entry => ['complete_export_checked', 'sample_checked', 'partial', 'video_frames'].includes(entry.photoStatus))).toBe(true);
   const audit = await (await page.request.get('/hub/datasets/individual/photo-audit.json')).json();
   expect(audit).toMatchObject({ generation: index.generation, scenes: index.total, collections: index.sources.length, photos: index.photos });
   const csv = await page.request.get('/hub/datasets/individual/photo-audit.csv');
   expect(csv.ok()).toBe(true);
   expect(await csv.text()).toContain('mappingFile,companionArchive,samplePhoto');
-  expect(await csv.text()).toContain('launchRouting,photoManifest,listedPhotos,boundNamesChecked');
+  expect(await csv.text()).toContain('launchRouting,photoManifest,listedPhotos,videoFrames,videoTimestamp,boundNamesChecked');
   expect(audit.routing).toEqual(index.photoRouting);
   expect(Object.values(index.photoRouting).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const manifests = JSON.parse(await readFile(new URL('../data/scene-manifests.json', import.meta.url), 'utf8'));
-  expect(audit.routing.full_scene_manifest).toBe(manifests.scenes.length);
+  expect(audit.routing.full_scene_manifest + audit.routing.video_frames_manifest).toBe(manifests.scenes.length);
+  expect(audit.routing.video_frames_manifest).toBe(47);
   expect(audit.repeatAudit.skip_confirmed_facts).toBeGreaterThan(0);
   expect(audit.repeatAudit.review_required).toBeGreaterThanOrEqual(0);
   expect(audit.repeatAudit.skip_confirmed_facts + audit.repeatAudit.review_required).toBe(index.total);
@@ -38,6 +39,37 @@ test('photo evidence covers every published scene and keeps stronger export chec
   await page.goto('/hub/datasets/audit');
   await expect(page.getByRole('heading', { name: 'Photograph availability' })).toBeVisible();
   await expect(page.getByRole('link', { name: /photo availability and path policy \(CSV\)/ })).toHaveAttribute('href', '/hub/datasets/individual/photo-audit.csv');
+});
+
+test('camera video imagery has its own filter and matching-frame launch while model export evidence remains separate', async ({ page }) => {
+  const providerRequests: string[] = [];
+  page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com/.test(request.url())) providerRequests.push(request.url()); });
+  const result = await (await page.request.get('/hub/datasets/api/entries?photos=video_frames')).json();
+  expect(result.total).toBe(47);
+  expect(result.entries.every((entry: { photoStatus: string }) => entry.photoStatus === 'video_frames')).toBe(true);
+  await page.goto('/hub/datasets/?photos=video_frames');
+  await expect(page.locator('#catalog-count')).toContainText('of 47 scene datasets');
+  await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('video_frames');
+  await expect(page.locator('[data-photo-status]').first()).toHaveText('Frames from camera videos');
+  const id = 'data-7ab128e89d676305e079e729';
+  const open = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  expect(open.status()).toBe(302);
+  const target = new URL(new URL(open.headers().location).searchParams.get('url')!);
+  const response = await page.request.get(target.pathname);
+  expect(response.headers()['access-control-allow-origin']).toBe('*');
+  const manifest = await response.json();
+  expect(manifest.version).toBe(4); expect(manifest.skipImages).toBeUndefined();
+  expect(Object.keys(manifest.videoImages)).toHaveLength(28);
+  for (const video of Object.values(manifest.videoImages) as { url: string; bytes: number; timestamp: number }[]) {
+    expect(video.url).toContain('/resolve/5ecd1b71d0c13b176dbdbe358b940624759d678f/s6/BiancaGolden_Ocho/');
+    expect(video.timestamp).toBe(240); expect(video.bytes).toBeGreaterThan(0);
+  }
+  expect(manifest.geometryFiles[0].member.path).toBe('0000242.ply');
+  await page.goto('/hub/datasets/entry/' + id);
+  await expect(page.locator('main')).toContainText('Model-only export SHA-256');
+  await expect(page.locator('main')).toContainText('One frame per scene decoded at camera resolution');
+  await expect(page.locator('main')).not.toContainText('All registered originals checked');
+  expect(providerRequests).toEqual([]);
 });
 
 test('photo filtering survives Back and Forward and makes no provider requests', async ({ page }) => {

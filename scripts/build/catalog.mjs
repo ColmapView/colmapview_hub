@@ -62,7 +62,7 @@ for (let pack = 0; pack < Math.ceil(sceneIndex.total / sceneIndex.packSize); pac
     add('delivery', summary.delivery, ordinal);
     add('viewer', 'available', ordinal);
     add('photos', summary.photoStatus || 'not_checked', ordinal);
-    if (['complete_export_checked', 'sample_checked', 'partial'].includes(summary.photoStatus)) add('photos', 'available', ordinal);
+    if (['complete_export_checked', 'sample_checked', 'partial', 'video_frames'].includes(summary.photoStatus)) add('photos', 'available', ordinal);
     for (const component of Object.keys(summary.availableData || {})) add('data', component, ordinal);
   }
 }

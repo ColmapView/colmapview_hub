@@ -499,6 +499,40 @@ test('statistics evidence names only the text files completely read in a mixed-f
   assert.match(html, /Not included by publisher/);
 });
 
+test('video imagery retains its model receipt, truthful media labels and exact additive launch contract', () => {
+  const proof = explicitManifestProof(), model = proof.sceneManifest;
+  model.viewerVersion = '0.19.10'; model.photoCount = 0; model.maskCount = 0;
+  model.pointFormat = 'archive_xyz_ply'; model.pointSource = 'pointcloud/s6/Motion.tar.zst';
+  model.frameGeometry = { sequencePath: 's6/Motion', frame: '0000242', frameCount: 476, role: 'points3D', count: model.counts.points,
+    sourcePath: model.pointSource, memberPath: '0000242.ply', memberSha256: 'd'.repeat(64) };
+  const digest = 'f'.repeat(64), url = `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${digest}.manifest.json`;
+  proof.photoAvailability = 'video_frames'; proof.availableData = { images: { status: 'listed', count: 2, sourceFormat: 'video' } };
+  proof.videoFrameRouting = { url, sha256: digest, baseManifestUrl: model.url, baseManifestSha256: model.sha256,
+    receiptSha256: 'b'.repeat(64), count: 2, timestamp: 240, frame: '0000242', frameCount: 476,
+    checkedAt: '2026-10-23T14:00:00Z', viewerVersion: '0.21.0', viewerCommit: 'c'.repeat(40),
+    sample: { name: '0028.png', sourcePath: 's6/Motion/Motion_0028.mp4', sha256: 'a'.repeat(64), width: 800, height: 1280 } };
+  proof.viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(url);
+  const item = row(0, { 7: proof });
+  assert.equal(render.canOpenIndividual(item, source), true);
+  const summary = render.individualSummary(item, source);
+  assert.equal(summary.photoStatus, 'video_frames'); assert.equal(render.isCatalogSummary(summary), true);
+  assert.equal(summary.sceneStats.points, model.counts.points);
+  const entry = render.individualEntry(item, source, parent), html = render.catalogEntryPage(entry);
+  assert.equal(entry.viewerUrl, proof.viewerUrl);
+  assert.match(html, /Frames from camera videos/); assert.match(html, /Images · video frames/);
+  assert.ok(entry.facts.some(fact => fact.label === 'Model-only export SHA-256' && fact.value === model.exportSha256));
+  assert.ok(entry.facts.some(fact => fact.label === 'Video frame manifest' && fact.url === url));
+  assert.doesNotMatch(html, /All registered originals checked|Video decoding.*outside/);
+  for (const edit of [p => { delete p.sceneManifest; }, p => { delete p.videoFrameRouting; },
+    p => { p.videoFrameRouting.baseManifestSha256 = 'd'.repeat(64); }, p => { p.videoFrameRouting.count = 3; },
+    p => { p.videoFrameRouting.frame = '0000243'; }, p => { p.videoFrameRouting.timestamp = 476; },
+    p => { p.videoFrameRouting.viewerVersion = '0.20.6'; }, p => { p.videoFrameRouting.sample.sourcePath = 's6/Other/Other_0028.mp4'; },
+    p => { p.viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(model.url); }]) {
+    const bad = structuredClone(proof); edit(bad);
+    assert.equal(render.canOpenIndividual(row(0, { 7: bad }), source), false);
+  }
+});
+
 const squareThumbnail = { url: '/hub/datasets/individual/thumbnails/' + 'a'.repeat(64) + '.jpg', width: 320, height: 320,
   sourcePath: 'scene/images/a.jpg', sourceSha256: 'b'.repeat(64), datasetLicense: 'cc-by-4.0', license: 'cc-by-sa-4.0',
   licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', creditUrl: 'https://commons.wikimedia.org/wiki/File:a.jpg',

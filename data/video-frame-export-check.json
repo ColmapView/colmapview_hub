@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-23T15:24:18.010036+00:00",
+  "id": "data-7ab128e89d676305e079e729",
+  "sourceId": "hf:nyuvideolab/danceNet3D",
+  "revision": "5ecd1b71d0c13b176dbdbe358b940624759d678f",
+  "path": "s6/BiancaGolden_Ocho/colmap",
+  "viewerVersion": "0.21.1",
+  "viewerCommit": "5d9cff3bb2b4c1f9a43108ba1c9e5b81dd32ab56",
+  "manifest": {
+    "url": "https://colmapview.opsiclear.com/hub/datasets/individual/manifests/f145182de4dfc8f40ef9ed12de94f9957baafa7f73df3329fd3d7a155efa7013.manifest.json",
+    "sha256": "f145182de4dfc8f40ef9ed12de94f9957baafa7f73df3329fd3d7a155efa7013"
+  },
+  "selectedFrame": {
+    "id": "0000242",
+    "videoTimestamp": 240,
+    "pointCount": 99649,
+    "memberSha256": "73a501ad254cbaa0288369c523ad0335b5c29313db2fce144e1af21f38d99afa"
+  },
+  "export": {
+    "status": "passed",
+    "cameras": 28,
+    "poses": 28,
+    "points": 99649,
+    "pngFrames": 28,
+    "dimensions": [
+      800,
+      1280
+    ],
+    "maxCalibrationDelta": 0,
+    "maxPoseDelta": 0,
+    "sample0028Pixels": "identical to independent FFmpeg decode",
+    "exportSha256": "f92b58c2c815192dd080e85e19e93a63ecdd27ef25615bbb93948d6a1a541fc9"
+  },
+  "pixelReference": {
+    "name": "0028.png",
+    "method": "independent_native_ffmpeg_complete_frame",
+    "rgbSha256": "92fa5374c5c995763ca9707a4ff5cb4a0ab2e74bd323261745874b154e160cf2",
+    "maxChannelDelta": 0
+  },
+  "scope": "One complete derived-PNG package, all frame dimensions, and unchanged camera calibration/poses checked independently. Source pixels compared for camera 0028 only. Other scene exports and remaining source pixels are separate checks; model point-value evidence remains in the base manifest receipt."
+}

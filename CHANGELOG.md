@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0 — 2026-10-23
+
+- Bind 1,349 per-camera videos across all 47 danceNet3D scenes to matching static frames in viewer 0.21.1. Preserve native models, selected geometry, old immutable manifests, and separate model/export evidence.
+- Label derived video imagery, expose accurate frame-routing audit coverage and validate the additive manifest against its pinned model and browser sample receipts.
+- Wait for the local Worker to finish starting before browser checks, and reject occupied development ports before seeding test storage.
+
 ## 0.10.18 — 2026-10-23
 
 - Use consistent icon controls for appearance, navigation, search, shuffle, reset and closing metadata. Keep tooltips, accessible names, keyboard operation and full touch targets; fit the phone header on one row.

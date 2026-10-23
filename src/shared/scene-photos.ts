@@ -2,6 +2,7 @@ export const PHOTO_LABELS = {
   complete_export_checked: 'All photos verified in export',
   sample_checked: 'Photo sample checked',
   partial: 'Photos partially available',
+  video_frames: 'Frames from camera videos',
   path_policy_required: 'Photos need setup',
   companion_archive: 'Photos in a separate archive',
   not_found: 'No loose photos found',

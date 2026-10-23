@@ -1,9 +1,22 @@
 import { copyFileSync, existsSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
+import { createServer } from 'node:net';
 
 const test = process.argv.includes('--test');
 const port = process.env.HUB_DEV_PORT || '5201';
 if (!/^\d{2,5}$/.test(port) || Number(port) > 65535) throw new Error('HUB_DEV_PORT must be a valid port number');
+// Fail before seeding storage or starting Wrangler. Browser readiness now uses
+// Wrangler's ready signal rather than probing its proxy during initialization.
+for (const host of ['127.0.0.1', '::1']) {
+  await new Promise((resolve, reject) => {
+    const probe = createServer(socket => socket.destroy());
+    probe.once('error', error => {
+      if (host === '::1' && ['EAFNOSUPPORT', 'EADDRNOTAVAIL'].includes(error.code)) resolve();
+      else reject(new Error(`Hub port ${port} is unavailable on ${host}. Choose a different HUB_DEV_PORT.`, { cause: error }));
+    });
+    probe.listen(Number(port), host, () => probe.close(error => error ? reject(error) : resolve()));
+  });
+}
 const state = test ? `.tmp/browser-state-${Date.now()}` : '.wrangler/state';
 const cli = 'node_modules/wrangler/bin/wrangler.js';
 if (!existsSync('.dev.vars')) copyFileSync('.dev.vars.example', '.dev.vars');

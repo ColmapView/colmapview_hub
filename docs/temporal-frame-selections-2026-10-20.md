@@ -1,5 +1,9 @@
 # Selected temporal frames, 2026-10-20
 
+The [October 23 video-frame follow-up](camera-video-frames-2026-10-23.md) adds
+matching camera imagery to these same selections. This document retains the
+earlier model-only checks and their original release scope.
+
 All 47 camera scenes at the pinned [danceNet3D revision](https://huggingface.co/datasets/nyuvideolab/danceNet3D/tree/5ecd1b71d0c13b176dbdbe358b940624759d678f) have a checked static preview. Twenty select complete first regular TAR/Zstandard point members (1,872,683 XYZ/RGB points); the other 27 select one original Gaussian ZIP member (799,402 Gaussians). Each selection passed local browser import, visible rendering, sharing, actual COLMAP download and complete independent PyCOLMAP reads. Viewer **0.19.10** and Hub **0.9.14** are deployed. All 47 published launches passed the same complete model/export checks; independent TAR/ZIP extraction from actual browser response bodies matched the original member hashes. The [production receipt](../data/zero-point-temporal-live-verification.json.gz) binds these checks to the deployed artifacts and catalog generation.
 
 Cameras, IDs, calibration and poses are unchanged. Every exported XYZ/RGB value matches its original PLY. Visibility lists do not become COLMAP observations. Gaussian models use the publisher equation COLMAP position = released position + (0, 1.5, 1.3), applied only to the Gaussian layer; their sparse-point count stays zero. A projection sanity check reports every camera and permits outlier Gaussians outside individual views (ToeTaps worst-view fraction 0.504, median 0.915); the source declaration establishes the world alignment.

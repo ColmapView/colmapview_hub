@@ -7,6 +7,7 @@ import type { PhotoStatus } from './scene-photos';
 import { sceneDataText, sceneStatistics } from './scene-contents';
 import { isSceneManifestEvidence, manifestViewerUrlMatches } from './scene-manifests';
 import type { SceneManifestEvidence } from './scene-manifests';
+import { isVideoFrameRoutingEvidence, type VideoFrameRoutingEvidence } from './video-frames';
 import { isPhotoRoutingEvidence, photoRoutingUrlMatches } from './photo-routing';
 import type { PhotoRoutingEvidence } from './photo-routing';
 import { isArchiveRoutingEvidence, type ArchiveRoutingEvidence } from './archive-routing';
@@ -35,6 +36,7 @@ export interface IndividualIndex {
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sceneTitle?: string; sampleScope?: 'companion_asset';
   companionPointCloud?: string;
   sceneManifest?: SceneManifestEvidence;
+  videoFrameRouting?: VideoFrameRoutingEvidence;
   photoRouting?: PhotoRoutingEvidence;
   priorPhotoRouting?: PhotoRoutingEvidence;
   photoArchiveRouting?: ArchiveRoutingEvidence;
@@ -90,7 +92,11 @@ export const individualTokens = (text: string) => [...new Set(text.normalize('NF
 const failedDelivery = new Set(['gated', 'access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error']);
 
 function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): proof is IndividualProof & { sceneManifest: SceneManifestEvidence } {
-  if (!proof || !isSceneManifestEvidence(proof.sceneManifest) || !manifestViewerUrlMatches(proof.viewerUrl, proof.sceneManifest)) return false;
+  if (!proof || !isSceneManifestEvidence(proof.sceneManifest)) return false;
+  const route = proof.videoFrameRouting;
+  if (proof.photoAvailability === 'video_frames' && !route) return false;
+  if (route ? !isVideoFrameRoutingEvidence(route, proof.sceneManifest) || proof.photoAvailability !== 'video_frames'
+    || !manifestViewerUrlMatches(proof.viewerUrl, route) : !manifestViewerUrlMatches(proof.viewerUrl, proof.sceneManifest)) return false;
   const native = proof.sceneCompatibility ?? proof.sceneValidation;
   const original = proof.sceneManifest.sourceCounts ?? proof.sceneManifest.counts;
   return native?.cameras === original.cameras && native.images === original.images
@@ -106,6 +112,7 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
   if (proof?.sampleScope === 'companion_asset') return false;
   const compatibility = proof?.sceneCompatibility;
   if (proof?.sceneManifest !== undefined && !hasCheckedSceneManifest(proof)) return false;
+  if ((proof?.videoFrameRouting !== undefined || proof?.photoAvailability === 'video_frames') && !hasCheckedSceneManifest(proof)) return false;
   if (proof?.photoArchiveRouting !== undefined && (!isArchiveRoutingEvidence(proof.photoArchiveRouting)
     || !photoRoutingUrlMatches(proof.viewerUrl, proof.photoArchiveRouting) || proof.photoRouting || proof.sceneManifest || proof.sceneValidation
     || !['colmap', 'cameras'].includes(kind) || proof.photoAvailability !== 'companion_archive')) return false;
@@ -189,19 +196,26 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         { label: 'Photo route checked on', value: proof.photoRouting.checkedAt },
       ] : []),
       ...(proof?.sceneManifest && isSceneManifestEvidence(proof.sceneManifest) ? [
-        { label: 'Scene manifest', value: proof.sceneManifest.frameGeometry ? 'Explicit v3 selected geometry frame' : 'Explicit v1 model and media selection', url: proof.sceneManifest.url },
+        { label: proof.videoFrameRouting ? 'Model evidence manifest' : 'Scene manifest', value: proof.sceneManifest.frameGeometry ? 'Explicit v3 selected geometry frame' : 'Explicit v1 model and media selection', url: proof.sceneManifest.url },
         ...(proof.sceneManifest.pointSource ? [{ label: 'Selected point cloud', value: proof.sceneManifest.pointSource, url: file(proof.sceneManifest.pointSource) }] : []),
-        { label: 'Selected scene export SHA-256', value: proof.sceneManifest.exportSha256 },
+        { label: proof.videoFrameRouting ? 'Model-only export SHA-256' : 'Selected scene export SHA-256', value: proof.sceneManifest.exportSha256 },
         { label: 'Manifest viewer build', value: `${proof.sceneManifest.viewerVersion} (${proof.sceneManifest.viewerCommit})` },
         ...(proof.sceneManifest.frameGeometry ? [
           { label: 'Selected frame', value: `${proof.sceneManifest.frameGeometry.frame} from ${proof.sceneManifest.frameGeometry.frameCount.toLocaleString('en-US')} published frames` },
           { label: 'Selected geometry', value: `${proof.sceneManifest.frameGeometry.count.toLocaleString('en-US')} ${proof.sceneManifest.frameGeometry.role === 'splat' ? 'Gaussians (separate from COLMAP sparse points)' : 'untracked XYZ points'}` },
           { label: 'Geometry member', value: proof.sceneManifest.frameGeometry.memberPath, url: file(proof.sceneManifest.frameGeometry.sourcePath) },
-          { label: 'Temporal scope', value: 'One static frame. Video decoding, sequence playback and archived masks are outside this launch.' },
+          { label: 'Temporal scope', value: proof.videoFrameRouting
+            ? 'One static frame with matching camera video frames loaded on demand. Sequence playback and archived masks are separate.'
+            : 'One static frame. Video decoding, sequence playback and archived masks are outside this launch.' },
         ] : []),
         ...(proof.sceneManifest.frameIndices ? [{label: 'Selected temporal views', value: `${proof.sceneManifest.counts.images} of ${proof.sceneManifest.sourceCounts!.images} source frames`}]: []),
         ...(proof.sceneManifest.maskCount && proof.sceneManifest.maskRole === 'unknown'
           ? [{ label: 'Mask export', value: 'Masks display in the viewer. Their role is unverified, so they are not qualified as COLMAP feature masks.' }] : []),
+      ] : []),
+      ...(proof?.videoFrameRouting && proof.sceneManifest && isVideoFrameRoutingEvidence(proof.videoFrameRouting, proof.sceneManifest) ? [
+        { label: 'Video frame manifest', value: `${proof.videoFrameRouting.count} camera videos at ${proof.videoFrameRouting.timestamp}s (frame ${proof.videoFrameRouting.frame})`, url: proof.videoFrameRouting.url },
+        { label: 'Video frame coverage', value: 'All registered names mapped. One frame per scene decoded at camera resolution; remaining pixels and full photo export checked separately.' },
+        { label: 'Video frame viewer build', value: `${proof.videoFrameRouting.viewerVersion} (${proof.videoFrameRouting.viewerCommit})` },
       ] : []),
       ...(summary.availableData ? [{ label: 'Available data', value: sceneDataText(summary.availableData) },
         ...Object.entries(summary.availableData).filter(([, evidence]) => evidence?.samplePath).flatMap(([kind, evidence]) => [{
@@ -211,7 +225,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
       ...(summary.thumbnail ? [{ label: 'Preview attribution', value: `${summary.thumbnail.attribution} · ${summary.thumbnail.license}. ${summary.thumbnail.crop === 'aspect_fit' ? 'Full-frame thumbnail' : 'Center-square crop'} of a checked registered photograph.` },
         { label: 'Preview original', value: summary.thumbnail.sourcePath, ...(summary.thumbnail.sourceArchive ? {} : { url: file(summary.thumbnail.sourcePath) }) },
         ...(summary.thumbnail.sourceArchive ? [{ label: 'Preview source archive', value: summary.thumbnail.sourceArchive, url: file(summary.thumbnail.sourceArchive) }] : [])] : []),
-      ...(proof?.photoAvailability ? [{ label: 'Original photographs', value: proof.photoAvailability === 'complete_export_checked'
+      ...(proof?.photoAvailability ? [{ label: proof.photoAvailability === 'video_frames' ? 'Camera imagery' : 'Original photographs', value: proof.photoAvailability === 'complete_export_checked'
         ? 'All registered originals checked in a complete export' : proof.photoAvailability === 'not_included'
           ? 'Not included by publisher' : photoLabel(proof.photoAvailability) }] : []),
       ...(proof?.calibrationReview ? [{ label: 'Calibration review', value: proof.calibrationReview.summary },

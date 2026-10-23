@@ -1,5 +1,10 @@
 # Public dataset catalog
 
+Version 4 [camera video manifests](camera-video-frames-2026-10-23.md) add on-demand
+matching frames to 47 danceNet3D scenes. Video imagery has its own availability,
+mapping and sample evidence; it does not upgrade original-photo or model-only
+export receipts.
+
 NeRF-style camera scenes may include a verified companion XYZ PLY. The loader owns association, parsing, display and COLMAP export; Hub records the exact point source and independently checked export counts. Source inventory and header counts remain separate from imported counts. A nonempty NeRF-style camera-metadata receipt requires the selected PLY's browser-readable byte hash and an independent point-value check.
 
 The OpenMVG SceauxCastle sample stores 6,586 landmarks and 22,564 observations inside `sfm_data.json`. Viewer 0.19.4 imports them alongside its 11 posed photos, replacing the former camera-only import. The exact source metadata and browser-exported model pass independent point-ID, coordinate, observation, reciprocal-track, calibration and pose checks. Geometry and error comparisons allow the existing WASM export's float32 representation; photos retain their original bytes. All 11 originals also passed a separate complete image-export and browser CORS check. The model-only receipt remains separate from photo evidence, and this confirmed result supersedes the previous zero-point receipt.

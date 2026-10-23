@@ -65,7 +65,7 @@ export async function verifyPublicationSource(viewerUrl: string, env: Env, origi
     const response = await env.CATALOG_ASSETS.fetch(new Request(source));
     if (!response.ok) { await response.body?.cancel(); throw new InputError('This catalog manifest is unavailable.', 422); }
     const manifest: unknown = JSON.parse(new TextDecoder().decode(await boundedBytes(response, JSON_LIMIT)));
-    if (!isObject(manifest) || ![1, 2, 3].includes(Number(manifest.version))) throw new InputError('This catalog manifest is invalid.', 422);
+    if (!isObject(manifest) || ![1, 2, 3, 4].includes(Number(manifest.version))) throw new InputError('This catalog manifest is invalid.', 422);
     return { viewerUrl, verification: { method: 'catalog_manifest', checkedAt } };
   }
   const match = source.origin === 'https://huggingface.co' && /^\/datasets\/([A-Za-z0-9][A-Za-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._-]*)(?:\/(?:resolve|tree|blob)\/([^/]+)(?:\/(.*))?)?\/?$/.exec(source.pathname);
