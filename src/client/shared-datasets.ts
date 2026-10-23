@@ -13,8 +13,10 @@ function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
   const headingText = document.createElement('div');
   const title = document.createElement('h2');
   const link = document.createElement('a'); link.className = 'dataset-open'; link.href = `/s/${entry.id}`; link.textContent = entry.title;
+  link.title = entry.title;
   link.setAttribute('aria-label', `Open in viewer: ${entry.title}`); title.append(link);
-  const info = document.createElement('button'); info.type = 'button'; info.className = 'dataset-info'; info.textContent = 'i';
+  const info = document.createElement('button'); info.type = 'button'; info.className = 'dataset-info';
+  const infoIcon = document.createElement('span'); infoIcon.textContent = 'i'; infoIcon.setAttribute('aria-hidden', 'true'); info.append(infoIcon);
   info.setAttribute('aria-label', `Metadata for ${entry.title}`); info.setAttribute('aria-haspopup', 'dialog'); info.setAttribute('aria-expanded', 'false');
   info.setAttribute('aria-controls', `metadata-shared-${entry.id}`);
   const image = document.createElement('img'); image.src = `${hubPath}/${entry.id}/preview.jpg`; image.alt = ''; image.loading = 'lazy';
@@ -33,6 +35,10 @@ function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
   const description = document.createElement('p'); description.textContent = entry.description;
   const license = document.createElement('p'); license.textContent = `License: ${entry.license?.name || entry.license?.id || 'Not specified'}`;
   const category = document.createElement('p'); category.textContent = `License category: ${LICENSE_CATEGORY_LABELS[classifyLicense(entry.license?.id ?? '')]}`;
+  const preview = document.createElement('div'); preview.className = 'dataset-card-preview';
+  const hover = document.createElement('div'); hover.className = 'dataset-card-hover';
+  const hoverLicense = document.createElement('p'); hoverLicense.textContent = `${LICENSE_CATEGORY_LABELS[classifyLicense(entry.license?.id ?? '')]} · ${entry.license?.name || entry.license?.id || 'Not specified'}`;
+  hover.append(hoverLicense); preview.append(image, hover);
   const contents = document.createElement('p'); contents.className = 'note';
   contents.textContent = assetLine(entry.assets) ? `Reported contents: ${assetLine(entry.assets)}` : '';
   const proof = document.createElement('p'); proof.className = 'note';
@@ -43,7 +49,8 @@ function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
   original.target = '_blank'; original.rel = 'noopener noreferrer'; original.textContent = 'Dataset source ↗';
   const links = document.createElement('div'); links.className = 'dataset-metadata-links'; links.append(source, original);
   content.append(name, description, license, category, ...(contents.textContent ? [contents] : []), proof, links); panel.append(header, content);
-  article.append(heading, image, panel);
+  const body = document.createElement('div'); body.className = 'dataset-card-body'; body.append(heading);
+  article.append(preview, body, panel);
   return article;
 }
 
@@ -73,7 +80,7 @@ export function initializeSharedDatasets(): void {
       cursor = data.cursor; more.hidden = !cursor;
       section.hidden = !seen.size && !cursor;
       status.textContent = seen.size ? `${seen.size} shared ${seen.size === 1 ? 'dataset' : 'datasets'}` : 'No datasets shared yet.';
-    } catch { status.textContent = 'Shared datasets could not be loaded. Try again.'; more.hidden = false; }
+    } catch { section.hidden = false; status.textContent = 'Shared datasets could not be loaded. Try again.'; more.hidden = false; }
     finally { loading = false; more.disabled = false; }
   };
   more.onclick = () => { void load(); };

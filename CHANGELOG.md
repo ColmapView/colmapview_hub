@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.13 — 2026-10-22
+
+- Bring the Hub closer to the viewer with a compact search toolbar, full-width photo grid and two-column phone layout. Show content and license details on hover or keyboard focus while keeping the complete metadata drawer available.
+- Keep scene labels, camera/point counts and source-review warnings visible. Group dataset previews, summaries and opening actions, and preserve each preview's aspect ratio.
+- Keep asynchronous search, scrolling and return navigation. Make local development use local bindings and independent inspector ports for concurrent worktrees.
+
 ## 0.10.12 — 2026-10-22
 
 - Flag 25 scenes with inconsistent source feature links: four complete-model findings and 21 bounded-sample findings. Preserve direct viewer links, original files and native camera/point counts.

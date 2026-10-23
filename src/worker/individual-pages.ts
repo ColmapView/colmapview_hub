@@ -4,7 +4,7 @@ import type { IndividualIndex, IndividualPage } from '../shared/individual-catal
 import { photoLabel } from '../shared/scene-photos';
 import type { PhotoStatus } from '../shared/scene-photos';
 import { catalogCard } from './catalog-pages';
-import { escapeHtml as escape, intro, page } from './pages';
+import { escapeHtml as escape, page } from './pages';
 import type { HubLocation } from './pages';
 import { HUB_UI_VERSION } from '../shared/ui-version';
 import { SCENE_DATA_LABELS } from '../shared/scene-contents';
@@ -18,30 +18,27 @@ export function individualBrowseUrl(filters: URLSearchParams, pageNumber = 1): s
 
 export function individualIndexPage(location: HubLocation, index: IndividualIndex, result: IndividualPage, filters: URLSearchParams): string {
   const options = (values: { value: string; label: string }[], field: string) => values.map(({ value, label }) => `<option value="${escape(value)}"${filters.get(field) === value ? ' selected' : ''}>${escape(label)}</option>`).join('');
-  const select = (field: string, title: string, all: string, values: { value: string; label: string }[]) => `<label${field === 'licenseCategory' ? ' class="catalog-license-filter"' : ''}>${title}<select name="${field}" aria-label="${title}"><option value="">${all}</option>${options(values, field)}</select></label>`;
+  const select = (field: string, title: string, all: string, values: { value: string; label: string }[], compact = false) => `<label class="catalog-field catalog-field-${field}"><span${compact ? ' class="sr-only"' : ''}>${title}</span><select name="${field}" aria-label="${title}"><option value="">${all}</option>${options(values, field)}</select></label>`;
   const values = (items: string[]) => [...new Set(items)].sort((a, b) => a.localeCompare(b, 'en')).map(value => ({ value, label: value }));
   const dataset = individualSelection(index.sources, filters.get('dataset') || '');
   const offset = (result.page - 1) * INDIVIDUAL_PAGE_SIZE;
-  const advanced = ['provider', 'license', 'status', 'photos', 'data'].some(field => filters.has(field));
+  const advanced = ['kind', 'provider', 'license', 'status', 'photos', 'data'].some(field => filters.has(field));
   const savedFilters = savedFilterSummary(filters);
   const shuffle = new URLSearchParams(filters);
   shuffle.set('seed', [...crypto.getRandomValues(new Uint8Array(8))].map(byte => byte.toString(16).padStart(2, '0')).join(''));
   shuffle.delete('page');
-  return page(location, 'Public datasets', '<div class="catalog-index">' + intro('Public datasets', `${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources`)
-    + '<p class="catalog-hint">Explore camera and reconstruction datasets. Original photographs are optional; each scene records its photo availability and loading evidence.</p>'
-    + '<section id="shared-datasets" class="shared-datasets" aria-label="Shared on Hub"><h2>Shared on Hub</h2>'
-    + '<p role="status">Loading shared datasets…</p><div class="dataset-grid" aria-label="Shared datasets"></div>'
-    + '<button type="button" class="button" data-shared-more hidden>Load more shared datasets</button></section>'
+  return page(location, 'Public datasets', '<div class="catalog-index"><div class="catalog-heading"><h1>Public datasets</h1>'
+    + `<p class="meta">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p></div>`
     + `<form id="individual-search" class="catalog-filters" role="search" action="/hub/datasets/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
-    + '<div class="catalog-feed-controls">'
-    + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }])
-    + `<a id="catalog-shuffle" class="button" href="${escape(individualBrowseUrl(shuffle))}">Shuffle</a></div>`
     + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"></label>`
-    + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''))
-    + select('kind', 'Type', 'All scene types', values(Object.keys(index.kinds)))
-    + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })))
-    + '<button type="submit" class="button button-primary">Search</button><a id="catalog-reset" class="button" href="/hub/datasets/">Reset</a></div>'
+    + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''), true)
+    + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })), true)
+    + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }], true)
+    + '<button type="submit" class="button button-primary catalog-icon-button" aria-label="Search" title="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>'
+    + `<a id="catalog-shuffle" class="button catalog-icon-button" href="${escape(individualBrowseUrl(shuffle))}" aria-label="Shuffle" title="Shuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 6h3c5 0 7 12 12 12h3M3 18h3c2 0 3.5-2 5-4.5M13 10.5C14.5 8 16 6 18 6h3m-4-4 4 4-4 4m0 4 4 4-4 4"/></svg></a>`
+    + '<a id="catalog-reset" class="button" href="/hub/datasets/">Reset</a></div>'
     + `<details class="catalog-advanced"${advanced ? ' open' : ''}><summary>More filters</summary><div class="catalog-secondary">`
+    + select('kind', 'Type', 'All scene types', values(Object.keys(index.kinds)))
     + select('provider', 'Source', 'All sources', [{ value: 'huggingface', label: 'Hugging Face' }, { value: 'public', label: 'Public sources' }])
     + select('license', 'License', 'All reported licenses', values(index.sources.map(source => source.license)))
     + select('status', 'Evidence', 'All evidence levels', values(Object.keys(index.levels)))
@@ -52,8 +49,11 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + ['delivery', 'viewer', 'seed'].map(field => `<input type="hidden" name="${field}" value="${escape(filters.get(field) || '')}">`).join('') + '</form>'
     + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
     + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
-    + `<p id="catalog-count" class="catalog-count" role="status" tabindex="-1">${result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets'}</p>`
-    + '<p id="catalog-status" class="catalog-status" role="status"></p>'
+    + `<div class="catalog-result-summary"><p id="catalog-count" class="catalog-count" role="status" tabindex="-1">${result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets'}</p>`
+    + '<p id="catalog-status" class="catalog-status" role="status"></p></div>'
+    + '<section id="shared-datasets" class="shared-datasets" aria-label="Shared on Hub" hidden><h2>Shared on Hub</h2>'
+    + '<p role="status">Loading shared datasets…</p><div class="dataset-grid" aria-label="Shared datasets"></div>'
+    + '<button type="button" class="button" data-shared-more hidden>Load more shared datasets</button></section>'
     + `<div id="catalog-results" class="dataset-grid dataset-feed" aria-label="Scene feed">${result.entries.length ? result.entries.map(catalogCard).join('') : '<p>No datasets match these filters.</p>'}</div>`
     + '<div id="catalog-sentinel" aria-hidden="true"></div>'
     + `<p id="catalog-end" class="catalog-end"${result.page === result.pages && result.total ? '' : ' hidden'}>You’ve reached the end of these scenes. <a id="catalog-reshuffle" href="${escape(individualBrowseUrl(shuffle))}">Shuffle again</a></p>`
@@ -63,6 +63,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + '<button type="button" class="button" id="catalog-more" hidden>Load more</button>'
     + `<a class="button" id="catalog-next" href="${escape(individualBrowseUrl(filters, result.page + 1))}"${result.page === result.pages ? ' hidden' : ''}>Next</a></nav>`
     + '<details class="catalog-notes"><summary>About this catalog</summary><div>'
+    + '<p>Explore camera and reconstruction datasets. Original photographs are optional; each scene records its photo availability and loading evidence.</p>'
     + '<p>Each card identifies one named scene at a pinned source revision. Native camera/model layouts have bounded format and access checks. Original photographs may be available, partial, absent or unverified. Full loading, complete exports and mask support retain their separate evidence; a layout check does not establish them. Standalone geometry files do not create dataset cards.</p>'
     + '<p>Discover mixes verified model evidence, collection-balanced random scenes and newly catalogued scenes. Random balances collections before scenes. New to Hub uses recorded catalogue dates, beginning October 19, 2026; these are not dataset creation dates. Photographs and large camera or point counts are not required for ranking. Available data can include companions requiring setup; the information panel retains their exact status.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a></p>`

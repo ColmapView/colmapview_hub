@@ -11,6 +11,7 @@ public/hub/datasets/
 .env.*
 *.tsbuildinfo
 playwright-report/
+.playwright-cli/
 test-results/
 private/
 wordlists/

@@ -332,8 +332,6 @@ test('model-only ArmGS cards show masks and cameras without claiming photos', as
   const placeholder = first.getByRole('img', { name: /^No photo:/ });
   await expect(placeholder).toBeVisible();
   await expect(placeholder).toHaveText('No photo');
-  const bounds = await placeholder.boundingBox();
-  expect(bounds!.height).toBeGreaterThanOrEqual(bounds!.width - 1);
   await first.getByRole('button', { name: /Metadata/ }).click();
   await expect(first.locator('[data-photo-status]')).toBeVisible();
   await expect(first.locator('[data-photo-status]')).toHaveText('Photos not included');

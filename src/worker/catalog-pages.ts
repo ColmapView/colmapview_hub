@@ -41,13 +41,18 @@ export function catalogEntryPage(entry: CatalogEntry): string {
       + (audit.sourceUrl ? `<p><a href="${escape(audit.sourceUrl)}" rel="noreferrer">Inspected source ↗</a></p>` : '')
       + factList(audit.facts) + '</details>';
   }).join('');
+  const preview = sceneThumbnailHtml(entry);
   return page(location, entry.title,
     '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
+    + `<div class="dataset-overview${preview ? ' dataset-overview-has-preview' : ''}">`
+    + (preview ? `<div class="dataset-overview-preview">${preview}</div>` : '')
+    + '<div class="dataset-overview-content">'
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
-    + sceneThumbnailHtml(entry) + sceneContentsHtml(entry.availableData) + sceneStatisticsHtml(entry.sceneStats)
+    + sceneContentsHtml(entry.availableData) + sceneStatisticsHtml(entry.sceneStats)
     + `<div class="actions">${actions}${individualAction}</div>`
     + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(catalogSummary(entry)))}">${escape(entry.dataset.label)}</a>.</p>`
       : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s named scenes</a>.</p>`)
+    + '</div></div>'
     + (entry.verification ? '<section class="dataset-section"><h2>Loading status</h2>'
       + factList([{ label: 'Loading qualification', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },
         ...(entry.verification.opening ? [{ label: 'Opening this entry', value: entry.verification.opening.summary }] : []),

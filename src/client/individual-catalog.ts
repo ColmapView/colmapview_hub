@@ -324,7 +324,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (seed) values.set('seed', seed);
     for (const field of fields) field.value = values.get(field.name) || '';
     const advanced = form.querySelector<HTMLDetailsElement>('.catalog-advanced');
-    if (advanced && ['provider', 'license', 'status', 'photos', 'data'].some(name => values.has(name))) advanced.open = true;
+    if (advanced && ['kind', 'provider', 'license', 'status', 'photos', 'data'].some(name => values.has(name))) advanced.open = true;
     void load(values, { restoring: true });
   });
   updateNavigation();

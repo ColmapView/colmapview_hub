@@ -298,10 +298,10 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
+  await page.getByText('More filters', { exact: true }).click();
   await page.getByLabel('Type', { exact: true }).selectOption('COLMAP reconstruction');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
-  await page.getByText('More filters', { exact: true }).click();
   await expect(page.locator('select[name="viewer"], select[name="delivery"]')).toHaveCount(0);
   await page.getByLabel('Evidence', { exact: true }).selectOption('Native COLMAP layout checked');
   await expect(page.locator('.dataset-card')).toHaveCount(24);

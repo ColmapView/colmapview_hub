@@ -173,7 +173,7 @@ for (const width of [1280, 390]) test(`Back restores the visible scene and refre
   await page.addInitScript(() => {
     if (sessionStorage.getItem('feed-return-navigation-fixture') !== '1') return;
     const observer = new MutationObserver(() => {
-      if (document.querySelectorAll('.dataset-card').length !== 48) return;
+      if (document.querySelectorAll('.dataset-card').length < 48) return;
       observer.disconnect();
       // Exercise a traversal event before restored layout reaches its first frame.
       dispatchEvent(new PopStateEvent('popstate'));
@@ -199,8 +199,12 @@ for (const width of [1280, 390]) test(`Back restores the visible scene and refre
   expect(anchor.id).toBe(identity);
   await page.evaluate(() => sessionStorage.setItem('feed-return-navigation-fixture', '1'));
   await page.goBack();
-  await expect(page.locator('.dataset-card')).toHaveCount(48);
-  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(ids);
+  // A denser viewport can prefetch another page while returning to the anchor.
+  // The previously seen order and selected scene must survive that append.
+  await expect.poll(() => page.locator('.dataset-card').count()).toBeGreaterThanOrEqual(ids.length);
+  const returnedIds = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
+  expect(returnedIds.slice(0, ids.length)).toEqual(ids);
+  expect(new Set(returnedIds).size).toBe(returnedIds.length);
   await expect(page.locator(`[data-entry-id="${identity}"]`)).toBeInViewport();
   expect(await page.evaluate(() => history.scrollRestoration)).toBe('manual');
   await page.reload();

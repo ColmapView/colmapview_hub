@@ -11,6 +11,8 @@ npm run dev
 
 Open `http://localhost:5201/hub/`. `scripts/dev.mjs` seeds public fixture word lists in local R2 and starts Wrangler with local Durable Object state. It copies `.dev.vars.example` only when `.dev.vars` does not exist. Production credentials and private dictionaries are unnecessary.
 
+The local server explicitly disables remote bindings and uses an ephemeral inspector port, so separate worktrees can run without sharing a debugger port. Set `HUB_DEV_PORT` or `HUB_E2E_PORT` to give their HTTP servers separate ports too.
+
 The viewer authenticates directly with providers and signs bucket requests in the browser. The Worker stores no user credentials and needs no provider secrets. Legacy `/auth/*` routes are inert compatibility responses; see [credential-service retirement](account-sessions.md). Ordinary catalog development needs only the public local Hub test key, not Google or HF credentials.
 
 To connect a local viewer, run it with `VITE_HUB_BASE_URL=http://localhost:5201/hub`. A local Hub accepts loopback origins and viewer URLs.
