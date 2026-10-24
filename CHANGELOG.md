@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.12.3 — 2026-10-24
+
+- Publish the Hub source under AGPLv3 with its attribution notice, a visible source link and a security policy. Dataset, preview and dependency licenses remain separate.
+- Scan complete Git history in CI using a pinned, checksum-verified Gitleaks binary with redacted output. Retain read-only workflow permissions and disable persisted checkout credentials.
+
 ## 0.12.2 — 2026-10-24
 
 - Use Images and Matched video frames consistently in filters, cards and metadata, retaining existing URL/API parameters. Partial video coverage is labeled as camera imagery, and video mappings no longer display an inferred repository-root media scope.

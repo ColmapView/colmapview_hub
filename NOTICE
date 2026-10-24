@@ -1,0 +1,28 @@
+ColmapView Hub
+Copyright (C) 2026 OpsiClear LLC
+
+The Hub source is licensed under the GNU Affero General Public License v3.0.
+See LICENSE for the full license text.
+
+Attribution (AGPL-3.0 Section 7(b))
+
+Deployments providing a user interface must retain visible attribution:
+"Built with ColmapView by OpsiClear"
+
+Provide a visible source link to the corresponding source of the deployed version.
+The upstream Hub repository is:
+https://github.com/ColmapView/colmapview_hub
+
+Modified deployments must identify their modifications and link to their own
+corresponding source. Preserve upstream copyright and attribution notices.
+
+Third-party materials
+
+The shared public-page stylesheet comes from ColmapView:
+https://github.com/ColmapView/Colmapview.github.io
+Its AGPL and attribution notices remain applicable.
+
+Catalog evidence does not grant rights to upstream datasets. Dataset and preview
+licenses and credits remain as recorded in their individual metadata. Bundled
+fonts and other dependencies retain their respective licenses; see their license
+files and package metadata. The Hub source license does not relicense them.

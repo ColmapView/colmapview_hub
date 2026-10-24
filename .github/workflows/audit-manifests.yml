@@ -22,6 +22,8 @@ jobs:
         shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/checkout@v6
         with:
           repository: ColmapView/Colmapview.github.io

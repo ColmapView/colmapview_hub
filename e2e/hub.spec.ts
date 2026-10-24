@@ -311,7 +311,7 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await expect(page).toHaveURL(/\/hub\/datasets\/$/);
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Datasets', exact: true })).toHaveAttribute('href', '/hub/datasets/');
-  await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Contact']);
+  await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Source', 'Contact']);
   await expect(page.getByLabel('Collection', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Public datasets', exact: true })).toBeVisible();
   await expect(page.locator('.dataset-card')).toHaveCount(24);

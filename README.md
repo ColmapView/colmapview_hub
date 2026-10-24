@@ -29,7 +29,7 @@ Open `http://localhost:5201/hub/`. Development uses local R2/Durable Object stat
 | `npm run catalog:import -- --viewer-root PATH` | Refresh metadata from the local survey inputs |
 | `npm run deploy` | Build assets and deploy the Hub; see the operations guide |
 
-CI runs `npm run check` and `npm run test:browser`. Individual suites and audit commands are documented below.
+CI runs `npm run check`, `npm run test:browser` and a redacted secret scan of the complete Git history. CI has read-only repository access and no production deployment credentials. Individual suites and audit commands are documented below.
 
 ## Project map
 
@@ -56,3 +56,8 @@ CI runs `npm run check` and `npm run test:browser`. Individual suites and audit 
 - [Share on Hub](docs/publication.md): public opt-ins, verification, anti-bot setup and operator review.
 - [Production setup](docs/operations.md): bindings, secrets, deployment and post-deploy checks.
 - [Credential-service retirement](docs/account-sessions.md): compatibility responses, permanent saved-connection deletion and rollout checks.
+- [Security](SECURITY.md): private vulnerability reports, production boundaries and source-publication checks.
+
+## License
+
+The Hub source is [AGPL-3.0](LICENSE), with the attribution terms in [NOTICE](NOTICE), matching ColmapView. Catalog evidence, previews, fonts and upstream datasets retain their own licenses and attribution; this code license does not grant rights to those materials.

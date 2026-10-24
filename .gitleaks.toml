@@ -1,0 +1,30 @@
+title = "ColmapView Hub secret scanning"
+
+[extend]
+useDefault = true
+
+# These public, content-derived SHA-256 identifiers are not access keys.
+# Keep every provider-specific detector and all other generic-key matches enabled.
+[[allowlists]]
+description = "Public catalog selection and evidence digests"
+targetRules = ["generic-api-key"]
+regexTarget = "match"
+regexes = ['''(?:selectionKey|evidenceKey)"\s*:\s*"[a-f0-9]{64}"''']
+
+# Gitleaks splits large minified JSON into fragments, sometimes cutting either
+# the digest's field name or value. Limit that fallback to hexadecimal digests
+# in the four reviewed, public evidence files; other detectors remain enabled.
+[[allowlists]]
+description = "SHA-256 fragments in reviewed public evidence"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^data/(?:photo-audit-decisions|zero-point-audit|zero-point-reaudit-2026-10-22|catalog-source-resolution-audit-2026-10-22)\.json\.gz$''']
+regexTarget = "match"
+regexes = ['''^(?:(?:selection|election|lection|ection|ction|tion|ion|on|n)Key|evidenceKey)"\s*:\s*"[a-f0-9]{16,64}"?$''']
+
+# OAuth client IDs identify public applications. Client secrets are never allowed.
+[[allowlists]]
+description = "Public Hugging Face OAuth client identifier in historical configuration"
+targetRules = ["generic-api-key"]
+regexTarget = "match"
+regexes = ['''AUTH_HF_CLIENT_ID"\s*:\s*"[A-Za-z0-9_-]{20,128}"''']

@@ -1,7 +1,8 @@
 {
   "name": "colmapview_hub",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "private": true,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "npm run build:assets && node scripts/dev.mjs",

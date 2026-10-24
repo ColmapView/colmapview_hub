@@ -39,7 +39,8 @@ describe('Hub pages', () => {
       for (const [href, label] of [['/about.html', 'About'], ['/privacy.html', 'Privacy'], ['/terms.html', 'Terms']]) {
         expect(html).toContain(`<a href="https://colmapview.opsiclear.com${href}">${label}</a>`);
       }
-      expect(html).toContain('<p>ColmapView · Maintained by OpsiClear LLC</p>');
+      expect(html).toContain('<p>Built with ColmapView by OpsiClear</p>');
+      expect(html).toContain('<a href="https://github.com/ColmapView/colmapview_hub">Source</a>');
       expect(html).toContain('<a href="mailto:info@opsiclear.com">Contact</a>');
       expect(html).toContain('<p class="eyebrow">ColmapView Hub</p>');
       expect(html.indexOf('/hub/colmapview.css')).toBeLessThan(html.indexOf('/hub/styles.css'));

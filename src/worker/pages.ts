@@ -46,9 +46,10 @@ const header = (path: string) => [
 
 const footer = [
   '<footer class="site-footer">',
-  '<p>ColmapView · Maintained by OpsiClear LLC</p>',
+  '<p>Built with ColmapView by OpsiClear</p>',
   '<nav class="footer-links" aria-label="Footer navigation">',
   policyLinks,
+  '<a href="https://github.com/ColmapView/colmapview_hub">Source</a>',
   '<a href="mailto:info@opsiclear.com">Contact</a>',
   '</nav></footer>',
 ].join('');
