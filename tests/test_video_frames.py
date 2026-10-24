@@ -8,7 +8,7 @@ import unittest
 from scripts.catalog.build_individual_catalog import hf_url
 from scripts.catalog.scene_manifests import manifest_assets
 from scripts.catalog.scene_qualification import scene_key
-from scripts.catalog.video_frames import review_digest, video_frame_reviews, video_frame_asset, apply_video_frames
+from scripts.catalog.video_frames import review_digest, video_frame_reviews, video_frame_asset, video_frame_assets, apply_video_frames
 
 
 class VideoFrameTests(unittest.TestCase):
@@ -48,6 +48,18 @@ class VideoFrameTests(unittest.TestCase):
                 else: review[field] = 'unreviewed'
                 _, body = video_frame_asset(review, self.model, self.parent, hf_url)
                 self.assertTrue(all('playbackRate' not in video for video in json.loads(body)['videoImages'].values()))
+
+    def test_clean_build_reproduces_the_original_published_video_manifest(self):
+        assets = video_frame_assets(self.review, self.model, self.parent, hf_url)
+        original_name = 'f145182de4dfc8f40ef9ed12de94f9957baafa7f73df3329fd3d7a155efa7013.manifest.json'
+        current_name, current_body = video_frame_asset(self.review, self.model, self.parent, hf_url)
+        self.assertEqual(len(assets), 2)
+        self.assertEqual(assets[current_name], current_body)
+        self.assertEqual(hashlib.sha256(assets[original_name]).hexdigest() + '.manifest.json', original_name)
+        current = json.loads(current_body)
+        for binding in current['videoImages'].values():
+            binding.pop('playbackRate')
+        self.assertEqual(json.loads(assets[original_name]), current)
 
     def test_changed_frame_source_identity_and_incomplete_coverage_cannot_inherit_the_receipt(self):
         def timestamp(review): review['timestamp'] += 1

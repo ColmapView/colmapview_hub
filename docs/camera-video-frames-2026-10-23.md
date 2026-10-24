@@ -17,7 +17,7 @@ native calibration, including sequences whose session metadata omits dimensions.
 Individual playback uses the pinned README's declared 30 fps capture rate through
 `playbackRate: 30`. The viewer retimes a local copy of the encoded packets before
 playback; it never changes the source timestamp used for stills or geometry.
-This requires the camera-playback viewer update; deploy it before these new Hub
+This requires viewer 0.22.0 or newer; deploy it before these new Hub
 manifests. Existing immutable manifests retain their original encoded-clock timing.
 
 One video per scene passed a real Chromium range read, complete packet-index/rate
@@ -49,8 +49,9 @@ frames; synchronized playback and archived masks remain separate capabilities.
 
 `data/video-frame-routing.json.gz` contains the additive media receipts. Its
 `baseManifest` binds the unchanged model-only evidence in `scene-manifests.json`.
-The new body-hashed v4 manifest becomes the Hub's launch URL; old assets remain
-unchanged. The runtime validates both the model receipt and the video layer before
+The new body-hashed v4 manifest becomes the Hub's launch URL; clean builds also
+reproduce the original video manifests at their unchanged URLs. The runtime
+validates both the model receipt and the video layer before
 offering direct opening. Audit CSV rows use `video_frames_manifest` and expose frame
 count/timestamp separately from listed original-photo counts. Reusable photo
 decisions reference the new receipt and retain earlier inventory evidence.

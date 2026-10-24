@@ -22,7 +22,7 @@ from .scene_qualification import apply_calibration_review, apply_source_integrit
 from .scene_photos import apply_photo_evidence, photo_scene_reviews
 from .scene_contents import apply_content_evidence, apply_thumbnail_evidence, content_scene_reviews
 from .scene_manifests import apply_manifest_evidence, manifest_assets, manifest_scene_reviews
-from .video_frames import apply_video_frames, video_frame_asset, video_frame_reviews
+from .video_frames import apply_video_frames, video_frame_assets, video_frame_reviews
 from .photo_routing import apply_routing, routing_asset, routing_coverage, routing_failures, routing_reviews
 from .archive_routing import archive_reviews, archive_asset, apply_archive_routing
 from .photo_decisions import decision_records, decision_coverage, selection_key
@@ -304,8 +304,7 @@ def build(root=Path('.')):
     for review in manifest_reviews.values():
         generated_manifests.update(manifest_assets(review, parents[review['sourceId']], hf_url))
     for key, review in video_reviews.items():
-        name, body = video_frame_asset(review, manifest_reviews[key], parents[review['sourceId']], hf_url)
-        generated_manifests[name] = body
+        generated_manifests.update(video_frame_assets(review, manifest_reviews[key], parents[review['sourceId']], hf_url))
     for review in photo_routing.values():
         name, body = routing_asset(review, parents[review['sourceId']], hf_url)
         generated_manifests[name] = body

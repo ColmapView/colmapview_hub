@@ -2,7 +2,10 @@
 
 ## Unreleased
 
+## 0.11.2 — 2026-10-24
+
 - Restore DanceNet3D's declared 30 fps capture speed for individual camera playback, retaining encoded timestamps for matched stills and selected geometry. Apply the timing only to the reviewed source revision and README; preserve existing immutable manifest URLs.
+- Regenerate the original video manifests during clean builds so previously shared URLs remain available alongside capture-speed playback.
 
 ## 0.11.1 — 2026-10-23
 

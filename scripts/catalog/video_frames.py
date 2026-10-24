@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import hashlib
+import json
 import re
 from urllib.parse import quote
 
@@ -85,7 +86,6 @@ def video_frame_reviews(catalog, policy, models, hf_url):
 
 
 def video_frame_asset(review, model, parent, hf_url):
-    import json
     base_name = review['baseManifest']['file']
     manifest = json.loads(manifest_assets(model, parent, hf_url)[base_name])
     manifest.update(version=4, videoImages={video['name']: {
@@ -98,6 +98,16 @@ def video_frame_asset(review, model, parent, hf_url):
     manifest.pop('skipImages', None)
     body = json_bytes(manifest)
     return hashlib.sha256(body).hexdigest() + '.manifest.json', body
+
+
+def video_frame_assets(review, model, parent, hf_url):
+    name, body = video_frame_asset(review, model, parent, hf_url)
+    manifest = json.loads(body)
+    # Reproduce the original published bytes even when building into an empty directory.
+    for binding in manifest['videoImages'].values():
+        binding.pop('playbackRate', None)
+    original = json_bytes(manifest)
+    return {hashlib.sha256(original).hexdigest() + '.manifest.json': original, name: body}
 
 
 def apply_video_frames(proof, review, model, parent, hf_url):
