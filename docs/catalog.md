@@ -1,5 +1,17 @@
 # Public dataset catalog
 
+The hosted browse and scene metadata pages use Google Analytics property
+`G-7K5H83SEMY`, also used by the older viewer releases. Measurement runs with
+analytics/ad storage denied, advertising features off and no account ID. The
+configured page location contains only the public catalog path; query strings,
+fragments and referrers are excluded. Do Not Track and Global Privacy Control
+prevent loading the tag. Local previews, share/manage pages, APIs and the viewer
+do not initialize it. The public privacy policy describes Google's processing.
+Keep Enhanced measurement disabled in this stream's Google Analytics settings:
+its automatic search/link events can collect query values or destination URLs
+independently of the configured page location. The Hub sends its page view
+explicitly; validate the real collection request when changing tag settings.
+
 [Video manifests](video-frame-mappings.md) add matched images on demand. Version 5
 selects zero-based presentation-frame indices or source timestamps; the viewer
 resolves these before playback, export or publication. The campus_nlp mapping

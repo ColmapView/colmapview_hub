@@ -1,7 +1,9 @@
 import { SECRET_PATTERN, waitText } from '../shared/model';
 import { initializeCatalogMetadata } from './catalog-card';
 import { initializeSharedDatasets } from './shared-datasets';
+import { initializeAnalytics } from './analytics';
 
+initializeAnalytics();
 initializeCatalogMetadata();
 initializeSharedDatasets();
 

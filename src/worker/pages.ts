@@ -55,10 +55,10 @@ const footer = [
 ].join('');
 
 /** Every Hub page: ColmapView's public-page frame, stylesheets and icon. */
-export function page(location: HubLocation, title: string, body: string, metadata = ''): string {
+export function page(location: HubLocation, title: string, body: string, metadata = '', publicCatalog = false): string {
   const asset = (file: string) => `${location.path}/${file}`;
   return [
-    `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"><head>`,
+    `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"${publicCatalog ? ' data-hub-public-catalog="true"' : ''}><head>`,
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">',
     '<meta name="robots" content="noindex,nofollow,noarchive">',
     `<title>${escapeHtml(title)} · ColmapView Hub</title>`,

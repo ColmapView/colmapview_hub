@@ -71,5 +71,5 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Photo availability, launch manifests and path policies for every scene (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p>'
     + '<p><a href="/hub/datasets/individual/component-audit.csv" download>Missing component audit — October 19, 2026 (CSV)</a> · <a href="/hub/datasets/individual/component-audit.json.gz" download>Full evidence (JSON.gz)</a></p>'
     + '<p><a href="/hub/datasets/individual/verified-scenes.json" download>Verified scene checks (JSON)</a> · <a href="/hub/datasets/individual/index.json" download>Labels and coverage (JSON)</a> · <a href="/hub/datasets/catalog.json" download>Source metadata (JSON)</a></p></div></details></div>',
-    `<script id="catalog-initial-data" type="application/json">${JSON.stringify(result).replaceAll('<', '\\u003c')}</script><script type="module" src="/hub/assets/individual-catalog.js?v=${HUB_UI_VERSION}"></script>`);
+    `<script id="catalog-initial-data" type="application/json">${JSON.stringify(result).replaceAll('<', '\\u003c')}</script><script type="module" src="/hub/assets/individual-catalog.js?v=${HUB_UI_VERSION}"></script>`, true);
 }

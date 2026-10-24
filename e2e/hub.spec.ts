@@ -4,6 +4,36 @@ import { createServer, type Server } from 'node:http';
 import { preview } from '../tests/fixtures/preview';
 
 const origin = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB_E2E_PORT || '5201'}`;
+
+test('public catalog analytics uses clean URLs without cookies or private-page tracking', async ({ page, context }) => {
+  const production = 'https://colmapview.opsiclear.com';
+  const tags: string[] = [];
+  await page.route(production + '/hub/**', async route => {
+    const url = new URL(route.request().url());
+    const response = await route.fetch({ url: origin + url.pathname + url.search });
+    await route.fulfill({ response });
+  });
+  await page.route('https://www.googletagmanager.com/**', route => {
+    tags.push(route.request().url());
+    return route.fulfill({ contentType: 'application/javascript', body: '' });
+  });
+  await page.addInitScript(() => Object.defineProperty(document, 'referrer', { value: 'https://example.org/?url=private-referrer' }));
+  await page.goto(production + '/hub/datasets/?q=private-query#private-fragment');
+  await expect.poll(() => tags.length).toBe(1);
+  expect(tags[0]).toBe('https://www.googletagmanager.com/gtag/js?id=G-7K5H83SEMY');
+  const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(command => Array.from(command)) ?? []);
+  expect(commands).toContainEqual(['consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' }]);
+  expect(commands).toContainEqual(['config', 'G-7K5H83SEMY', expect.objectContaining({ page_location: production + '/hub/datasets/', page_referrer: '', send_page_view: false })]);
+  expect(JSON.stringify(commands)).not.toContain('private-');
+  expect((await context.cookies()).filter(cookie => cookie.name.startsWith('_ga'))).toEqual([]);
+  await page.addInitScript(() => Object.defineProperty(navigator, 'doNotTrack', { value: '1' }));
+  await page.goto(production + '/hub/datasets/?q=private-query');
+  await expect(page.locator('#catalog-results')).toBeVisible();
+  expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+  expect(tags).toHaveLength(1);
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
 let viewerServer: Server;
 let viewerOrigin: string;
 

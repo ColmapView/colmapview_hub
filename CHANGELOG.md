@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.12.4 — 2026-10-24
+
+- Measure visits to public catalog browse and scene metadata pages with the existing Google Analytics property. Keep analytics/ad storage denied, advertising features off and measured URLs free of query strings, fragments and referrers; honor Do Not Track and Global Privacy Control. Share/manage, API and local preview pages do not initialize analytics.
+
 ## 0.12.3 — 2026-10-24
 
 - Publish the Hub source under AGPLv3 with its attribution notice, a visible source link and a security policy. Dataset, preview and dependency licenses remain separate.

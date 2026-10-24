@@ -74,7 +74,7 @@ export function catalogEntryPage(entry: CatalogEntry): string {
       { label: 'Scan date', value: entry.checkedAt }, ...entry.facts]) + `<p class="note">${escape(LICENSE_CATEGORY_NOTE)}</p></section>`
     + '<section class="dataset-section"><h2>Loading evidence</h2><p class="note">Checks cover the recorded files and samples. Inclusion does not certify every scene or image. Source access and license terms apply.</p>'
     + (audits || '<p>No additional dataset loading audit is recorded for this entry.</p>') + '</section>',
-    social(`${location.origin}${datasetPath(entry)}`, entry.title, entry.description));
+    social(`${location.origin}${datasetPath(entry)}`, entry.title, entry.description), true);
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {

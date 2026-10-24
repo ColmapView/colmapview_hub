@@ -60,10 +60,12 @@ function blocked(location: HubLocation, api: boolean, seconds: number): Response
     : html(blockedPage(location, Math.ceil(seconds / 60)), 429, headers);
 }
 
-function contentSecurityPolicy(local: boolean): string {
+function contentSecurityPolicy(local: boolean, analytics = false): string {
   const frames = [...VIEWER_ORIGINS, ...(local ? LOOPBACK_HOSTS.map(host => `http://${host}:*`) : [])];
-  return ["default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self'", "font-src 'self'",
-    `frame-src ${frames.join(' ')}`, "connect-src 'self'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
+  const tag = analytics ? ' https://www.googletagmanager.com' : '';
+  const collection = analytics ? ' https://*.google-analytics.com' : '';
+  return ["default-src 'none'", `script-src 'self'${tag}`, "style-src 'self'", `img-src 'self'${tag}${collection}`, "font-src 'self'",
+    `frame-src ${frames.join(' ')}`, `connect-src 'self'${tag}${collection}`, "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
 }
 
 const CSP = contentSecurityPolicy(false);
@@ -86,7 +88,9 @@ function withSharedHeaders(request: Request, result: Response, location?: HubLoc
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   headers.set('Referrer-Policy', 'no-referrer');
-  headers.set('Content-Security-Policy', location?.local ? LOCAL_CSP : CSP);
+  const publicCatalog = result.status === 200 && headers.get('Content-Type')?.startsWith('text/html')
+    && /^\/hub\/datasets\/(?:$|entry\/data-[a-f0-9]{24}$)/.test(new URL(request.url).pathname);
+  headers.set('Content-Security-Policy', publicCatalog ? contentSecurityPolicy(Boolean(location?.local), true) : location?.local ? LOCAL_CSP : CSP);
   return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });
 }
 
