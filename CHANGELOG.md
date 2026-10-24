@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.12.1 — 2026-10-24
+
+- Validate the independent MBZUAI feature-integrity receipt alongside the earlier immutable relationship audit. This supersedes 0.12.0 before deployment; the frame mappings and runtime behavior are unchanged.
+
 ## 0.12.0 — 2026-10-24
 
 - Publish generic, model-bound video frame mappings with separate mapped-view and unique-source counts. Retain legacy DanceNet evidence and all immutable manifests; imagery does not establish native model export integrity.

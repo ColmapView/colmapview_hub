@@ -51,6 +51,21 @@ class IndividualDatasetsTests(unittest.TestCase):
                                        json.loads(gzip.decompress((root / 'data/native-layouts.json.gz').read_bytes())))
         flagged = {identity(review['sourceId'], ['colmap', review['path'], review['files'], None]): review
                    for review in reviews.values() if review.get('sourceIntegrityReview')}
+        additional = json.loads((root / 'data/mbzuai-source-integrity-2026-10-24.json').read_bytes())
+        additional_review = next(review for review in reviews.values() if review['sourceId'] == additional['sourceId']
+                                 and review['path'] == additional['path'])
+        additional_id = identity(additional['sourceId'], ['colmap', additional['path'], additional_review['files'], None])
+        warning = flagged.pop(additional_id)['sourceIntegrityReview']
+        self.assertEqual(additional_review['revision'], additional['revision'])
+        self.assertEqual(warning['scope'], additional['scope'])
+        self.assertEqual(warning['checkedAt'], additional['checkedAt'])
+        self.assertEqual(warning['files'], additional['files'])
+        body = {key: value for key, value in additional.items() if key != 'receiptSha256'}
+        digest = hashlib.sha256(json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        self.assertEqual(warning['receiptSha256'], digest)
+        self.assertEqual(additional['receiptSha256'], digest)
+        self.assertEqual(additional['observationIntegrity']['status'], 'invalid')
+        self.assertEqual(additional['observationIntegrity']['issues']['duplicateImage'], 668)
         self.assertEqual(sorted(flagged), finding['affectedIds'])
         full = {row['id']: row for row in receipt['completeModels']}
         ranges = {(row['id'], row['role']): row for row in receipt['additionalRangeReceipts']}
