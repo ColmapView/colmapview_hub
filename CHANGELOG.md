@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Restore DanceNet3D's declared 30 fps capture speed for individual camera playback, retaining encoded timestamps for matched stills and selected geometry. Apply the timing only to the reviewed source revision and README; preserve existing immutable manifest URLs.
+
 ## 0.11.1 — 2026-10-23
 
 - Keep browser-test startup compatible with quiet CI by using HTTP readiness there, while preserving the Windows ready-banner check and development-port protection.

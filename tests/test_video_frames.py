@@ -32,11 +32,22 @@ class VideoFrameTests(unittest.TestCase):
         updated = json.loads(body)
         self.assertEqual(name, hashlib.sha256(body).hexdigest() + '.manifest.json')
         self.assertEqual(updated.pop('version'), 4)
-        self.assertEqual(len(updated.pop('videoImages')), 28)
+        videos = updated.pop('videoImages')
+        self.assertEqual(len(videos), 28)
+        self.assertTrue(all(video['timestamp'] == 240 and video['playbackRate'] == 30 for video in videos.values()))
         original.pop('version'); original.pop('skipImages')
         self.assertEqual(updated, original)
         self.assertEqual(self.review['timestamp'], 240)  # ID 242 follows a dropped source frame.
         self.assertEqual(self.review['frameIds'][240], '0000242')
+
+    def test_playback_rate_is_only_added_for_the_reviewed_publisher_revision_and_readme(self):
+        for field in ('revision', 'sourceId', 'readme'):
+            with self.subTest(field=field):
+                review = copy.deepcopy(self.review)
+                if field == 'readme': review[field]['sha256'] = '0' * 64
+                else: review[field] = 'unreviewed'
+                _, body = video_frame_asset(review, self.model, self.parent, hf_url)
+                self.assertTrue(all('playbackRate' not in video for video in json.loads(body)['videoImages'].values()))
 
     def test_changed_frame_source_identity_and_incomplete_coverage_cannot_inherit_the_receipt(self):
         def timestamp(review): review['timestamp'] += 1

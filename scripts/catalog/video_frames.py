@@ -10,6 +10,11 @@ from .scene_qualification import scene_key
 
 CHECKS = ('nativeCalibration', 'completeNameMapping', 'sourceListing', 'orderedFrameMapping', 'samplePixels')
 
+# This pinned README declares 30 fps capture, packaged as 1 fps videos. Playback
+# restores capture speed; the independently checked still timestamps stay unchanged.
+PLAYBACK_RATES = {('hf:nyuvideolab/danceNet3D', '5ecd1b71d0c13b176dbdbe358b940624759d678f',
+                   '9d470c38d7784ecd3c81f81375adae5e515e2607dcce57ba72766c0baa5eec23'): 30}
+
 
 def review_digest(review):
     return hashlib.sha256(json_bytes({key: value for key, value in review.items() if key != 'receiptSha256'})).hexdigest()
@@ -86,6 +91,10 @@ def video_frame_asset(review, model, parent, hf_url):
     manifest.update(version=4, videoImages={video['name']: {
         'url': hf_url(parent, review['revision'], video['sourcePath']), 'bytes': video['bytes'], 'timestamp': video['timestamp']}
         for video in review['videos']})
+    rate = PLAYBACK_RATES.get((review['sourceId'], review['revision'], review['readme']['sha256']))
+    if rate is not None:
+        for binding in manifest['videoImages'].values():
+            binding['playbackRate'] = rate
     manifest.pop('skipImages', None)
     body = json_bytes(manifest)
     return hashlib.sha256(body).hexdigest() + '.manifest.json', body

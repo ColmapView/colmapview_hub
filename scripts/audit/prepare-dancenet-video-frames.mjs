@@ -40,6 +40,7 @@ async function pinned(url, maximum = 4 * 1024 * 1024) {
 const receipt = (sourcePath, body) => ({ sourcePath, bytes: body.length, sha256: sha256(body) });
 const readmeBody = await pinned(sourceUrl('README.md'));
 assert.match(readmeBody.toString(), /at 1 fps/);
+assert.match(readmeBody.toString(), /Captured at 30 fps/);
 const extractorBody = await pinned(sourceUrl('video_to_images.py'));
 assert.match(extractorBody.toString(), /for i, frame_id in enumerate\(frame_ids\)/);
 assert.match(extractorBody.toString(), /-start_number["']\s*,\s*["']0/);

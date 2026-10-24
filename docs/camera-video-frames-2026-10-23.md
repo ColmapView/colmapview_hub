@@ -14,6 +14,12 @@ was dropped. Every registered name matches the native pose file, publisher camer
 list and complete pinned video listing. Camera dimensions come from the unchanged
 native calibration, including sequences whose session metadata omits dimensions.
 
+Individual playback uses the pinned README's declared 30 fps capture rate through
+`playbackRate: 30`. The viewer retimes a local copy of the encoded packets before
+playback; it never changes the source timestamp used for stills or geometry.
+This requires the camera-playback viewer update; deploy it before these new Hub
+manifests. Existing immutable manifests retain their original encoded-clock timing.
+
 One video per scene passed a real Chromium range read, complete packet-index/rate
 check and matching-frame PNG decode at the camera resolution. The receipt includes
 its PNG hash. Source video hashes are publisher LFS declarations, not claims that
