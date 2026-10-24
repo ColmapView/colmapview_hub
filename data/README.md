@@ -2,6 +2,16 @@
 
 The [source-integrity production verification](../docs/source-integrity-release-2026-10-22.md) records Hub 0.10.12 / viewer 0.20.6 release identities and browser exports. Later receipts below retain their own release and validation scope.
 
+`video-frame-mappings.json` records generic, native-model-bound imagery separately
+from export integrity. The campus_nlp pilot maps all 285 registered views to six
+pinned source recordings using v5 frame indices; 18 independent software-decoded
+RGBA samples passed against native FFmpeg references on viewer 0.23.0. Source
+feature-integrity warnings remain. See [authoring and evidence rules](../docs/video-frame-mappings.md).
+The [complete source relationship receipt](mbzuai-source-integrity-2026-10-24.json)
+records 107,879 track references and 2,048,985 observations checked, including 668
+duplicate-image issues. It preserves viewing while documenting the native model's
+feature/export limitation separately from the imagery mapping.
+
 `video-frame-routing.json.gz` adds matching video imagery for 47 danceNet3D scenes
 without changing the earlier model-only receipts. See the [video frame audit and
 operator workflow](../docs/camera-video-frames-2026-10-23.md). Its complete name/time

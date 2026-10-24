@@ -180,18 +180,22 @@ def routing_coverage(proof, kind, unresolved=''):
     manifest = target if target.startswith(LAUNCH_ASSETS) else ''
     routing = proof.get('photoRouting', {})
     archive = proof.get('photoArchiveRouting', {})
-    video = proof.get('videoFrameRouting', {})
+    mapping = proof.get('videoFrameMapping', {})
+    video = mapping or proof.get('videoFrameRouting', {})
+    mapped = video.get('mappedImages', video.get('count', ''))
+    registered = video.get('registeredImages', video.get('count', ''))
     status = ('video_frames_manifest' if video else 'full_scene_manifest' if proof.get('sceneManifest') else 'photo_inventory_manifest' if routing
               else 'photo_archive_manifest' if archive
               else 'prefix_manifest' if manifest else 'companion_archive' if proof.get('photoAvailability') == 'companion_archive'
               else 'no_photo_association' if proof.get('photoAvailability') in ('not_found', 'not_included')
               else 'importer_route' if kind not in ('colmap', 'cameras') else 'native_discovery_or_review')
     return {'launchRouting': status, 'photoManifest': manifest, 'listedPhotos': routing.get('listedPhotos', ''),
-        'videoFrames': video.get('count', ''), 'videoTimestamp': video.get('timestamp', ''),
-        'boundNamesChecked': video.get('count', routing.get('nameCheck', {}).get('matched', '')),
-        'inspectedRegisteredNames': video.get('count', routing.get('nameCheck', {}).get('inspected', '')),
+        'videoFrames': mapped, 'videoSources': video.get('videoSources', video.get('count', '')),
+        'videoTimestamp': video.get('timestamp', ''), 'videoTemporalScope': mapping.get('temporalScope', ''),
+        'boundNamesChecked': mapped if video else routing.get('nameCheck', {}).get('matched', ''),
+        'inspectedRegisteredNames': registered if video else routing.get('nameCheck', {}).get('inspected', ''),
         'allNamesInspected': True if video else routing.get('nameCheck', {}).get('complete', ''),
-        'declaredMappingNames': video.get('count', routing.get('mappedNames', '')),
+        'declaredMappingNames': mapped if video else routing.get('mappedNames', ''),
         'routingCheckedAt': video.get('checkedAt', routing.get('checkedAt', archive.get('checkedAt', ''))), 'routingNote': '' if video else unresolved,
         'archivePhotoLowerBound': archive.get('photoLowerBound', ''), 'archiveMemberSample': archive.get('sampleMemberPath', '')}
 

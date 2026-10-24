@@ -87,6 +87,12 @@ test('manifest plans include retained assets and variant references and detect m
     proof.videoFrameRouting.sha256 = 'c'.repeat(64);
     await save('packs/0.json', [row]);
     assert.match((await manifestPlan(root, schemas)).manifests.find(item => item.file === videoFile).errors[0], /checksum/);
+    proof.videoFrameMapping = { sha256: videoDigest };
+    await save('packs/0.json', [row]);
+    assert.deepEqual((await manifestPlan(root, schemas)).manifests.find(item => item.file === videoFile).errors, []);
+    proof.videoFrameMapping.sha256 = 'f'.repeat(64);
+    await save('packs/0.json', [row]);
+    assert.match((await manifestPlan(root, schemas)).manifests.find(item => item.file === videoFile).errors[0], /checksum/);
   } finally {
     assert.ok(resolve(root).startsWith(resolve(tmpdir(), 'colmapview-manifest-plan-')));
     await rm(root, { recursive: true, force: true });

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { gunzipSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 
 const sceneId = (source: string, path: string) => 'data-' + createHash('sha256').update([source, 'colmap', '', path].join('\0')).digest('hex').slice(0, 24);
@@ -24,18 +25,25 @@ test('photo evidence covers every published scene and keeps stronger export chec
   expect(audit).toMatchObject({ generation: index.generation, scenes: index.total, collections: index.sources.length, photos: index.photos });
   const csv = await page.request.get('/hub/datasets/individual/photo-audit.csv');
   expect(csv.ok()).toBe(true);
-  expect(await csv.text()).toContain('mappingFile,companionArchive,samplePhoto');
-  expect(await csv.text()).toContain('launchRouting,photoManifest,listedPhotos,videoFrames,videoTimestamp,boundNamesChecked');
+  const csvText = await csv.text(), header = csvText.split(/\r?\n/, 1)[0];
+  expect(header).toContain('mappingFile,companionArchive,samplePhoto');
+  expect(header).toContain('launchRouting,photoManifest,listedPhotos,videoFrames,videoSources,videoTimestamp,videoTemporalScope,boundNamesChecked');
   expect(audit.routing).toEqual(index.photoRouting);
   expect(Object.values(index.photoRouting).reduce((sum, count) => sum + count, 0)).toBe(index.total);
   const manifests = JSON.parse(await readFile(new URL('../data/scene-manifests.json', import.meta.url), 'utf8'));
-  expect(audit.routing.full_scene_manifest + audit.routing.video_frames_manifest).toBe(manifests.scenes.length);
-  expect(audit.routing.video_frames_manifest).toBe(47);
+  const generic = JSON.parse(await readFile(new URL('../data/video-frame-mappings.json', import.meta.url), 'utf8'));
+  const legacy = JSON.parse(gunzipSync(await readFile(new URL('../data/video-frame-routing.json.gz', import.meta.url))).toString());
+  type Selection = { sourceId: string; kind: string; path: string };
+  const key = (selection: Selection) => JSON.stringify([selection.sourceId, selection.kind, selection.path]);
+  const fullModelSelections = new Set(manifests.scenes.map(key));
+  const nativeOnly = generic.scenes.filter((selection: Selection) => !fullModelSelections.has(key(selection))).length;
+  expect(audit.routing.full_scene_manifest + audit.routing.video_frames_manifest).toBe(manifests.scenes.length + nativeOnly);
+  expect(audit.routing.video_frames_manifest).toBe(legacy.scenes.length + generic.scenes.length);
   expect(audit.repeatAudit.skip_confirmed_facts).toBeGreaterThan(0);
   expect(audit.repeatAudit.review_required).toBeGreaterThanOrEqual(0);
   expect(audit.repeatAudit.skip_confirmed_facts + audit.repeatAudit.review_required).toBe(index.total);
-  expect(await csv.text()).toContain('auditDecision,repeatAudit,decisionScope,nextAuditAction');
-  expect(await csv.text()).not.toContain('Eiffel_Tower_Scene');
+  expect(header).toContain('auditDecision,repeatAudit,decisionScope,nextAuditAction');
+  expect(csvText.includes('Eiffel_Tower_Scene')).toBe(false);
   await page.goto('/hub/datasets/audit');
   await expect(page.getByRole('heading', { name: 'Photograph availability' })).toBeVisible();
   await expect(page.getByRole('link', { name: /photo availability and path policy \(CSV\)/ })).toHaveAttribute('href', '/hub/datasets/individual/photo-audit.csv');
@@ -45,10 +53,11 @@ test('camera video imagery has its own filter and matching-frame launch while mo
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com/.test(request.url())) providerRequests.push(request.url()); });
   const result = await (await page.request.get('/hub/datasets/api/entries?photos=video_frames')).json();
-  expect(result.total).toBe(47);
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  expect(result.total).toBe(index.photos.video_frames);
   expect(result.entries.every((entry: { photoStatus: string }) => entry.photoStatus === 'video_frames')).toBe(true);
   await page.goto('/hub/datasets/?photos=video_frames');
-  await expect(page.locator('#catalog-count')).toContainText('of 47 scene datasets');
+  await expect(page.locator('#catalog-count')).toContainText(`of ${result.total.toLocaleString('en-US')} scene datasets`);
   await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('video_frames');
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Frames from camera videos');
   const id = 'data-7ab128e89d676305e079e729';
@@ -69,6 +78,31 @@ test('camera video imagery has its own filter and matching-frame launch while mo
   await expect(page.locator('main')).toContainText('Model-only export SHA-256');
   await expect(page.locator('main')).toContainText('One frame per scene decoded at camera resolution');
   await expect(page.locator('main')).not.toContainText('All registered originals checked');
+  expect(providerRequests).toEqual([]);
+});
+
+test('per-pose video mappings expose view/source counts and source feature warnings without claiming full export', async ({ page }) => {
+  const providerRequests: string[] = [];
+  page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com/.test(request.url())) providerRequests.push(request.url()); });
+  const id = 'data-92baac9828db4bc141448f90';
+  const open = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  expect(open.status()).toBe(302);
+  const target = new URL(new URL(open.headers().location).searchParams.get('url')!);
+  const response = await page.request.get(target.pathname), manifest = await response.json();
+  expect(manifest.version).toBe(5); expect(manifest.skipImages).toBeUndefined();
+  expect(Object.keys(manifest.videoImages)).toHaveLength(285);
+  const bindings = Object.values(manifest.videoImages) as { url: string; frameIndex: number; timestamp?: number }[];
+  expect(new Set(bindings.map(binding => binding.url)).size).toBe(6);
+  expect(bindings.every(binding => Number.isSafeInteger(binding.frameIndex) && binding.frameIndex >= 0 && binding.timestamp === undefined)).toBe(true);
+  expect(manifest.videoImages['campus_nlp/cam00/000000_a.jpg'].frameIndex).toBe(7);
+  expect(manifest.videoImages['campus_nlp/cam03/000170_d.jpg'].frameIndex).toBe(67);
+  expect(manifest.videoImages['campus_nlp/cam05/000278_f.jpg'].frameIndex).toBe(22);
+  expect(manifest.files.points3D).toContain('/resolve/4c18714ad982888d453ec88e2dc335f8dce5928d/reconstructions/scenes/campus_nlp/0/points3D.bin');
+  await page.goto('/hub/datasets/entry/' + id);
+  await expect(page.locator('main')).toContainText('285 matched views from 6 source videos');
+  await expect(page.locator('main')).toContainText('18 decoded samples');
+  await expect(page.locator('main')).toContainText('668 duplicate-image');
+  await expect(page.locator('main')).not.toContainText('Model-only export SHA-256');
   expect(providerRequests).toEqual([]);
 });
 

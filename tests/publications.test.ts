@@ -204,11 +204,17 @@ describe('public Hub submissions', () => {
     await expect(boundedBytes(new Response(stream), 128)).rejects.toThrow('needs review');
     expect(cancel).toHaveBeenCalledOnce();
   });
-  it('checks a curated manifest through its fixed asset binding without an external request', async () => {
-    const assets = { fetch: vi.fn(async () => Response.json({ version: 4 })) };
+  it.each([1, 2, 3, 4, 5])('checks a curated v%s manifest through its fixed asset binding without an external request', async version => {
+    const assets = { fetch: vi.fn(async () => Response.json({ version })) };
     const checked = await verifyPublicationSource(`${origin}/?url=${encodeURIComponent(`${origin}/hub/datasets/individual/manifests/${'a'.repeat(64)}.manifest.json`)}`,
       { ...env, CATALOG_ASSETS: assets } as unknown as Env, origin);
     expect(checked.verification?.method).toBe('catalog_manifest'); expect(fetch).not.toHaveBeenCalled();
+  });
+  it.each([0, 6, 'unknown'])('rejects unsupported curated manifest version %s without an external request', async version => {
+    const assets = { fetch: vi.fn(async () => Response.json({ version })) };
+    await expect(verifyPublicationSource(`${origin}/?url=${encodeURIComponent(`${origin}/hub/datasets/individual/manifests/${'a'.repeat(64)}.manifest.json`)}`,
+      { ...env, CATALOG_ASSETS: assets } as unknown as Env, origin)).rejects.toThrow('catalog manifest is invalid');
+    expect(fetch).not.toHaveBeenCalled();
   });
   it('publishes only a validated operator-reviewed record and strips private submission fields', () => {
     const record = { ...input(), id: 'HappyTree-LAAAAAAAAAAAAAAAA', listed: true, schemaVersion: 1,

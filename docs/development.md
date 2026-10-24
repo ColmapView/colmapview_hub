@@ -71,6 +71,9 @@ Python tools are packages. Invoke a command as `python -m scripts.audit.dataset_
 The [scene discovery feed](discovery-feed.md) documents ranking, seeded random
 selection, first-catalogued dates, scrolling and return navigation.
 
+[Video frame mappings](video-frame-mappings.md) documents explicit source-frame
+authoring, independent pixel evidence, and viewer-before-catalog rollout.
+
 The data pipeline is committed inputs → exact scene qualification → metadata packs and search postings → Worker page/API → asynchronous browser results. Build orchestration lives in `scripts/build/catalog.mjs`; the Python projection lives in `scripts/catalog/build_individual_catalog.py`.
 
 Keep public routes, metadata schemas and scene identities stable when moving implementation files. The internal `individual` name remains in established source names and `/hub/datasets/individual/` asset URLs. It describes the scene projection; renaming a directory must not rename its public routes.

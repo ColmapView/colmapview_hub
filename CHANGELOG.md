@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.12.0 — 2026-10-24
+
+- Publish generic, model-bound video frame mappings with separate mapped-view and unique-source counts. Retain legacy DanceNet evidence and all immutable manifests; imagery does not establish native model export integrity.
+- Add explicit-frame authoring and an MBZUAI adapter for the publisher's resampling and global image counters. New v5 launches require viewer 0.23.0 or newer.
+- Restore campus_nlp imagery with 285 explicit frame selections from six pinned source videos, checked against 18 independent decoded samples. Preserve the native model's existing feature-integrity warnings.
+
 ## 0.11.2 — 2026-10-24
 
 - Restore DanceNet3D's declared 30 fps capture speed for individual camera playback, retaining encoded timestamps for matched stills and selected geometry. Apply the timing only to the reviewed source revision and README; preserve existing immutable manifest URLs.

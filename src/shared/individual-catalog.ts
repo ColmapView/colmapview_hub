@@ -8,6 +8,7 @@ import { sceneDataText, sceneStatistics } from './scene-contents';
 import { isSceneManifestEvidence, manifestViewerUrlMatches } from './scene-manifests';
 import type { SceneManifestEvidence } from './scene-manifests';
 import { isVideoFrameRoutingEvidence, type VideoFrameRoutingEvidence } from './video-frames';
+import { isVideoFrameMappingEvidence, type VideoFrameMappingEvidence } from './video-frame-mappings';
 import { isPhotoRoutingEvidence, photoRoutingUrlMatches } from './photo-routing';
 import type { PhotoRoutingEvidence } from './photo-routing';
 import { isArchiveRoutingEvidence, type ArchiveRoutingEvidence } from './archive-routing';
@@ -37,6 +38,7 @@ export type IndividualProof = CatalogVerification & { statusLabel: string; viewe
   companionPointCloud?: string;
   sceneManifest?: SceneManifestEvidence;
   videoFrameRouting?: VideoFrameRoutingEvidence;
+  videoFrameMapping?: VideoFrameMappingEvidence;
   photoRouting?: PhotoRoutingEvidence;
   priorPhotoRouting?: PhotoRoutingEvidence;
   photoArchiveRouting?: ArchiveRoutingEvidence;
@@ -94,9 +96,11 @@ const failedDelivery = new Set(['gated', 'access_denied', 'not_found', 'browser_
 function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): proof is IndividualProof & { sceneManifest: SceneManifestEvidence } {
   if (!proof || !isSceneManifestEvidence(proof.sceneManifest)) return false;
   const route = proof.videoFrameRouting;
-  if (proof.photoAvailability === 'video_frames' && !route) return false;
-  if (route ? !isVideoFrameRoutingEvidence(route, proof.sceneManifest) || proof.photoAvailability !== 'video_frames'
-    || !manifestViewerUrlMatches(proof.viewerUrl, route) : !manifestViewerUrlMatches(proof.viewerUrl, proof.sceneManifest)) return false;
+  const mapping = proof.videoFrameMapping;
+  if (proof.photoAvailability === 'video_frames' && !route && !mapping) return false;
+  if (mapping ? !manifestViewerUrlMatches(proof.viewerUrl, mapping)
+    : route ? !isVideoFrameRoutingEvidence(route, proof.sceneManifest) || proof.photoAvailability !== 'video_frames'
+      || !manifestViewerUrlMatches(proof.viewerUrl, route) : !manifestViewerUrlMatches(proof.viewerUrl, proof.sceneManifest)) return false;
   const native = proof.sceneCompatibility ?? proof.sceneValidation;
   const original = proof.sceneManifest.sourceCounts ?? proof.sceneManifest.counts;
   return native?.cameras === original.cameras && native.images === original.images
@@ -106,13 +110,18 @@ function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): pro
 }
 
 export function canOpenIndividual(row: IndividualRecord, source: IndividualSource): boolean {
-  const [, , kind, , , archive, , proof] = row;
+  const [, , kind, , , archive, files, proof] = row;
   if (source.access !== 'public' || archive || proof?.opening || failedDelivery.has(proof?.delivery || '')) return false;
   if (['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')) return false;
   if (proof?.sampleScope === 'companion_asset') return false;
   const compatibility = proof?.sceneCompatibility;
+  const mapping = proof?.videoFrameMapping;
+  if (mapping !== undefined && (!isVideoFrameMappingEvidence(mapping, files,
+    compatibility?.images ?? proof?.sceneValidation?.images, compatibility?.revision ?? proof?.sceneValidation?.revision)
+    || !manifestViewerUrlMatches(proof?.viewerUrl, mapping) || proof?.videoFrameRouting || proof?.photoRouting || proof?.photoArchiveRouting
+    || proof?.photoAvailability !== (mapping.mappedImages === mapping.registeredImages ? 'video_frames' : 'partial'))) return false;
   if (proof?.sceneManifest !== undefined && !hasCheckedSceneManifest(proof)) return false;
-  if ((proof?.videoFrameRouting !== undefined || proof?.photoAvailability === 'video_frames') && !hasCheckedSceneManifest(proof)) return false;
+  if ((proof?.videoFrameRouting !== undefined || proof?.photoAvailability === 'video_frames' && !mapping) && !hasCheckedSceneManifest(proof)) return false;
   if (proof?.photoArchiveRouting !== undefined && (!isArchiveRoutingEvidence(proof.photoArchiveRouting)
     || !photoRoutingUrlMatches(proof.viewerUrl, proof.photoArchiveRouting) || proof.photoRouting || proof.sceneManifest || proof.sceneValidation
     || !['colmap', 'cameras'].includes(kind) || proof.photoAvailability !== 'companion_archive')) return false;
@@ -216,6 +225,12 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         { label: 'Video frame manifest', value: `${proof.videoFrameRouting.count} camera videos at ${proof.videoFrameRouting.timestamp}s (frame ${proof.videoFrameRouting.frame})`, url: proof.videoFrameRouting.url },
         { label: 'Video frame coverage', value: 'All registered names mapped. One frame per scene decoded at camera resolution; remaining pixels and full photo export checked separately.' },
         { label: 'Video frame viewer build', value: `${proof.videoFrameRouting.viewerVersion} (${proof.videoFrameRouting.viewerCommit})` },
+      ] : []),
+      ...(proof?.videoFrameMapping ? [
+        { label: 'Video frame manifest', value: `${proof.videoFrameMapping.mappedImages.toLocaleString('en-US')} matched views from ${proof.videoFrameMapping.videoSources} source videos`, url: proof.videoFrameMapping.url },
+        { label: 'Frame coverage', value: `${proof.videoFrameMapping.mappedImages} of ${proof.videoFrameMapping.registeredImages} registered names; ${proof.videoFrameMapping.sampleCount} decoded samples checked separately from full export` },
+        { label: 'Temporal scope', value: proof.videoFrameMapping.temporalScope === 'per_pose' ? 'One matched frame at each registered pose’s source time' : 'Matched frames for one synchronized snapshot' },
+        { label: 'Video frame viewer build', value: `${proof.videoFrameMapping.viewerVersion} (${proof.videoFrameMapping.viewerCommit})` },
       ] : []),
       ...(summary.availableData ? [{ label: 'Available data', value: sceneDataText(summary.availableData) },
         ...Object.entries(summary.availableData).filter(([, evidence]) => evidence?.samplePath).flatMap(([kind, evidence]) => [{
