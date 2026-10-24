@@ -185,7 +185,7 @@ test('camera metadata with a verified XYZ companion shows the loaded count and e
 });
 
 test('photo availability is displayed separately without changing model actions', () => {
-  for (const [status, label] of [['partial', 'Photos partially available'], ['path_policy_required', 'Photos need setup'],
+  for (const [status, label] of [['partial', 'Images partially available'], ['path_policy_required', 'Photos need setup'],
     ['companion_archive', 'Photos in a separate archive'], ['not_found', 'No loose photos found'], ['not_included', 'Photos not included']]) {
     const item = row(0, { 7: nativePhotoProof(status) });
     const summary = render.individualSummary(item, source);
@@ -284,7 +284,7 @@ test('a bounded pose prefix is displayed separately from complete name coverage'
     policy: 'exact_registered_sample', sceneRoot: 'scene', policyNote: 'Later photos exist.', summary: 'A later photo matched.',
     nameCheck: { registered: 74, matched: 1, missing: 73, ambiguous: 0, scope: 'prefix', totalRegistered: 5493 } };
   const html = render.catalogEntryPage(render.individualEntry(row(0, { 7: proof }), source, parent));
-  assert.match(html, /Sampled photo names matched/);
+  assert.match(html, /Sampled image names matched/);
   assert.match(html, /1\/74 inspected names from 5493 registered poses/);
   assert.match(html, /does not establish complete coverage/);
   assert.doesNotMatch(html, /1\/5493 through the current loader/);
@@ -519,7 +519,7 @@ test('video imagery retains its model receipt, truthful media labels and exact a
   assert.equal(summary.sceneStats.points, model.counts.points);
   const entry = render.individualEntry(item, source, parent), html = render.catalogEntryPage(entry);
   assert.equal(entry.viewerUrl, proof.viewerUrl);
-  assert.match(html, /Frames from camera videos/); assert.match(html, /Images · video frames/);
+  assert.match(html, /Matched video frames/); assert.match(html, /Images · video frames/);
   assert.ok(entry.facts.some(fact => fact.label === 'Model-only export SHA-256' && fact.value === model.exportSha256));
   assert.ok(entry.facts.some(fact => fact.label === 'Video frame manifest' && fact.url === url));
   assert.doesNotMatch(html, /All registered originals checked|Video decoding.*outside/);
@@ -560,7 +560,7 @@ test('square previews remain same-origin and attributed for every source and ima
   assert.doesNotMatch(visible, /figcaption|square crop|Original photographer|cc-by-sa-4.0/);
   assert.match(html, /dataset-photo-credit.*Original photographer.*cc-by-sa-4.0.*Cropped/);
   const detail = render.catalogEntryPage(render.individualEntry(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source, parent));
-  assert.match(detail, /Center-square crop of a checked registered photograph/);
+  assert.match(detail, /Center-square crop of a checked registered image/);
   for (const license of ['cc-by-nc-4.0', 'unknown', 'other']) {
     assert.match(render.catalogCard({ ...summary, license, thumbnail: { ...squareThumbnail, datasetLicense: license, license } }), /class="dataset-thumbnail"/);
     assert.match(render.catalogCard({ ...summary, thumbnail: { ...squareThumbnail, license } }), /class="dataset-thumbnail"/);

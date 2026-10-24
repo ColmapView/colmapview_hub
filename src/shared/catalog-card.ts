@@ -18,7 +18,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     ['Dataset', entry.dataset?.title || entry.title], ['Type', entry.itemKind || entry.formats.join(' · ') || 'Collection'],
     ['Source', providerLabel(entry.provider)], ['License', entry.license], ['License category', LICENSE_CATEGORY_LABELS[category]],
     ['Access', accessLabel(entry.access)], ['Evidence', entry.statusLabel], ['Delivery', deliveryLabel(entry.delivery)],
-    ...(entry.photoStatus ? [['Photographs', photoLabel(entry.photoStatus)]] : []),
+    ...(entry.photoStatus ? [['Images', photoLabel(entry.photoStatus)]] : []),
     ...(entry.availableData ? [['Available data', sceneDataText(entry.availableData)]] : []),
     ...(entry.sceneStats ? [['Camera models', entry.sceneStats.cameraModels === null ? 'Unknown' : entry.sceneStats.cameraModels.toLocaleString('en-US')]] : []),
   ];
@@ -38,7 +38,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + `<dialog class="dataset-metadata" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
     + `<div class="dataset-metadata-header"><h2>Dataset information</h2><button type="button" class="dataset-metadata-close icon-button" aria-label="Close" title="Close" autofocus>${icon('close')}</button></div>`
     + '<div class="dataset-metadata-content">'
-    + `<p class="dataset-metadata-title">${escape(entry.title)}</p><dl>${facts.map(([label, value]) => `<div><dt>${label}</dt><dd${label === 'Photographs' && entry.photoStatus ? ` data-photo-status="${escape(entry.photoStatus)}"` : label === 'Camera models' ? ' data-stat="cameraModels"' : ''}>${escape(value)}</dd></div>`).join('')}</dl>`
+    + `<p class="dataset-metadata-title">${escape(entry.title)}</p><dl>${facts.map(([label, value]) => `<div><dt>${label}</dt><dd${label === 'Images' && entry.photoStatus ? ` data-photo-status="${escape(entry.photoStatus)}"` : label === 'Camera models' ? ' data-stat="cameraModels"' : ''}>${escape(value)}</dd></div>`).join('')}</dl>`
     + (preview ? `<p class="dataset-photo-credit">Photo: ${sceneThumbnailCreditHtml(entry.thumbnail!)}${entry.thumbnail!.crop === 'center_square' ? ' · Cropped' : ''}</p>` : '')
     + `<p class="note">${escape(entry.description)}</p>`
     + `<div class="dataset-metadata-links"><a href="${datasetPath(entry)}">Full metadata</a>`

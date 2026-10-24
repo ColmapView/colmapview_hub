@@ -25,10 +25,23 @@ manifests; it never downloads or decodes videos.
 
 ## Authoring
 
+Run these operator commands from the Hub repository root with the viewer checkout
+available at `../colmap-webview` (or set `--viewer-root` explicitly).
+
 `scripts/audit/compile-video-frame-manifest.mjs` compiles a `model` manifest plus
 `videos` and `images` tables. Video IDs are an authoring convenience only. The
 emitted manifest contains explicit URLs, sizes and selectors for every mapped
 registered name. Compilation makes no network requests and cannot certify pixels.
+
+```sh
+node scripts/audit/compile-video-frame-manifest.mjs --input mapping.json --output scene.manifest.json --viewer-root ../colmap-webview
+```
+
+Still images, metrics, dataset exports and provider uploads use these fixed frame
+selections. Individual playback starts there, and seeking keeps saved images
+unchanged. Source recordings stay at their original host. Sources over the 256 MiB
+playback limit can still supply ranged matched frames; the viewer disables Video
+and explains the limit.
 
 The MBZUAI operator adapter reads the pinned native model and video indices:
 

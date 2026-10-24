@@ -45,7 +45,7 @@ test('photo evidence covers every published scene and keeps stronger export chec
   expect(header).toContain('auditDecision,repeatAudit,decisionScope,nextAuditAction');
   expect(csvText.includes('Eiffel_Tower_Scene')).toBe(false);
   await page.goto('/hub/datasets/audit');
-  await expect(page.getByRole('heading', { name: 'Photograph availability' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Image availability' })).toBeVisible();
   await expect(page.getByRole('link', { name: /photo availability and path policy \(CSV\)/ })).toHaveAttribute('href', '/hub/datasets/individual/photo-audit.csv');
 });
 
@@ -58,8 +58,8 @@ test('camera video imagery has its own filter and matching-frame launch while mo
   expect(result.entries.every((entry: { photoStatus: string }) => entry.photoStatus === 'video_frames')).toBe(true);
   await page.goto('/hub/datasets/?photos=video_frames');
   await expect(page.locator('#catalog-count')).toContainText(`of ${result.total.toLocaleString('en-US')} scene datasets`);
-  await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('video_frames');
-  await expect(page.locator('[data-photo-status]').first()).toHaveText('Frames from camera videos');
+  await expect(page.getByRole('combobox', { name: 'Images', exact: true })).toHaveValue('video_frames');
+  await expect(page.locator('[data-photo-status]').first()).toHaveText('Matched video frames');
   const id = 'data-7ab128e89d676305e079e729';
   const open = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
   expect(open.status()).toBe(302);
@@ -102,6 +102,8 @@ test('per-pose video mappings expose view/source counts and source feature warni
   await expect(page.locator('main')).toContainText('285 matched views from 6 source videos');
   await expect(page.locator('main')).toContainText('18 decoded samples');
   await expect(page.locator('main')).toContainText('668 duplicate-image');
+  await expect(page.locator('main')).toContainText('Image availability check');
+  await expect(page.locator('main')).not.toContainText('Current media scope');
   await expect(page.locator('main')).not.toContainText('Model-only export SHA-256');
   expect(providerRequests).toEqual([]);
 });
@@ -114,14 +116,14 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   await page.goto('/hub/datasets/?photos=not_included');
   await expect(page.locator('#catalog-count')).toContainText(count(index.photos.not_included));
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos not included');
-  await page.getByRole('combobox', { name: 'Photographs', exact: true }).selectOption('not_found');
+  await page.getByRole('combobox', { name: 'Images', exact: true }).selectOption('not_found');
   await expect(page.locator('#catalog-count')).toContainText(count(index.photos.not_found));
   await page.goBack();
   await expect(page.locator('#catalog-count')).toContainText(count(index.photos.not_included));
-  await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('not_included');
+  await expect(page.getByRole('combobox', { name: 'Images', exact: true })).toHaveValue('not_included');
   await page.goForward();
   await expect(page.locator('#catalog-count')).toContainText(count(index.photos.not_found));
-  await expect(page.getByRole('combobox', { name: 'Photographs', exact: true })).toHaveValue('not_found');
+  await expect(page.getByRole('combobox', { name: 'Images', exact: true })).toHaveValue('not_found');
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await expect(page.locator('#catalog-count')).toContainText(count(index.total));
   expect(providerRequests).toEqual([]);

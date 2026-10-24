@@ -35,5 +35,9 @@ it('rejects changed source selections, counts, viewer targets and old-runtime cl
   expect(canOpenIndividual(row({ ...proof, viewerUrl: 'https://colmapview.opsiclear.com/?url=https://unreviewed.test/model' }), source)).toBe(false);
   const partial = { ...proof, photoAvailability: 'partial' as const, videoFrameMapping: { ...mapping, mappedImages: 100 } };
   expect(canOpenIndividual(row(partial), source)).toBe(true);
+  const entry = individualEntry(row(partial), source, { ...source, checkedAt: mapping.checkedAt, audits: [],
+    facts: [{ label: 'Pinned revision', value: mapping.revision }] } as unknown as CatalogEntry);
+  expect(entry.facts.find(item => item.label === 'Camera imagery')?.value).toBe('Images partially available');
+  expect(entry.facts.some(item => item.label === 'Original photographs')).toBe(false);
   expect(canOpenIndividual(row({ ...partial, photoAvailability: 'video_frames' }), source)).toBe(false);
 });

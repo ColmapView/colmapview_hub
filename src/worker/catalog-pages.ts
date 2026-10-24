@@ -88,10 +88,10 @@ export function catalogAuditPage(snapshot: CatalogSnapshot): string {
   return page(location, 'Dataset audit', '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
     + intro('Dataset audit', `${number(audit.sourcesAudited)} sources assessed on ${audit.checkedAt}, including previously supported and rejected inventory records.`)
     + `<p>${number(snapshot.sceneSummary?.entries || 0)} named scenes are published with scoped model/layout evidence. Original photographs are optional. Complete camera-and-photo export checks form a separate evidence tier: <a href="/hub/datasets/individual/verified-scenes.json" download>Download verified scene checks (JSON)</a>. Historical source research below retains its own scope and dates.</p>`
-    + (snapshot.photoAudit ? '<section class="dataset-section"><h2>Photograph availability</h2>'
+    + (snapshot.photoAudit ? '<section class="dataset-section"><h2>Image availability</h2>'
       + `<p>${number(snapshot.photoAudit.scenes)} published scenes assessed on ${escape(snapshot.photoAudit.checkedAt.slice(0, 10))}. Known truncated models are excluded. Photos remain optional for supported camera models.</p>`
       + factList(Object.entries(snapshot.photoAudit.photos).map(([status, count]) => ({ label: photoLabel(status as PhotoStatus), value: number(count) })))
-      + '<p>A checked photo sample does not establish every image or complete loading. Photos needing setup or a companion ZIP are not automatically attached by the current scene link. Model, photograph and mask evidence remain separate.</p>'
+      + '<p>Source photos and matched video frames have separate coverage and pixel checks. A sample does not establish every image or complete loading. Model, image and mask evidence remain separate.</p>'
       + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Download every scene’s photo availability and path policy (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p></section>' : '')
     + '<section class="dataset-section"><h2>Format evidence</h2>'
     + factList(Object.entries(audit.levels).map(([level, count]) => ({ label: status(level), value: number(count) }))) + '</section>'

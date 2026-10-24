@@ -14,7 +14,7 @@ jobs:
       - run: npm ci
       - run: cp .dev.vars.example .dev.vars
       - run: npm run check
-      - name: Check manifest compatibility with the released viewer
+      - name: Check manifest compatibility with the minimum v5 viewer
         uses: actions/checkout@v6
         with:
           repository: ColmapView/Colmapview.github.io

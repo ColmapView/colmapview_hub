@@ -44,7 +44,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + select('license', 'License', 'All reported licenses', values(index.sources.map(source => source.license)))
     + select('status', 'Evidence', 'All evidence levels', values(Object.keys(index.levels)))
     + select('data', 'Available data', 'Any data', Object.entries(SCENE_DATA_LABELS).filter(([key]) => index.contents?.[key]).map(([value, label]) => ({ value, label })))
-    + select('photos', 'Photographs', 'All photo availability', [{ value: 'available', label: 'Photos on current paths' },
+    + select('photos', 'Images', 'All image availability', [{ value: 'available', label: 'Images on current paths' },
       ...Object.keys(index.photos || {}).sort().map(value => ({ value, label: photoLabel(value as PhotoStatus) }))])
     + '</div></details>'
     + ['delivery', 'viewer', 'seed'].map(field => `<input type="hidden" name="${field}" value="${escape(filters.get(field) || '')}">`).join('') + '</form>'
@@ -64,8 +64,8 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + '<button type="button" class="button" id="catalog-more" hidden>Load more</button>'
     + `<a class="button" id="catalog-next" href="${escape(individualBrowseUrl(filters, result.page + 1))}"${result.page === result.pages ? ' hidden' : ''}>Next</a></nav>`
     + '<details class="catalog-notes"><summary>About this catalog</summary><div>'
-    + '<p>Explore camera and reconstruction datasets. Original photographs are optional; each scene records its photo availability and loading evidence.</p>'
-    + '<p>Each card identifies one named scene at a pinned source revision. Native camera/model layouts have bounded format and access checks. Original photographs may be available, partial, absent or unverified. Full loading, complete exports and mask support retain their separate evidence; a layout check does not establish them. Standalone geometry files do not create dataset cards.</p>'
+    + '<p>Explore camera and reconstruction datasets, with source photos or matched video frames where available.</p>'
+    + '<p>Each card identifies one named scene at a pinned source revision. Native camera/model layouts have bounded format and access checks. Image availability, sampled pixels, full loading, complete exports and masks have separate evidence. Standalone geometry files do not create dataset cards.</p>'
     + '<p>Discover mixes verified model evidence, collection-balanced random scenes and newly catalogued scenes. Random balances collections before scenes. New to Hub uses recorded catalogue dates, beginning October 19, 2026; these are not dataset creation dates. Photographs and large camera or point counts are not required for ranking. Available data can include companions requiring setup; the information panel retains their exact status.</p>'
     + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a></p>`
     + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Photo availability, launch manifests and path policies for every scene (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p>'

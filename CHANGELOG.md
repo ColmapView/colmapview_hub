@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.12.2 — 2026-10-24
+
+- Use Images and Matched video frames consistently in filters, cards and metadata, retaining existing URL/API parameters. Partial video coverage is labeled as camera imagery, and video mappings no longer display an inferred repository-root media scope.
+- Clarify source time versus geometry frame IDs, and update the current manifest and authoring guides. Refresh the UI cache version so returning browsers receive the new wording.
+
 ## 0.12.1 — 2026-10-24
 
 - Validate the independent MBZUAI feature-integrity receipt alongside the earlier immutable relationship audit. This supersedes 0.12.0 before deployment; the frame mappings and runtime behavior are unchanged.

@@ -1,5 +1,9 @@
 # Camera video frames, 2026-10-23
 
+This dated receipt covers the DanceNet3D v4 cohort. See the current
+[generic mapping guide](video-frame-mappings.md) for v5 frame indices, per-pose
+frames and separate source/sample counts.
+
 Viewer 0.21.1 adds version 4 manifests with exact registered-name → video URL,
 byte length and presentation timestamp bindings. The 47 pinned danceNet3D scene
 launches now bind 1,349 camera videos to the same static times as their existing
