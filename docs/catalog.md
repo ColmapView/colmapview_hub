@@ -25,7 +25,8 @@ not store them or cookie identifiers. Consent revision 2 accompanies measurement
 an explicit Allow queues `consent_granted` as additional evidence of the interface.
 
 The measured page location contains only the public catalog path. Query strings,
-fragments and full referrer URLs are excluded. Acquisition uses only a fixed
+fragments and full referrer URLs are excluded. URL passthrough and cross-domain
+linker import/decoration are explicitly disabled. Acquisition uses only a fixed
 referral category (Google, Bing, DuckDuckGo, GitHub, Hugging Face, viewer or other).
 Do Not Track and Global Privacy Control keep analytics off and suppress the
 automatic prompt by default. The visitor can explicitly allow only this analytics

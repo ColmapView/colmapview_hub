@@ -165,6 +165,8 @@ function loadAnalytics(choice: Choice): Gtag {
     ad_user_data: 'denied', ad_personalization: 'denied' });
   gtag('consent', 'update', { analytics_storage: 'granted' });
   gtag('set', 'ads_data_redaction', true);
+  gtag('set', 'url_passthrough', false);
+  gtag('set', 'linker', { domains: [], accept_incoming: false, decorate_forms: false });
   gtag('js', new Date());
   gtag('config', MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false,
     allow_ad_personalization_signals: false, ignore_referrer: true,

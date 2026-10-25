@@ -69,6 +69,8 @@ test('public catalog analytics waits for cookie consent and uses clean URLs with
   const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(command => Array.from(command)) ?? []);
   expect(commands).toContainEqual(['consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' }]);
   expect(commands).toContainEqual(['consent', 'update', { analytics_storage: 'granted' }]);
+  expect(commands).toContainEqual(['set', 'url_passthrough', false]);
+  expect(commands).toContainEqual(['set', 'linker', { domains: [], accept_incoming: false, decorate_forms: false }]);
   expect(commands).toContainEqual(['config', 'G-7K5H83SEMY', expect.objectContaining({
     page_location: production + '/hub/datasets/', page_referrer: '', send_page_view: false,
     cookie_prefix: 'cvh', cookie_domain: 'colmapview.opsiclear.com', cookie_path: '/hub/datasets',
