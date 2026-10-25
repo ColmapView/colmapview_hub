@@ -27,6 +27,7 @@ from .video_frame_mappings import apply_mapping, mapping_assets, mapping_reviews
 from .photo_routing import apply_routing, routing_asset, routing_coverage, routing_failures, routing_reviews
 from .archive_routing import archive_reviews, archive_asset, apply_archive_routing
 from .photo_decisions import decision_records, decision_coverage, selection_key
+from .splat_routing import splat_reviews, splat_asset, apply_splats
 from .scene_discovery import HISTORY, load_history, discovery_row
 
 # A normal results page must not parse thousands of unrelated scene records.
@@ -297,6 +298,9 @@ def build(root=Path('.')):
     decision_bytes = (root / 'data/photo-audit-decisions.json.gz').read_bytes()
     decision_policy = json.loads(gzip.decompress(decision_bytes))
     photo_decisions = decision_records(decision_policy)
+    splat_bytes = (root / 'data/gaussian-routing.json.gz').read_bytes()
+    splat_routes = splat_reviews(catalog, json.loads(gzip.decompress(splat_bytes)))
+    matched_splats = set()
     for key, review in video_reviews.items():
         selection = selection_key(review['sourceId'], review['revision'], review['kind'], review['path'], manifest_reviews[key]['files'])
         decision = photo_decisions.get(selection, {})
@@ -347,6 +351,14 @@ def build(root=Path('.')):
             name, body = launch_manifest_asset(manifest)
             generated_manifests[name] = body
     matched_contents = set()
+    for review in splat_routes.values():
+        if review.get('baseManifestSha256'):
+            target = urllib.parse.parse_qs(urllib.parse.urlsplit(review['baseViewerUrl']).query)['url'][0]
+            base_name = target.rsplit('/', 1)[-1]
+            if hashlib.sha256(generated_manifests.get(base_name, b'')).hexdigest() != review['baseManifestSha256']:
+                raise ValueError('Gaussian routing must preserve the independently built original manifest: ' + review['id'])
+        name, body = splat_asset(review)
+        generated_manifests[name] = body
     matched_photos = set()
     matched_reviews = set()
     matched_native = set()
@@ -365,6 +377,7 @@ def build(root=Path('.')):
                                 + archive_bytes + decision_bytes
                                 + Path(__file__).with_name('archive_routing.py').read_bytes()
                                 + Path(__file__).with_name('photo_decisions.py').read_bytes()
+                                + splat_bytes + Path(__file__).with_name('splat_routing.py').read_bytes()
                                 + Path(__file__).with_name('individual-listings.mjs').read_bytes()
                                 + Path(__file__).with_name('catalog-publication.mjs').read_bytes()
                                 + (Path(__file__).parent.parent / 'build/catalog.mjs').read_bytes()
@@ -569,6 +582,9 @@ def build(root=Path('.')):
                             if value not in files.values() and len(files) < MAX_SCENE_FILE_LINKS:
                                 files['variant:' + member[1] + ':' + role] = value
                 proof = {**proof, 'sceneTitle': scene_title}
+            if item_id in splat_routes:
+                proof = apply_splats(entry, (kind, path, files, archive), revision, proof, splat_routes[item_id])
+                matched_splats.add(item_id)
             contents.update(proof['availableData'].keys())
             if proof.get('thumbnail'):
                 thumbnails.add(proof['thumbnail']['url'].split('/')[-1])
@@ -652,6 +668,8 @@ def build(root=Path('.')):
         raise ValueError('Native layout no longer matches the scene listing; recheck its identity and file paths')
     if any(key not in matched_photos and key[0] not in excluded and key not in scene_exclusions for key in photo_reviews):
         raise ValueError('Photo evidence no longer matches a published scene; recheck its identity and file paths')
+    if matched_splats != set(splat_routes):
+        raise ValueError('Gaussian routing contains an unpublished or changed scene selection')
     if any(key not in matched_contents and key[0] not in excluded and key not in scene_exclusions for key in content_reviews):
         raise ValueError('Content evidence no longer matches the published scene identities')
     if any(key not in matched_video_mappings and key[0] not in excluded and key not in scene_exclusions for key in video_mappings):

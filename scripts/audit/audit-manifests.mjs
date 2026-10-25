@@ -243,7 +243,7 @@ async function loadManifest(context, origin, item, options, onRateLimit) {
           splat: Boolean(state.loadedFiles?.splatFile), sourceUrl: state.sourceUrl };
       });
       if (state.progress) lastProgress = state.progress;
-      if (!state.loading && (state.counts || state.error)) break;
+      if (!state.loading && (state.counts || state.error) && (!item.requiresSplat || state.splat || state.error)) break;
       await page.waitForTimeout(250);
     } while (Date.now() < deadline);
     result.actual = state.counts;

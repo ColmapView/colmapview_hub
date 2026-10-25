@@ -630,6 +630,36 @@ const row = (number = 0, overrides = {}) => Object.assign([`data-${String(number
 const nativePhotoProof = status => ({ ...parent.verification, level: 'native_layout_checked', statusLabel: 'Native COLMAP layout checked',
   viewerUrl: verified.viewerUrl, photoAvailability: status, sceneCompatibility: { status: 'native_headers_checked', revision: 'a'.repeat(40),
     cameraRecordChecked: true, poseRecordChecked: true, cameras: 1, images: 2, points: 3 } });
+test('Gaussian companion launch retains native gates and rejects stale selections', () => {
+  const proof = nativePhotoProof('sample_checked');
+  proof.viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(`https://huggingface.co/datasets/owner/dataset/resolve/${proof.sceneCompatibility.revision}/scene0/sparse/0`);
+  const record = row(0, { 7: proof });
+  const revision = proof.sceneCompatibility.revision;
+  const sha256 = 'd'.repeat(64), url = `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${sha256}.manifest.json`;
+  proof.gaussianRouting = { sourceId: source.sourceId, revision, kind: record[2], path: record[3], files: record[6],
+    baseViewerUrl: proof.viewerUrl, url, sha256, receiptSha256: 'e'.repeat(64), checkedAt: '2026-10-25', viewerVersion: '0.25.0', viewerCommit: 'f'.repeat(40),
+    assets: [{ path: 'scene0/output.ply', url: `https://huggingface.co/datasets/owner/dataset/resolve/${revision}/scene0/output.ply`,
+      format: 'ply', bytes: 3000, gaussians: 10, role: 'model', headerSha256: 'a'.repeat(64), headerBytes: 100,
+      allowOrigin: '*', headerCheckedAt: '2026-10-25', association: 'scene_hierarchy' }] };
+  proof.viewerUrl = `https://colmapview.opsiclear.com/?url=${encodeURIComponent(url)}`;
+  assert.equal(render.canOpenIndividual(record, source), true);
+  assert.equal(render.individualSummary(record, source).sceneStats.points, 3);
+  const entry = render.individualEntry(record, source, parent);
+  assert.ok(entry.facts.some(f => f.label === 'Gaussian model' && f.value.includes('10 Gaussians')));
+  const supplemented = explicitManifestProof();
+  supplemented.gaussianRouting = { ...proof.gaussianRouting, baseViewerUrl: supplemented.viewerUrl };
+  supplemented.viewerUrl = proof.viewerUrl;
+  assert.equal(render.canOpenIndividual(row(0, { 7: supplemented }), source), true);
+  assert.equal(render.individualSummary(row(0, { 7: supplemented }), source).sceneStats.points, 350710);
+  supplemented.sceneCompatibility.points = 1;
+  assert.equal(render.canOpenIndividual(row(0, { 7: supplemented }), source), false);
+  for (const mutate of [r => { r[3] = 'other/sparse/0'; }, r => { r[6] = { ...r[6], cameras: 'other/cameras.bin' }; },
+    r => { r[7].gaussianRouting.revision = 'b'.repeat(40); }, r => { r[7].gaussianRouting.baseViewerUrl = 'bad URL'; },
+    r => { r[7].gaussianRouting.assets[0].url = 'https://example.com/model.ply'; }, r => { r[7].opening = { status: 'load_failed' }; }]) {
+    const changed = structuredClone(record); mutate(changed);
+    assert.equal(render.canOpenIndividual(changed, source), false);
+  }
+});
 const fixture = () => {
   const rows = [row(), row(1, { 7: { ...parent.verification, ...verified, statusLabel: parent.statusLabel, viewerUrl: parent.viewerUrl } }), row(2),
     row(3, { 1: 1, 2: 'scene', 3: 'Public scene', 4: 'COLMAP' })];

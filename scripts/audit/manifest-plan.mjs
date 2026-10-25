@@ -22,6 +22,7 @@ export async function viewerManifestSchemas(viewerRoot) {
   const result = await build({ stdin: { contents: [
     `export { ColmapManifestSchema } from ${JSON.stringify(resolve(viewerRoot, 'src/types/manifest.ts'))};`,
     `export { CameraDatasetManifestSchema } from ${JSON.stringify(resolve(viewerRoot, 'src/types/cameraDatasetManifest.ts'))};`,
+    `export { SPLAT_AUTO_LOAD_MAX_BYTES } from ${JSON.stringify(resolve(viewerRoot, 'src/splat/loadingPolicy.ts'))};`,
   ].join('\n'), resolveDir: viewerRoot, loader: 'ts' }, bundle: true, write: false, platform: 'node', format: 'esm' });
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString('base64')}`);
 }
@@ -47,8 +48,11 @@ export async function manifestPlan(root, schemas) {
     const evidence = proof.sceneManifest?.counts ?? proof.sceneValidation ?? proof.sceneCompatibility;
     const expected = evidence ? Object.fromEntries(['cameras', 'images', 'points'].map(key => [key, evidence[key] ?? null])) : null;
     if (expected && proof.sceneManifest?.frameGeometry?.role === 'splat') expected.splats = proof.sceneManifest.frameGeometry.count;
+    const companions = proof.gaussianRouting?.assets;
+    if (expected && companions?.length === 1 && companions[0].role === 'model' && companions[0].bytes <= schemas.SPLAT_AUTO_LOAD_MAX_BYTES)
+      expected.splats = companions[0].gaussians;
     const list = references.get(url) ?? [];
-    const manifestSha256 = proof.videoFrameMapping?.sha256 ?? proof.videoFrameRouting?.sha256 ?? proof.sceneManifest?.sha256 ?? proof.photoRouting?.sha256 ?? proof.photoArchiveRouting?.sha256;
+    const manifestSha256 = proof.gaussianRouting?.sha256 ?? proof.videoFrameMapping?.sha256 ?? proof.videoFrameRouting?.sha256 ?? proof.sceneManifest?.sha256 ?? proof.photoRouting?.sha256 ?? proof.photoArchiveRouting?.sha256;
     list.push({ id: row[0], source: index.sources[row[1]].sourceId, path: row[3], expected, ...(manifestSha256 ? { manifestSha256 } : {}) });
     references.set(url, list);
   };
@@ -82,7 +86,7 @@ export async function manifestPlan(root, schemas) {
       const counts = new Set(entries.map(entry => entry.expected?.[key]).filter(value => value != null));
       if (counts.size > 1) errors.push(`Entries disagree about selected ${key} count`);
     }
-    manifests.push({ file, url, sha256, requiresSplat: Boolean(manifest?.geometryFiles?.some(file => file.role === 'splat')),
+    manifests.push({ file, url, sha256, requiresSplat: Boolean(manifest?.geometryFiles?.some(file => file.role === 'splat') || entries.some(entry => entry.expected?.splats > 0)),
       addressing: selections.has(file) ? 'selection' : 'content',
       bytes: bytes.length, version: manifest?.version, format: manifest?.format ?? 'colmap', entries, errors });
     references.delete(url);

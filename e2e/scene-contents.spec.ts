@@ -1,5 +1,22 @@
 import { expect, test } from '@playwright/test';
 
+test('OcularBell adds Gaussians while retaining its named camera dataset and zero sparse points', async ({ page }) => {
+  const id = 'data-d28cbb0f5daf045780e9b015';
+  const redirect = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  expect(redirect.status()).toBe(302);
+  const manifestUrl = new URL(new URL(redirect.headers().location).searchParams.get('url')!);
+  const manifest = await (await page.request.get(manifestUrl.pathname)).json();
+  expect(manifest).toMatchObject({ format: 'colmapview-camera-dataset', version: 2 });
+  expect(manifest.metadataUrl).toContain('/23e7eaa65ff836405329c7b6b4a34afaeb3a70e2/mic/transforms_train.json');
+  expect(manifest.splats).toEqual(['https://huggingface.co/datasets/pablovela5620/nerf-synthetic-mirror/resolve/23e7eaa65ff836405329c7b6b4a34afaeb3a70e2/trained/mic.ply']);
+  expect(manifest.pointCloud).toBeUndefined();
+  await page.goto('/hub/datasets/entry/' + id);
+  await expect(page.locator('[data-stat="points"]')).toHaveText('0');
+  await expect(page.locator('main')).toContainText('13,059 Gaussians');
+  await expect(page.locator('[data-asset="splats"]')).toHaveText('Splats');
+  await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveAttribute('href', '/s/OcularBell');
+});
+
 test('the Expo root entry binds its original model instead of selecting a nested sparse variant', async ({ page }) => {
   const id = 'data-01385be0766a2831ee3918cf';
   const source = 'https://huggingface.co/datasets/alandpn/expo_mcm-ufrn/resolve/3e142592fa3d276221c243a01fa6ee69217e23b5/';

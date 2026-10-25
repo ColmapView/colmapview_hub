@@ -1,5 +1,11 @@
 # Dataset catalog
 
+`gaussian-routing.json.gz` adds explicit, revision-bound Gaussian companions to
+696 existing scene selections. `gaussian-link-audit.json.gz` records the complete
+4,559-scene / 144-collection review, including exclusions and temporal alternatives.
+See the [Gaussian linking audit and operator workflow](../docs/gaussian-links-2026-10-25.md).
+These additive receipts preserve original sparse-point, photograph and export evidence.
+
 The [source-integrity production verification](../docs/source-integrity-release-2026-10-22.md) records Hub 0.10.12 / viewer 0.20.6 release identities and browser exports. Later receipts below retain their own release and validation scope.
 
 `video-frame-mappings.json` records generic, native-model-bound imagery separately

@@ -15,6 +15,7 @@ import { isArchiveRoutingEvidence, type ArchiveRoutingEvidence } from './archive
 import type { FeedSelection } from './discovery';
 import { CATALOG_SHARE_NAME } from './dataset-share';
 import { VIDEO_CAPTURE_LABELS } from './video-capture';
+import { isGaussianRoutingEvidence, type GaussianRoutingEvidence } from './gaussian-routing';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -38,6 +39,7 @@ export interface IndividualIndex {
 }
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sceneTitle?: string; sampleScope?: 'companion_asset';
   companionPointCloud?: string;
+  gaussianRouting?: GaussianRoutingEvidence;
   sceneManifest?: SceneManifestEvidence;
   videoFrameRouting?: VideoFrameRoutingEvidence;
   videoFrameMapping?: VideoFrameMappingEvidence;
@@ -96,6 +98,7 @@ export const individualTokens = (text: string) => [...new Set(text.normalize('NF
 const failedDelivery = new Set(['gated', 'access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error']);
 
 function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): proof is IndividualProof & { sceneManifest: SceneManifestEvidence } {
+  if (proof?.gaussianRouting) proof = { ...proof, viewerUrl: proof.gaussianRouting.baseViewerUrl };
   if (!proof || !isSceneManifestEvidence(proof.sceneManifest)) return false;
   const route = proof.videoFrameRouting;
   const mapping = proof.videoFrameMapping;
@@ -112,7 +115,13 @@ function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): pro
 }
 
 export function canOpenIndividual(row: IndividualRecord, source: IndividualSource): boolean {
-  const [, , kind, , , archive, files, proof] = row;
+  const [, , kind, path, , archive, files, storedProof] = row;
+  let proof = storedProof;
+  if (proof?.gaussianRouting !== undefined) {
+    if (!isGaussianRoutingEvidence(proof.gaussianRouting, source.sourceId,
+      proof.sceneCompatibility?.revision ?? proof.sceneValidation?.revision, kind, path, files, proof.viewerUrl)) return false;
+    proof = { ...proof, viewerUrl: proof.gaussianRouting.baseViewerUrl };
+  }
   if (source.access !== 'public' || archive || proof?.opening || failedDelivery.has(proof?.delivery || '')) return false;
   if (['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')) return false;
   if (proof?.sampleScope === 'companion_asset') return false;
@@ -199,6 +208,12 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
       ...(summary.videoCapture ? [{ label: 'Video capture', value: VIDEO_CAPTURE_LABELS[summary.videoCapture] }] : []),
+      ...(proof?.gaussianRouting && canOpen ? [
+        { label: 'Gaussian companions', value: `${proof.gaussianRouting.assets.length.toLocaleString('en-US')} selectable sources; loaded on demand`, url: proof.gaussianRouting.url },
+        ...proof.gaussianRouting.assets.slice(0, 6).map(asset => ({ label: asset.role === 'change_subset' ? 'Gaussian change subset' : 'Gaussian model',
+          value: `${asset.path} · ${asset.gaussians.toLocaleString('en-US')} Gaussians`, url: asset.url })),
+        { label: 'Gaussian check scope', value: 'Pinned format headers, counts and scene association checked. Alternatives, levels of detail and time samples stay separate. Sparse points and full-export evidence are unchanged.' },
+      ] : []),
       ...(proof?.photoArchiveRouting && isArchiveRoutingEvidence(proof.photoArchiveRouting) ? [
         { label: 'Archive photo manifest', value: `${proof.photoArchiveRouting.format.toUpperCase()}; at least ${proof.photoArchiveRouting.photoLowerBound.toLocaleString('en-US')} photographs recorded. Members load as needed.`, url: proof.photoArchiveRouting.url },
         { label: 'Checked archive photograph', value: proof.photoArchiveRouting.sampleMemberPath },

@@ -93,6 +93,23 @@ test('manifest plans include retained assets and variant references and detect m
     proof.videoFrameMapping.sha256 = 'f'.repeat(64);
     await save('packs/0.json', [row]);
     assert.match((await manifestPlan(root, schemas)).manifests.find(item => item.file === videoFile).errors[0], /checksum/);
+    const cameraBody = { format: 'colmapview-camera-dataset', version: 2, metadataUrl: 'https://example.org/transforms.json', splats: ['https://example.org/model.ply'] };
+    const cameraDigest = manifestHash(JSON.stringify(cameraBody)), cameraFile = cameraDigest + '.manifest.json';
+    await save('manifests/' + cameraFile, cameraBody);
+    schemas.CameraDatasetManifestSchema = schemas.ColmapManifestSchema;
+    schemas.SPLAT_AUTO_LOAD_MAX_BYTES = 150_000_000;
+    proof.gaussianRouting = { sha256: cameraDigest, assets: [{ role: 'model', bytes: 150_000_000, gaussians: 13 }] };
+    proof.viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(`https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${cameraFile}`);
+    await save('packs/0.json', [row]);
+    const companion = (await manifestPlan(root, schemas)).manifests.find(item => item.file === cameraFile);
+    assert.deepEqual(companion.errors, []); // The companion layer owns its checksum; native points remain zero.
+    assert.deepEqual(companion.entries[0].expected, { cameras: 1, images: 2, points: 0, splats: 13 });
+    assert.equal(companion.requiresSplat, true);
+    proof.gaussianRouting.assets[0].bytes++;
+    await save('packs/0.json', [row]);
+    const lazy = (await manifestPlan(root, schemas)).manifests.find(item => item.file === cameraFile);
+    assert.equal(lazy.requiresSplat, false);
+    assert.equal(lazy.entries[0].expected.splats, undefined);
   } finally {
     assert.ok(resolve(root).startsWith(resolve(tmpdir(), 'colmapview-manifest-plan-')));
     await rm(root, { recursive: true, force: true });

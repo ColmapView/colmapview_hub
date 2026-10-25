@@ -361,6 +361,8 @@ class IndividualDatasetsTests(unittest.TestCase):
             def save(name, value):
                 (data / name).write_text(json.dumps(value), encoding='utf8')
             save('scene-manifests.json', {'schemaVersion': 1, 'checkedAt': '2026-10-18', 'scenes': []})
+            (data / 'gaussian-routing.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'checkedAt': '2026-10-25',
+                'viewerVersion': '0.25.0', 'viewerCommit': 'a' * 40, 'routes': []}).encode()))
             for name in ('companion-media-routing.json.gz', 'photo-audit-decisions.json.gz', 'video-frame-routing.json.gz'):
                 (data / name).write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'checkedAt': '2026-10-19', 'scenes': []}).encode()))
             (data / 'photo-routing.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'checkedAt': '2026-10-19',
@@ -471,6 +473,8 @@ class IndividualDatasetsTests(unittest.TestCase):
             def save(name, value):
                 (data / name).write_text(json.dumps(value), encoding='utf8')
             save('scene-manifests.json', {'schemaVersion': 1, 'checkedAt': '2026-10-18', 'scenes': []})
+            (data / 'gaussian-routing.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'checkedAt': '2026-10-25',
+                'viewerVersion': '0.25.0', 'viewerCommit': 'a' * 40, 'routes': []}).encode()))
             for name in ('companion-media-routing.json.gz', 'photo-audit-decisions.json.gz', 'video-frame-routing.json.gz'):
                 (data / name).write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'checkedAt': '2026-10-19', 'scenes': []}).encode()))
             (data / 'photo-routing.json.gz').write_bytes(gzip.compress(json.dumps({'schemaVersion': 1, 'checkedAt': '2026-10-19',
