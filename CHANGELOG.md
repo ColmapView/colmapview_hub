@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.14.0 — 2026-10-25
+
+- Serve the native viewer at catalog and uploaded share addresses, keeping short URLs through loads and reloads. Use only the fixed deployed app shell, pass inert startup data and preserve viewer browser policies without forwarding visitor credentials.
+- Keep social metadata, previews, management and lookup protection compatible. Reject unavailable or outdated viewer shells without redirecting to a long URL. Add offline browser fixtures and document the viewer-first deployment order.
+
 ## 0.13.0 — 2026-10-25
 
 - Consolidate browse controls into a single top row, with responsive filter menus and a bottom bar for counts, catalog information and icon actions. Keep search, asynchronous loading and return positions working with both bars.

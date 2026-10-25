@@ -10,11 +10,12 @@ import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBounde
 import { individualRoute } from './individual-routes';
 import { individualIndex, readIndividual } from './individual-data';
 import { datasetShareId } from '../shared/dataset-share';
-import { datasetPath, isCatalogOpenUrl } from '../shared/catalog';
+import { isCatalogOpenUrl } from '../shared/catalog';
 import type { CatalogEntry } from '../shared/catalog';
 import { catalogEntryPage } from './catalog-pages';
 import { retiredAuthRoute } from './retired-auth';
 import { publicationConfiguration, sharedDatasetResponse, submitPublication } from './publications';
+import { VIEWER_DOCUMENT_HEADER, viewerDocument } from './viewer-document';
 export { LookupGuard } from './guard';
 
 const UNAVAILABLE = 'The Hub is temporarily unavailable. Please try again.';
@@ -89,13 +90,15 @@ function allowedOrigin(request: Request, location: HubLocation): string | null {
  */
 function withSharedHeaders(request: Request, result: Response, location?: HubLocation): Response {
   const headers = new Headers(result.headers);
+  const viewer = headers.get(VIEWER_DOCUMENT_HEADER) === '1';
+  headers.delete(VIEWER_DOCUMENT_HEADER);
   if (!headers.has('Cache-Control')) headers.set('Cache-Control', 'no-store');
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
-  headers.set('Referrer-Policy', 'no-referrer');
+  if (!viewer) headers.set('Referrer-Policy', 'no-referrer');
   const publicCatalog = result.status === 200 && headers.get('Content-Type')?.startsWith('text/html')
     && /^\/hub\/datasets\/(?:$|entry\/data-[a-f0-9]{24}$)/.test(new URL(request.url).pathname);
-  headers.set('Content-Security-Policy', publicCatalog ? contentSecurityPolicy(Boolean(location?.local), true) : location?.local ? LOCAL_CSP : CSP);
+  if (!viewer) headers.set('Content-Security-Policy', publicCatalog ? contentSecurityPolicy(Boolean(location?.local), true) : location?.local ? LOCAL_CSP : CSP);
   return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });
 }
 
@@ -193,7 +196,7 @@ async function lookup(request: Request, env: Env, location: HubLocation, url: UR
   // This runs after the same lookup guard as previews and management pages.
   const navigation = request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate';
   const vary = { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' };
-  if (view === 'card' && navigation) return new Response(null, { status: 307, headers: { Location: record.viewerUrl, ...vary } });
+  if (view === 'card' && navigation) return viewerDocument(env, location, record.viewerUrl);
   const linkBase = url.pathname.startsWith(`${SHARE_PATH}/`) ? `${location.origin}${SHARE_PATH}` : location.base;
   if (target?.redirect) return redirect(`${linkBase}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${url.search}`, 308);
   if (view === 'preview') return new Response(base64Bytes(record.thumbnailBase64), { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=300' } });
@@ -268,7 +271,7 @@ async function lookupDataset(request: Request, env: Env, location: HubLocation, 
   const headers = { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' };
   if (request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate') {
     const target = entry.openUrl && (entry.viewerUrl || entry.candidateViewerUrl);
-    return new Response(null, { status: 307, headers: { ...headers, Location: target && isCatalogOpenUrl(target) ? target : datasetPath(entry) } });
+    if (target && isCatalogOpenUrl(target)) return viewerDocument(env, location, target);
   }
   return html(catalogEntryPage(entry, false), 200, headers);
 }

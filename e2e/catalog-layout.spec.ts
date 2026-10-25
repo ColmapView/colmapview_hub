@@ -41,7 +41,7 @@ test('catalog controls stay on one row and responsive filters keep their values'
   await expect(page.locator('.catalog-notes')).not.toHaveAttribute('open');
 });
 
-test('every rendered and asynchronously replaced scene has a copyable short link and a safe redirect', async ({ page }) => {
+test('every rendered and asynchronously replaced scene has a copyable short link and a native viewer document', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
     writeText: async (value: string) => { (window as Window & { copiedDatasetLink?: string }).copiedDatasetLink = value; },
   } }));
@@ -61,10 +61,11 @@ test('every rendered and asynchronously replaced scene has a copyable short link
     const shortUrl = new URL(path, page.url()).href;
     await expect.poll(() => page.evaluate(() => (window as Window & { copiedDatasetLink?: string }).copiedDatasetLink)).toBe(shortUrl);
     await expect(panel.locator('[data-copy-status]')).toHaveText('Link copied');
-    const redirect = await page.request.get(path, { headers: { 'Sec-Fetch-Dest': 'document' }, maxRedirects: 0 });
+    const viewer = await page.request.get(path, { headers: { 'Sec-Fetch-Dest': 'document' }, maxRedirects: 0 });
     const original = await page.request.get(`/hub/datasets/open/${id}`, { maxRedirects: 0 });
-    expect(redirect.status()).toBe(307);
-    expect(redirect.headers().location).toBe(original.headers().location);
+    expect(viewer.status()).toBe(200);
+    expect(viewer.headers().location).toBeUndefined();
+    expect(await viewer.text()).toContain(JSON.stringify({ version: 1, viewerUrl: original.headers().location }));
     await panel.getByRole('button', { name: 'Close', exact: true }).click();
   }
   const card = page.locator('.dataset-card').first();

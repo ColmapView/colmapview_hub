@@ -17,10 +17,19 @@ The viewer authenticates directly with providers and signs bucket requests in th
 
 To connect a local viewer, run it with `VITE_HUB_BASE_URL=http://localhost:5201/hub`. A local Hub accepts loopback origins and viewer URLs.
 
+Short-address navigations use the custom production app shell configured by
+`HUB_VIEWER_ORIGIN`; their assets load from the Hub host's viewer root. Browser
+tests instead start an explicit local HTML fixture, with no external app fetch.
+Set `HUB_VIEWER_ORIGIN` when launching the dev script to override the shell with
+an HTTP loopback origin. A full local viewer still needs its root/assets served on
+the same origin as the Hub share path; the fixture checks the document contract,
+while the viewer repository's browser tests exercise actual dataset loading.
+
 | Environment variable | Use |
 | --- | --- |
 | `HUB_DEV_PORT` | Change the development server's default port, 5201 |
 | `HUB_E2E_PORT` | Choose a separate port for browser tests; their server starts automatically |
+| `HUB_VIEWER_ORIGIN` | Override the app-shell origin for local development; production accepts only the configured Pages project |
 | `PYTHON` | Override the Python executable used by builds and tests |
 
 Without `PYTHON`, commands use `python` on Windows and `python3` elsewhere. Set it to an executable name or full path, without shell flags. `scripts/lib/python.mjs` owns this selection; `scripts/run-python.mjs` is its command-line entry point.

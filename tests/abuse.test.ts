@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { runInDurableObject } from 'cloudflare:test';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { create, guard, input, ip, listings, origin, post, remove, request, resetState } from './helpers';
+import { create, guard, input, ip, listings, mockViewerDocument, origin, post, remove, request, resetState } from './helpers';
 
 beforeEach(resetState);
 
@@ -15,7 +15,8 @@ describe('cross-site subresources', () => {
     expect((await request(`/${link.id}/preview.jpg`, crossSite('image'), '192.0.2.7')).status).toBe(404);
     expect((await request(`/${link.id}`, crossSite('iframe'), '192.0.2.7')).status).toBe(404);
     expect(await storedKeys('192.0.2.7')).toBe(0);
-    expect((await request(`/${link.id}`, crossSite('document'), '192.0.2.7')).status).toBe(307);
+    mockViewerDocument();
+    expect((await request(`/${link.id}`, crossSite('document'), '192.0.2.7')).status).toBe(200);
     expect((await request(`/${link.id}/preview.jpg`, { headers: { 'Sec-Fetch-Site': 'same-origin', 'Sec-Fetch-Dest': 'image' } }, '192.0.2.7')).status).toBe(200);
   });
 

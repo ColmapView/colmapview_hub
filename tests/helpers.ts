@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { createExecutionContext, listDurableObjectIds, runInDurableObject, waitOnExecutionContext } from 'cloudflare:test';
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import worker from '../src/worker/index';
 import type { AssetSummary, CreateLinkInput, LinkAccess } from '../src/shared/model';
 import { clientIdentity } from '../src/worker/crypto';
@@ -21,6 +21,17 @@ export const assets: AssetSummary = { format: 'zip', imageFormat: 'jpeg', colmap
   images: 83, masks: 82, splats: 1, viewerSettings: true, preview: false };
 /** Turns gallery listings on for one request. */
 export const listings: Partial<Env> = { HUB_LISTINGS_ENABLED: 'true' };
+
+/** An explicit app-shell fixture; no submitted dataset URL may be fetched by the Worker. */
+export function mockViewerDocument() {
+  return vi.mocked(globalThis.fetch).mockImplementation(async (resource, init) => {
+    expect(String(resource)).toBe('https://colmapview-opsiclear.pages.dev/');
+    expect(new Headers(init?.headers).get('Authorization')).toBeNull();
+    expect(new Headers(init?.headers).get('Cookie')).toBeNull();
+    return new Response('<!doctype html><html><head><meta name="colmapview-hub-launch" content="1"></head><body><div id="root"></div></body></html>',
+      { headers: { 'Content-Type': 'text/html', 'Referrer-Policy': 'strict-origin', 'Cross-Origin-Opener-Policy': 'same-origin-allow-popups' } });
+  });
+}
 export interface LinkResult { id: string; url: string; shareUrl: string; managementPath: string }
 /** What a viewer sends. Viewers before access-aware links omit `access`. */
 export type LinkPayload = Omit<CreateLinkInput, 'access' | 'listed'> & { access?: LinkAccess; listed?: boolean };

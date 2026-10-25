@@ -17,15 +17,24 @@ URL; Copy link is also available in their information panels and full metadata.
 Shared on Hub submissions retain their existing `/s/<id>` addresses and copy
 controls. Clipboard failures reveal a selectable link.
 
-Curated short URLs read only bounded, current built catalog assets. Browser
-navigations (GET/HEAD with a document destination or navigate mode) redirect
-directly to the recorded viewer URL. Entries without an allowed launch resolve
+Curated short URLs resolve bounded, current built catalog assets. Browser
+navigations (GET/HEAD with a document destination or navigate mode) receive the
+native viewer document with inert startup data and keep the short address.
+Entries without an allowed launch resolve
 to their metadata. Non-navigation requests receive social metadata without
 analytics, with `Vary: Sec-Fetch-Dest, Sec-Fetch-Mode`. Removed entries return 404.
 The short namespace uses the normal lookup cooldown; cross-site embeds and
 prefetches are rejected before reading assets or spending misses. Its IDs are
 case-sensitive. It creates no R2 records and accepts no submitted target URL.
 Existing `/hub/datasets/open/<id>` launch and API contracts stay compatible.
+
+The Worker fetches only the fixed operator-owned Pages app shell, with an 8-second
+timeout and a 128 KiB bound, and never forwards visitor credentials. It requires
+the viewer's launch capability marker, escapes the JSON data, and preserves
+the viewer's browser security and referrer policies. These personalized documents
+are uncacheable and contain no analytics. Source files and provider sign-in stay
+in the normal viewer/browser flow. Embeds continue to use the ordinary viewer URL
+because cross-site subresources cannot look up protected short links.
 
 The hosted browse and scene metadata pages use Google Analytics web stream
 `G-7K5H83SEMY`, used historically by viewer releases through v0.15.4.
@@ -129,7 +138,7 @@ Hub pages use the viewer's compact controls, neutral palettes and shared `colmap
 
 Appearance, header navigation, search, shuffle, reset and metadata close use consistent icon controls with tooltips and accessible names. The appearance button cycles Dark → Light → System, retains the shared saved preference and follows system/cross-tab changes. Icon controls keep 44 px touch targets, and the phone header fits on one row.
 
-The info button opens dataset metadata in a side panel with a close button, Escape/backdrop dismissal and keyboard focus return. The panel opens only on activation; its header stays visible while long content scrolls inside the viewport. A primary click opens a camera/model scene through a same-origin redirect. Native camera/pose/point layouts require exact pinned file sets with bounded header and CORS-response checks; full camera-and-photo exports form a stronger optional evidence tier. Missing photographs do not exclude a usable reconstruction. Gated, extraction-only, unsupported, known-failed and standalone geometry entries are excluded. Opening a scene resolves fixed catalog assets only; the Worker never downloads source data.
+The info button opens dataset metadata in a side panel with a close button, Escape/backdrop dismissal and keyboard focus return. The panel opens only on activation; its header stays visible while long content scrolls inside the viewport. A primary click opens a camera/model scene at its short viewer address. Native camera/pose/point layouts require exact pinned file sets with bounded header and CORS-response checks; full camera-and-photo exports form a stronger optional evidence tier. Missing photographs do not exclude a usable reconstruction. Gated, extraction-only, unsupported, known-failed and standalone geometry entries are excluded. Opening a scene resolves fixed catalog assets and the operator-owned app shell only; the Worker never downloads source data.
 
 Search replaces results asynchronously. The Collection filter selects source datasets within the same browser. Filter changes support browser Back and Forward; text changes in the same editing session share one history entry. Load more appends 24 entries while retaining the current filters and results. Aborted or late responses cannot replace a newer search; failed appends retain the previous entries and offer a retry. Failed searches label the retained entries as previous results. A changed catalog generation refreshes the first results page before mixing inventories. Reset clears every filter, including saved criteria from retired controls, with or without JavaScript. Server-rendered filters, model links and pagination remain available without JavaScript. Additional filters, coverage notes and metadata downloads are folded away from the main browsing view.
 

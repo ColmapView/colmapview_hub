@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { create, input, request, resetState } from './helpers';
+import { create, input, mockViewerDocument, request, resetState } from './helpers';
 
-beforeEach(resetState);
+beforeEach(async () => { await resetState(); mockViewerDocument(); });
 
 const navigation = { 'Sec-Fetch-Dest': 'document', 'Sec-Fetch-Mode': 'navigate' };
 const viewerUrl = 'https://colmapview.opsiclear.com/?url=https://drive.google.com/file/d/drive-fixture/view#camera=43';
@@ -12,24 +12,31 @@ describe('direct share links', () => {
     expect(link.shareUrl).toBe(`https://colmapview.opsiclear.com/s/${link.id}`);
     for (const [prefix, method] of [['', 'GET'], ['', 'HEAD'], ['/../s', 'GET'], ['/../s', 'HEAD']]) {
       const response = await request(`${prefix}/${link.id}?url=https://unrelated.example/`, { method, headers: navigation });
-      expect(response.status).toBe(307);
-      expect(response.headers.get('Location')).toBe(viewerUrl);
+      expect(response.status).toBe(200);
+      expect(response.headers.get('Location')).toBeNull();
+      expect(response.headers.get('Referrer-Policy')).toBe('strict-origin');
+      expect(response.headers.get('Cross-Origin-Opener-Policy')).toBe('same-origin-allow-popups');
+      expect(response.headers.get('Content-Security-Policy')).toBeNull();
+      expect(response.headers.get('X-Hub-Viewer-Document')).toBeNull();
       expect(response.headers.get('Cache-Control')).toBe('no-store');
       expect(response.headers.get('Vary')).toBe('Sec-Fetch-Dest, Sec-Fetch-Mode');
-      expect(await response.text()).toBe('');
+      const body = await response.text();
+      if (method === 'HEAD') expect(body).toBe('');
+      else expect(body).toContain(JSON.stringify({ version: 1, viewerUrl }));
     }
   });
 
   it('resolves a differently cased short link without an intermediate card or canonical hop', async () => {
     const link = await create(input({ viewerUrl }));
     const response = await request(`/../s/${link.id.toLowerCase()}`, { headers: navigation });
-    expect(response.status).toBe(307);
-    expect(response.headers.get('Location')).toBe(viewerUrl);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Location')).toBeNull();
+    expect(await response.text()).toContain(JSON.stringify({ version: 1, viewerUrl }));
   });
 
   it.each(['Sec-Fetch-Dest', 'Sec-Fetch-Mode'])('recognizes navigation from %s alone', async header => {
     const link = await create(input({ viewerUrl }));
-    expect((await request(`/${link.id}`, { headers: { [header]: navigation[header as keyof typeof navigation] } })).status).toBe(307);
+    expect((await request(`/${link.id}`, { headers: { [header]: navigation[header as keyof typeof navigation] } })).status).toBe(200);
   });
 
   it('keeps social metadata, image previews and management independent of navigation redirects', async () => {
@@ -61,7 +68,7 @@ describe('direct share links', () => {
     expect((await request('/MissingOne')).status).toBe(404);
     expect((await request('/../s/missingone', { method: 'HEAD' })).status).toBe(404);
     expect((await request('/../s/MissingTwo/preview.jpg')).status).toBe(404);
-    expect((await request(`/../s/${link.id}`, { headers: navigation })).status).toBe(307);
+    expect((await request(`/../s/${link.id}`, { headers: navigation })).status).toBe(200);
     expect((await request('/MissingThree')).status).toBe(429);
     expect((await request(`/../s/${link.id}`, { headers: navigation })).status).toBe(429);
     expect((await request(`/${link.id}`, { headers: navigation })).status).toBe(429);
@@ -75,10 +82,10 @@ describe('direct share links', () => {
         new Headers({ 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'document', 'Sec-Purpose': 'prefetch' }),
       ]) expect((await request(`/../s/${id}`, { headers })).status).toBe(404);
     }
-    expect((await request(`/../s/${link.id}`, { headers: navigation })).status).toBe(307);
+    expect((await request(`/../s/${link.id}`, { headers: navigation })).status).toBe(200);
   });
 
-  it('applies the existing miss cooldown before redirecting an otherwise valid dataset', async () => {
+  it('applies the existing miss cooldown before serving an otherwise valid dataset', async () => {
     const link = await create(input({ viewerUrl }));
     for (const [index, expected] of [404, 404, 429].entries()) {
       expect((await request(`/missing-${index}`, { headers: navigation })).status).toBe(expected);

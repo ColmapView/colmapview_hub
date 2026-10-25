@@ -1,6 +1,5 @@
 import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
-import { createServer, type Server } from 'node:http';
 import { preview } from '../tests/fixtures/preview';
 
 const origin = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB_E2E_PORT || '5201'}`;
@@ -293,29 +292,6 @@ test('public catalog analytics disables measurement if saving withdrawal fails',
   await page.unrouteAll({ behavior: 'wait' });
 });
 
-let viewerServer: Server;
-let viewerOrigin: string;
-
-test.beforeAll(async () => {
-  // Browser routing mocks do not intercept the document reached through an HTTP redirect.
-  // A real loopback server verifies that handoff without contacting a deployed viewer.
-  viewerServer = createServer((_, response) => {
-    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    response.end('<!doctype html><title>Viewer fixture</title><h1>Viewer fixture</h1>');
-  });
-  await new Promise<void>((resolve, reject) => {
-    viewerServer.once('error', reject);
-    viewerServer.listen(0, '127.0.0.1', resolve);
-  });
-  const address = viewerServer.address();
-  if (!address || typeof address === 'string') throw new Error('Viewer fixture did not start.');
-  viewerOrigin = `http://127.0.0.1:${address.port}`;
-});
-
-test.afterAll(async () => {
-  if (viewerServer) await new Promise<void>((resolve, reject) => viewerServer.close(error => error ? reject(error) : resolve()));
-});
-
 interface Link { id: string; url: string; shareUrl: string; owner: string }
 
 async function createLink(page: Page, overrides: Record<string, unknown> = {}): Promise<Link> {
@@ -352,15 +328,19 @@ const noHorizontalScroll = (page: Page) => page.evaluate(() => document.document
 for (const width of [1280, 360]) {
   test(`opens a shared result directly in the viewer at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    const viewerUrl = `${viewerOrigin}/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43`;
+    const viewerUrl = `${production}/?url=https%3A%2F%2Fdata.example%2Fmanifest.json#camera=43`;
     const link = await createLink(page, { viewerUrl });
     try {
-      const redirected = page.waitForResponse(response => response.url() === link.shareUrl);
+      const document = page.waitForResponse(response => response.url() === link.shareUrl);
       await page.goto(link.shareUrl);
-      expect((await redirected).status()).toBe(307);
-      await expect(page).toHaveURL(viewerUrl);
+      expect((await document).status()).toBe(200);
+      await expect(page).toHaveURL(link.shareUrl);
       await expect(page.getByRole('heading', { name: 'Viewer fixture', exact: true })).toBeVisible();
+      expect(await page.locator('#colmapview-hub-launch').textContent()).toBe(JSON.stringify({ version: 1, viewerUrl }));
       await expect(page.locator('iframe, #player')).toHaveCount(0);
+      await page.reload();
+      await expect(page).toHaveURL(link.shareUrl);
+      await expect(page.getByRole('heading', { name: 'Viewer fixture', exact: true })).toBeVisible();
       const metadata = await page.request.get(link.shareUrl);
       expect(metadata.status()).toBe(200);
       expect(await metadata.text()).toContain('<meta name="twitter:card" content="summary_large_image">');
@@ -457,11 +437,12 @@ test('explains a failed deletion and lets the owner try again', async ({ page })
 });
 
 test('opens a private Drive result directly so the viewer can request access', async ({ page }) => {
-  const viewerUrl = `${viewerOrigin}/?url=https://drive.google.com/file/d/private-fixture/view`;
+  const viewerUrl = `${production}/?url=https://drive.google.com/file/d/private-fixture/view`;
   const link = await createLink(page, { access: 'private', viewerUrl });
   try {
     await page.goto(link.shareUrl);
-    await expect(page).toHaveURL(viewerUrl);
+    await expect(page).toHaveURL(link.shareUrl);
+    expect(await page.locator('#colmapview-hub-launch').textContent()).toBe(JSON.stringify({ version: 1, viewerUrl }));
     await expect(page.getByRole('heading', { name: 'Viewer fixture' })).toBeVisible();
     await expect(page.locator('iframe, #player')).toHaveCount(0);
   } finally { await removeLink(page, link); }

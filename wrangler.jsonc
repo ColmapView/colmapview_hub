@@ -85,6 +85,7 @@
   ],
   "vars": {
     "HUB_ORIGIN": "https://colmapview.opsiclear.com",
+    "HUB_VIEWER_ORIGIN": "https://colmapview-opsiclear.pages.dev",
     "HUB_PATH": "/hub",
     "HUB_LISTINGS_ENABLED": "false",
     "HUB_PUBLICATIONS_ENABLED": "true",

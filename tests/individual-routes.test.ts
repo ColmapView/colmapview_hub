@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { base, request, resetState } from './helpers';
+import { base, mockViewerDocument, request, resetState } from './helpers';
 import { HUB_UI_VERSION } from '../src/shared/ui-version';
 import { datasetSharePath } from '../src/shared/dataset-share';
 
@@ -256,12 +256,15 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   expect(target.searchParams.get('url')).toBe('https://huggingface.co/datasets/owner/data/resolve/revision/room/sparse/0');
   expect(keys).toEqual(['index.json', 'ids/00.json', 'packs/0.json', `sources/${source.id}.json`]);
   const short = datasetSharePath(id)!;
+  mockViewerDocument();
   for (const method of ['GET', 'HEAD']) {
     const direct = await request(`/..${short}?url=https://unrelated.example`, { method, headers: { 'Sec-Fetch-Dest': 'document' } });
-    expect(direct.status).toBe(307);
-    expect(direct.headers.get('Location')).toBe(viewerUrl);
+    expect(direct.status).toBe(200);
+    expect(direct.headers.get('Location')).toBeNull();
     expect(direct.headers.get('Vary')).toBe('Sec-Fetch-Dest, Sec-Fetch-Mode');
-    expect(await direct.text()).toBe('');
+    const body = await direct.text();
+    if (method === 'HEAD') expect(body).toBe('');
+    else expect(body).toContain(JSON.stringify({ version: 1, viewerUrl }));
   }
   const social = await request(`/..${short}`);
   expect(social.status).toBe(200);
@@ -272,7 +275,10 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   expect((await request(`/..${datasetSharePath('data-' + 'f'.repeat(24))}`)).status).toBe(404);
   source.access = 'gated';
   expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
-  expect((await request(`/..${short}`, { headers: { 'Sec-Fetch-Dest': 'document' } })).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  const gated = await request(`/..${short}`, { headers: { 'Sec-Fetch-Dest': 'document' } });
+  expect(gated.status).toBe(200);
+  expect(gated.headers.get('Location')).toBeNull();
+  expect(await gated.text()).not.toContain('id="colmapview-hub-launch"');
   source.access = 'public';
   row[5] = 'scene.zip';
   row[7] = { level: 'header_checked', delivery: 'browser_readable', viewerUrl: target.href };
