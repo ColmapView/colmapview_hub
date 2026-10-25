@@ -44,4 +44,7 @@ test('AblazeDowntown opens all 291 matched frames and uses a cached gallery prev
   expect(new Set(bindings.map(binding => binding.url)).size).toBe(6);
   expect(manifest.videoImages['campus_knowledge_center/cam00/000000_a.jpg'].frameIndex).toBe(7);
   expect(manifest.files.points3D).toContain('/campus_knowledge_center/0/points3D.bin');
+  const detail = await (await page.request.get('/hub/datasets/entry/data-49bf5cfb99943b782333146d')).text();
+  expect(detail).toContain('44,515');
+  expect(detail).toContain('1,448 duplicate-image feature-track issues');
 });

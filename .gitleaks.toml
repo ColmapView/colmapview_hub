@@ -28,3 +28,13 @@ description = "Public Hugging Face OAuth client identifier in historical configu
 targetRules = ["generic-api-key"]
 regexTarget = "match"
 regexes = ['''AUTH_HF_CLIENT_ID"\s*:\s*"[A-Za-z0-9_-]{20,128}"''']
+
+# One minified gzip fragment starts at Key rather than selectionKey. This exact
+# public, recomputed selection digest is not an access credential.
+[[allowlists]]
+description = "Exact public catalog selection digest at a fragment boundary"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^data/photo-audit-decisions\.json\.gz$''']
+regexTarget = "match"
+regexes = ['''^Key"\s*:\s*"d1301a8e686cd584a420c2eb6928f47a7a9fd319ba1f18952a7ae536a5a4ed4c"?$''']

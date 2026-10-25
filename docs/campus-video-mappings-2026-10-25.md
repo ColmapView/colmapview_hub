@@ -1,14 +1,21 @@
 # Campus imagery correspondence audit — October 25, 2026
 
 The Hub adds verified video imagery and cached matching-frame previews to eleven
-existing MBZUAI Campus entries. No dataset IDs, short names, native geometry or
-export qualification change. Existing campus_nlp and DanceNet3D evidence stays
+existing MBZUAI Campus entries. Dataset IDs, short names and native geometry stay
+unchanged. Existing campus_nlp and DanceNet3D evidence stays
 unchanged. The viewer already supports these explicit v5 frame bindings.
 
 `/s/AblazeDowntown` is `campus_knowledge_center/0`: all 291 registered views map to
 six pinned recordings. Its 44,515 native sparse points remain unchanged. Eighteen
 first/middle/last samples passed independent native FFmpeg versus browser software
 decoder RGBA comparisons at the native 2704 × 2028 calibration.
+The complete live model also has 1,448 duplicate-image feature-track issues across
+223,853 tracks and 1,893,376 observations. The
+[source-integrity receipt](../data/campus-knowledge-center-integrity-2026-10-25.json)
+binds that result to the exact native files and viewer 0.25.2. The Hub now shows the
+same source warning as the viewer. Photos, cameras and points remain viewable;
+feature matching and COLMAP export remain disabled. Image support does not repair
+or certify those upstream feature relationships.
 
 The complete source review covers all 26 native models at revision
 `4c18714ad982888d453ec88e2dc335f8dce5928d`, including 29,518 registered-name records.
