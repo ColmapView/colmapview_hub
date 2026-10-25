@@ -9,6 +9,8 @@ unchanged. The new camera-dataset v2 wrapper requires **viewer 0.25.0**; native
 COLMAP manifests retain their existing versions.
 Viewer 0.25.1 also distinguishes repeated filenames with the shortest unique
 trainer, seed or time suffix in the picker.
+Distinct files here means pinned source URLs; mirrored content is not
+deduplicated by a complete payload hash.
 
 The checked assets include Gaussian PLY, raw SPLAT and SOG. PLY classification
 uses the viewer's parser; raw SPLAT checks total 32-byte record length and bounded
@@ -78,3 +80,27 @@ viewer checkout. Network work is explicit and separate from ordinary builds.
 manifest schemas and body checksums offline. `--load` performs a separate,
 budgeted real-browser load audit; it must not be represented as completed by a
 schema/header-only pass. New cards still require the normal catalog qualification.
+
+## Release verification
+
+Hub **0.16.0** is deployed as Worker version
+`c476d360-f45d-4735-a782-8900e5acb963`; viewer **0.25.1** is live on the custom
+host, its Pages origin and GitHub Pages `/latest/`. Both release CI runs passed.
+The [production receipt](../data/gaussian-links-release-2026-10-25.json.gz) records:
+
+- All **2,564** selected Gaussian files passed fresh anonymous availability,
+  exact-size and CORS checks, including the reused pinned format receipts.
+- Every one of the **696** changed manifests matched its published checksum,
+  declared sources and open redirect. **713** grouped production checks passed,
+  including short-address viewer shells, CSS headers, legacy upload routes and
+  the retired credential service. The create API was checked with its supported
+  OPTIONS/POST contract; its unsupported GET correctly returns 404.
+- All **3,455** retained/generated manifest schemas passed; the complete local
+  suite passed 99 Node, 187 Python and 267 Worker tests, all 95 Hub browser tests
+  and three manifest-runner tests.
+- A real OcularBell load retained **100 camera poses, zero sparse points and
+  13,059 decoded Gaussians**, with its published manifest bytes and short address
+  verified. The production model was also visually confirmed in Chromium.
+
+These checks do not claim a complete download/render or full photo export of
+every other Gaussian model or every frame in a temporal sequence.
