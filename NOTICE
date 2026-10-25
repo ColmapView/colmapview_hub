@@ -26,3 +26,7 @@ Catalog evidence does not grant rights to upstream datasets. Dataset and preview
 licenses and credits remain as recorded in their individual metadata. Bundled
 fonts and other dependencies retain their respective licenses; see their license
 files and package metadata. The Hub source license does not relicense them.
+
+IBM Plex Sans, Copyright 2019 IBM Corp., is redistributed unchanged from the
+Fontsource package under the SIL Open Font License 1.1. Its full copyright notice
+and license are in public/hub/fonts/OFL.txt (served at /hub/fonts/OFL.txt).

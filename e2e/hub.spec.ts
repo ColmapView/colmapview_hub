@@ -5,8 +5,11 @@ import { preview } from '../tests/fixtures/preview';
 
 const origin = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB_E2E_PORT || '5201'}`;
 
-test('public catalog analytics uses clean URLs without cookies or private-page tracking', async ({ page, context }) => {
-  const production = 'https://colmapview.opsiclear.com';
+const production = 'https://colmapview.opsiclear.com';
+const choiceKey = 'colmapview-hub-analytics-v1';
+const analyticsCatalog = production + '/hub/datasets/?q=private-query#private-fragment';
+
+async function mockCatalogAnalytics(page: Page): Promise<string[]> {
   const tags: string[] = [];
   await page.route(production + '/hub/**', async route => {
     const url = new URL(route.request().url());
@@ -17,8 +20,25 @@ test('public catalog analytics uses clean URLs without cookies or private-page t
     tags.push(route.request().url());
     return route.fulfill({ contentType: 'application/javascript', body: '' });
   });
+  return tags;
+}
+
+test('public catalog analytics waits for opt-in and uses clean URLs without cookies', async ({ page, context }) => {
+  const tags = await mockCatalogAnalytics(page);
+  const fonts: string[] = [];
+  page.on('request', request => { if (request.resourceType() === 'font') fonts.push(request.url()); });
   await page.addInitScript(() => Object.defineProperty(document, 'referrer', { value: 'https://example.org/?url=private-referrer' }));
-  await page.goto(production + '/hub/datasets/?q=private-query#private-fragment');
+  await page.goto(analyticsCatalog);
+  await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeVisible();
+  expect(tags).toHaveLength(0);
+  expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+  await page.getByRole('button', { name: 'Decline', exact: true }).click();
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Analytics settings' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
+  expect(tags).toHaveLength(0);
+  await page.getByRole('button', { name: 'Analytics settings' }).click();
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
   await expect.poll(() => tags.length).toBe(1);
   expect(tags[0]).toBe('https://www.googletagmanager.com/gtag/js?id=G-7K5H83SEMY');
   const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(command => Array.from(command)) ?? []);
@@ -26,10 +46,96 @@ test('public catalog analytics uses clean URLs without cookies or private-page t
   expect(commands).toContainEqual(['config', 'G-7K5H83SEMY', expect.objectContaining({ page_location: production + '/hub/datasets/', page_referrer: '', send_page_view: false })]);
   expect(JSON.stringify(commands)).not.toContain('private-');
   expect((await context.cookies()).filter(cookie => cookie.name.startsWith('_ga'))).toEqual([]);
-  await page.addInitScript(() => Object.defineProperty(navigator, 'doNotTrack', { value: '1' }));
-  await page.goto(production + '/hub/datasets/?q=private-query');
-  await expect(page.locator('#catalog-results')).toBeVisible();
+  expect(fonts.length).toBeGreaterThan(0);
+  expect(fonts.every(url => new URL(url).origin === production)).toBe(true);
+  const license = await page.request.get(origin + '/hub/fonts/OFL.txt');
+  expect(license.status()).toBe(200);
+  expect(await license.text()).toContain('Copyright 2019 IBM Corp.');
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
+test('public catalog analytics withdraws consent across tabs and discards loaded tags', async ({ page, context }) => {
+  const tags = await mockCatalogAnalytics(page);
+  await page.goto(analyticsCatalog);
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
+  await expect.poll(() => tags.length).toBe(1);
+  const other = await context.newPage();
+  const otherTags = await mockCatalogAnalytics(other);
+  await other.goto(analyticsCatalog);
+  await expect.poll(() => otherTags.length).toBe(1);
+  await page.getByRole('button', { name: 'Analytics settings' }).click();
+  const reloads = [page.waitForEvent('domcontentloaded'), other.waitForEvent('domcontentloaded')];
+  await page.getByRole('button', { name: 'Decline', exact: true }).click();
+  await Promise.all(reloads);
+  for (const tab of [page, other]) {
+    await expect(tab.getByRole('button', { name: 'Analytics settings' })).toBeVisible();
+    expect(await tab.evaluate(() => 'dataLayer' in window)).toBe(false);
+    await tab.unrouteAll({ behavior: 'wait' });
+  }
+  expect(tags).toHaveLength(1);
+  expect(otherTags).toHaveLength(1);
+});
+
+for (const signal of ['doNotTrack', 'globalPrivacyControl'] as const) {
+  test(`public catalog analytics respects ${signal} even with saved consent`, async ({ page }) => {
+    const tags = await mockCatalogAnalytics(page);
+    await page.addInitScript(({ key, signal }) => {
+      localStorage.setItem(key, JSON.stringify({ choice: 'allow', updatedAt: Date.now() }));
+      Object.defineProperty(navigator, signal, { value: signal === 'doNotTrack' ? '1' : true });
+    }, { key: choiceKey, signal });
+    await page.goto(analyticsCatalog);
+    await page.getByRole('button', { name: 'Analytics settings' }).click();
+    await expect(page.getByRole('button', { name: 'Allow analytics', exact: true })).toBeDisabled();
+    await expect(page.locator('#analytics-status')).toContainText('privacy signal');
+    expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+    expect(tags).toHaveLength(0);
+    await page.unrouteAll({ behavior: 'wait' });
+  });
+}
+
+for (const [label, saved] of [
+  ['malformed', 'invalid-json'],
+  ['expired', JSON.stringify({ choice: 'allow', updatedAt: Date.now() - 181 * 86400000 })],
+  ['future date', JSON.stringify({ choice: 'allow', updatedAt: Date.now() + 86400000 })],
+]) {
+  test(`public catalog analytics rejects invalid permission: ${label}`, async ({ page }) => {
+    const tags = await mockCatalogAnalytics(page);
+    await page.addInitScript(({ key, saved }) => localStorage.setItem(key, saved), { key: choiceKey, saved });
+    await page.goto(analyticsCatalog);
+    await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeVisible();
+    expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+    expect(tags).toHaveLength(0);
+    await page.unrouteAll({ behavior: 'wait' });
+  });
+}
+
+test('public catalog analytics stays off when permission cannot be stored', async ({ page }) => {
+  const tags = await mockCatalogAnalytics(page);
+  await page.addInitScript(() => {
+    for (const method of ['getItem', 'setItem']) Object.defineProperty(Storage.prototype, method, {
+      value() { throw new DOMException('Storage blocked', 'SecurityError'); },
+    });
+  });
+  await page.goto(analyticsCatalog);
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
+  await expect(page.locator('#analytics-status')).toContainText('Analytics stays off');
   expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+  expect(tags).toHaveLength(0);
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
+test('public catalog analytics disables measurement if saving withdrawal fails', async ({ page }) => {
+  const tags = await mockCatalogAnalytics(page);
+  await page.goto(analyticsCatalog);
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
+  await expect.poll(() => tags.length).toBe(1);
+  await page.evaluate(() => Object.defineProperty(Storage.prototype, 'setItem', {
+    configurable: true, value() { throw new DOMException('Storage full', 'QuotaExceededError'); },
+  }));
+  await page.getByRole('button', { name: 'Analytics settings' }).click();
+  await page.getByRole('button', { name: 'Decline', exact: true }).click();
+  await expect(page.locator('#analytics-status')).toContainText('Clear this site’s data');
+  expect(await page.evaluate(() => (window as Window & { 'ga-disable-G-7K5H83SEMY'?: boolean })['ga-disable-G-7K5H83SEMY'])).toBe(true);
   expect(tags).toHaveLength(1);
   await page.unrouteAll({ behavior: 'wait' });
 });

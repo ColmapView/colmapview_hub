@@ -1,7 +1,14 @@
 # Public dataset catalog
 
 The hosted browse and scene metadata pages use Google Analytics property
-`G-7K5H83SEMY`, also used by the older viewer releases. Measurement runs with
+`G-7K5H83SEMY`, also used by the older viewer releases, only after explicit opt-in.
+Before opt-in, no Google tag or measurement request is loaded. Allow and Decline
+have equal prominence; the footer's Analytics settings control reopens the choice.
+The browser stores only the choice and its time in `colmapview-hub-analytics-v1`
+for 180 days. Missing, expired, malformed or unavailable storage grants no permission.
+Withdrawal disables measurement and reloads to discard the loaded Google tag;
+storage changes in another tab and returning to an open tab recheck permission.
+Measurement runs with
 analytics/ad storage denied, advertising features off and no account ID. The
 configured page location contains only the public catalog path; query strings,
 fragments and referrers are excluded. Do Not Track and Global Privacy Control

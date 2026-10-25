@@ -44,14 +44,21 @@ const header = (path: string) => [
   '</header>',
 ].join('');
 
-const footer = [
+const footer = (publicCatalog: boolean) => [
   '<footer class="site-footer">',
   '<p>Built with ColmapView by OpsiClear</p>',
   '<nav class="footer-links" aria-label="Footer navigation">',
   policyLinks,
   '<a href="https://github.com/ColmapView/colmapview_hub">Source</a>',
   '<a href="mailto:info@opsiclear.com">Contact</a>',
+  publicCatalog ? '<button type="button" id="analytics-settings" aria-controls="analytics-choice" aria-expanded="false" hidden>Analytics settings</button>' : '',
   '</nav></footer>',
+  publicCatalog ? '<section class="analytics-choice" id="analytics-choice" aria-label="Optional analytics" hidden>'
+    + '<p>Allow cookieless Google Analytics to measure Hub visits? Google receives connection and browser information. '
+    + '<a href="https://colmapview.opsiclear.com/privacy.html#hub-analytics">Privacy</a></p>'
+    + '<div class="actions"><button type="button" class="button" id="analytics-allow">Allow analytics</button>'
+    + '<button type="button" class="button" id="analytics-decline">Decline</button></div>'
+    + '<p class="note" id="analytics-status" role="status"></p></section>' : '',
 ].join('');
 
 /** Every Hub page: ColmapView's public-page frame, stylesheets and icon. */
@@ -72,7 +79,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
     '<a class="skip-link" href="#main">Skip to content</a>',
     header(location.path),
     `<main id="main" tabindex="-1"><div class="hub-content">${body}</div></main>`,
-    footer,
+    footer(publicCatalog),
     '</body></html>',
   ].join('');
 }

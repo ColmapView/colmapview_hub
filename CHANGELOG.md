@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.12.5 — 2026-10-24
+
+- Require explicit opt-in before loading Google Analytics or sending any measurement. Provide equally prominent Allow and Decline controls, footer settings for withdrawal, a 180-day browser-only choice and cross-tab updates. Invalid or unavailable storage and browser privacy signals grant no permission.
+- Keep opted-in measurement cookieless, advertising off, and query strings, fragments and referrers excluded. Withdrawal reloads the page to remove the running tag.
+- Record the bundled IBM Plex Sans copyright and OFL location in NOTICE.
+
 ## 0.12.4 — 2026-10-24
 
 - Measure visits to public catalog browse and scene metadata pages with the existing Google Analytics property. Keep analytics/ad storage denied, advertising features off and measured URLs free of query strings, fragments and referrers; honor Do Not Track and Global Privacy Control. Share/manage, API and local preview pages do not initialize analytics.

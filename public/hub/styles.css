@@ -238,3 +238,13 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
 .shared-datasets > h2 { font-size: 1rem; margin-bottom: .5rem; }
 .shared-datasets .dataset-grid { margin-block: var(--sp-2); }
 .shared-dataset-preview { width: 100%; height: auto; aspect-ratio: 600 / 315; object-fit: cover; border-radius: .35rem; }
+.footer-links button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; border-radius: 4px; padding: var(--sp-1) var(--sp-3); min-height: 32px; }
+.footer-links button:hover { background: var(--bg-hover); }
+.analytics-choice { position: fixed; z-index: 30; bottom: var(--sp-3); right: var(--sp-3); width: min(460px, calc(100% - 24px)); padding: var(--sp-4); border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-secondary); box-shadow: 0 4px 24px #0004; font-size: 13px; }
+.analytics-choice p { margin: 0; }
+.analytics-choice .actions { margin-block: var(--sp-3) 0; }
+.analytics-choice .note:empty { display: none; }
+.analytics-choice .note:not(:empty) { margin-top: var(--sp-2); }
+@media (pointer: coarse) {
+  .footer-links button { min-height: 44px; }
+}
