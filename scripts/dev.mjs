@@ -1,7 +1,8 @@
 import { copyFileSync, existsSync, readFileSync } from 'node:fs';
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { createServer as createHttpServer } from 'node:http';
+import { seedLocalHub } from './dev-seed.mjs';
 
 const test = process.argv.includes('--test');
 const port = process.env.HUB_DEV_PORT || '5201';
@@ -21,8 +22,7 @@ for (const host of ['127.0.0.1', '::1']) {
 const state = test ? `.tmp/browser-state-${Date.now()}` : '.wrangler/state';
 const cli = 'node_modules/wrangler/bin/wrangler.js';
 if (!existsSync('.dev.vars')) copyFileSync('.dev.vars.example', '.dev.vars');
-const seed = spawnSync(process.execPath, [cli, 'r2', 'object', 'put', 'colmapview-hub/internal/wordlists-v1.json', '--local', '--persist-to', state, '--file', 'tests/fixtures/dev-wordlists.json'], { stdio: 'inherit' });
-if (seed.status !== 0) process.exit(seed.status ?? 1);
+await seedLocalHub(state);
 // Browser tests use an explicit local app shell, never the network or a deployed viewer.
 let viewerOrigin = process.env.HUB_VIEWER_ORIGIN;
 let viewerFixture;

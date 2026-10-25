@@ -13,6 +13,7 @@ import { isPhotoRoutingEvidence, photoRoutingUrlMatches } from './photo-routing'
 import type { PhotoRoutingEvidence } from './photo-routing';
 import { isArchiveRoutingEvidence, type ArchiveRoutingEvidence } from './archive-routing';
 import type { FeedSelection } from './discovery';
+import { CATALOG_SHARE_NAME } from './dataset-share';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -50,7 +51,7 @@ export type IndividualProof = CatalogVerification & { statusLabel: string; viewe
     photoCount: number; export: 'colmap_images' | 'colmap_model'; exportSha256: string } };
 export type IndividualRecord = [id: string, source: number, kind: string, path: string, format: string, archive: string | null,
   files: Record<string, string> | null, proof: IndividualProof | null,
-  inventory?: { listedAssets: number; linkedAssets: number; linksTruncated: boolean }];
+  inventory?: { listedAssets: number; linkedAssets: number; linksTruncated: boolean } | null, shareName?: string];
 export interface IndividualPage { entries: CatalogSummary[]; total: number; page: number; pages: number; generation: string; feed?: FeedSelection }
 export interface IndividualSelection { id: string; label: string; title: string; count: number; listingComplete: boolean; metadataUrl: string }
 export const matchesIndividualDataset = (source: IndividualSource, value: string) => !value || source.id === value
@@ -150,6 +151,7 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
   const statusLabel = gated ? 'Access required' : proof?.statusLabel || (archive ? 'Extraction required; load unverified' : 'Files listed; load not checked');
   const title = proof?.sceneTitle || (['colmap', 'cameras'].includes(kind) ? path.replace(/(?:^|\/)(?:(?:colmap\/)?sparse(?:\/\d+)?|known_pose_model|triangulated_model|triangulated_text)$/i, '') || source.label : path || source.label);
   return { id, title: title || 'Root reconstruction', provider: source.provider,
+    ...(row[9] && CATALOG_SHARE_NAME.test(row[9]) ? { shareName: row[9] } : {}),
     ...(source.sourceUrl ? { sourceUrl: source.sourceUrl } : {}),
     license: source.license, licenseCategory: licenseCategory(source), access: source.access, statusLabel, formats: [format], testOrFixture: false,
     dataset: { id: source.id, label: source.label, title: source.title }, itemKind: kindLabel,

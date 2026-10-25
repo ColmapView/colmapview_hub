@@ -14,3 +14,10 @@ it('rejects malformed, non-canonical and unrelated IDs without accepting URL syn
   for (const id of ['data-0', 'data-' + 'F'.repeat(24), 'hf-sample-0123456789ab', 'https://example.org', '../private']) expect(datasetSharePath(id)).toBeUndefined();
   for (const code of ['', 'A'.repeat(15), 'A'.repeat(17), '/'.repeat(16), 'A'.repeat(15) + '=', 'A'.repeat(15) + '%']) expect(datasetShareId(code)).toBeUndefined();
 });
+
+it('prefers a reserved adjective+noun name and safely falls back for older metadata', () => {
+  const id = 'data-' + '0'.repeat(24);
+  expect(datasetSharePath(id, 'HappyTree')).toBe('/s/HappyTree');
+  expect(datasetSharePath(id, '../private')).toBe('/s/d/AAAAAAAAAAAAAAAA');
+  expect(datasetSharePath('unrelated', 'HappyTree')).toBeUndefined();
+});

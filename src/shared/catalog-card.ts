@@ -15,7 +15,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
   const metadataId = `metadata-${entry.id}`;
   const title = catalogCardTitle(entry);
   const preview = sceneThumbnailHtml(entry, true);
-  const share = datasetSharePath(entry.id);
+  const share = datasetSharePath(entry.id, entry.shareName);
   const facts = [
     ['Dataset', entry.dataset?.title || entry.title], ['Type', entry.itemKind || entry.formats.join(' · ') || 'Collection'],
     ['Source', providerLabel(entry.provider)], ['License', entry.license], ['License category', LICENSE_CATEGORY_LABELS[category]],

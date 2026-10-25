@@ -10,10 +10,13 @@ extra filters close with Escape or an outside click; reading catalog information
 pauses automatic appends. Return anchors account for both bars. Policy links and
 Analytics settings remain in the ordinary page footer.
 
-Every curated scene has a short URL at `/s/d/<code>`. The 16-character URL-safe
-code reversibly encodes the complete 12-byte `data-…` ID, so existing scene IDs
-have stable, collision-free aliases without stored share records. Cards use this
-URL; Copy link is also available in their information panels and full metadata.
+Every curated scene has a readable `/s/AdjectiveNoun` URL. Names are independently
+random and assigned once in `data/catalog-share-names.json`. The operator allocator
+conditionally reserves each `links/<name>.json` key against upload collisions;
+these small records contain only a public dataset ID and creation time. They have
+no upload ownership, management key, provider credentials or duplicate image data.
+Cards, full metadata and Copy link use the reserved name. The optional tenth
+field in built scene rows carries it to the API and asynchronous card renderer.
 Shared on Hub submissions retain their existing `/s/<id>` addresses and copy
 controls. Clipboard failures reveal a selectable link.
 
@@ -25,7 +28,10 @@ to their metadata. Non-navigation requests receive social metadata without
 analytics, with `Vary: Sec-Fetch-Dest, Sec-Fetch-Mode`. Removed entries return 404.
 The short namespace uses the normal lookup cooldown; cross-site embeds and
 prefetches are rejected before reading assets or spending misses. Its IDs are
-case-sensitive. It creates no R2 records and accepts no submitted target URL.
+case-sensitive for legacy codes. Readable names follow the upload namespace's
+case handling. Old `/s/d/<code>` URLs still resolve the complete 12-byte scene ID
+from built assets, without a redirect or a new record. No public API can create,
+overwrite or manage curated name reservations, and they accept no submitted URL.
 Existing `/hub/datasets/open/<id>` launch and API contracts stay compatible.
 
 The Worker fetches only the fixed operator-owned Pages app shell, with an 8-second

@@ -5,7 +5,7 @@ import { MAX_MISSES, REFUSAL_FLOOR_MS, VERIFIED_BOT_MAX_MISSES } from './guard';
 import { lookupTarget, missKey } from './ids';
 import { blockedPage, cardPage, errorPage, galleryKey, galleryPage, hubLocation, managementPage, notFoundPage, unavailablePage } from './pages';
 import type { HubLocation } from './pages';
-import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
+import { listPublicRecords, metadataFingerprint, readShareRecord, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
 import { individualRoute } from './individual-routes';
 import { individualIndex, readIndividual } from './individual-data';
@@ -180,22 +180,35 @@ async function lookup(request: Request, env: Env, location: HubLocation, url: UR
   if (crossSiteSubresource(request)) return failure(location, false, 404);
   const check = await lookupGuard(request, env, location, false, missLimit(request, env));
   let target: { key: string; redirect: boolean } | null;
-  let record: CardRecord | null;
+  let record: CardRecord | null = null;
+  let dataset: CatalogEntry | null = null;
   try {
     target = await lookupTarget(id, () => readWordlists(env.LINKS));
-    record = target ? await readCard(env.LINKS, target.key) : null;
+    const stored = target ? await readShareRecord(env.LINKS, target.key) : null;
+    if (stored && 'datasetId' in stored) {
+      if (view === 'card') {
+        const entry = await readIndividual(env.CATALOG_ASSETS, location.origin,
+          await individualIndex(env.CATALOG_ASSETS, location.origin), stored.datasetId);
+        dataset = entry?.shareName === stored.id ? entry : null;
+      }
+    } else record = stored;
   } catch (error) {
     const refusal = await check(null);
     if (refusal) return refusal;
     throw error;
   }
-  const refusal = await check(record ? null : await hash(missKey(id)));
+  const refusal = await check(record || dataset ? null : await hash(missKey(id)));
   if (refusal) return refusal;
-  if (!record) return failure(location, false, 404);
+  if (!record && !dataset) return failure(location, false, 404);
   // Open browser navigations directly; non-navigation fetches still provide social preview metadata.
   // This runs after the same lookup guard as previews and management pages.
   const navigation = request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate';
   const vary = { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' };
+  if (dataset) {
+    if (!navigation && target?.redirect) return redirect(`${location.origin}${SHARE_PATH}/${target.key}${url.search}`, 308);
+    return datasetResponse(request, env, location, dataset);
+  }
+  if (!record) return failure(location, false, 404);
   if (view === 'card' && navigation) return viewerDocument(env, location, record.viewerUrl);
   const linkBase = url.pathname.startsWith(`${SHARE_PATH}/`) ? `${location.origin}${SHARE_PATH}` : location.base;
   if (target?.redirect) return redirect(`${linkBase}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${url.search}`, 308);
@@ -254,6 +267,14 @@ function decodeId(value: string): string {
 }
 
 /** Public catalog aliases use bounded built assets, with the same lookup cooldown as share links. */
+async function datasetResponse(request: Request, env: Env, location: HubLocation, entry: CatalogEntry): Promise<Response> {
+  if (request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate') {
+    const target = entry.openUrl && (entry.viewerUrl || entry.candidateViewerUrl);
+    if (target && isCatalogOpenUrl(target)) return viewerDocument(env, location, target);
+  }
+  return html(catalogEntryPage(entry, false), 200, { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' });
+}
+
 async function lookupDataset(request: Request, env: Env, location: HubLocation, code: string, validPath: boolean): Promise<Response> {
   const check = await lookupGuard(request, env, location, false, missLimit(request, env));
   const id = validPath ? datasetShareId(code) : undefined;
@@ -268,12 +289,7 @@ async function lookupDataset(request: Request, env: Env, location: HubLocation, 
   const refusal = await check(entry ? null : await hash(`catalog-dataset:${code}`));
   if (refusal) return refusal;
   if (!entry) return failure(location, false, 404);
-  const headers = { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' };
-  if (request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate') {
-    const target = entry.openUrl && (entry.viewerUrl || entry.candidateViewerUrl);
-    if (target && isCatalogOpenUrl(target)) return viewerDocument(env, location, target);
-  }
-  return html(catalogEntryPage(entry, false), 200, headers);
+  return datasetResponse(request, env, location, entry);
 }
 
 async function route(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {

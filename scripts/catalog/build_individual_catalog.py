@@ -250,6 +250,15 @@ def build(root=Path('.')):
     catalog = read(root / 'data/catalog.json')
     registry_bytes = (root / 'data/individual-datasets.json').read_bytes()
     registry = json.loads(registry_bytes)
+    names_path = root / 'data/catalog-share-names.json'
+    names_bytes = names_path.read_bytes() if names_path.exists() else b''
+    names_document = json.loads(names_bytes) if names_bytes else {'schemaVersion': 1, 'names': {}}
+    share_names = names_document.get('names', {})
+    if (names_document.get('schemaVersion') != 1 or not isinstance(share_names, dict)
+            or any(not re.fullmatch(r'data-[a-f0-9]{24}', key) or not isinstance(value, str)
+            or not re.fullmatch(r'[A-Z][a-z]{2,13}[A-Z][a-z]{2,13}', value) for key, value in share_names.items())
+            or len(set(value.lower() for value in share_names.values())) != len(share_names)):
+        raise ValueError('Invalid or duplicated catalog share names')
     audit = {row['sourceId']: row for row in read(root / 'data/dataset-audit.json')['results']}
     policy_bytes = (root / 'data/scene-exclusions.json').read_bytes()
     scene_exclusions = reviewed_scene_exclusions(catalog, json.loads(policy_bytes))
@@ -343,7 +352,7 @@ def build(root=Path('.')):
     matched_native = set()
     published_reviews = []
     excluded = {row['sourceId'] for row in [*catalog['entries'], *audit.values()] if is_access_restricted(row)}
-    generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes
+    generation = hashlib.sha256((root / 'data/catalog.json').read_bytes() + registry_bytes + names_bytes
                                 + (root / 'data/dataset-audit.json').read_bytes() + policy_bytes + verified_bytes + native_bytes + photo_bytes + content_bytes + manifest_bytes + routing_bytes + Path(__file__).read_bytes()
                                 + Path(__file__).with_name('scene_qualification.py').read_bytes()
                                 + Path(__file__).with_name('scene_photos.py').read_bytes()
@@ -584,6 +593,10 @@ def build(root=Path('.')):
             if kind != 'scene' and (kind, path, archive) in scene_details:
                 item.append({**scene_details[(kind, path, archive)], 'listedAssets': len(set(files.values())),
                              'linkedAssets': len(files), 'linksTruncated': False} if group else scene_details[(kind, path, archive)])
+            if item_id in share_names:
+                while len(item) < 9:
+                    item.append(None)
+                item.append(share_names[item_id])
             pack.append(item)
             selected_kind = ('splat-scene' if proof.get('sceneManifest', {}).get('frameGeometry', {}).get('role') == 'splat'
                              else 'colmap' if kind == 'cameras' and proof.get('sceneManifest', {}).get('counts', {}).get('points', 0) > 0 else kind)

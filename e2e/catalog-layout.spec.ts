@@ -54,7 +54,7 @@ test('every rendered and asynchronously replaced scene has a copyable short link
     const card = page.locator('.dataset-card').first();
     const id = await card.getAttribute('data-entry-id');
     const path = (await card.locator('.dataset-open').getAttribute('href'))!;
-    expect(path).toMatch(/^\/s\/d\/[A-Za-z0-9_-]{16}$/);
+    expect(path).toMatch(/^\/s\/[A-Z][a-z]{2,13}[A-Z][a-z]{2,13}$/);
     await card.locator('.dataset-info').click();
     const panel = card.locator('.dataset-metadata');
     await panel.getByRole('button', { name: 'Copy link', exact: true }).click();

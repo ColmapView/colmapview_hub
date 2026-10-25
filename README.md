@@ -6,7 +6,7 @@ The companion service for [ColmapView](https://github.com/ColmapView/Colmapview.
 
 Share links use `/s/RoughhewnBiplane` and serve the viewer at that address, including saved view settings. The address stays short through loading and reloads. Existing `/hub/<id>` links continue to work. Non-navigation fetches retain social preview metadata; image previews and delete links keep their own routes. Private datasets still require access in the viewer. The creation API adds `shareUrl` for updated viewers and keeps its legacy `url` and `managementPath` fields compatible with older viewers.
 
-Each curated scene also has a compact `/s/d/<code>` URL, used by its card and Copy link action. It is derived from the complete public scene ID and resolved from the current built catalog, without creating a stored share record. See the [catalog guide](docs/catalog.md) for routing and interface details.
+Every curated scene uses the same `/s/AdjectiveNoun` naming style in its card, metadata and Copy link action. Names are randomly assigned once and reserved against upload collisions. Old `/s/d/<code>` links keep working. See the [catalog guide](docs/catalog.md) for routing and interface details.
 
 ## Development
 

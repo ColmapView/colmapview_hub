@@ -13,6 +13,10 @@ Open `http://localhost:5201/hub/`. `scripts/dev.mjs` seeds public fixture word l
 
 The local server explicitly disables remote bindings and uses an ephemeral inspector port, so separate worktrees can run without sharing a debugger port. Set `HUB_DEV_PORT` or `HUB_E2E_PORT` to give their HTTP servers separate ports too.
 
+The launcher seeds committed public name reservations into local R2 alongside
+the public test word lists. It uses Wrangler's local binding proxy with remote
+bindings explicitly disabled; it does not need production dictionaries or access.
+
 The viewer authenticates directly with providers and signs bucket requests in the browser. The Worker stores no user credentials and needs no provider secrets. Legacy `/auth/*` routes are inert compatibility responses; see [credential-service retirement](account-sessions.md). Ordinary catalog development needs only the public local Hub test key, not Google or HF credentials.
 
 To connect a local viewer, run it with `VITE_HUB_BASE_URL=http://localhost:5201/hub`. A local Hub accepts loopback origins and viewer URLs.

@@ -2,6 +2,10 @@ import { ID_PATTERN, isListedId, MAX_RECORD_BYTES, MAX_WORDLIST_BYTES } from '..
 import type { AssetSummary, CardRecord, LicenseInfo, ListedLink, LinkMetadata, Ownership } from '../shared/model';
 import type { Wordlists } from './crypto';
 import { isHttpUrl, isObject, parseAssetSummary } from './validation';
+import { CATALOG_SHARE_NAME } from '../shared/dataset-share';
+
+/** Operator-reserved public names share the upload namespace without taking upload ownership. */
+export interface CatalogAliasRecord { schemaVersion: 1; kind: 'catalog'; id: string; datasetId: string; createdAt: string }
 
 export const WORDLIST_KEY = 'internal/wordlists-v1.json';
 export const recordKey = (id: string) => `${isListedId(id) ? 'listed' : 'links'}/${id}.json`;
@@ -61,8 +65,14 @@ export function toCardRecord(value: unknown, id: string): CardRecord {
     access: value.access === 'private' ? 'private' : 'public' };
 }
 
-export async function readCard(bucket: R2Bucket, id: string): Promise<CardRecord | null> {
+export async function readShareRecord(bucket: R2Bucket, id: string): Promise<CardRecord | CatalogAliasRecord | null> {
   const value = await readStoredJson(bucket, id);
+  if (isObject(value) && value.kind === 'catalog') {
+    if (value.schemaVersion !== 1 || value.id !== id || !CATALOG_SHARE_NAME.test(id)
+      || typeof value.datasetId !== 'string' || !/^data-[a-f0-9]{24}$/.test(value.datasetId)
+      || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt))) throw new Error('Invalid catalog alias');
+    return { schemaVersion: 1, kind: 'catalog', id, datasetId: value.datasetId, createdAt: value.createdAt };
+  }
   return value === undefined ? null : toCardRecord(value, id);
 }
 

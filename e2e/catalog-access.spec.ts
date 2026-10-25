@@ -180,7 +180,7 @@ for (const width of [1280, 390]) test(`Back restores the visible scene and refre
     });
     observer.observe(document, { childList: true, subtree: true });
   });
-  await page.route('**/s/d/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Viewer navigation fixture</h1>' }));
+  await page.route('**/s/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Viewer navigation fixture</h1>' }));
   await page.goto('/hub/datasets/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
@@ -453,7 +453,7 @@ test('complete-export evidence stays scoped while other model layouts remain loa
   expect(published.generation).toBe(index.generation);
   expect(sortScenes(published.scenes)).toEqual(sortScenes(policy.scenes));
   const response = await page.request.get('/hub/datasets/api/entries?status=Cameras%20%2B%20photos%20verified');
-  const data = await response.json() as { total: number; entries: { id: string; statusLabel: string; delivery: string; hasViewer: boolean }[] };
+  const data = await response.json() as { total: number; entries: { id: string; shareName: string; statusLabel: string; delivery: string; hasViewer: boolean }[] };
   expect(index.total).toBeGreaterThan(policy.scenes.length);
   const completePhotoExports = policy.scenes.filter(scene => scene.export !== 'colmap_model');
   expect(completePhotoExports).toHaveLength(4);
@@ -470,7 +470,8 @@ test('complete-export evidence stays scoped while other model layouts remain loa
     expect(open.status()).toBe(302);
     expect(open.headers().location).toBe(scene.viewerUrl);
     await page.goto(`/hub/datasets/entry/${sceneId}`);
-    await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveAttribute('href', scene.viewerUrl);
+    const name = [...data.entries, ...reviews.entries].find(row => row.id === sceneId)!.shareName;
+    await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveAttribute('href', `/s/${name}`);
     await expect(page.locator('main')).toContainText('Verified original photographs');
     await expect(page.locator('main')).toContainText(`${scene.counts.images} posed original photographs`);
     if (reviewedIds.has(sceneId)) {

@@ -1,4 +1,5 @@
 import { licenseCategory } from './license-categories';
+import { CATALOG_SHARE_NAME } from './dataset-share';
 import type { LicenseCategory } from './license-categories';
 import { isPhotoStatus } from './scene-photos';
 import type { PhotoStatus, ScenePhotoAudit } from './scene-photos';
@@ -27,6 +28,7 @@ export interface CatalogVerification {
 }
 export interface CatalogEntry {
   id: string;
+  shareName?: string;
   sourceId: string;
   provider: 'huggingface' | 'public';
   title: string;
@@ -68,7 +70,7 @@ export interface CatalogSnapshot {
   sceneSummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
   photoAudit?: { checkedAt: string; scenes: number; photos: Partial<Record<PhotoStatus, number>> };
 }
-export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail'> & { sourceUrl?: string; delivery?: string; hasViewer?: boolean; openUrl?: string };
+export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail' | 'shareName'> & { sourceUrl?: string; delivery?: string; hasViewer?: boolean; openUrl?: string };
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
 export function isCatalogOpenUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
@@ -104,6 +106,7 @@ export function catalogSummary(entry: CatalogEntry): CatalogSummary {
     && !['gated', 'access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error'].includes(entry.verification?.delivery || '')
     && !['conversion_needed', 'no_native_assets', 'unavailable'].includes(entry.verification?.level || '');
   return { id, title, sourceUrl: entry.sourceUrl, provider, license, licenseCategory: licenseCategory(entry), access, statusLabel, formats, description, testOrFixture,
+    ...(entry.shareName ? { shareName: entry.shareName } : {}),
     ...(canOpen && isCatalogOpenUrl(entry.openUrl || entry.viewerUrl) ? { openUrl: entry.openUrl || entry.viewerUrl } : {}),
     dataset: dataset || { id, label: datasetLabel(entry), title }, ...(itemKind ? { itemKind } : {}),
     ...(entry.photoStatus ? { photoStatus: entry.photoStatus } : {}),
@@ -124,6 +127,7 @@ export function isCatalogSummary(value: unknown): value is CatalogSummary {
     && ['public', 'gated', 'terms', 'unknown'].includes(String(item.access))
     && (item.delivery === undefined || typeof item.delivery === 'string') && (item.hasViewer === undefined || typeof item.hasViewer === 'boolean')
     && (item.openUrl === undefined || isCatalogOpenUrl(item.openUrl))
+    && (item.shareName === undefined || typeof item.shareName === 'string' && CATALOG_SHARE_NAME.test(item.shareName))
     && (item.sourceUrl === undefined || isCatalogSourceUrl(item.sourceUrl))
     && (item.itemKind === undefined || typeof item.itemKind === 'string')
     && (item.photoStatus === undefined || isPhotoStatus(item.photoStatus))

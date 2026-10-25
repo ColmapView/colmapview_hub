@@ -25,11 +25,12 @@ function social(url: string, title: string, description: string): string {
 }
 
 export function catalogEntryPage(entry: CatalogEntry, analytics = true): string {
-  const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(href)}"${href === entry.viewerUrl || href === entry.candidateViewerUrl ? ' data-analytics-open' : ''} target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
+  const share = entry.shareName ? datasetSharePath(entry.id, entry.shareName) : undefined;
+  const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(href)}"${primary ? ' data-analytics-open' : ''} target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
   const gated = entry.access === 'gated' || entry.verification?.delivery === 'gated';
   const blocked = gated || Boolean(entry.verification?.opening);
-  const viewerUrl = !blocked ? entry.viewerUrl : undefined;
-  const candidateViewerUrl = !blocked ? entry.candidateViewerUrl : undefined;
+  const viewerUrl = !blocked && entry.viewerUrl ? share || entry.viewerUrl : undefined;
+  const candidateViewerUrl = !blocked && entry.candidateViewerUrl ? share || entry.candidateViewerUrl : undefined;
   const dataLabel = entry.verification?.opening?.status === 'extraction_required' ? 'Download archive' : 'Dataset URL';
   const actions = action(gated ? 'Get source access' : entry.sourceUrl === entry.dataUrl ? dataLabel : 'Source', entry.sourceUrl)
     + (!gated && entry.dataUrl && entry.dataUrl !== entry.sourceUrl ? action(dataLabel, entry.dataUrl) : '')
@@ -50,7 +51,7 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true): string 
     + '<div class="dataset-overview-content">'
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
     + sceneContentsHtml(entry.availableData) + sceneStatisticsHtml(entry.sceneStats)
-    + `<div class="actions">${actions}${individualAction}${datasetSharePath(entry.id) ? `<button type="button" class="button" data-copy-dataset-link="${datasetSharePath(entry.id)}">Copy link</button><span class="note" data-copy-status role="status"></span>` : ''}</div>`
+    + `<div class="actions">${actions}${individualAction}${datasetSharePath(entry.id, entry.shareName) ? `<button type="button" class="button" data-copy-dataset-link="${datasetSharePath(entry.id, entry.shareName)}">Copy link</button><span class="note" data-copy-status role="status"></span>` : ''}</div>`
     + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(catalogSummary(entry)))}">${escape(entry.dataset.label)}</a>.</p>`
       : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s named scenes</a>.</p>`)
     + '</div></div>'
@@ -75,7 +76,7 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true): string 
       { label: 'Scan date', value: entry.checkedAt }, ...entry.facts]) + `<p class="note">${escape(LICENSE_CATEGORY_NOTE)}</p></section>`
     + '<section class="dataset-section"><h2>Loading evidence</h2><p class="note">Checks cover the recorded files and samples. Inclusion does not certify every scene or image. Source access and license terms apply.</p>'
     + (audits || '<p>No additional dataset loading audit is recorded for this entry.</p>') + '</section>',
-    social(`${location.origin}${datasetPath(entry)}`, entry.title, entry.description), analytics);
+    social(`${location.origin}${!analytics && share ? share : datasetPath(entry)}`, entry.title, entry.description), analytics);
 }
 
 export function catalogAuditPage(snapshot: CatalogSnapshot): string {

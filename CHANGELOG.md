@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.15.0 — 2026-10-25
+
+- Give every curated dataset a stable adjective-and-noun address in the same `/s/Name` format as upload shares. Reserve names conditionally in R2 to prevent collisions, retain the public ID-to-name registry and keep old dataset-code links working without redirects.
+- Use readable names in cards, asynchronous results, metadata, social links and Copy link. Preserve lookup cooldowns, browser-only authentication and upload ownership boundaries. Add a resumable operator allocator and local catalog-name fixtures.
+
 ## 0.14.0 — 2026-10-25
 
 - Serve the native viewer at catalog and uploaded share addresses, keeping short URLs through loads and reloads. Use only the fixed deployed app shell, pass inert startup data and preserve viewer browser policies without forwarding visitor credentials.

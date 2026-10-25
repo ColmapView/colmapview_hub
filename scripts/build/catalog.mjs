@@ -6,12 +6,14 @@ import { publicationSnapshot } from '../catalog/catalog-publication.mjs';
 import { applyIndividualListings } from '../catalog/individual-listings.mjs';
 import { applyLicenseCategories } from '../catalog/license-categories.mjs';
 import { runPython } from '../lib/python.mjs';
+import { validateNames } from '../catalog/share-names.mjs';
 
 runPython(['-m', 'scripts.catalog.build_individual_catalog']);
 runPython(['-m', 'scripts.catalog.component_audit']);
 
 const json = async path => JSON.parse(await readFile(path, 'utf8'));
 const sceneIndex = await json('public/hub/datasets/individual/index.json');
+const shareNames = validateNames(await json('data/catalog-share-names.json'));
 if (sceneIndex.unit !== 'named_scene' || Object.keys(sceneIndex.kinds).some(kind => !['COLMAP reconstruction', 'Cameras and poses', 'Camera dataset', 'Gaussian scene', 'Public scene'].includes(kind))) {
   throw new Error('Public browse entries must be named scene datasets. Refusing to publish a file inventory.');
 }
@@ -51,6 +53,7 @@ for (let pack = 0; pack < Math.ceil(sceneIndex.total / sceneIndex.packSize); pac
   const rows = await json(`public/hub/datasets/individual/packs/${pack}.json`);
   for (const row of rows) {
     const source = sceneIndex.sources[row[1]];
+    if (!shareNames[row[0]] || row[9] !== shareNames[row[0]]) throw new Error(`Missing catalog name for ${row[0]}. Run npm run catalog:names -- --apply, then rebuild.`);
     if (!source || !canOpenIndividual(row, source)) throw new Error(`Published scene fails the Hub loading contract: ${row[0]}`);
     const ordinal = checkedScenes++;
     if (!/^data-[a-f0-9]{24}$/.test(row[0]) || seen.has(row[0]) || ordinal !== source.start + sourceCounts[row[1]]++) throw new Error('Scene identities or source ranges disagree');
