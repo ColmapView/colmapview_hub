@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.12.7 — 2026-10-24
+
+- Welcome visitors with a clear explanation of how optional analytics helps improve ColmapView, what Google receives, and how to change the choice. Use equally prominent Yes, allow analytics and No thanks buttons, accessible descriptions, and a panel that fits short screens. Keep settings reachable while scrolling; closing or pressing Escape changes no consent.
+
 ## 0.12.6 — 2026-10-24
 
 - Report a failed analytics-choice write accurately when a previous allowance is already active. Failed withdrawal still stops measurement and explains how to clear the saved allowance. Refresh the client cache version for returning browsers.

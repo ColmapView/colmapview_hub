@@ -3,8 +3,10 @@
 The hosted browse and scene metadata pages use Google Analytics web stream
 `G-7K5H83SEMY`, used historically by viewer releases through v0.15.4.
 Measurement starts only after explicit opt-in.
-Before opt-in, no Google tag or measurement request is loaded. Allow and Decline
-have equal prominence; the footer's Analytics settings control reopens the choice.
+Before opt-in, no Google tag or measurement request is loaded. “Yes, allow analytics”
+and “No thanks” have equal prominence. The footer's Analytics settings control
+stays in the bottom corner while scrolling and reopens the choice. Closing the
+panel or pressing Escape does not grant consent or change a saved choice.
 The browser stores only the choice and its time in `colmapview-hub-analytics-v1`
 for 180 days. Missing, expired, malformed or unavailable storage grants no permission.
 Withdrawal disables measurement and reloads to discard the loaded Google tag;
@@ -19,6 +21,18 @@ Keep Enhanced measurement disabled in this stream's Google Analytics settings:
 its automatic search/link events can collect query values or destination URLs
 independently of the configured page location. The Hub sends its page view
 explicitly; validate the real collection request when changing tag settings.
+
+The October 24, 2026 production check also confirmed Google signals and
+user-provided collection off, existing processing terms accepted, and email
+redaction on. URL query redaction is enabled for `url`, `q`, `state`, `code`,
+`access_token`, `token`, `key`, `config`, `userid`, `authuser`, `resourcekey`,
+`returnto`, `redirect_uri`, `id_token` and `refresh_token`. This is an additional
+safeguard for cached older tags; it does not replace prior opt-in or clean URLs.
+The owner chose to keep retention unchanged: event data 2 months, user data
+14 months, and resets on new activity on. Google products/services sharing and
+business recommendations were off; aggregate modeling contributions and technical
+support access were on and were left unchanged. Recheck these dated account
+settings separately from the browser integration when changing data practices.
 
 [Video manifests](video-frame-mappings.md) add matched images on demand. Version 5
 selects zero-based presentation-frame indices or source timestamps; the viewer

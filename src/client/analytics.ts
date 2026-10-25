@@ -25,11 +25,13 @@ export function initializeAnalytics(): void {
   const allow = document.querySelector<HTMLButtonElement>('#analytics-allow');
   const decline = document.querySelector<HTMLButtonElement>('#analytics-decline');
   const status = document.querySelector<HTMLElement>('#analytics-status');
-  if (!panel || !settings || !allow || !decline || !status) return;
+  const close = document.querySelector<HTMLButtonElement>('#analytics-close');
+  if (!panel || !settings || !allow || !decline || !status || !close) return;
 
   let started = false;
   const show = (open: boolean, focus = false) => {
     panel.hidden = !open;
+    settings.hidden = open;
     settings.setAttribute('aria-expanded', String(open));
     allow.disabled = privacySignal();
     status.textContent = privacySignal() ? 'Analytics is off because your browser sends a privacy signal.' : '';
@@ -72,6 +74,10 @@ export function initializeAnalytics(): void {
   };
   settings.hidden = false;
   settings.onclick = () => show(panel.hidden, true);
+  close.onclick = () => show(false, true);
+  panel.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); show(false, true); }
+  });
   allow.onclick = () => { if (!privacySignal()) choose('allow'); };
   decline.onclick = () => choose('decline');
   window.addEventListener('storage', event => {
