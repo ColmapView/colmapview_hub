@@ -78,7 +78,7 @@ export function initializeAnalytics(): void {
     status.textContent = signals
       ? active ? `Analytics allowed here; ${name} remains on.` : `${name} is on. Analytics stays off unless you allow it here.`
       : active ? 'Analytics is on.' : '';
-    if (focus) (open ? decline : settings).focus();
+    if (focus) (open ? decline : settings).focus({ preventScroll: true });
   };
   const reconcile = () => {
     let choice = savedChoice();
@@ -124,7 +124,7 @@ export function initializeAnalytics(): void {
     if (choice === 'allow' && analytics[DISABLE_KEY]) { location.reload(); return; }
     reconcile();
     if (choice === 'allow') gtag?.('event', 'consent_granted', { consent_revision: POLICY_VERSION });
-    settings.focus();
+    settings.focus({ preventScroll: true });
   };
   settings.hidden = false;
   settings.onclick = () => show(panel.hidden, true);

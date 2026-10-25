@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.12.12 — 2026-10-25
+
+- Keep Analytics settings in the footer instead of floating over the catalog. Remember the first-visit choice, and preserve the scroll position when choosing or closing the prompt.
+
 ## 0.12.11 — 2026-10-25
 
 - Enable first-party Google Analytics cookies only after fresh, explicit cookie consent, improving session and returning-visitor measurement. Preserve refusals and keep Google entirely blocked beforehand; advertising remains denied.

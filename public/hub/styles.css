@@ -240,7 +240,6 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
 .shared-dataset-preview { width: 100%; height: auto; aspect-ratio: 600 / 315; object-fit: cover; border-radius: .35rem; }
 .footer-links button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; border-radius: 4px; padding: var(--sp-1) var(--sp-3); min-height: 32px; }
 .footer-links button:hover { background: var(--bg-hover); }
-#analytics-settings { position: fixed; z-index: 29; right: var(--sp-3); bottom: var(--sp-3); border: 1px solid var(--border-light); background: var(--bg-secondary); font-size: 12px; }
 .analytics-choice { position: fixed; z-index: 30; bottom: var(--sp-3); right: var(--sp-3); width: min(460px, calc(100% - 24px)); max-height: calc(100dvh - 24px); overflow: auto; padding: var(--sp-4); border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-secondary); box-shadow: 0 4px 24px #0004; font-size: 13px; }
 .analytics-choice h2 { font-size: 15px; margin: 0 0 var(--sp-2); padding-right: 32px; }
 .analytics-close { position: absolute; top: var(--sp-2); right: var(--sp-2); background: none; }

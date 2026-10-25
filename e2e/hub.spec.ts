@@ -46,12 +46,13 @@ test('public catalog analytics waits for cookie consent and uses clean URLs with
   expect(tags).toHaveLength(0);
   expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
   await page.getByRole('button', { name: 'Close analytics settings', exact: true }).click();
+  expect(await page.evaluate(() => scrollY)).toBe(0);
   await page.setViewportSize({ width: 360, height: 360 });
   const settings = page.getByRole('button', { name: 'Analytics settings', exact: true });
-  const beforeScroll = await settings.boundingBox();
+  await expect(page.locator('.site-footer #analytics-settings')).toHaveCount(1);
+  expect(await settings.evaluate(element => getComputedStyle(element).position)).toBe('static');
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
-  const afterScroll = await settings.boundingBox();
-  expect(beforeScroll && afterScroll && Math.abs(beforeScroll.y - afterScroll.y) < 1).toBe(true);
+  await expect(settings).toBeInViewport();
   expect(await page.evaluate(key => localStorage.getItem(key), choiceKey)).toBe(null);
   await settings.click();
   await page.getByRole('button', { name: 'No thanks', exact: true }).press('Escape');
@@ -63,7 +64,9 @@ test('public catalog analytics waits for cookie consent and uses clean URLs with
   await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
   expect(tags).toHaveLength(0);
   await page.getByRole('button', { name: 'Analytics settings' }).click();
+  await page.evaluate(() => scrollTo(0, 0));
   await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
+  expect(await page.evaluate(() => scrollY)).toBe(0);
   await expect.poll(() => tags.length).toBe(1);
   expect(tags[0]).toBe('https://www.googletagmanager.com/gtag/js?id=G-7K5H83SEMY');
   const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(command => Array.from(command)) ?? []);
@@ -84,6 +87,9 @@ test('public catalog analytics waits for cookie consent and uses clean URLs with
   const license = await page.request.get(origin + '/hub/fonts/OFL.txt');
   expect(license.status()).toBe(200);
   expect(await license.text()).toContain('Copyright 2019 IBM Corp.');
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
+  await expect.poll(() => tags.length).toBe(2);
   await page.unrouteAll({ behavior: 'wait' });
 });
 

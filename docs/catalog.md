@@ -5,9 +5,11 @@ The hosted browse and scene metadata pages use Google Analytics web stream
 Measurement starts only after explicit opt-in to analytics cookies (consent revision 2).
 Before opt-in, no Google tag or measurement request is loaded. “Allow analytics”
 uses the standard primary button style; “No thanks” remains clearly visible beside
-it with the same text size and one-click action. The footer's Analytics settings control
-stays in the bottom corner while scrolling and reopens the choice. Closing the
-panel or pressing Escape does not grant consent or change a saved choice.
+it with the same text size and one-click action. The prompt appears on the first visit
+without a valid saved choice; both allowance and refusal keep it hidden on later visits.
+Analytics settings is an ordinary footer control that reopens the choice, with no
+floating button. Choosing or closing the prompt preserves the page's scroll position.
+Closing the panel or pressing Escape does not grant consent or change a saved choice.
 The browser stores the choice, time, `policyVersion: 2` and a two-bit privacy-signal
 snapshot in `colmapview-hub-analytics-v1` for 180 days. Earlier refusals are kept;
 earlier cookieless allowances require fresh consent. Missing, expired, malformed,
