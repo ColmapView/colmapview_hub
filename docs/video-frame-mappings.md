@@ -35,12 +35,16 @@ the older DanceNet3D receipt already has a fixed synchronized multi-view contrac
 Never infer capture type from video count, file extensions, frame selectors or
 COLMAP camera-model count: one calibration can be shared by many moving poses.
 
-The October 25 audit found 48 published scenes with playable video mappings:
+The October 25 audit found 48 published scenes with video-frame mappings:
 
 | Capture evidence | Scenes | Registered views | Source recordings | Temporal selection |
 | --- | ---: | ---: | ---: | --- |
 | DanceNet3D synchronized multi-view | 47 | 1,349 | 1,349 | One geometry snapshot; matching frame from each camera |
 | campus_nlp moving camera | 1 | 285 | 6 | One selected source frame per registered pose |
+
+Full recording playback has a separate 256 MiB per-source limit. The six Campus
+recordings currently exceed it; their matched still frames remain available
+through bounded range reads.
 
 DanceNet3D's [pinned publisher description](https://huggingface.co/datasets/nyuvideolab/danceNet3D/blob/5ecd1b71d0c13b176dbdbe358b940624759d678f/README.md)
 documents synchronized cameras. The Campus classification was checked against all
