@@ -58,7 +58,9 @@ export function initializeAnalytics(): void {
       if (choice === 'decline' && started) {
         (window as Window & { [DISABLE_KEY]?: boolean })[DISABLE_KEY] = true;
         status.textContent = 'Analytics is disabled for this page. Clear this site’s data to remove the saved allowance; your browser could not update it.';
-      } else status.textContent = 'Your browser could not save this choice. Analytics stays off.';
+      } else status.textContent = started
+        ? 'Your browser could not save this choice. Your current analytics setting is unchanged.'
+        : 'Your browser could not save this choice. Analytics stays off.';
       return;
     }
     if (choice === 'allow' && (window as Window & { [DISABLE_KEY]?: boolean })[DISABLE_KEY]) {

@@ -133,6 +133,8 @@ test('public catalog analytics disables measurement if saving withdrawal fails',
     configurable: true, value() { throw new DOMException('Storage full', 'QuotaExceededError'); },
   }));
   await page.getByRole('button', { name: 'Analytics settings' }).click();
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
+  await expect(page.locator('#analytics-status')).toContainText('Your current analytics setting is unchanged');
   await page.getByRole('button', { name: 'Decline', exact: true }).click();
   await expect(page.locator('#analytics-status')).toContainText('Clear this site’s data');
   expect(await page.evaluate(() => (window as Window & { 'ga-disable-G-7K5H83SEMY'?: boolean })['ga-disable-G-7K5H83SEMY'])).toBe(true);

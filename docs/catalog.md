@@ -1,7 +1,8 @@
 # Public dataset catalog
 
-The hosted browse and scene metadata pages use Google Analytics property
-`G-7K5H83SEMY`, also used by the older viewer releases, only after explicit opt-in.
+The hosted browse and scene metadata pages use Google Analytics web stream
+`G-7K5H83SEMY`, used historically by viewer releases through v0.15.4.
+Measurement starts only after explicit opt-in.
 Before opt-in, no Google tag or measurement request is loaded. Allow and Decline
 have equal prominence; the footer's Analytics settings control reopens the choice.
 The browser stores only the choice and its time in `colmapview-hub-analytics-v1`

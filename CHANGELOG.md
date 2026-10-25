@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.12.6 — 2026-10-24
+
+- Report a failed analytics-choice write accurately when a previous allowance is already active. Failed withdrawal still stops measurement and explains how to clear the saved allowance. Refresh the client cache version for returning browsers.
+
 ## 0.12.5 — 2026-10-24
 
 - Require explicit opt-in before loading Google Analytics or sending any measurement. Provide equally prominent Allow and Decline controls, footer settings for withdrawal, a 180-day browser-only choice and cross-tab updates. Invalid or unavailable storage and browser privacy signals grant no permission.
