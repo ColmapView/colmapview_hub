@@ -12,8 +12,10 @@ function savedChoice(): 'allow' | 'decline' | undefined {
   } catch { /* Unavailable or malformed storage never grants permission. */ }
 }
 
-const privacySignal = () => navigator.doNotTrack === '1'
-  || (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
+const privacySignal = () => {
+  if ((navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true) return 'Global Privacy Control';
+  if (navigator.doNotTrack === '1') return 'Do Not Track';
+};
 
 /** Catalog traffic only: never initialize on share/manage pages or local previews. */
 export function initializeAnalytics(): void {
@@ -33,8 +35,9 @@ export function initializeAnalytics(): void {
     panel.hidden = !open;
     settings.hidden = open;
     settings.setAttribute('aria-expanded', String(open));
-    allow.disabled = privacySignal();
-    status.textContent = privacySignal() ? 'Analytics is off because your browser sends a privacy signal.' : '';
+    const signal = privacySignal();
+    allow.disabled = signal !== undefined;
+    status.textContent = signal ? `Analytics off: ${signal} is enabled.` : '';
     if (focus) (open ? decline : settings).focus();
   };
   const reconcile = () => {

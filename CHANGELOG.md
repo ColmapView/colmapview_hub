@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.12.8 — 2026-10-24
+
+- Shorten the analytics explanation and use the existing primary style for Allow analytics, with No thanks beside it. Name Do Not Track or Global Privacy Control when it keeps analytics off. Measurement still requires opt-in.
+
 ## 0.12.7 — 2026-10-24
 
 - Welcome visitors with a clear explanation of how optional analytics helps improve ColmapView, what Google receives, and how to change the choice. Use equally prominent Yes, allow analytics and No thanks buttons, accessible descriptions, and a panel that fits short screens. Keep settings reachable while scrolling; closing or pressing Escape changes no consent.

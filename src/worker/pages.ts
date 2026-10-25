@@ -55,13 +55,12 @@ const footer = (publicCatalog: boolean) => [
   '</nav></footer>',
   publicCatalog ? '<section class="analytics-choice" id="analytics-choice" aria-label="Optional analytics" hidden>'
     + `<button type="button" class="button icon-button analytics-close" id="analytics-close" aria-label="Close analytics settings" title="Close analytics settings">${icon('close')}</button>`
-    + '<h2>Help us improve ColmapView</h2>'
-    + '<p id="analytics-purpose">We use optional Google Analytics to understand Hub visits and improve the website. '
-    + 'If you allow it, Google receives your IP address and browser/device information, even without cookies. '
-    + 'Dataset contents are not sent to analytics.</p>'
-    + '<p class="analytics-detail">We don’t use analytics cookies. You can change your choice anytime in Analytics settings. '
+    + '<h2>Help improve ColmapView</h2>'
+    + '<p id="analytics-purpose">Optional Google Analytics helps us improve the Hub. '
+    + 'If allowed, Google receives your IP address and browser/device details, but no dataset contents.</p>'
+    + '<p class="analytics-detail">No analytics cookies. Change your choice in Analytics settings. '
     + '<a href="https://colmapview.opsiclear.com/privacy.html#hub-analytics">Privacy policy</a></p>'
-    + '<div class="actions"><button type="button" class="button" id="analytics-allow" aria-describedby="analytics-purpose">Yes, allow analytics</button>'
+    + '<div class="actions"><button type="button" class="button button-primary" id="analytics-allow" aria-describedby="analytics-purpose analytics-status">Allow analytics</button>'
     + '<button type="button" class="button" id="analytics-decline" aria-describedby="analytics-purpose">No thanks</button></div>'
     + '<p class="note" id="analytics-status" role="status"></p></section>' : '',
 ].join('');

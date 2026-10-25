@@ -33,7 +33,7 @@ test('public catalog analytics waits for opt-in and uses clean URLs without cook
   for (const width of [1280, 360]) {
     await page.setViewportSize({ width, height: 800 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    const allow = await page.getByRole('button', { name: 'Yes, allow analytics', exact: true }).boundingBox();
+    const allow = await page.getByRole('button', { name: 'Allow analytics', exact: true }).boundingBox();
     const decline = await page.getByRole('button', { name: 'No thanks', exact: true }).boundingBox();
     expect(allow && decline && Math.abs(allow.y - decline.y) < 1).toBe(true);
   }
@@ -57,7 +57,7 @@ test('public catalog analytics waits for opt-in and uses clean URLs without cook
   await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
   expect(tags).toHaveLength(0);
   await page.getByRole('button', { name: 'Analytics settings' }).click();
-  await page.getByRole('button', { name: 'Yes, allow analytics', exact: true }).click();
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
   await expect.poll(() => tags.length).toBe(1);
   expect(tags[0]).toBe('https://www.googletagmanager.com/gtag/js?id=G-7K5H83SEMY');
   const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(command => Array.from(command)) ?? []);
@@ -76,7 +76,7 @@ test('public catalog analytics waits for opt-in and uses clean URLs without cook
 test('public catalog analytics withdraws consent across tabs and discards loaded tags', async ({ page, context }) => {
   const tags = await mockCatalogAnalytics(page);
   await page.goto(analyticsCatalog);
-  await page.getByRole('button', { name: 'Yes, allow analytics', exact: true }).click();
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
   await expect.poll(() => tags.length).toBe(1);
   const other = await context.newPage();
   const otherTags = await mockCatalogAnalytics(other);
@@ -104,8 +104,8 @@ for (const signal of ['doNotTrack', 'globalPrivacyControl'] as const) {
     }, { key: choiceKey, signal });
     await page.goto(analyticsCatalog);
     await page.getByRole('button', { name: 'Analytics settings' }).click();
-    await expect(page.getByRole('button', { name: 'Yes, allow analytics', exact: true })).toBeDisabled();
-    await expect(page.locator('#analytics-status')).toContainText('privacy signal');
+    await expect(page.getByRole('button', { name: 'Allow analytics', exact: true })).toBeDisabled();
+    await expect(page.locator('#analytics-status')).toHaveText(`Analytics off: ${signal === 'doNotTrack' ? 'Do Not Track' : 'Global Privacy Control'} is enabled.`);
     expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
     expect(tags).toHaveLength(0);
     await page.unrouteAll({ behavior: 'wait' });
@@ -136,7 +136,7 @@ test('public catalog analytics stays off when permission cannot be stored', asyn
     });
   });
   await page.goto(analyticsCatalog);
-  await page.getByRole('button', { name: 'Yes, allow analytics', exact: true }).click();
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
   await expect(page.locator('#analytics-status')).toContainText('Analytics stays off');
   expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
   expect(tags).toHaveLength(0);
@@ -146,13 +146,13 @@ test('public catalog analytics stays off when permission cannot be stored', asyn
 test('public catalog analytics disables measurement if saving withdrawal fails', async ({ page }) => {
   const tags = await mockCatalogAnalytics(page);
   await page.goto(analyticsCatalog);
-  await page.getByRole('button', { name: 'Yes, allow analytics', exact: true }).click();
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
   await expect.poll(() => tags.length).toBe(1);
   await page.evaluate(() => Object.defineProperty(Storage.prototype, 'setItem', {
     configurable: true, value() { throw new DOMException('Storage full', 'QuotaExceededError'); },
   }));
   await page.getByRole('button', { name: 'Analytics settings' }).click();
-  await page.getByRole('button', { name: 'Yes, allow analytics', exact: true }).click();
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
   await expect(page.locator('#analytics-status')).toContainText('Your current analytics setting is unchanged');
   await page.getByRole('button', { name: 'No thanks', exact: true }).click();
   await expect(page.locator('#analytics-status')).toContainText('Clear this site’s data');

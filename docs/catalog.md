@@ -3,8 +3,9 @@
 The hosted browse and scene metadata pages use Google Analytics web stream
 `G-7K5H83SEMY`, used historically by viewer releases through v0.15.4.
 Measurement starts only after explicit opt-in.
-Before opt-in, no Google tag or measurement request is loaded. “Yes, allow analytics”
-and “No thanks” have equal prominence. The footer's Analytics settings control
+Before opt-in, no Google tag or measurement request is loaded. “Allow analytics”
+uses the standard primary button style; “No thanks” remains clearly visible beside
+it with the same text size and one-click action. The footer's Analytics settings control
 stays in the bottom corner while scrolling and reopens the choice. Closing the
 panel or pressing Escape does not grant consent or change a saved choice.
 The browser stores only the choice and its time in `colmapview-hub-analytics-v1`
@@ -15,7 +16,10 @@ Measurement runs with
 analytics/ad storage denied, advertising features off and no account ID. The
 configured page location contains only the public catalog path; query strings,
 fragments and referrers are excluded. Do Not Track and Global Privacy Control
-prevent loading the tag. Local previews, share/manage pages, APIs and the viewer
+prevent loading the tag, even with saved consent. The settings message names the
+active signal and Allow is disabled while it is present. This is the Hub's privacy
+policy, not a claim that either signal legally prohibits all analytics everywhere.
+Local previews, share/manage pages, APIs and the viewer
 do not initialize it. The public privacy policy describes Google's processing.
 Keep Enhanced measurement disabled in this stream's Google Analytics settings:
 its automatic search/link events can collect query values or destination URLs
