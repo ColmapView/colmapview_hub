@@ -2,11 +2,16 @@
 
 ## Unreleased
 
-## 0.12.10 — 2026-10-25
+## 0.12.11 — 2026-10-25
 
 - Enable first-party Google Analytics cookies only after fresh, explicit cookie consent, improving session and returning-visitor measurement. Preserve refusals and keep Google entirely blocked beforehand; advertising remains denied.
 - Respect browser privacy signals by default while allowing a specific analytics choice in settings. A new signal withdraws older permission. Expiry and withdrawal remove scoped cookies and discard the running tag, including across tabs.
 - Measure bounded public Hub interactions and coarse referral categories without search text, source URLs, shared-link IDs, dataset files or credentials. Record the consent revision and update the concise disclosure and operating guide.
+- Require the displayed notice to match the script's consent revision, including during cached-page rollouts. Supersede prepared 0.12.10 before deployment.
+
+## 0.12.10 — 2026-10-25
+
+- Prepared expanded consent-based Hub analytics; superseded by 0.12.11 before deployment to guard against an older cached notice loading a newer script.
 
 ## 0.12.9 — 2026-10-24
 

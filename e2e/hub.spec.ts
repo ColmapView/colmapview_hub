@@ -136,6 +136,26 @@ for (const signal of ['doNotTrack', 'globalPrivacyControl'] as const) {
   });
 }
 
+test('public catalog analytics rejects an outdated notice even with saved cookie consent', async ({ page, context }) => {
+  const tags = await mockCatalogAnalytics(page);
+  await seedAnalyticsCookies(context);
+  await page.addInitScript(key => localStorage.setItem(key, JSON.stringify({
+    choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now(),
+  })), choiceKey);
+  await page.route(production + '/hub/datasets/?*', async route => {
+    const url = new URL(route.request().url());
+    const response = await route.fetch({ url: origin + url.pathname + url.search });
+    const body = (await response.text()).replace(/ data-analytics-consent-version="\d+"/, '');
+    await route.fulfill({ response, body });
+  });
+  await page.goto(analyticsCatalog);
+  expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+  expect((await context.cookies()).filter(cookie => analyticsCookieNames.includes(cookie.name))).toEqual([]);
+  await expect(page.getByRole('button', { name: 'Analytics settings' })).toBeHidden();
+  expect(tags).toHaveLength(0);
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
 test('public catalog analytics preserves an earlier cookieless refusal', async ({ page }) => {
   const tags = await mockCatalogAnalytics(page);
   await page.addInitScript(key => localStorage.setItem(key, JSON.stringify({ choice: 'decline', updatedAt: Date.now() })), choiceKey);

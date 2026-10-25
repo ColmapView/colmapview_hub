@@ -2,6 +2,7 @@ import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, SHARE_PATH, VIEWER_ORIGI
 import type { CardRecord, ListedLink } from '../shared/model';
 import { escapeHtml } from '../shared/html';
 import { HUB_UI_VERSION } from '../shared/ui-version';
+import { ANALYTICS_CONSENT_REVISION } from '../shared/analytics-consent';
 import { assetLine } from '../shared/asset-summary';
 import { icon } from '../shared/icons';
 export { assetLine } from '../shared/asset-summary';
@@ -53,7 +54,7 @@ const footer = (publicCatalog: boolean) => [
   '<a href="mailto:info@opsiclear.com">Contact</a>',
   publicCatalog ? '<button type="button" id="analytics-settings" aria-controls="analytics-choice" aria-expanded="false" hidden>Analytics settings</button>' : '',
   '</nav></footer>',
-  publicCatalog ? '<section class="analytics-choice" id="analytics-choice" aria-label="Optional analytics" hidden>'
+  publicCatalog ? `<section class="analytics-choice" id="analytics-choice" data-analytics-consent-version="${ANALYTICS_CONSENT_REVISION}" aria-label="Optional analytics" hidden>`
     + `<button type="button" class="button icon-button analytics-close" id="analytics-close" aria-label="Close analytics settings" title="Close analytics settings">${icon('close')}</button>`
     + '<h2>Help improve ColmapView</h2>'
     + '<p id="analytics-purpose">Allow Google Analytics cookies to measure visits and Hub actions? '

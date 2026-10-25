@@ -14,6 +14,9 @@ earlier cookieless allowances require fresh consent. Missing, expired, malformed
 unknown-revision or unavailable permission grants no access. Withdrawal disables
 measurement, deletes this integration's cookies and reloads to discard the tag.
 Expiry has an active deadline; storage changes and returning to a tab also recheck.
+The notice and browser initializer share `ANALYTICS_CONSENT_REVISION`. An older
+cached notice paired with a newer script cannot initialize analytics or authorize
+cookies; it clears this integration's cookies and waits for a current page.
 
 After consent, `analytics_storage` is granted. Advertising storage, advertising
 user-data use and personalization remain denied; Google signals and automatic

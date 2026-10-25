@@ -1,9 +1,9 @@
 import { initializeHubUsage } from './hub-usage';
+import { ANALYTICS_CONSENT_REVISION as POLICY_VERSION } from '../shared/analytics-consent';
 
 const MEASUREMENT_ID = 'G-7K5H83SEMY';
 const DISABLE_KEY = `ga-disable-${MEASUREMENT_ID}` as const;
 const CHOICE_KEY = 'colmapview-hub-analytics-v1';
-const POLICY_VERSION = 2;
 const CHOICE_AGE = 180 * 24 * 60 * 60 * 1000;
 const COOKIE_PREFIX = 'cvh';
 const COOKIE_PATH = '/hub/datasets';
@@ -54,6 +54,11 @@ export function initializeAnalytics(): void {
   const status = document.querySelector<HTMLElement>('#analytics-status');
   const close = document.querySelector<HTMLButtonElement>('#analytics-close');
   if (!panel || !settings || !allow || !decline || !status || !close) return;
+  if (panel.dataset.analyticsConsentVersion !== String(POLICY_VERSION)) {
+    // A cached older notice can load a newer script during deployment.
+    clearAnalyticsCookies();
+    return;
+  }
 
   const analytics = window as AnalyticsWindow;
   let started = false;
