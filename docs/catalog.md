@@ -22,7 +22,10 @@ bottom bar shows the result range, loading status,
 shuffle/reset, catalog information, the viewer link and appearance. Full count
 descriptions remain available to assistive technology. Catalog information and
 extra filters close with Escape or an outside click; reading catalog information
-pauses automatic appends. Return anchors account for both bars. Policy links and
+pauses automatic appends. Catalog information contains counts, the current
+selection and a short description; operator audit and raw-data download links
+are omitted. Audit records remain available for maintenance. Return anchors
+account for both bars. Policy links and
 Analytics settings remain in the ordinary page footer.
 
 Every curated scene has a readable `/s/AdjectiveNoun` URL. Names are independently

@@ -6,7 +6,7 @@ import type { PhotoStatus, ScenePhotoAudit } from './scene-photos';
 import { isSceneContents, isSceneStatistics, isSceneThumbnail } from './scene-contents';
 import type { SceneContents, SceneStatistics, SceneThumbnail } from './scene-contents';
 import { isVideoCaptureType, type VideoCaptureType } from './video-capture';
-export { classifyLicense, licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from './license-categories';
+export { classifyLicense, licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS } from './license-categories';
 
 export interface CatalogFact { label: string; value: string; url?: string }
 export interface CatalogAudit { sourceId: string; sourceUrl?: string; checkedAt: string; scope: 'source' | 'collection'; facts: CatalogFact[] }

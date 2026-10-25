@@ -3,8 +3,6 @@ export type LicenseCategory = typeof LICENSE_CATEGORIES[number];
 export const LICENSE_CATEGORY_LABELS: Record<LicenseCategory, string> = {
   commercial: 'Commercial use', 'non-commercial': 'Non-commercial (NC)', 'not-specified': 'Not specified',
 };
-export const LICENSE_CATEGORY_NOTE = 'Categories summarize reported source licenses; conditions and asset-specific terms still apply. “Not specified” includes missing, custom or unclear terms.';
-
 // Exact identifiers only: a license for code or a substring in custom terms
 // does not establish the dataset's permissions. See data/README.md for sources.
 const commercial = new Set([

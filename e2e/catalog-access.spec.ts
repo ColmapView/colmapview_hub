@@ -149,7 +149,7 @@ test('reading catalog notes defers an in-flight append until the notes close', a
   release();
   await (await response).finished();
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-  await expect(page.getByRole('link', { name: 'Audit and coverage', exact: true })).toBeVisible();
+  await expect(page.locator('.catalog-totals')).toBeVisible();
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.locator('.catalog-notes > summary').click();
   await expect(page.locator('.dataset-card')).toHaveCount(48);

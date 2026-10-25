@@ -1,6 +1,6 @@
 import { accessLabel, catalogSummary, datasetPath, datasetFilterValue, deliveryLabel, providerLabel } from '../shared/catalog';
 import type { CatalogEntry, CatalogFact, CatalogSnapshot, CatalogSummary } from '../shared/catalog';
-import { licenseCategory, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from '../shared/license-categories';
+import { licenseCategory, LICENSE_CATEGORY_LABELS } from '../shared/license-categories';
 import { escapeHtml as escape, intro, page } from './pages';
 import { catalogCardHtml as catalogCard } from '../shared/catalog-card';
 import { photoLabel } from '../shared/scene-photos';
@@ -73,7 +73,7 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true): string 
     + factList([{ label: 'Source', value: providerLabel(entry.provider) }, { label: 'Access', value: accessLabel(entry.access) },
       { label: 'License category', value: LICENSE_CATEGORY_LABELS[licenseCategory(entry)] },
       { label: 'License (source metadata)', value: entry.license }, { label: 'Recorded formats', value: entry.formats.join(' · ') || 'Not established' },
-      { label: 'Scan date', value: entry.checkedAt }, ...entry.facts]) + `<p class="note">${escape(LICENSE_CATEGORY_NOTE)}</p></section>`
+      { label: 'Scan date', value: entry.checkedAt }, ...entry.facts]) + '</section>'
     + '<section class="dataset-section"><h2>Loading evidence</h2><p class="note">Checks cover the recorded files and samples. Inclusion does not certify every scene or image. Source access and license terms apply.</p>'
     + (audits || '<p>No additional dataset loading audit is recorded for this entry.</p>') + '</section>',
     social(`${location.origin}${!analytics && share ? share : datasetPath(entry)}`, entry.title, entry.description), analytics);

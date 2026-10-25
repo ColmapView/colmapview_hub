@@ -1,4 +1,4 @@
-import { LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from '../shared/license-categories';
+import { LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS } from '../shared/license-categories';
 import { INDIVIDUAL_PAGE_SIZE, individualDatasetOptions, individualSelection, savedFilterSummary } from '../shared/individual-catalog';
 import type { IndividualIndex, IndividualPage } from '../shared/individual-catalog';
 import { photoLabel } from '../shared/scene-photos';
@@ -48,13 +48,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<p class="catalog-totals">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p>`
     + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
     + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
-    + '<p>Explore camera and reconstruction datasets, with source photos or matched video frames where available.</p>'
-    + '<p>Each card identifies one named scene at a pinned source revision. Native camera/model layouts have bounded format and access checks. Image availability, sampled pixels, full loading, complete exports and masks have separate evidence. Standalone geometry files do not create dataset cards.</p>'
-    + '<p>Discover mixes verified model evidence, collection-balanced random scenes and newly catalogued scenes. Random balances collections before scenes. New to Hub uses recorded catalogue dates, beginning October 19, 2026; these are not dataset creation dates. Photographs and large camera or point counts are not required for ranking. Available data can include companions requiring setup; the information panel retains their exact status.</p>'
-    + `<p>${escape(LICENSE_CATEGORY_NOTE)}</p><p><a href="/hub/datasets/audit">Audit and coverage</a></p>`
-    + '<p><a href="/hub/datasets/individual/photo-audit.csv" download>Photo availability, launch manifests and path policies for every scene (CSV)</a> · <a href="/hub/datasets/individual/photo-audit.json" download>Photo audit totals (JSON)</a></p>'
-    + '<p><a href="/hub/datasets/individual/component-audit.csv" download>Missing component audit — October 19, 2026 (CSV)</a> · <a href="/hub/datasets/individual/component-audit.json.gz" download>Full evidence (JSON.gz)</a></p>'
-    + '<p><a href="/hub/datasets/individual/verified-scenes.json" download>Verified scene checks (JSON)</a> · <a href="/hub/datasets/individual/index.json" download>Labels and coverage (JSON)</a> · <a href="/hub/datasets/catalog.json" download>Source metadata (JSON)</a></p></div></details>';
+    + '<p>Explore camera and reconstruction datasets, with photos or video where available.</p></div></details>';
   const countDescription = result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
   const status = `<div class="catalog-result-summary"><p id="catalog-count" class="catalog-count" role="status" tabindex="-1" aria-label="${countDescription}" title="${countDescription}">${result.total ? `${number(offset + 1)}–${number(offset + result.entries.length)} / ${number(result.total)}` : 'No matching datasets'}</p>`
     + '<p id="catalog-status" class="catalog-status" role="status"></p></div>'
