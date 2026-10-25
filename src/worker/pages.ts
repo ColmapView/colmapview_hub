@@ -56,9 +56,9 @@ const footer = (publicCatalog: boolean) => [
   publicCatalog ? '<section class="analytics-choice" id="analytics-choice" aria-label="Optional analytics" hidden>'
     + `<button type="button" class="button icon-button analytics-close" id="analytics-close" aria-label="Close analytics settings" title="Close analytics settings">${icon('close')}</button>`
     + '<h2>Help improve ColmapView</h2>'
-    + '<p id="analytics-purpose">Optional Google Analytics helps us improve the Hub. '
-    + 'If allowed, Google receives your IP address and browser/device details, but no dataset contents.</p>'
-    + '<p class="analytics-detail">No analytics cookies. Change your choice in Analytics settings. '
+    + '<p id="analytics-purpose">Allow Google Analytics cookies to measure visits and Hub actions? '
+    + 'Google receives cookie IDs, IP and browser/device details, but no dataset files.</p>'
+    + '<p class="analytics-detail">Ads stay off. Change your choice anytime in Analytics settings. '
     + '<a href="https://colmapview.opsiclear.com/privacy.html#hub-analytics">Privacy policy</a></p>'
     + '<div class="actions"><button type="button" class="button button-primary" id="analytics-allow" aria-describedby="analytics-purpose analytics-status">Allow analytics</button>'
     + '<button type="button" class="button" id="analytics-decline" aria-describedby="analytics-purpose">No thanks</button></div>'

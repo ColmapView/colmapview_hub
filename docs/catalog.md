@@ -2,29 +2,61 @@
 
 The hosted browse and scene metadata pages use Google Analytics web stream
 `G-7K5H83SEMY`, used historically by viewer releases through v0.15.4.
-Measurement starts only after explicit opt-in.
+Measurement starts only after explicit opt-in to analytics cookies (consent revision 2).
 Before opt-in, no Google tag or measurement request is loaded. “Allow analytics”
 uses the standard primary button style; “No thanks” remains clearly visible beside
 it with the same text size and one-click action. The footer's Analytics settings control
 stays in the bottom corner while scrolling and reopens the choice. Closing the
 panel or pressing Escape does not grant consent or change a saved choice.
-The browser stores only the choice and its time in `colmapview-hub-analytics-v1`
-for 180 days. Missing, expired, malformed or unavailable storage grants no permission.
-Withdrawal disables measurement and reloads to discard the loaded Google tag;
-storage changes in another tab and returning to an open tab recheck permission.
-Measurement runs with
-analytics/ad storage denied, advertising features off and no account ID. The
-configured page location contains only the public catalog path; query strings,
-fragments and referrers are excluded. Do Not Track and Global Privacy Control
-prevent loading the tag, even with saved consent. The settings message names the
-active signal and Allow is disabled while it is present. This is the Hub's privacy
-policy, not a claim that either signal legally prohibits all analytics everywhere.
+The browser stores the choice, time, `policyVersion: 2` and a two-bit privacy-signal
+snapshot in `colmapview-hub-analytics-v1` for 180 days. Earlier refusals are kept;
+earlier cookieless allowances require fresh consent. Missing, expired, malformed,
+unknown-revision or unavailable permission grants no access. Withdrawal disables
+measurement, deletes this integration's cookies and reloads to discard the tag.
+Expiry has an active deadline; storage changes and returning to a tab also recheck.
+
+After consent, `analytics_storage` is granted. Advertising storage, advertising
+user-data use and personalization remain denied; Google signals and automatic
+enhanced measurement stay off. `cvh_ga` and `cvh_ga_7K5H83SEMY` are restricted to
+the current host and `/hub/datasets`, use Secure/SameSite=Lax, do not refresh on
+visits and expire no later than the existing 180-day permission. There is no
+application account/user ID. Choice records stay in the browser; the Worker does
+not store them or cookie identifiers. Consent revision 2 accompanies measurements;
+an explicit Allow queues `consent_granted` as additional evidence of the interface.
+
+The measured page location contains only the public catalog path. Query strings,
+fragments and full referrer URLs are excluded. Acquisition uses only a fixed
+referral category (Google, Bing, DuckDuckGo, GitHub, Hugging Face, viewer or other).
+Do Not Track and Global Privacy Control keep analytics off and suppress the
+automatic prompt by default. The visitor can explicitly allow only this analytics
+in settings while a signal is present; advertising stays off. A newly detected
+signal absent from that permission withdraws it, and removing the signal does not
+restore consent. This is a site-specific analytics choice, not an opt-in to sale,
+cross-site advertising or all future purposes.
 Local previews, share/manage pages, APIs and the viewer
 do not initialize it. The public privacy policy describes Google's processing.
 Keep Enhanced measurement disabled in this stream's Google Analytics settings:
 its automatic search/link events can collect query values or destination URLs
 independently of the configured page location. The Hub sends its page view
 explicitly; validate the real collection request when changing tag settings.
+
+`src/client/hub-usage.ts` measures trusted clicks and committed search/filter
+actions only after permission. It reports dataset opens, metadata/link opens,
+shuffle/reset/pagination, appearance changes and one 90% scroll event per page.
+Dataset IDs must match the curated `data-[a-f0-9]{24}` format; shared-link IDs,
+text, hrefs, search terms and filter values are never sent. Filter names and their
+active state are bounded. Google supplies ordinary session/engagement measurement
+after cookie consent. Do not replace this with automatic form/search/link capture.
+
+Use event-scoped custom dimensions for `dataset_id`, `filter_name`, `filter_active`
+and `consent_revision` when these parameters are needed in custom reports. They do
+not require publishing any source URL or visitor account identity.
+
+The public privacy policy must deploy before this consent revision is enabled.
+Google's processing terms were already accepted; its official DPF record showed
+EU/UK/Swiss participation active in the October 25, 2026 check. These technical
+controls are not a blanket legal certification; the operator must maintain its
+purpose/retention justification, rights process and applicable transfer arrangements.
 
 The October 24, 2026 production check also confirmed Google signals and
 user-provided collection off, existing processing terms accepted, and email

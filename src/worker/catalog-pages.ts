@@ -24,7 +24,7 @@ function social(url: string, title: string, description: string): string {
 }
 
 export function catalogEntryPage(entry: CatalogEntry): string {
-  const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(href)}" target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
+  const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(href)}"${href === entry.viewerUrl || href === entry.candidateViewerUrl ? ' data-analytics-open' : ''} target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
   const gated = entry.access === 'gated' || entry.verification?.delivery === 'gated';
   const blocked = gated || Boolean(entry.verification?.opening);
   const viewerUrl = !blocked ? entry.viewerUrl : undefined;
@@ -44,7 +44,7 @@ export function catalogEntryPage(entry: CatalogEntry): string {
   const preview = sceneThumbnailHtml(entry);
   return page(location, entry.title,
     '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
-    + `<div class="dataset-overview${preview ? ' dataset-overview-has-preview' : ''}">`
+    + `<div class="dataset-overview${preview ? ' dataset-overview-has-preview' : ''}" data-entry-id="${escape(entry.id)}">`
     + (preview ? `<div class="dataset-overview-preview">${preview}</div>` : '')
     + '<div class="dataset-overview-content">'
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))

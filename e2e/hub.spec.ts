@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import { preview } from '../tests/fixtures/preview';
@@ -8,6 +8,12 @@ const origin = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB
 const production = 'https://colmapview.opsiclear.com';
 const choiceKey = 'colmapview-hub-analytics-v1';
 const analyticsCatalog = production + '/hub/datasets/?q=private-query#private-fragment';
+const analyticsCookieNames = ['cvh_ga', 'cvh_ga_7K5H83SEMY'];
+
+async function seedAnalyticsCookies(context: BrowserContext): Promise<void> {
+  await context.addCookies(analyticsCookieNames.map(name => ({ name, value: 'synthetic-browser-session',
+    domain: 'colmapview.opsiclear.com', path: '/hub/datasets', secure: true, sameSite: 'Lax' as const })));
+}
 
 async function mockCatalogAnalytics(page: Page): Promise<string[]> {
   const tags: string[] = [];
@@ -23,7 +29,7 @@ async function mockCatalogAnalytics(page: Page): Promise<string[]> {
   return tags;
 }
 
-test('public catalog analytics waits for opt-in and uses clean URLs without cookies', async ({ page, context }) => {
+test('public catalog analytics waits for cookie consent and uses clean URLs with advertising denied', async ({ page, context }) => {
   const tags = await mockCatalogAnalytics(page);
   const fonts: string[] = [];
   page.on('request', request => { if (request.resourceType() === 'font') fonts.push(request.url()); });
@@ -62,7 +68,13 @@ test('public catalog analytics waits for opt-in and uses clean URLs without cook
   expect(tags[0]).toBe('https://www.googletagmanager.com/gtag/js?id=G-7K5H83SEMY');
   const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(command => Array.from(command)) ?? []);
   expect(commands).toContainEqual(['consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' }]);
-  expect(commands).toContainEqual(['config', 'G-7K5H83SEMY', expect.objectContaining({ page_location: production + '/hub/datasets/', page_referrer: '', send_page_view: false })]);
+  expect(commands).toContainEqual(['consent', 'update', { analytics_storage: 'granted' }]);
+  expect(commands).toContainEqual(['config', 'G-7K5H83SEMY', expect.objectContaining({
+    page_location: production + '/hub/datasets/', page_referrer: '', send_page_view: false,
+    cookie_prefix: 'cvh', cookie_domain: 'colmapview.opsiclear.com', cookie_path: '/hub/datasets',
+    cookie_update: false, cookie_flags: 'SameSite=Lax;Secure', consent_revision: 2,
+    allow_google_signals: false, allow_ad_personalization_signals: false, campaign_source: 'other',
+  })]);
   expect(JSON.stringify(commands)).not.toContain('private-');
   expect((await context.cookies()).filter(cookie => cookie.name.startsWith('_ga'))).toEqual([]);
   expect(fonts.length).toBeGreaterThan(0);
@@ -82,6 +94,8 @@ test('public catalog analytics withdraws consent across tabs and discards loaded
   const otherTags = await mockCatalogAnalytics(other);
   await other.goto(analyticsCatalog);
   await expect.poll(() => otherTags.length).toBe(1);
+  await seedAnalyticsCookies(context);
+  await context.addCookies([{ name: 'unrelated_preference', value: 'keep', url: production }]);
   await page.getByRole('button', { name: 'Analytics settings' }).click();
   const reloads = [page.waitForEvent('domcontentloaded'), other.waitForEvent('domcontentloaded')];
   await page.getByRole('button', { name: 'No thanks', exact: true }).click();
@@ -93,29 +107,116 @@ test('public catalog analytics withdraws consent across tabs and discards loaded
   }
   expect(tags).toHaveLength(1);
   expect(otherTags).toHaveLength(1);
+  const cookies = await context.cookies();
+  expect(cookies.filter(cookie => analyticsCookieNames.includes(cookie.name))).toEqual([]);
+  expect(cookies.find(cookie => cookie.name === 'unrelated_preference')?.value).toBe('keep');
 });
 
 for (const signal of ['doNotTrack', 'globalPrivacyControl'] as const) {
-  test(`public catalog analytics respects ${signal} even with saved consent`, async ({ page }) => {
+  test(`public catalog analytics defaults off for ${signal} and accepts a specific analytics choice`, async ({ page }) => {
     const tags = await mockCatalogAnalytics(page);
     await page.addInitScript(({ key, signal }) => {
-      localStorage.setItem(key, JSON.stringify({ choice: 'allow', updatedAt: Date.now() }));
+      localStorage.setItem(key, JSON.stringify({ choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now() }));
       Object.defineProperty(navigator, signal, { value: signal === 'doNotTrack' ? '1' : true });
     }, { key: choiceKey, signal });
     await page.goto(analyticsCatalog);
+    await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
     await page.getByRole('button', { name: 'Analytics settings' }).click();
-    await expect(page.getByRole('button', { name: 'Allow analytics', exact: true })).toBeDisabled();
-    await expect(page.locator('#analytics-status')).toHaveText(`Analytics off: ${signal === 'doNotTrack' ? 'Do Not Track' : 'Global Privacy Control'} is enabled.`);
+    await expect(page.getByRole('button', { name: 'Allow analytics', exact: true })).toBeEnabled();
+    await expect(page.locator('#analytics-status')).toContainText(signal === 'doNotTrack' ? 'Do Not Track' : 'Global Privacy Control');
     expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
     expect(tags).toHaveLength(0);
+    await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
+    await expect.poll(() => tags.length).toBe(1);
+    expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), choiceKey))
+      .toMatchObject({ choice: 'allow', policyVersion: 2, signals: signal === 'doNotTrack' ? 1 : 2 });
     await page.unrouteAll({ behavior: 'wait' });
   });
 }
 
+test('public catalog analytics preserves an earlier cookieless refusal', async ({ page }) => {
+  const tags = await mockCatalogAnalytics(page);
+  await page.addInitScript(key => localStorage.setItem(key, JSON.stringify({ choice: 'decline', updatedAt: Date.now() })), choiceKey);
+  await page.goto(analyticsCatalog);
+  await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
+  expect(tags).toHaveLength(0);
+  expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
+test('public catalog analytics withdraws for a new privacy signal and does not resume when it disappears', async ({ page, context }) => {
+  const tags = await mockCatalogAnalytics(page);
+  await page.goto(analyticsCatalog);
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
+  await expect.poll(() => tags.length).toBe(1);
+  await seedAnalyticsCookies(context);
+  const reload = page.waitForEvent('domcontentloaded');
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'globalPrivacyControl', { value: true });
+    dispatchEvent(new Event('pageshow'));
+  });
+  await reload;
+  await expect(page.getByRole('button', { name: 'Analytics settings' })).toBeVisible();
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).choice, choiceKey)).toBe('decline');
+  expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+  expect((await context.cookies()).filter(cookie => analyticsCookieNames.includes(cookie.name))).toEqual([]);
+  expect(tags).toHaveLength(1);
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
+test('public catalog analytics expires while the page remains open and removes its cookies', async ({ page, context }) => {
+  const tags = await mockCatalogAnalytics(page);
+  const now = Date.now();
+  await page.clock.install({ time: now });
+  await page.addInitScript(({ key, now }) => localStorage.setItem(key, JSON.stringify({
+    choice: 'allow', policyVersion: 2, signals: 0, updatedAt: now - 180 * 86400000 + 2000,
+  })), { key: choiceKey, now });
+  await page.goto(analyticsCatalog);
+  await expect.poll(() => tags.length).toBe(1);
+  await seedAnalyticsCookies(context);
+  const reload = page.waitForEvent('domcontentloaded');
+  await page.clock.fastForward(3000);
+  await reload;
+  await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeVisible();
+  expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+  expect((await context.cookies()).filter(cookie => analyticsCookieNames.includes(cookie.name))).toEqual([]);
+  expect(tags).toHaveLength(1);
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
+test('public catalog analytics measures bounded actions without search text, hrefs or shared-link identifiers', async ({ page }) => {
+  const tags = await mockCatalogAnalytics(page);
+  await page.goto(production + '/hub/datasets/?utm_campaign=private-campaign#private-fragment');
+  await page.locator('#hub-theme').click();
+  expect(tags).toHaveLength(0);
+  expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+  await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
+  await expect.poll(() => tags.length).toBe(1);
+  const card = page.locator('#catalog-results [data-entry-id]').first();
+  const id = await card.getAttribute('data-entry-id');
+  await card.locator('.dataset-info').click();
+  await expect(card.locator('.dataset-metadata')).toBeVisible();
+  await card.locator('.dataset-metadata-close').click();
+  await card.locator('.dataset-open').evaluate(link => link.addEventListener('click', event => event.preventDefault()));
+  await card.locator('.dataset-open').click();
+  await card.evaluate(element => element.dataset.entryId = 'private-shared-link-id');
+  await card.locator('.dataset-open').click();
+  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('private-search user@example.org');
+  await page.getByRole('searchbox', { name: 'Search datasets' }).press('Tab');
+  const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(command => Array.from(command)) ?? []);
+  expect(commands).toContainEqual(['event', 'catalog_search', {}]);
+  expect(commands).toContainEqual(['event', 'dataset_metadata_open', /^data-[a-f0-9]{24}$/.test(id ?? '') ? { dataset_id: id } : {}]);
+  expect(commands).toContainEqual(['event', 'dataset_open', {}]);
+  expect(JSON.stringify(commands)).not.toMatch(/private-|user@example|https:\/\/huggingface/);
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
 for (const [label, saved] of [
   ['malformed', 'invalid-json'],
-  ['expired', JSON.stringify({ choice: 'allow', updatedAt: Date.now() - 181 * 86400000 })],
-  ['future date', JSON.stringify({ choice: 'allow', updatedAt: Date.now() + 86400000 })],
+  ['previous cookieless allowance', JSON.stringify({ choice: 'allow', updatedAt: Date.now() })],
+  ['expired', JSON.stringify({ choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now() - 181 * 86400000 })],
+  ['future date', JSON.stringify({ choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now() + 86400000 })],
+  ['unknown consent revision', JSON.stringify({ choice: 'allow', policyVersion: 3, signals: 0, updatedAt: Date.now() })],
 ]) {
   test(`public catalog analytics rejects invalid permission: ${label}`, async ({ page }) => {
     const tags = await mockCatalogAnalytics(page);
@@ -155,7 +256,7 @@ test('public catalog analytics disables measurement if saving withdrawal fails',
   await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
   await expect(page.locator('#analytics-status')).toContainText('Your current analytics setting is unchanged');
   await page.getByRole('button', { name: 'No thanks', exact: true }).click();
-  await expect(page.locator('#analytics-status')).toContainText('Clear this site’s data');
+  await expect(page.locator('#analytics-status')).toContainText('Clear site data');
   expect(await page.evaluate(() => (window as Window & { 'ga-disable-G-7K5H83SEMY'?: boolean })['ga-disable-G-7K5H83SEMY'])).toBe(true);
   expect(tags).toHaveLength(1);
   await page.unrouteAll({ behavior: 'wait' });
