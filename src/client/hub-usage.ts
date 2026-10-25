@@ -30,7 +30,7 @@ export function initializeHubUsage(track: Track): void {
     }
   });
   document.addEventListener('submit', event => {
-    if (event.isTrusted && event.target instanceof HTMLFormElement && event.target.id === 'individual-search') track('catalog_search', {});
+    if (event.isTrusted && event.target instanceof HTMLFormElement && event.target.id === 'individual-search') track('catalog_search_submit', {});
   });
   let scrolled = false;
   let pending = false;

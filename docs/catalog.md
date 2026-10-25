@@ -42,7 +42,9 @@ independently of the configured page location. The Hub sends its page view
 explicitly; validate the real collection request when changing tag settings.
 
 `src/client/hub-usage.ts` measures trusted clicks and committed search/filter
-actions only after permission. It reports dataset opens, metadata/link opens,
+actions only after permission. Search edits (`catalog_search`) and submissions
+(`catalog_search_submit`) have separate event names to avoid counting a committed
+search twice. It reports dataset opens, metadata/link opens,
 shuffle/reset/pagination, appearance changes and one 90% scroll event per page.
 Dataset IDs must match the curated `data-[a-f0-9]{24}` format; shared-link IDs,
 text, hrefs, search terms and filter values are never sent. Filter names and their

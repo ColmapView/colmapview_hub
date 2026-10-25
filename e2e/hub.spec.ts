@@ -205,8 +205,11 @@ test('public catalog analytics measures bounded actions without search text, hre
   await card.locator('.dataset-open').click();
   await page.getByRole('searchbox', { name: 'Search datasets' }).fill('private-search user@example.org');
   await page.getByRole('searchbox', { name: 'Search datasets' }).press('Tab');
+  await page.getByRole('searchbox', { name: 'Search datasets' }).press('Enter');
   const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(command => Array.from(command)) ?? []);
   expect(commands).toContainEqual(['event', 'catalog_search', {}]);
+  expect(commands).toContainEqual(['event', 'catalog_search_submit', {}]);
+  expect(commands.filter(command => command[0] === 'event' && command[1] === 'catalog_search')).toHaveLength(1);
   expect(commands).toContainEqual(['event', 'dataset_metadata_open', /^data-[a-f0-9]{24}$/.test(id ?? '') ? { dataset_id: id } : {}]);
   expect(commands).toContainEqual(['event', 'dataset_open', {}]);
   expect(JSON.stringify(commands)).not.toMatch(/private-|user@example|https:\/\/huggingface/);
