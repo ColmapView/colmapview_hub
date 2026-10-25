@@ -14,7 +14,7 @@ test('refinement variants have one scene card while historical model links keep 
   expect(new URL(original.headers().location).searchParams.get('url')).toMatch(/\/scene0000_00\/sparse\/init$/);
   await page.goto(`/hub/datasets/?dataset=${source.id}&q=scene0000_00`);
   await expect(page.locator('.dataset-card')).toHaveCount(1);
-  await expect(page.locator('main')).toContainText(`${index.total.toLocaleString('en-US')} scene entries`);
+  await expect(page.locator('.catalog-totals')).toContainText(`${index.total.toLocaleString('en-US')} scene entries`);
 });
 
 test('the Gaussian scene filter returns the same kind and count reported by its cards', async ({ page }) => {
@@ -144,14 +144,14 @@ test('reading catalog notes defers an in-flight append until the notes close', a
   await page.goto('/hub/datasets/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await started;
-  await page.getByText('About this catalog', { exact: true }).click();
+  await page.locator('.catalog-notes > summary').click();
   const response = page.waitForResponse(value => new URL(value.url()).searchParams.get('page') === '2');
   release();
   await (await response).finished();
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   await expect(page.getByRole('link', { name: 'Audit and coverage', exact: true })).toBeVisible();
   await expect(page.locator('.dataset-card')).toHaveCount(24);
-  await page.getByText('About this catalog', { exact: true }).click();
+  await page.locator('.catalog-notes > summary').click();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
 });
 
@@ -180,7 +180,7 @@ for (const width of [1280, 390]) test(`Back restores the visible scene and refre
     });
     observer.observe(document, { childList: true, subtree: true });
   });
-  await page.route('**/hub/datasets/open/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Viewer navigation fixture</h1>' }));
+  await page.route('**/s/d/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Viewer navigation fixture</h1>' }));
   await page.goto('/hub/datasets/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('.dataset-card')).toHaveCount(48);

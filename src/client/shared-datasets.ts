@@ -50,6 +50,9 @@ function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
   const original = document.createElement('a'); original.href = originalUrl.href;
   original.target = '_blank'; original.rel = 'noopener noreferrer'; original.textContent = 'Dataset source ↗';
   const links = document.createElement('div'); links.className = 'dataset-metadata-links'; links.append(source, original);
+  const copy = document.createElement('button'); copy.type = 'button'; copy.dataset.copyDatasetLink = `/s/${entry.id}`; copy.textContent = 'Copy link';
+  const copied = document.createElement('span'); copied.className = 'note'; copied.dataset.copyStatus = ''; copied.setAttribute('role', 'status');
+  links.append(copy, copied);
   content.append(name, description, license, category, ...(contents.textContent ? [contents] : []), proof, links); panel.append(header, content);
   const body = document.createElement('div'); body.className = 'dataset-card-body'; body.append(heading);
   article.append(preview, body, panel);

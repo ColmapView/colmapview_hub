@@ -2,8 +2,25 @@ import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { base, request, resetState } from './helpers';
 import { HUB_UI_VERSION } from '../src/shared/ui-version';
+import { datasetSharePath } from '../src/shared/dataset-share';
 
 beforeEach(resetState);
+
+it('keeps catalog short-link misses guarded and rejects embeds before metadata or private reads', async () => {
+  const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
+  const records = vi.spyOn(env.LINKS, 'get');
+  for (const code of ['not-one', 'not-two', 'not-three']) {
+    expect((await request(`/../s/d/${code}`, { headers: { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'iframe' } })).status).toBe(404);
+    expect((await request(`/../s/d/${code}`, { headers: { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'document', 'Sec-Purpose': 'prefetch' } })).status).toBe(404);
+  }
+  expect((await request('/../s/d/not-one/')).status).toBe(404);
+  expect((await request('/../s/d/not-one', { method: 'HEAD' })).status).toBe(404);
+  expect((await request('/../s/d/not-two')).status).toBe(404);
+  expect(records).not.toHaveBeenCalled();
+  expect((await request('/MissingThird')).status).toBe(429);
+  expect((await request('/../s/d/not-one')).status).toBe(429);
+  expect(assets).not.toHaveBeenCalled();
+});
 
 it('rejects invalid feed modes and seeds before any public or private data read', async () => {
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
@@ -229,7 +246,7 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   expect(unchecked.headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
   keys.length = 0;
   const viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent('https://huggingface.co/datasets/owner/data/resolve/revision/room/sparse/0');
-  row[7] = { level: 'scene_verified', delivery: 'browser_readable', viewerUrl,
+  row[7] = { level: 'scene_verified', delivery: 'browser_readable', viewerUrl, checkedAt: '2026-10-25', summary: 'Fixture native model verified.', scope: 'Fixture model and pixels only.', viewerVersion: 'v0.23.6',
     sceneValidation: { status: 'passed', revision: 'revision', cameras: 1, images: 2, points: 3, photoCount: 2,
       export: 'colmap_images', exportSha256: 'a'.repeat(64) } };
   const response = await request(`/datasets/open/${id}`);
@@ -238,8 +255,24 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   expect(target.origin).toBe('https://colmapview.opsiclear.com');
   expect(target.searchParams.get('url')).toBe('https://huggingface.co/datasets/owner/data/resolve/revision/room/sparse/0');
   expect(keys).toEqual(['index.json', 'ids/00.json', 'packs/0.json', `sources/${source.id}.json`]);
+  const short = datasetSharePath(id)!;
+  for (const method of ['GET', 'HEAD']) {
+    const direct = await request(`/..${short}?url=https://unrelated.example`, { method, headers: { 'Sec-Fetch-Dest': 'document' } });
+    expect(direct.status).toBe(307);
+    expect(direct.headers.get('Location')).toBe(viewerUrl);
+    expect(direct.headers.get('Vary')).toBe('Sec-Fetch-Dest, Sec-Fetch-Mode');
+    expect(await direct.text()).toBe('');
+  }
+  const social = await request(`/..${short}`);
+  expect(social.status).toBe(200);
+  const socialHtml = await social.text();
+  expect(socialHtml).toContain('property="og:title"');
+  expect(socialHtml).not.toContain('data-hub-public-catalog');
+  expect(socialHtml).not.toContain('id="analytics-choice"');
+  expect((await request(`/..${datasetSharePath('data-' + 'f'.repeat(24))}`)).status).toBe(404);
   source.access = 'gated';
   expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  expect((await request(`/..${short}`, { headers: { 'Sec-Fetch-Dest': 'document' } })).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
   source.access = 'public';
   row[5] = 'scene.zip';
   row[7] = { level: 'header_checked', delivery: 'browser_readable', viewerUrl: target.href };

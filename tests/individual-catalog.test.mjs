@@ -685,7 +685,7 @@ test('only verified camera-and-photo cards open directly; unchecked or blocked r
   assert.equal(native.openUrl, `/hub/datasets/open/${row()[0]}`);
   assert.equal(native.hasViewer, true);
   const html = render.catalogCard(native);
-  assert.match(html, /class="dataset-open" href="\/hub\/datasets\/open\/data-/);
+  assert.match(html, /class="dataset-open" href="\/s\/d\/[A-Za-z0-9_-]{16}"/);
   assert.doesNotMatch(html, /Try · unchecked/);
   assert.match(html, /aria-controls="metadata-data-/);
   assert.match(html, /Full metadata/);
@@ -703,7 +703,7 @@ test('only verified camera-and-photo cards open directly; unchecked or blocked r
   }
   for (const openUrl of ['javascript:alert(1)', '//evil.example/', 'https://evil.example/?url=data', '/hub/datasets/open/../../secret']) {
     assert.equal(render.isCatalogSummary({ ...native, openUrl }), false);
-    assert.ok(render.catalogCard({ ...native, openUrl }).includes(`href="${render.datasetPath(native)}"`));
+    assert.match(render.catalogCard({ ...native, openUrl }), /class="dataset-open" href="\/s\/d\/[A-Za-z0-9_-]{16}"/);
   }
   const escaped = render.catalogCard({ ...native, title: '<img src=x onerror=alert(1)>', license: '<script>bad()</script>' });
   assert.doesNotMatch(escaped, /<img|<script>/);

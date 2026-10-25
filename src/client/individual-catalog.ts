@@ -22,6 +22,30 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const sentinel = document.querySelector<HTMLElement>('#catalog-sentinel')!;
   const notes = document.querySelector<HTMLDetailsElement>('.catalog-notes');
   const fields = [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[name],select[name]')];
+  const primary = form.querySelector<HTMLElement>('.catalog-primary')!;
+  const secondary = form.querySelector<HTMLElement>('.catalog-secondary')!;
+  const primaryFilters = [...primary.querySelectorAll<HTMLElement>(':scope > .catalog-field')];
+  const submit = primary.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  const compact = matchMedia('(max-width: 1100px)');
+  const arrangeFilters = () => {
+    const focused = document.activeElement;
+    if (compact.matches) secondary.prepend(...primaryFilters);
+    else for (const field of primaryFilters) primary.insertBefore(field, submit);
+    if (focused instanceof HTMLElement && primaryFilters.some(field => field.contains(focused))) focused.focus({ preventScroll: true });
+  };
+  compact.addEventListener('change', arrangeFilters);
+  arrangeFilters();
+  const panels = [...document.querySelectorAll<HTMLDetailsElement>('.catalog-advanced, .catalog-notes')];
+  document.addEventListener('click', event => {
+    for (const panel of panels) if (panel.open && event.target instanceof Node && !panel.contains(event.target)) panel.open = false;
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || event.defaultPrevented || document.querySelector('.dataset-metadata[open]')) return;
+    const panel = panels.find(panel => panel.open);
+    if (!panel) return;
+    event.preventDefault(); panel.open = false;
+    panel.querySelector('summary')?.focus({ preventScroll: true });
+  });
   const navigation = catalogHistory(form);
   let pending: AbortController | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -83,7 +107,9 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const focused = document.activeElement?.closest<HTMLElement>('[data-entry-id]');
     const preferred = departing?.isConnected ? departing : focused;
     const preferredIndex = preferred ? cards.indexOf(preferred) : -1;
-    const areas = cards.map(card => { const box = card.getBoundingClientRect(); return Math.max(0, Math.min(box.bottom, innerHeight) - Math.max(box.top, 0)); });
+    const viewportTop = document.querySelector('.catalog-toolbar')!.getBoundingClientRect().bottom;
+    const viewportBottom = document.querySelector('.catalog-footbar')!.getBoundingClientRect().top;
+    const areas = cards.map(card => { const box = card.getBoundingClientRect(); return Math.max(0, Math.min(box.bottom, viewportBottom) - Math.max(box.top, viewportTop)); });
     const selected = Boolean(departing?.isConnected);
     const visible = preferredIndex >= 0 && (selected || areas[preferredIndex] > 0) ? preferredIndex : Math.max(0, areas.indexOf(Math.max(...areas)));
     const start = Math.max(0, Math.floor(visible / INDIVIDUAL_PAGE_SIZE) * INDIVIDUAL_PAGE_SIZE - 96);
@@ -91,11 +117,14 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     rememberFeed({ key: viewKey, query: committed.toString(), data: { entries: cached, page: firstPage + start / INDIVIDUAL_PAGE_SIZE,
       pages, total, generation }, lastPage: firstPage + start / INDIVIDUAL_PAGE_SIZE + Math.ceil(cached.length / INDIVIDUAL_PAGE_SIZE) - 1,
     collectionText: selection.textContent || '', anchor: cards[visible] ? { id: entries[visible].id,
-      top: selected && areas[visible] === 0 ? 0 : cards[visible].getBoundingClientRect().top } : null });
+      top: selected && areas[visible] === 0 ? viewportTop : cards[visible].getBoundingClientRect().top } : null });
   };
   const updateNavigation = () => {
     const offset = (firstPage - 1) * INDIVIDUAL_PAGE_SIZE;
-    count.textContent = total ? `Showing ${(offset + 1).toLocaleString()}–${(offset + loaded).toLocaleString()} of ${total.toLocaleString()} ${total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
+    const description = total ? `Showing ${(offset + 1).toLocaleString()}–${(offset + loaded).toLocaleString()} of ${total.toLocaleString()} ${total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
+    count.textContent = total ? `${(offset + 1).toLocaleString()}–${(offset + loaded).toLocaleString()} / ${total.toLocaleString()}` : 'No matching datasets';
+    count.setAttribute('aria-label', description);
+    count.title = description;
     committedCount = count.textContent;
     pageLabel.textContent = `${loaded.toLocaleString()} loaded`;
     previous.hidden = firstPage === 1;
@@ -109,6 +138,8 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     end.hidden = !total || lastPage < pages;
     savedFilters.textContent = savedFilterSummary(committed);
     savedFilters.hidden = !savedFilters.textContent;
+    form.querySelector('.catalog-advanced')?.toggleAttribute('data-active',
+      ['dataset', 'licenseCategory', 'sort', 'kind', 'provider', 'license', 'status', 'photos', 'data', 'delivery', 'viewer'].some(field => committed.has(field)));
   };
   const restore = () => {
     const saved = recallFeed(key(), generation);
@@ -249,7 +280,10 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       if (controller.signal.aborted || sequence !== request) return;
       status.textContent = failure;
       automaticPaused = true;
-      if (!options.append) count.textContent = `Previous results · ${committedCount}`;
+      if (!options.append) {
+        count.textContent = `Previous results · ${committedCount}`;
+        count.setAttribute('aria-label', count.textContent);
+      }
       if (options.append) more.textContent = 'Retry loading more';
     } finally {
       if (sequence === request) {
@@ -274,7 +308,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     timer = setTimeout(() => search(select ? 'push' : 'typing'), select ? 0 : 200);
   });
   form.addEventListener('submit', event => { event.preventDefault(); search(); });
-  form.querySelector<HTMLAnchorElement>('#catalog-reset')!.addEventListener('click', event => {
+  document.querySelector<HTMLAnchorElement>('#catalog-reset')!.addEventListener('click', event => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     for (const field of fields) field.value = '';
@@ -323,8 +357,6 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const seed = navigation.feedSeed();
     if (seed) values.set('seed', seed);
     for (const field of fields) field.value = values.get(field.name) || '';
-    const advanced = form.querySelector<HTMLDetailsElement>('.catalog-advanced');
-    if (advanced && ['kind', 'provider', 'license', 'status', 'photos', 'data'].some(name => values.has(name))) advanced.open = true;
     void load(values, { restoring: true });
   });
   updateNavigation();

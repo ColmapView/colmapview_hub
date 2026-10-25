@@ -8,6 +8,11 @@ import type { HubLocation } from './pages';
 import { listPublicRecords, metadataFingerprint, readCard, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
 import { individualRoute } from './individual-routes';
+import { individualIndex, readIndividual } from './individual-data';
+import { datasetShareId } from '../shared/dataset-share';
+import { datasetPath, isCatalogOpenUrl } from '../shared/catalog';
+import type { CatalogEntry } from '../shared/catalog';
+import { catalogEntryPage } from './catalog-pages';
 import { retiredAuthRoute } from './retired-auth';
 import { publicationConfiguration, sharedDatasetResponse, submitPublication } from './publications';
 export { LookupGuard } from './guard';
@@ -245,11 +250,39 @@ function decodeId(value: string): string {
   try { return decodeURIComponent(value); } catch { return value; }
 }
 
+/** Public catalog aliases use bounded built assets, with the same lookup cooldown as share links. */
+async function lookupDataset(request: Request, env: Env, location: HubLocation, code: string, validPath: boolean): Promise<Response> {
+  const check = await lookupGuard(request, env, location, false, missLimit(request, env));
+  const id = validPath ? datasetShareId(code) : undefined;
+  let entry: CatalogEntry | null = null;
+  try {
+    if (id) entry = await readIndividual(env.CATALOG_ASSETS, location.origin, await individualIndex(env.CATALOG_ASSETS, location.origin), id);
+  } catch (error) {
+    const refusal = await check(null);
+    if (refusal) return refusal;
+    throw error;
+  }
+  const refusal = await check(entry ? null : await hash(`catalog-dataset:${code}`));
+  if (refusal) return refusal;
+  if (!entry) return failure(location, false, 404);
+  const headers = { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' };
+  if (request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate') {
+    const target = entry.openUrl && (entry.viewerUrl || entry.candidateViewerUrl);
+    return new Response(null, { status: 307, headers: { ...headers, Location: target && isCatalogOpenUrl(target) ? target : datasetPath(entry) } });
+  }
+  return html(catalogEntryPage(entry, false), 200, headers);
+}
+
 async function route(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
   if (url.origin === location.origin && (url.pathname === SHARE_PATH || url.pathname.startsWith(`${SHARE_PATH}/`))) {
     if (!['GET', 'HEAD'].includes(request.method)) return failure(location, false, 404);
     if (url.pathname === SHARE_PATH || url.pathname === `${SHARE_PATH}/`) return redirect(`${location.base}/datasets/`, 307);
     const parts = url.pathname.slice(SHARE_PATH.length + 1).split('/').map(decodeId);
+    if (parts[0] === 'd') {
+      if (crossSiteSubresource(request)) return failure(location, false, 404);
+      if (parts.length === 3 && parts[2] === '' && datasetShareId(parts[1])) return redirect(`${location.origin}${SHARE_PATH}/d/${parts[1]}`, 308);
+      return lookupDataset(request, env, location, parts[1] || '', parts.length === 2);
+    }
     if (parts.length === 2 && parts[1] === '') return redirect(`${location.origin}${url.pathname.slice(0, -1)}${url.search}`, 308);
     if (parts.length === 1) return lookup(request, env, location, url, parts[0], 'card');
     if (parts.length === 2 && parts[1] === 'preview.jpg') return lookup(request, env, location, url, parts[0], 'preview');

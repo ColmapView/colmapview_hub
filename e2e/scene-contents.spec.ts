@@ -131,7 +131,11 @@ test('cards show content roles, load same-origin photos and open metadata only o
   await page.keyboard.press('Tab');
   await expect(panel.getByRole('link', { name: 'Full metadata', exact: true })).toBeFocused();
   await page.keyboard.press('Tab');
+  await expect(panel.getByRole('button', { name: 'Copy link', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(panel.getByRole('link', { name: 'Related scenes', exact: true })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(panel.getByRole('button', { name: 'Copy link', exact: true })).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(panel.getByRole('link', { name: 'Full metadata', exact: true })).toBeFocused();
   await info.focus();
@@ -163,6 +167,7 @@ test('cards show content roles, load same-origin photos and open metadata only o
   expect(caption.y).toBeGreaterThan(bounds.y);
   expect(Math.abs(bounds.y + bounds.height - caption.y - caption.height)).toBeLessThan(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.locator('.catalog-advanced > summary').click();
   await page.getByRole('combobox', { name: 'License category', exact: true }).selectOption('non-commercial');
   await expect(page.locator('.dataset-thumbnail')).toHaveCount(0);
   expect(providerRequests).toEqual([]);
@@ -350,7 +355,7 @@ test('model-only ArmGS cards show masks and cameras without claiming photos', as
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as { sources: { id: string; sourceId: string }[] };
   const source = index.sources.find(source => source.sourceId === 'hf:Dororo99/Ours_Waymo_ArmGS')!;
   await page.goto('/hub/datasets/?dataset=' + source.id);
-  await expect(page.locator('#catalog-count')).toContainText('of 11 scene datasets');
+  await expect(page.locator('#catalog-count')).toHaveAccessibleName(/of 11 scene datasets/);
   const first = page.locator('.dataset-card').first();
   await expect(first.locator('[data-asset="cameras"]')).toBeVisible();
   await expect(first.locator('[data-asset="masks"]')).toBeVisible();

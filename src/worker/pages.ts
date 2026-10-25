@@ -32,16 +32,24 @@ export function hubLocation(env: Env): HubLocation {
 const policyLinks = ([['About', 'about.html'], ['Privacy', 'privacy.html'], ['Terms', 'terms.html']] as const)
   .map(([label, path]) => `<a href="${VIEWER}/${path}">${label}</a>`).join('');
 
-const header = (path: string) => [
-  '<header class="site-header">',
-  `<a class="brand" href="${escapeHtml(path)}/datasets/">ColmapView <span>Hub</span></a>`,
-  '<nav class="site-nav" aria-label="Main navigation">',
-  `<a class="button icon-button" href="${escapeHtml(path)}/datasets/" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
-  `<a class="button icon-button" href="${VIEWER}/" aria-label="Open viewer" title="Open viewer">${icon('viewer')}</a>`,
-  '</nav>',
+const themeControl = () => [
   '<button type="button" class="button icon-button hub-theme" id="hub-theme" aria-label="Appearance: Dark. Switch to Light." title="Appearance: Dark. Switch to Light." data-theme="dark" disabled>',
   ...(['dark', 'light', 'system'] as const).map(theme => `<span data-theme-icon="${theme}"${theme === 'dark' ? '' : ' hidden'}>${icon(theme)}</span>`),
   '</button>',
+].join('');
+
+const viewerControl = () => `<a class="button icon-button" href="${VIEWER}/" aria-label="Open viewer" title="Open viewer">${icon('viewer')}</a>`;
+
+const header = (path: string, filters?: string) => [
+  `<header class="site-header${filters ? ' catalog-toolbar' : ''}">`,
+  `<a class="brand" href="${escapeHtml(path)}/datasets/" aria-label="ColmapView Hub"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></a>`,
+  ...(filters ? [filters] : [
+  '<nav class="site-nav" aria-label="Main navigation">',
+  `<a class="button icon-button" href="${escapeHtml(path)}/datasets/" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
+  viewerControl(),
+  '</nav>',
+  themeControl(),
+  ]),
   '</header>',
 ].join('');
 
@@ -67,7 +75,8 @@ const footer = (publicCatalog: boolean) => [
 ].join('');
 
 /** Every Hub page: ColmapView's public-page frame, stylesheets and icon. */
-export function page(location: HubLocation, title: string, body: string, metadata = '', publicCatalog = false): string {
+export function page(location: HubLocation, title: string, body: string, metadata = '', publicCatalog = false,
+  catalog?: { filters: string; status: string }): string {
   const asset = (file: string) => `${location.path}/${file}`;
   return [
     `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"${publicCatalog ? ' data-hub-public-catalog="true"' : ''}><head>`,
@@ -80,11 +89,12 @@ export function page(location: HubLocation, title: string, body: string, metadat
     `<script src="${asset('assets/theme.js')}?v=${HUB_UI_VERSION}"></script>`,
     `<link rel="stylesheet" href="${asset('styles.css')}?v=${HUB_UI_VERSION}">`,
     `<script type="module" src="${asset('assets/client.js')}?v=${HUB_UI_VERSION}"></script>`,
-    '</head><body>',
+    `</head><body${catalog ? ' class="catalog-browse"' : ''}>`,
     '<a class="skip-link" href="#main">Skip to content</a>',
-    header(location.path),
+    header(location.path, catalog?.filters),
     `<main id="main" tabindex="-1"><div class="hub-content">${body}</div></main>`,
     footer(publicCatalog),
+    catalog ? `<section class="catalog-footbar" aria-label="Catalog status">${catalog.status}${viewerControl()}${themeControl()}</section>` : '',
     '</body></html>',
   ].join('');
 }

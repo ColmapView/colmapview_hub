@@ -8,6 +8,8 @@ const shapes = {
   search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/>',
   shuffle: '<path d="M3 6h3c5 0 7 12 12 12h3M3 18h3c2 0 3.5-2 5-4.5M13 10.5C14.5 8 16 6 18 6h3m-4-4 4 4-4 4m0 4 4 4-4 4"/>',
   close: '<path d="m6 6 12 12M6 18 18 6"/>',
+  filters: '<path d="M4 7h16M4 17h16"/><circle cx="8" cy="7" r="3"/><circle cx="16" cy="17" r="3"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>',
 } as const;
 
 /** Decorative, trusted icons; each owning control supplies its accessible name. */

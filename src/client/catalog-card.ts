@@ -1,5 +1,7 @@
 import { catalogCardHtml } from '../shared/catalog-card';
 import type { CatalogSummary } from '../shared/catalog';
+import { DATASET_SHARE_PATH, datasetShareId } from '../shared/dataset-share';
+import { ID_PATTERN, SHARE_PATH } from '../shared/model';
 
 export function catalogCardElement(entry: CatalogSummary): HTMLElement {
   const template = document.createElement('template');
@@ -24,6 +26,24 @@ export function initializeCatalogMetadata(): void {
   document.addEventListener('click', event => {
     const target = event.target;
     if (!(target instanceof Element)) return;
+    const copy = target.closest<HTMLButtonElement>('[data-copy-dataset-link]');
+    if (copy) {
+      const path = copy.dataset.copyDatasetLink || '';
+      if (!(path.startsWith(`${DATASET_SHARE_PATH}/`) && datasetShareId(path.slice(DATASET_SHARE_PATH.length + 1)))
+        && !(path.startsWith(`${SHARE_PATH}/`) && ID_PATTERN.test(path.slice(SHARE_PATH.length + 1)))) return;
+      const status = copy.parentElement?.querySelector<HTMLElement>('[data-copy-status]');
+      const url = new URL(path, location.origin).href;
+      copy.disabled = true;
+      void Promise.resolve().then(() => navigator.clipboard.writeText(url)).then(() => {
+        if (status) status.textContent = 'Link copied';
+      }).catch(() => {
+        if (status) {
+          const link = document.createElement('a'); link.href = url; link.textContent = url;
+          status.replaceChildren('Copy this link: ', link);
+        }
+      }).finally(() => { copy.disabled = false; });
+      return;
+    }
     const button = target.closest<HTMLButtonElement>('.dataset-info');
     if (button) {
       const panel = button.closest('[data-dataset-card]')?.querySelector<HTMLDialogElement>('.dataset-metadata');

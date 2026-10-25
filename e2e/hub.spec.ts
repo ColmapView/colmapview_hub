@@ -604,8 +604,8 @@ test('preserves saved filters after their redundant controls are removed', async
 test('opens the scene browser directly in the ColmapView frame', async ({ page }) => {
   await page.goto('/hub/');
   await expect(page).toHaveURL(/\/hub\/datasets\/$/);
-  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
-  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Datasets', exact: true })).toHaveAttribute('href', '/hub/datasets/');
+  await expect(page.getByRole('region', { name: 'Catalog status' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
+  await expect(page.getByRole('link', { name: 'ColmapView Hub', exact: true })).toHaveAttribute('href', '/hub/datasets/');
   await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Source', 'Contact']);
   await expect(page.getByLabel('Collection', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Public datasets', exact: true })).toBeVisible();
@@ -618,11 +618,12 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
-  await page.getByText('More filters', { exact: true }).click();
+  await page.locator('.catalog-advanced > summary').click();
   await page.getByLabel('Type', { exact: true }).selectOption('COLMAP reconstruction');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
   await expect(page.locator('select[name="viewer"], select[name="delivery"]')).toHaveCount(0);
+  await page.locator('.catalog-advanced > summary').click();
   await page.getByLabel('Evidence', { exact: true }).selectOption('Native COLMAP layout checked');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await expect.poll(() => new URL(page.url()).searchParams.get('status')).toBe('Native COLMAP layout checked');
@@ -640,7 +641,7 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await expect(page.locator('.dataset-thumbnail')).toBeVisible();
   await expect(page.locator('.dataset-thumbnail')).toHaveAttribute('src', /^\/hub\/datasets\/individual\/thumbnails\/[a-f0-9]{64}\.jpg$/);
   await page.getByRole('link', { name: '← All datasets', exact: true }).click();
-  await page.getByText('About this catalog', { exact: true }).click();
+  await page.locator('.catalog-notes > summary').click();
   await page.getByRole('link', { name: 'Audit and coverage', exact: true }).click();
   await expect(page).toHaveURL(origin + '/hub/datasets/audit');
   await expect(page.getByRole('heading', { name: 'Dataset audit', exact: true })).toBeVisible();

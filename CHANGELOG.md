@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.13.0 — 2026-10-25
+
+- Consolidate browse controls into a single top row, with responsive filter menus and a bottom bar for counts, catalog information and icon actions. Keep search, asynchronous loading and return positions working with both bars.
+- Give every curated scene a stable `/s/d/…` short URL and copy action. Resolve links from current public catalog assets, preserve restricted-scene fallbacks and social metadata, and apply the existing lookup protections without new stored share records.
+
 ## 0.12.12 — 2026-10-25
 
 - Keep Analytics settings in the footer instead of floating over the catalog. Remember the first-visit choice, and preserve the scroll position when choosing or closing the prompt.

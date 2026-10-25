@@ -5,6 +5,7 @@ import { licenseCategory, LICENSE_CATEGORY_LABELS } from './license-categories';
 import { photoLabel } from './scene-photos';
 import { catalogCardTitle } from './catalog-title';
 import { icon } from './icons';
+import { datasetSharePath } from './dataset-share';
 import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
 
 export function catalogCardHtml(entry: CatalogSummary): string {
@@ -14,6 +15,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
   const metadataId = `metadata-${entry.id}`;
   const title = catalogCardTitle(entry);
   const preview = sceneThumbnailHtml(entry, true);
+  const share = datasetSharePath(entry.id);
   const facts = [
     ['Dataset', entry.dataset?.title || entry.title], ['Type', entry.itemKind || entry.formats.join(' · ') || 'Collection'],
     ['Source', providerLabel(entry.provider)], ['License', entry.license], ['License category', LICENSE_CATEGORY_LABELS[category]],
@@ -29,7 +31,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + '<div class="dataset-card-hover">' + sceneContentsHtml(entry.availableData)
     + `<p>${escape(LICENSE_CATEGORY_LABELS[category])} · ${escape(entry.license)}</p></div></div>`
     + '<div class="dataset-card-body"><div class="dataset-card-heading"><div>'
-    + `<h2><a class="dataset-open" href="${escape(catalogOpenUrl(entry))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
+    + `<h2><a class="dataset-open" href="${escape(share || catalogOpenUrl(entry))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
     + `<p class="dataset-label">${escape(entry.dataset?.label || providerLabel(entry.provider))}</p></div>`
     + `<button type="button" class="dataset-info" aria-label="${escape(`Metadata for ${entry.title}`)}" aria-haspopup="dialog" aria-controls="${metadataId}" aria-expanded="false"><span aria-hidden="true">i</span></button></div>`
     + sceneStatisticsHtml(entry.sceneStats, true)
@@ -42,6 +44,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + (preview ? `<p class="dataset-photo-credit">Photo: ${sceneThumbnailCreditHtml(entry.thumbnail!)}${entry.thumbnail!.crop === 'center_square' ? ' · Cropped' : ''}</p>` : '')
     + `<p class="note">${escape(entry.description)}</p>`
     + `<div class="dataset-metadata-links"><a href="${datasetPath(entry)}">Full metadata</a>`
+    + (share ? `<button type="button" data-copy-dataset-link="${share}">Copy link</button><span class="note" data-copy-status role="status"></span>` : '')
     + (entry.dataset ? `<a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Related scenes</a>` : '')
     + (isCatalogSourceUrl(entry.sourceUrl) ? `<a href="${escape(entry.sourceUrl)}" target="_blank" rel="noopener noreferrer">Original source ↗</a>` : '')
     + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></dialog></article>`;

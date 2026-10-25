@@ -57,8 +57,10 @@ test('camera video imagery has its own filter and matching-frame launch while mo
   expect(result.total).toBe(index.photos.video_frames);
   expect(result.entries.every((entry: { photoStatus: string }) => entry.photoStatus === 'video_frames')).toBe(true);
   await page.goto('/hub/datasets/?photos=video_frames');
-  await expect(page.locator('#catalog-count')).toContainText(`of ${result.total.toLocaleString('en-US')} scene datasets`);
+  await expect(page.locator('#catalog-count')).toHaveAccessibleName(new RegExp(`of ${result.total.toLocaleString('en-US')} scene datasets`));
+  await page.locator('.catalog-advanced > summary').click();
   await expect(page.getByRole('combobox', { name: 'Images', exact: true })).toHaveValue('video_frames');
+  await page.keyboard.press('Escape');
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Matched video frames');
   const id = 'data-7ab128e89d676305e079e729';
   const open = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
@@ -110,22 +112,23 @@ test('per-pose video mappings expose view/source counts and source feature warni
 
 test('photo filtering survives Back and Forward and makes no provider requests', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as { total: number; photos: Record<string, number> };
-  const count = (total: number) => `of ${total.toLocaleString('en-US')} scene datasets`;
+  const count = (total: number) => new RegExp(`of ${total.toLocaleString('en-US')} scene datasets`);
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com/.test(request.url())) providerRequests.push(request.url()); });
   await page.goto('/hub/datasets/?photos=not_included');
-  await expect(page.locator('#catalog-count')).toContainText(count(index.photos.not_included));
+  await expect(page.locator('#catalog-count')).toHaveAccessibleName(count(index.photos.not_included));
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos not included');
+  await page.locator('.catalog-advanced > summary').click();
   await page.getByRole('combobox', { name: 'Images', exact: true }).selectOption('not_found');
-  await expect(page.locator('#catalog-count')).toContainText(count(index.photos.not_found));
+  await expect(page.locator('#catalog-count')).toHaveAccessibleName(count(index.photos.not_found));
   await page.goBack();
-  await expect(page.locator('#catalog-count')).toContainText(count(index.photos.not_included));
+  await expect(page.locator('#catalog-count')).toHaveAccessibleName(count(index.photos.not_included));
   await expect(page.getByRole('combobox', { name: 'Images', exact: true })).toHaveValue('not_included');
   await page.goForward();
-  await expect(page.locator('#catalog-count')).toContainText(count(index.photos.not_found));
+  await expect(page.locator('#catalog-count')).toHaveAccessibleName(count(index.photos.not_found));
   await expect(page.getByRole('combobox', { name: 'Images', exact: true })).toHaveValue('not_found');
   await page.getByRole('link', { name: 'Reset', exact: true }).click();
-  await expect(page.locator('#catalog-count')).toContainText(count(index.total));
+  await expect(page.locator('#catalog-count')).toHaveAccessibleName(count(index.total));
   expect(providerRequests).toEqual([]);
 });
 
@@ -218,7 +221,7 @@ test('companion ZIP requirements remain explicit and Waymo mappings launch throu
     sources: { id: string; sourceId: string }[] };
   const archiveSource = index.sources.find(source => source.sourceId === 'hf:cornell-vailab/megaunscene')!;
   await page.goto('/hub/datasets/?photos=companion_archive&dataset=' + archiveSource.id);
-  await expect(page.locator('#catalog-count')).toContainText('of 478 scene datasets');
+  await expect(page.locator('#catalog-count')).toHaveAccessibleName(/of 478 scene datasets/);
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos in a separate archive');
   const zipped = await (await page.request.get('/hub/datasets/api/entries?photos=companion_archive&dataset=' + archiveSource.id)).json() as {
     entries: { id: string; openUrl: string; photoStatus: string }[] };

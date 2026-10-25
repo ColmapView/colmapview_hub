@@ -1,5 +1,32 @@
 # Public dataset catalog
 
+The browse page has one sticky toolbar for search and primary filters. On narrow
+screens the same select elements move into More filters, retaining values and
+form submission. The menu starts closed and highlights active filters. A fixed
+bottom bar shows the result range, loading status,
+shuffle/reset, catalog information, the viewer link and appearance. Full count
+descriptions remain available to assistive technology. Catalog information and
+extra filters close with Escape or an outside click; reading catalog information
+pauses automatic appends. Return anchors account for both bars. Policy links and
+Analytics settings remain in the ordinary page footer.
+
+Every curated scene has a short URL at `/s/d/<code>`. The 16-character URL-safe
+code reversibly encodes the complete 12-byte `data-…` ID, so existing scene IDs
+have stable, collision-free aliases without stored share records. Cards use this
+URL; Copy link is also available in their information panels and full metadata.
+Shared on Hub submissions retain their existing `/s/<id>` addresses and copy
+controls. Clipboard failures reveal a selectable link.
+
+Curated short URLs read only bounded, current built catalog assets. Browser
+navigations (GET/HEAD with a document destination or navigate mode) redirect
+directly to the recorded viewer URL. Entries without an allowed launch resolve
+to their metadata. Non-navigation requests receive social metadata without
+analytics, with `Vary: Sec-Fetch-Dest, Sec-Fetch-Mode`. Removed entries return 404.
+The short namespace uses the normal lookup cooldown; cross-site embeds and
+prefetches are rejected before reading assets or spending misses. Its IDs are
+case-sensitive. It creates no R2 records and accepts no submitted target URL.
+Existing `/hub/datasets/open/<id>` launch and API contracts stay compatible.
+
 The hosted browse and scene metadata pages use Google Analytics web stream
 `G-7K5H83SEMY`, used historically by viewer releases through v0.15.4.
 Measurement starts only after explicit opt-in to analytics cookies (consent revision 2).

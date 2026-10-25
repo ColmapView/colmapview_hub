@@ -32,7 +32,7 @@ describe('Hub pages', () => {
     const link = await create(input());
     for (const path of [`/${link.id}`, '/missing-frame']) {
       const html = await (await request(path)).text();
-    expect(html).toContain('<a class="brand" href="/hub/datasets/">ColmapView <span>Hub</span></a>');
+      expect(html).toContain('<a class="brand" href="/hub/datasets/" aria-label="ColmapView Hub">');
       for (const [href, label] of [['/hub/datasets/', 'Datasets'], ['https://colmapview.opsiclear.com/', 'Open viewer']]) {
         expect(html).toContain(`href="${href}" aria-label="${label}" title="${label}"`);
       }
