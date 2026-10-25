@@ -57,7 +57,7 @@ const baseManifest = { version: 1, baseUrl: 'https://colmapview.opsiclear.com/hu
   files: { cameras: sourceUrl(files.cameras), images: sourceUrl(files.images), points3D: sourceUrl(files.points3d) }, skipImages: true, splats: [] };
 const prepared = { sourceId, revision, kind: 'colmap', path: root,
   baseManifestSha256: hash(Buffer.from(canonical(baseManifest))), modelFiles, registeredImages,
-  videos: [], bindings: [], samples: [], temporalScope: 'per_pose',
+  videos: [], bindings: [], samples: [], temporalScope: 'per_pose', captureType: 'moving_camera',
   sourceListing: { url: treeUrl, bytes: treeBody.length, sha256: hash(treeBody), complete: true },
   extractor: { sourcePath: 'prepare_data.py', bytes: extractor.length, sha256: hash(extractor) },
   recipe: { framesPerSecond: 2, skipStartSeconds: 0, skipEndSeconds: 0,

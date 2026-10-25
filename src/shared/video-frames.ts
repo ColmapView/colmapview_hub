@@ -2,6 +2,7 @@ import type { SceneManifestEvidence } from './scene-manifests';
 
 /** An additive media receipt. The base manifest still owns native geometry/export evidence. */
 export interface VideoFrameRoutingEvidence {
+  captureType?: 'synchronized_multiview';
   url: string; sha256: string; baseManifestUrl: string; baseManifestSha256: string; receiptSha256: string;
   count: number; timestamp: number; frame: string; frameCount: number;
   checkedAt: string; viewerVersion: string; viewerCommit: string;
@@ -16,6 +17,7 @@ export function isVideoFrameRoutingEvidence(value: unknown, model: SceneManifest
   const sample = item.sample;
   const version = typeof item.viewerVersion === 'string' && /^\d+\.\d+\.\d+$/.test(item.viewerVersion) ? item.viewerVersion.split('.').map(Number) : [];
   return Boolean(frame) && hash(item.sha256) && hash(item.receiptSha256) && hash(item.viewerCommit, 40)
+    && (item.captureType === undefined || item.captureType === 'synchronized_multiview')
     && item.url === `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${item.sha256}.manifest.json`
     && item.baseManifestUrl === model.url && item.baseManifestSha256 === model.sha256
     && item.count === model.counts.images && count(item.timestamp) && item.timestamp < item.frameCount

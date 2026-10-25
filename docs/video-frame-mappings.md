@@ -23,6 +23,40 @@ source times. Existing calibration, feature-integrity and export warnings remain
 independent of imagery availability. The Worker serves the curated metadata and
 manifests; it never downloads or decodes videos.
 
+## Capture type and temporal selection
+
+The catalog's **Video capture** label is reviewed separately from `temporalScope`.
+`captureType: synchronized_multiview` identifies a synchronized multi-view capture;
+`moving_camera` identifies recordings with camera trajectories, including a single
+fly-through or several moving recordings in one reconstruction. Moving cameras can
+also be part of a rig; this label alone does not assert synchronization or the
+number of physical devices. Missing generic classifications display **Not classified**;
+the older DanceNet3D receipt already has a fixed synchronized multi-view contract.
+Never infer capture type from video count, file extensions, frame selectors or
+COLMAP camera-model count: one calibration can be shared by many moving poses.
+
+The October 25 audit found 48 published scenes with playable video mappings:
+
+| Capture evidence | Scenes | Registered views | Source recordings | Temporal selection |
+| --- | ---: | ---: | ---: | --- |
+| DanceNet3D synchronized multi-view | 47 | 1,349 | 1,349 | One geometry snapshot; matching frame from each camera |
+| campus_nlp moving camera | 1 | 285 | 6 | One selected source frame per registered pose |
+
+DanceNet3D's [pinned publisher description](https://huggingface.co/datasets/nyuvideolab/danceNet3D/blob/5ecd1b71d0c13b176dbdbe358b940624759d678f/README.md)
+documents synchronized cameras. The Campus classification was checked against all
+285 native camera centers in the [pinned poses](https://huggingface.co/datasets/sebothetramp/MBZUAI-Campus/blob/4c18714ad982888d453ec88e2dc335f8dce5928d/reconstructions/scenes/campus_nlp/0/images.bin)
+(SHA-256 `eca686d9f4c8eef1087cdfc8b67fcc94450a21b1efa71e2a7d76b0948679a011`).
+Each recording has 20–55 distinct registered positions, so six recordings must not
+be described as six fixed camera poses or one single video. Synchronization between
+these recordings is not established by the frame mapping.
+
+This is catalog evidence, not an extra runtime manifest field. The viewer's v4/v5
+bindings already support both layouts: multiple videos can supply one snapshot,
+and one video can supply many posed views. Individual playback does not animate
+camera poses or synchronize recordings. Stills and exports retain their explicit
+matched frames. The table covers published video bindings, not every dataset
+originally captured on video or every upstream video file.
+
 ## Authoring
 
 Run these operator commands from the Hub repository root with the viewer checkout

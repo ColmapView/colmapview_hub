@@ -116,6 +116,7 @@ def apply_video_frames(proof, review, model, parent, hf_url):
     url = ASSET_BASE + name
     sample = review['sample']
     result['videoFrameRouting'] = {'url': url, 'sha256': name.removesuffix('.manifest.json'),
+        'captureType': 'synchronized_multiview',
         'baseManifestUrl': result['sceneManifest']['url'], 'baseManifestSha256': result['sceneManifest']['sha256'],
         'receiptSha256': review['receiptSha256'], 'count': len(review['videos']), 'timestamp': review['timestamp'],
         'frame': review['frame'], 'frameCount': review['frameCount'], 'checkedAt': review['checkedAt'],

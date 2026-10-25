@@ -6,6 +6,7 @@ import { photoLabel } from './scene-photos';
 import { catalogCardTitle } from './catalog-title';
 import { icon } from './icons';
 import { datasetSharePath } from './dataset-share';
+import { VIDEO_CAPTURE_LABELS } from './video-capture';
 import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
 
 export function catalogCardHtml(entry: CatalogSummary): string {
@@ -21,6 +22,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     ['Source', providerLabel(entry.provider)], ['License', entry.license], ['License category', LICENSE_CATEGORY_LABELS[category]],
     ['Access', accessLabel(entry.access)], ['Evidence', entry.statusLabel], ['Delivery', deliveryLabel(entry.delivery)],
     ...(entry.photoStatus ? [['Images', photoLabel(entry.photoStatus)]] : []),
+    ...(entry.videoCapture ? [['Video capture', VIDEO_CAPTURE_LABELS[entry.videoCapture]]] : []),
     ...(entry.availableData ? [['Available data', sceneDataText(entry.availableData)]] : []),
     ...(entry.sceneStats ? [['Camera models', entry.sceneStats.cameraModels === null ? 'Unknown' : entry.sceneStats.cameraModels.toLocaleString('en-US')]] : []),
   ];
@@ -29,6 +31,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + (entry.statusLabel === 'Feature links need review' || entry.statusLabel === 'Calibration needs review'
       ? `<p class="dataset-review">${escape(entry.statusLabel)}</p>` : '')
     + '<div class="dataset-card-hover">' + sceneContentsHtml(entry.availableData)
+    + (entry.videoCapture ? `<p>${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</p>` : '')
     + `<p>${escape(LICENSE_CATEGORY_LABELS[category])} · ${escape(entry.license)}</p></div></div>`
     + '<div class="dataset-card-body"><div class="dataset-card-heading"><div>'
     + `<h2><a class="dataset-open" href="${escape(share || catalogOpenUrl(entry))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`

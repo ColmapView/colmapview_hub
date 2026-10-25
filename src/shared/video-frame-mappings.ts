@@ -1,3 +1,5 @@
+import { isVideoCaptureType, type VideoCaptureType } from './video-capture';
+
 /** Model-bound media evidence. A decoded sample is separate from complete export verification. */
 export interface VideoFrameMappingEvidence {
   schemaVersion: 1; manifestVersion: 4 | 5;
@@ -5,6 +7,7 @@ export interface VideoFrameMappingEvidence {
   revision: string; modelFiles: Record<string, string>;
   registeredImages: number; mappedImages: number; videoSources: number; sampleCount: number;
   temporalScope: 'per_pose' | 'synchronized';
+  captureType?: VideoCaptureType;
   checkedAt: string; viewerCommit: string; viewerVersion: string;
 }
 
@@ -23,6 +26,7 @@ export function isVideoFrameMappingEvidence(value: unknown, files: Record<string
     && count(item.videoSources, 1) && item.videoSources <= item.mappedImages
     && count(item.sampleCount, 1) && item.sampleCount >= item.videoSources
     && ['per_pose', 'synchronized'].includes(item.temporalScope)
+    && (item.captureType === undefined || isVideoCaptureType(item.captureType))
     && version.length === 3 && (version[0] > 0 || version[1] >= 23)
     && typeof item.checkedAt === 'string' && Number.isFinite(Date.parse(item.checkedAt))
     && Boolean(item.modelFiles) && typeof item.modelFiles === 'object' && !Array.isArray(item.modelFiles)

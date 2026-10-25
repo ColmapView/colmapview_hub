@@ -13,6 +13,7 @@ from .scene_qualification import native_launch_manifest, scene_key
 from .video_frames import review_digest
 
 CHECKS = ('nativeSelection', 'nameCoverage', 'sourceListing', 'presentationMapping', 'browserPixels')
+CAPTURE_TYPES = ('synchronized_multiview', 'moving_camera', 'unclassified')
 MODEL_ROLES = ('cameras', 'images', 'points3d', 'rigs', 'frames')
 
 
@@ -45,6 +46,7 @@ def mapping_reviews(catalog, policy, native_models, manifest_models, hf_url):
                 or review.get('revision') != model['revision'] or review.get('receiptSha256') != review_digest(review)
                 or any(review.get('checks', {}).get(check) != 'passed' for check in CHECKS)
                 or review.get('temporalScope') not in ('per_pose', 'synchronized')
+                or review.get('captureType', 'unclassified') not in CAPTURE_TYPES
                 or review.get('manifestVersion') not in (4, 5)
                 or not re.fullmatch('[a-f0-9]{40}', review.get('viewerCommit', ''))
                 or not re.fullmatch(r'\d+\.\d+\.\d+', review.get('viewerVersion', ''))
@@ -162,6 +164,7 @@ def apply_mapping(proof, review, model, parent, hf_url):
         'modelFiles': {role: path for role, path in model['files'].items() if role in MODEL_ROLES},
         'registeredImages': len(review['registeredImages']), 'mappedImages': count, 'videoSources': len(review['videos']),
         'temporalScope': review['temporalScope'], 'checkedAt': review['checkedAt'],
+        'captureType': review.get('captureType', 'unclassified'),
         'viewerCommit': review['viewerCommit'], 'viewerVersion': review['viewerVersion'],
         'sampleCount': len(review['samples'])}
     result['viewerUrl'] = 'https://colmapview.opsiclear.com/?url=' + quote(url, safe='')

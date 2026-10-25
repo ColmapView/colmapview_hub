@@ -82,6 +82,7 @@ class VideoFrameTests(unittest.TestCase):
         self.assertEqual(updated['sceneManifest'], model_receipt)
         self.assertEqual(proof['photoAvailability'], 'not_found')
         self.assertEqual(updated['photoAvailability'], 'video_frames')
+        self.assertEqual(updated['videoFrameRouting']['captureType'], 'synchronized_multiview')
         self.assertEqual(updated['availableData']['images'], {'status': 'listed', 'count': 28, 'sourceFormat': 'video'})
         self.assertIn('remaining camera pixels', updated['scope'])
 

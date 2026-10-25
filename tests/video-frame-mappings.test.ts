@@ -1,7 +1,9 @@
 import { expect, it } from 'vitest';
 import { canOpenIndividual, individualEntry, type IndividualProof, type IndividualRecord, type IndividualSource } from '../src/shared/individual-catalog';
-import type { VideoFrameMappingEvidence } from '../src/shared/video-frame-mappings';
+import { isVideoFrameMappingEvidence, type VideoFrameMappingEvidence } from '../src/shared/video-frame-mappings';
 import type { CatalogEntry } from '../src/shared/catalog';
+import { isCatalogSummary } from '../src/shared/catalog';
+import { catalogCardHtml } from '../src/shared/catalog-card';
 
 const files = { cameras: 'scene/cameras.bin', images: 'scene/images.bin', points3d: 'scene/points3D.bin' };
 const source: IndividualSource = { id: 'source', sourceId: 'hf:owner/data', title: 'Data', label: 'Data', provider: 'huggingface',
@@ -9,7 +11,7 @@ const source: IndividualSource = { id: 'source', sourceId: 'hf:owner/data', titl
 const mapping: VideoFrameMappingEvidence = { schemaVersion: 1, manifestVersion: 5, sha256: 'a'.repeat(64),
   url: `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${'a'.repeat(64)}.manifest.json`,
   baseManifestSha256: 'b'.repeat(64), receiptSha256: 'c'.repeat(64), revision: 'd'.repeat(40), modelFiles: files,
-  registeredImages: 285, mappedImages: 285, videoSources: 6, sampleCount: 18, temporalScope: 'per_pose',
+  registeredImages: 285, mappedImages: 285, videoSources: 6, sampleCount: 18, temporalScope: 'per_pose', captureType: 'moving_camera',
   checkedAt: '2026-10-24T12:00:00Z', viewerCommit: 'e'.repeat(40), viewerVersion: '0.23.0' };
 const proof: IndividualProof = { level: 'native_layout_checked', delivery: 'cors_headers_checked', statusLabel: 'Native model checked',
   summary: 'Native selection with separately checked video imagery.', scope: 'Native counts and sampled pixels.',
@@ -24,7 +26,24 @@ it('reports registered views and unique videos separately without requiring a mo
   const entry = individualEntry(row(proof), source, { ...source, checkedAt: mapping.checkedAt, audits: [],
     facts: [{ label: 'Pinned revision', value: mapping.revision }] } as unknown as CatalogEntry);
   expect(entry.facts.find(item => item.label === 'Video frame manifest')?.value).toBe('285 matched views from 6 source videos');
+  expect(entry.facts.find(item => item.label === 'Video capture')?.value).toBe('Moving camera');
+  expect(catalogCardHtml(entry)).toContain('<dt>Video capture</dt><dd>Moving camera</dd>');
+  expect(isCatalogSummary({ ...entry, videoCapture: 'toString' })).toBe(false);
+  expect(isVideoFrameMappingEvidence({ ...mapping, captureType: 'toString' }, files, 285, mapping.revision)).toBe(false);
   expect(proof.sceneManifest).toBeUndefined();
+});
+
+it('does not infer capture type from the number of recordings', () => {
+  const parent = { ...source, checkedAt: mapping.checkedAt, audits: [], facts: [] } as unknown as CatalogEntry;
+  for (const videoSources of [1, 6]) {
+    const selected = { ...proof, videoFrameMapping: { ...mapping, videoSources } };
+    expect(individualEntry(row(selected), source, parent).videoCapture).toBe('moving_camera');
+    const unclassified = { ...selected, videoFrameMapping: { ...selected.videoFrameMapping, captureType: undefined } };
+    const entry = individualEntry(row(unclassified), source, parent);
+    expect(entry.videoCapture).toBe('unclassified');
+    expect(entry.facts.find(item => item.label === 'Video capture')?.value).toBe('Not classified');
+    expect(canOpenIndividual(row(unclassified), source)).toBe(true);
+  }
 });
 
 it('rejects changed source selections, counts, viewer targets and old-runtime claims', () => {

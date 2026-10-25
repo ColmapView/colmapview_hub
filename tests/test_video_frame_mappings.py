@@ -28,7 +28,7 @@ class VideoFrameMappingTests(unittest.TestCase):
                        'bindings': [{'name': name, 'video': 'recording', 'frameIndex': index} for name, index in [('cam/a.jpg', 0), ('cam/b.jpg', 17)]],
                        'samples': [{'name': 'cam/a.jpg', 'video': 'recording', 'frameIndex': 0, 'sourceTimestamp': 0.25, 'bytes': 50,
                                     'sha256': 'd' * 64, 'referenceSha256': 'e' * 64, 'maxPixelDifference': 0, 'meanPixelDifference': 0}],
-                       'temporalScope': 'per_pose', 'checkedAt': '2026-10-24T12:00:00Z', 'viewerVersion': '0.23.0', 'viewerCommit': 'e' * 40,
+                       'temporalScope': 'per_pose', 'captureType': 'moving_camera', 'checkedAt': '2026-10-24T12:00:00Z', 'viewerVersion': '0.23.0', 'viewerCommit': 'e' * 40,
                        'checks': {check: 'passed' for check in CHECKS}}
 
     def validate(self, review=None):
@@ -51,9 +51,19 @@ class VideoFrameMappingTests(unittest.TestCase):
         updated = apply_mapping(proof, review, self.model, self.parent, hf_url)
         self.assertEqual(updated['videoFrameMapping']['mappedImages'], 2)
         self.assertEqual(updated['videoFrameMapping']['videoSources'], 1)
+        self.assertEqual(updated['videoFrameMapping']['captureType'], 'moving_camera')
         self.assertEqual(updated['sourceIntegrityReview'], proof['sourceIntegrityReview'])
         self.assertNotIn('sceneManifest', updated)
         self.assertNotIn('exportSha256', updated['videoFrameMapping'])
+
+    def test_unclassified_capture_stays_unknown_instead_of_inferring_a_flythrough(self):
+        review = copy.deepcopy(self.review)
+        del review['captureType']
+        checked = self.validate(review)[self.key]
+        updated = apply_mapping({'scope': ''}, checked, self.model, self.parent, hf_url)
+        self.assertEqual(updated['videoFrameMapping']['captureType'], 'unclassified')
+        review['captureType'] = 'one_video_means_flythrough'
+        with self.assertRaises(ValueError): self.validate(review)
 
     def test_partial_coverage_is_counted_without_claiming_all_registered_photos(self):
         review = copy.deepcopy(self.review)

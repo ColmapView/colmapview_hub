@@ -5,6 +5,7 @@ import { isPhotoStatus } from './scene-photos';
 import type { PhotoStatus, ScenePhotoAudit } from './scene-photos';
 import { isSceneContents, isSceneStatistics, isSceneThumbnail } from './scene-contents';
 import type { SceneContents, SceneStatistics, SceneThumbnail } from './scene-contents';
+import { isVideoCaptureType, type VideoCaptureType } from './video-capture';
 export { classifyLicense, licenseCategory, LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS, LICENSE_CATEGORY_NOTE } from './license-categories';
 
 export interface CatalogFact { label: string; value: string; url?: string }
@@ -54,6 +55,7 @@ export interface CatalogEntry {
   openUrl?: string;
   datasetLabel?: string;
   photoStatus?: PhotoStatus;
+  videoCapture?: VideoCaptureType;
   availableData?: SceneContents;
   sceneStats?: SceneStatistics;
   thumbnail?: SceneThumbnail;
@@ -70,7 +72,7 @@ export interface CatalogSnapshot {
   sceneSummary?: { checkedAt: string; entries: number; sourceEntriesWithModels: number; incompleteCollections: number };
   photoAudit?: { checkedAt: string; scenes: number; photos: Partial<Record<PhotoStatus, number>> };
 }
-export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail' | 'shareName'> & { sourceUrl?: string; delivery?: string; hasViewer?: boolean; openUrl?: string };
+export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail' | 'shareName' | 'videoCapture'> & { sourceUrl?: string; delivery?: string; hasViewer?: boolean; openUrl?: string };
 export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
 export function isCatalogOpenUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
@@ -107,6 +109,7 @@ export function catalogSummary(entry: CatalogEntry): CatalogSummary {
     && !['conversion_needed', 'no_native_assets', 'unavailable'].includes(entry.verification?.level || '');
   return { id, title, sourceUrl: entry.sourceUrl, provider, license, licenseCategory: licenseCategory(entry), access, statusLabel, formats, description, testOrFixture,
     ...(entry.shareName ? { shareName: entry.shareName } : {}),
+    ...(entry.videoCapture ? { videoCapture: entry.videoCapture } : {}),
     ...(canOpen && isCatalogOpenUrl(entry.openUrl || entry.viewerUrl) ? { openUrl: entry.openUrl || entry.viewerUrl } : {}),
     dataset: dataset || { id, label: datasetLabel(entry), title }, ...(itemKind ? { itemKind } : {}),
     ...(entry.photoStatus ? { photoStatus: entry.photoStatus } : {}),
@@ -131,6 +134,7 @@ export function isCatalogSummary(value: unknown): value is CatalogSummary {
     && (item.sourceUrl === undefined || isCatalogSourceUrl(item.sourceUrl))
     && (item.itemKind === undefined || typeof item.itemKind === 'string')
     && (item.photoStatus === undefined || isPhotoStatus(item.photoStatus))
+    && (item.videoCapture === undefined || isVideoCaptureType(item.videoCapture))
     && (item.availableData === undefined || isSceneContents(item.availableData))
     && (item.sceneStats === undefined || isSceneStatistics(item.sceneStats))
     && (item.thumbnail === undefined || isSceneThumbnail(item.thumbnail))

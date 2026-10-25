@@ -520,6 +520,8 @@ test('video imagery retains its model receipt, truthful media labels and exact a
   const entry = render.individualEntry(item, source, parent), html = render.catalogEntryPage(entry);
   assert.equal(entry.viewerUrl, proof.viewerUrl);
   assert.match(html, /Matched video frames/); assert.match(html, /Images · video frames/);
+  assert.match(html, /Synchronized multi-view/);
+  assert.equal(summary.videoCapture, 'synchronized_multiview');
   assert.ok(entry.facts.some(fact => fact.label === 'Model-only export SHA-256' && fact.value === model.exportSha256));
   assert.ok(entry.facts.some(fact => fact.label === 'Video frame manifest' && fact.url === url));
   assert.doesNotMatch(html, /All registered originals checked|Video decoding.*outside/);

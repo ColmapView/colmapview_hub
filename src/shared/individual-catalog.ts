@@ -14,6 +14,7 @@ import type { PhotoRoutingEvidence } from './photo-routing';
 import { isArchiveRoutingEvidence, type ArchiveRoutingEvidence } from './archive-routing';
 import type { FeedSelection } from './discovery';
 import { CATALOG_SHARE_NAME } from './dataset-share';
+import { VIDEO_CAPTURE_LABELS } from './video-capture';
 
 export interface IndividualSource {
   id: string; sourceId: string; title: string; label: string;
@@ -156,6 +157,8 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
     license: source.license, licenseCategory: licenseCategory(source), access: source.access, statusLabel, formats: [format], testOrFixture: false,
     dataset: { id: source.id, label: source.label, title: source.title }, itemKind: kindLabel,
     ...(proof?.photoAvailability ? { photoStatus: proof.photoAvailability } : {}),
+    ...(proof?.videoFrameRouting ? { videoCapture: proof.videoFrameRouting.captureType ?? 'synchronized_multiview' }
+      : proof?.videoFrameMapping ? { videoCapture: proof.videoFrameMapping.captureType ?? 'unclassified' } : {}),
     ...(proof?.availableData ? { availableData: proof.availableData } : {}),
     ...(proof?.thumbnail ? { thumbnail: proof.thumbnail } : {}),
     sceneStats: sceneStatistics(hasCheckedSceneManifest(proof) ? proof.sceneManifest.counts
@@ -195,6 +198,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`
         : `Extract ${path || 'the scene'} and check its camera or geometry format. Conversion or a compatible importer may be needed before loading it in ColmapView.` }] : []),
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
+      ...(summary.videoCapture ? [{ label: 'Video capture', value: VIDEO_CAPTURE_LABELS[summary.videoCapture] }] : []),
       ...(proof?.photoArchiveRouting && isArchiveRoutingEvidence(proof.photoArchiveRouting) ? [
         { label: 'Archive photo manifest', value: `${proof.photoArchiveRouting.format.toUpperCase()}; at least ${proof.photoArchiveRouting.photoLowerBound.toLocaleString('en-US')} photographs recorded. Members load as needed.`, url: proof.photoArchiveRouting.url },
         { label: 'Checked archive photograph', value: proof.photoArchiveRouting.sampleMemberPath },

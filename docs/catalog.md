@@ -125,6 +125,8 @@ selects zero-based presentation-frame indices or source timestamps; the viewer
 resolves these before playback, export or publication. The campus_nlp mapping
 binds 285 registered views to six recordings, with 18 independently checked
 samples. The 47 DanceNet3D scenes retain their immutable v4 timestamp manifests.
+Cards and metadata distinguish **Moving camera** from **Synchronized multi-view**;
+capture evidence and temporal selection are [separate properties](video-frame-mappings.md#capture-type-and-temporal-selection).
 Video imagery has separate mapping and sample evidence; it does not establish a
 complete image export or repair native feature links.
 
