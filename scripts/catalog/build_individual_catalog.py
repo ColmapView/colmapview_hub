@@ -27,7 +27,7 @@ from .video_frame_mappings import apply_mapping, mapping_assets, mapping_reviews
 from .photo_routing import apply_routing, routing_asset, routing_coverage, routing_failures, routing_reviews
 from .archive_routing import archive_reviews, archive_asset, apply_archive_routing
 from .photo_decisions import decision_records, decision_coverage, selection_key
-from .splat_routing import splat_reviews, splat_asset, apply_splats
+from .splat_routing import splat_reviews, splat_asset, apply_splats, verify_splat_classifications
 from .scene_discovery import HISTORY, load_history, discovery_row
 
 # A normal results page must not parse thousands of unrelated scene records.
@@ -300,6 +300,9 @@ def build(root=Path('.')):
     photo_decisions = decision_records(decision_policy)
     splat_bytes = (root / 'data/gaussian-routing.json.gz').read_bytes()
     splat_routes = splat_reviews(catalog, json.loads(gzip.decompress(splat_bytes)))
+    classification_bytes = (root / 'data/gaussian-link-audit.json.gz').read_bytes() if splat_routes else b''
+    if splat_routes:
+        verify_splat_classifications(splat_routes, json.loads(gzip.decompress(classification_bytes)))
     matched_splats = set()
     for key, review in video_reviews.items():
         selection = selection_key(review['sourceId'], review['revision'], review['kind'], review['path'], manifest_reviews[key]['files'])
@@ -377,7 +380,7 @@ def build(root=Path('.')):
                                 + archive_bytes + decision_bytes
                                 + Path(__file__).with_name('archive_routing.py').read_bytes()
                                 + Path(__file__).with_name('photo_decisions.py').read_bytes()
-                                + splat_bytes + Path(__file__).with_name('splat_routing.py').read_bytes()
+                                + splat_bytes + classification_bytes + Path(__file__).with_name('splat_routing.py').read_bytes()
                                 + Path(__file__).with_name('individual-listings.mjs').read_bytes()
                                 + Path(__file__).with_name('catalog-publication.mjs').read_bytes()
                                 + (Path(__file__).parent.parent / 'build/catalog.mjs').read_bytes()
@@ -585,6 +588,10 @@ def build(root=Path('.')):
             if item_id in splat_routes:
                 proof = apply_splats(entry, (kind, path, files, archive), revision, proof, splat_routes[item_id])
                 matched_splats.add(item_id)
+            if (proof['availableData'].get('splats', {}).get('status') == 'checked'
+                    and not proof.get('gaussianRouting')
+                    and proof.get('sceneManifest', {}).get('frameGeometry', {}).get('role') != 'splat'):
+                raise ValueError('A Gaussian availability badge requires checked Gaussian companions or a verified Gaussian frame')
             contents.update(proof['availableData'].keys())
             if proof.get('thumbnail'):
                 thumbnails.add(proof['thumbnail']['url'].split('/')[-1])

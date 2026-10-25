@@ -3,7 +3,7 @@ import type { LicenseCategory } from './license-categories';
 import type { PhotoStatus } from './scene-photos';
 
 export const SCENE_DATA_LABELS = {
-  images: 'Images', cameras: 'Cameras', point_cloud: 'Point cloud', splats: 'Splats', masks: 'Masks', meshes: 'Meshes', geometry: '3D models',
+  images: 'Images', cameras: 'Cameras', point_cloud: 'Point cloud', splats: 'Gaussians', masks: 'Masks', meshes: 'Meshes', geometry: '3D models',
 } as const;
 export type SceneDataKind = keyof typeof SCENE_DATA_LABELS;
 export type SceneDataStatus = 'checked' | 'listed' | 'needs_setup' | 'archive' | 'partial';
@@ -86,12 +86,25 @@ export function isSceneContents(value: unknown): value is SceneContents {
   });
 }
 
+function isGaussianCandidate(kind: SceneDataKind, status: SceneDataStatus): boolean {
+  return kind === 'splats' && ['listed', 'archive', 'partial'].includes(status);
+}
+
+function sceneDataLabel(kind: SceneDataKind, status: SceneDataStatus): string {
+  return isGaussianCandidate(kind, status) ? 'Gaussian candidates' : SCENE_DATA_LABELS[kind];
+}
+
 export function sceneDataText(contents?: SceneContents): string {
   return (Object.keys(SCENE_DATA_LABELS) as SceneDataKind[]).filter(kind => contents?.[kind]).map(kind => {
     const status = contents![kind]!.status;
     const suffix = { checked: '', listed: ' · listed', needs_setup: ' · setup', archive: ' · archive', partial: ' · partial' }[status];
-    return SCENE_DATA_LABELS[kind] + (contents![kind]!.sourceFormat === 'video' ? ' · video frames' : suffix);
+    return sceneDataLabel(kind, status) + (contents![kind]!.sourceFormat === 'video' ? ' · video frames' : suffix);
   }).join(', ');
+}
+
+export function gaussianAvailabilityHtml(contents?: SceneContents): string {
+  return contents?.splats?.status === 'checked'
+    ? '<span class="dataset-gaussians" title="Verified Gaussian data. Sparse-point counts exclude Gaussians.">Gaussians available</span>' : '';
 }
 
 export function sceneContentsHtml(contents?: SceneContents): string {
@@ -106,12 +119,17 @@ export function sceneContentsHtml(contents?: SceneContents): string {
   return '<ul class="dataset-contents" aria-label="Available data">'
     + (Object.keys(SCENE_DATA_LABELS) as SceneDataKind[]).filter(kind => contents[kind]).map(kind => {
       const evidence = contents[kind]!;
+      const candidate = isGaussianCandidate(kind, evidence.status);
       const suffix = evidence.sourceFormat === 'video' ? ' · video frames'
         : { checked: '', listed: ' · listed', needs_setup: ' · setup', archive: ' · archive', partial: ' · partial' }[evidence.status];
       const units: Record<SceneDataKind, string> = { images: 'images', cameras: 'camera definitions', point_cloud: 'points',
-        splats: 'splat files', masks: 'masks', meshes: 'mesh files', geometry: 'model files' };
+        splats: `${candidate ? 'candidate' : 'Gaussian'} ${evidence.count === 1 ? 'file' : 'files'}`, masks: 'masks', meshes: 'mesh files', geometry: 'model files' };
       const count = evidence.count ? `${evidence.count.toLocaleString('en-US')} ${units[kind]}. ` : '';
-      return `<li data-asset="${kind}" data-asset-status="${evidence.status}" title="${escape(count + notes[evidence.status])}">${SCENE_DATA_LABELS[kind]}${suffix}</li>`;
+      const note = kind === 'splats' && evidence.status === 'checked'
+        ? 'Gaussian format verified. Sparse-point counts exclude Gaussians. Complete loading and alignment have separate evidence.'
+        : candidate
+          ? 'Gaussian content is unverified. ' + notes[evidence.status] : notes[evidence.status];
+      return `<li data-asset="${kind}" data-asset-status="${evidence.status}" title="${escape(count + note)}">${sceneDataLabel(kind, evidence.status)}${suffix}</li>`;
     }).join('') + '</ul>';
 }
 

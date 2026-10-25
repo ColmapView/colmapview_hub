@@ -6,7 +6,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from scripts.audit.plan_splat_links import media_scope, listed_geometry
-from scripts.catalog.splat_routing import apply_splats, digest, splat_asset, splat_reviews
+from scripts.catalog.splat_routing import apply_splats, digest, splat_asset, splat_reviews, verify_splat_classifications
 
 
 class SplatRoutingTests(unittest.TestCase):
@@ -77,6 +77,14 @@ class SplatRoutingTests(unittest.TestCase):
         proof = {'photoAudit': {'sceneRoot': 'benchmark/clean/room'}}
         self.assertEqual(media_scope('colmap', 'benchmark/poisoned/room/sparse/0', proof), 'benchmark/poisoned/room')
 
+    def test_a_ply_filename_and_positive_vertex_count_do_not_establish_gaussians(self):
+        review = self.validated()
+        asset = {'sourceId': review['sourceId'], 'revision': review['revision'], 'path': 'scene/output.ply', 'status': 'linked'}
+        for role in ('point_cloud', 'point-cloud', 'meshes', None):
+            with self.assertRaisesRegex(ValueError, 'verified Gaussian header'):
+                verify_splat_classifications({review['id']: review}, {'schemaVersion': 1, 'assets': [{**asset, 'role': role}]})
+        verify_splat_classifications({review['id']: review}, {'schemaVersion': 1, 'assets': [{**asset, 'role': 'gaussian-splat'}]})
+
     def test_colmap_only_inventories_include_embedded_gaussians_and_deduplicate_badges(self):
         rows = [['colmap', 'scene/sparse/0', {'cameras': 'scene/sparse/0/cameras.bin',
                  'asset:trained': 'scene/gs_scene/point_cloud.ply'}, None]]
@@ -86,6 +94,7 @@ class SplatRoutingTests(unittest.TestCase):
     def test_committed_audit_covers_every_current_audited_scene_and_keeps_gs_pool_times_separate(self):
         audit = json.loads(gzip.decompress(Path('data/gaussian-link-audit.json.gz').read_bytes()))
         policy = json.loads(gzip.decompress(Path('data/gaussian-routing.json.gz').read_bytes()))
+        verify_splat_classifications({route['id']: route for route in policy['routes']}, audit)
         scenes = audit['scenes']
         self.assertEqual(len(scenes), audit['summary']['scenes'])
         self.assertEqual(len({scene['id'] for scene in scenes}), len(scenes))

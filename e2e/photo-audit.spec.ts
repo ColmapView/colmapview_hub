@@ -315,7 +315,7 @@ test('later TV photographs show partial sampled coverage without changing camera
 test('compressed splats require conversion and empty geometry does not receive a presence badge', async ({ page }) => {
   const packed = sceneId('hf:promc/reconstruction-scenes', 'lawn-tree');
   await page.goto('/hub/datasets/entry/' + packed);
-  await expect(page.locator('[data-asset="splats"]')).toHaveText('Splats · setup');
+  await expect(page.locator('[data-asset="splats"]')).toHaveText('Gaussians · setup');
   await expect(page.locator('[data-asset="geometry"]')).toHaveCount(0);
   await expect(page.locator('main')).toContainText('Convert it to standard Gaussian PLY');
   expect((await page.request.get('/hub/datasets/open/' + packed, { maxRedirects: 0 })).status()).toBe(302);

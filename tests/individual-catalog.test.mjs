@@ -630,6 +630,26 @@ const row = (number = 0, overrides = {}) => Object.assign([`data-${String(number
 const nativePhotoProof = status => ({ ...parent.verification, level: 'native_layout_checked', statusLabel: 'Native COLMAP layout checked',
   viewerUrl: verified.viewerUrl, photoAvailability: status, sceneCompatibility: { status: 'native_headers_checked', revision: 'a'.repeat(40),
     cameraRecordChecked: true, poseRecordChecked: true, cameras: 1, images: 2, points: 3 } });
+test('only verified Gaussian data gets the always-visible availability note', () => {
+  const proof = { ...nativePhotoProof('sample_checked'), availableData: { point_cloud: { status: 'checked', samplePath: 'scene/cloud.ply' } } };
+  const plain = render.catalogCard(render.individualSummary(row(0, { 7: proof }), source));
+  assert.doesNotMatch(plain, /Gaussians available/);
+  for (const status of ['checked', 'listed', 'archive', 'needs_setup', 'partial']) {
+    const summary = render.individualSummary(row(0, { 7: { ...proof,
+      availableData: { ...proof.availableData, splats: { status, count: 1, samplePath: 'scene/another.ply' } } } }), source);
+    const html = render.catalogCard(summary);
+    assert.equal(html.includes('Gaussians available'), status === 'checked');
+    assert.match(html, /data-stat="points">3<\/dd>/);
+    if (status === 'checked') {
+      assert.match(html, /dataset-card-summary[\s\S]*dataset-gaussians/);
+      assert.match(html, /Gaussian format verified/);
+      assert.match(html, /1 Gaussian file\./);
+    } else if (status !== 'needs_setup') {
+      assert.match(html, /Gaussian candidates/);
+      assert.match(html, /Gaussian content is unverified/);
+    }
+  }
+});
 test('Gaussian companion launch retains native gates and rejects stale selections', () => {
   const proof = nativePhotoProof('sample_checked');
   proof.viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(`https://huggingface.co/datasets/owner/dataset/resolve/${proof.sceneCompatibility.revision}/scene0/sparse/0`);

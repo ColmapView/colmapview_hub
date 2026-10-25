@@ -21,6 +21,18 @@ def splat_asset(review):
     return hashlib.sha256(body).hexdigest() + '.manifest.json', body
 
 
+def verify_splat_classifications(reviews, audit):
+    """A PLY suffix does not establish Gaussians: require the pinned classifier receipt."""
+    if audit.get('schemaVersion') != 1 or not isinstance(audit.get('assets'), list):
+        raise ValueError('Gaussian availability requires the format-classification audit')
+    verified = {(item['sourceId'], item['revision'], item['path']) for item in audit['assets']
+                if item.get('status') == 'linked' and item.get('role') in ('splats', 'gaussian-splat')}
+    for review in reviews.values():
+        for asset in review['assets']:
+            if (review['sourceId'], review['revision'], asset['path']) not in verified:
+                raise ValueError('Gaussian availability requires a verified Gaussian header, not a PLY filename: ' + asset['path'])
+
+
 def splat_reviews(catalog, policy):
     if (policy.get('schemaVersion') != 1 or policy.get('viewerVersion') != '0.25.0'
             or not re.fullmatch('[a-f0-9]{40}', policy.get('viewerCommit', '')) or not policy.get('checkedAt')):

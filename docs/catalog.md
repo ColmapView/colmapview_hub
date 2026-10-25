@@ -1,5 +1,14 @@
 # Public dataset catalog
 
+Cards show **Gaussians available** beside their statistics when Gaussian data has
+verified format evidence and a viewer binding. The note stays visible without
+hovering. PLY is a container format: ordinary point clouds and meshes keep their
+own labels. Listed, archive-only and conversion-required assets do not receive an
+availability note. Unverified listings and archives say “Gaussian candidates.”
+The catalog build checks Gaussian bindings against the pinned
+classification audit; a `.ply` filename alone is insufficient. Filters and data
+badges use “Gaussians”; the existing `splats` API/filter key stays compatible.
+
 The browse page has one sticky toolbar for search and primary filters. On narrow
 screens the same select elements move into More filters, retaining values and
 form submission. The menu starts closed and highlights active filters. A fixed

@@ -1,5 +1,22 @@
 import { expect, test } from '@playwright/test';
 
+test('verified Gaussians have a visible card note while ordinary point clouds do not', async ({ page }) => {
+  await page.goto('/hub/datasets/?q=mic&dataset=hf-pablovela5620-nerf-synthetic-mirror-9d24c0164a24');
+  await page.mouse.move(0, 0);
+  const gaussian = page.locator('[data-entry-id="data-d28cbb0f5daf045780e9b015"]');
+  await expect(gaussian.locator('.dataset-card-hover')).toHaveCSS('opacity', '0');
+  await expect(gaussian.locator('.dataset-card-summary .dataset-gaussians')).toHaveText('Gaussians available');
+  await expect(gaussian.locator('.dataset-gaussians')).toBeVisible();
+  await expect(gaussian.locator('[data-stat="points"]')).toHaveText('0');
+  await gaussian.getByRole('button', { name: 'Metadata for mic', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('Gaussians');
+  await page.goto('/hub/datasets/?q=scene0024_01&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9');
+  const plain = page.locator('.dataset-card').filter({ has: page.getByRole('link', { name: 'Open in viewer: scene0024_01 · i2slam_colmap', exact: true }) });
+  await expect(plain).toBeVisible();
+  await expect(plain.locator('[data-stat="points"]')).toHaveText('23,659');
+  await expect(plain.locator('.dataset-gaussians')).toHaveCount(0);
+});
+
 test('OcularBell adds Gaussians while retaining its named camera dataset and zero sparse points', async ({ page }) => {
   const id = 'data-d28cbb0f5daf045780e9b015';
   const redirect = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
@@ -13,7 +30,7 @@ test('OcularBell adds Gaussians while retaining its named camera dataset and zer
   await page.goto('/hub/datasets/entry/' + id);
   await expect(page.locator('[data-stat="points"]')).toHaveText('0');
   await expect(page.locator('main')).toContainText('13,059 Gaussians');
-  await expect(page.locator('[data-asset="splats"]')).toHaveText('Splats');
+  await expect(page.locator('[data-asset="splats"]')).toHaveText('Gaussians');
   await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveAttribute('href', '/s/OcularBell');
 });
 
@@ -339,7 +356,7 @@ for (const selected of [
   expect(entry.sceneStats.points).toBe(selected.points);
   expect(entry.sceneStats.cameraPoses).toBe(29);
   await page.goto('/hub/datasets/entry/' + entry.id);
-  await expect(page.locator('[data-asset="splats"]')).toHaveText(selected.role === 'splat' ? 'Splats' : 'Splats · archive');
+  await expect(page.locator('[data-asset="splats"]')).toHaveText(selected.role === 'splat' ? 'Gaussians' : 'Gaussian candidates · archive');
   await expect(page.locator('[data-asset="masks"]')).toHaveText('Masks · archive');
   await expect(page.locator('main')).toContainText('splats archive member');
   await expect(page.locator('main')).toContainText(entry.availableData.splats.archiveMember);

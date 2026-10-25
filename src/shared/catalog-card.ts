@@ -7,7 +7,7 @@ import { catalogCardTitle } from './catalog-title';
 import { icon } from './icons';
 import { datasetSharePath } from './dataset-share';
 import { VIDEO_CAPTURE_LABELS } from './video-capture';
-import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
+import { gaussianAvailabilityHtml, sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
 
 export function catalogCardHtml(entry: CatalogSummary): string {
   const category = licenseCategory(entry);
@@ -37,7 +37,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + `<h2><a class="dataset-open" href="${escape(share || catalogOpenUrl(entry))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
     + `<p class="dataset-label">${escape(entry.dataset?.label || providerLabel(entry.provider))}</p></div>`
     + `<button type="button" class="dataset-info" aria-label="${escape(`Metadata for ${entry.title}`)}" aria-haspopup="dialog" aria-controls="${metadataId}" aria-expanded="false"><span aria-hidden="true">i</span></button></div>`
-    + sceneStatisticsHtml(entry.sceneStats, true)
+    + '<div class="dataset-card-summary">' + sceneStatisticsHtml(entry.sceneStats, true) + gaussianAvailabilityHtml(entry.availableData) + '</div>'
     + (!canOpen ? '<p class="dataset-link-note">Source only</p>' : !entry.hasViewer ? '<p class="dataset-link-note">Try · unchecked ↗</p>' : '')
     + '</div>'
     + `<dialog class="dataset-metadata" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
