@@ -1,16 +1,22 @@
 # Public dataset catalog
 
-Cards show **Gaussians available** beside their statistics when Gaussian data has
-verified format evidence and a viewer binding. The note stays visible without
-hovering. PLY is a container format: ordinary point clouds and meshes keep their
+The Hub is a photo gallery: each tile has a single-line scene caption and, when
+verified, a small **Gaussians** label. Source, content roles and licence appear on
+hover or keyboard focus. The image opens the viewer directly; the corner info
+button opens full metadata and camera/point statistics. Touch devices keep that
+button visible. Shared-on-Hub photos use the same layout.
+
+The Gaussian label means Gaussian data has verified format evidence and a viewer
+binding. It stays visible without hovering. PLY is a container format: ordinary point clouds and meshes keep their
 own labels. Listed, archive-only and conversion-required assets do not receive an
 availability note. Unverified listings and archives say “Gaussian candidates.”
 The catalog build checks Gaussian bindings against the pinned
 classification audit; a `.ply` filename alone is insufficient. Filters and data
 badges use “Gaussians”; the existing `splats` API/filter key stays compatible.
 
-The browse page has one sticky toolbar for search and primary filters. On narrow
-screens the same select elements move into More filters, retaining values and
+The browse page has one sticky toolbar for search and collection selection.
+Licence, ordering and other filters live in More filters. On narrow
+screens collection selection also moves into More filters, retaining values and
 form submission. The menu starts closed and highlights active filters. A fixed
 bottom bar shows the result range, loading status,
 shuffle/reset, catalog information, the viewer link and appearance. Full count
@@ -151,7 +157,7 @@ The source snapshot lives in `data/catalog.json`; `data/individual-datasets.json
 
 Cards and filters distinguish **Commercial use**, **Non-commercial (NC)** and **Not specified** using reported source license metadata. Individual entries inherit their source category and retain the exact license string. Missing, custom, conflicting or unclear terms remain Not specified. Conditions such as attribution, share-alike, acceptable-use restrictions and asset-specific licenses still apply. `npm run catalog:licenses` refreshes these categories without the original survey CSVs.
 
-Hub pages use the viewer's compact controls, neutral palettes and shared `colmap-viewer-theme` preference (Dark, Light or System). The catalog fills the available width with a compact toolbar and an edge-to-edge photo grid: three columns on regular desktops, four at 1600 px and wider, two at 1100 px and narrower, and one at 640 px and narrower. Titles, collection labels and camera/point counts sit over a dark gradient at the bottom of each photograph. Search, collection, license category and feed controls stay together; More filters contains scene type, source, exact license, evidence, data and image availability. Source-review warnings stay visible. Content roles and reported license terms appear at the top of the photo on hover or keyboard focus. Gallery images fill their tiles and crop without stretching. Dataset detail pages retain uncropped previews and group the preview, summary and opening actions together.
+Hub pages use the viewer's compact controls, neutral palettes and shared `colmap-viewer-theme` preference (Dark, Light or System). The catalog fills the available width with an edge-to-edge photo grid: three columns on regular desktops, four at 1600 px and wider, two at 1100 px and narrower, and one at 640 px and narrower. Captions sit over a subtle dark gradient at the bottom of each photograph. Source-review warnings stay visible. Gallery images fill their tiles and crop without stretching. Dataset detail pages retain uncropped previews and group the preview, summary and opening actions together.
 
 Appearance, header navigation, search, shuffle, reset and metadata close use consistent icon controls with tooltips and accessible names. The appearance button cycles Dark → Light → System, retains the shared saved preference and follows system/cross-tab changes. Icon controls keep 44 px touch targets, and the phone header fits on one row.
 

@@ -28,13 +28,11 @@ export function isSceneStatistics(value: unknown): value is SceneStatistics {
     && (item[key] === null || typeof item[key] === 'number' && Number.isSafeInteger(item[key]) && item[key] >= 0));
 }
 
-export function sceneStatisticsHtml(statistics?: SceneStatistics, compact = false): string {
+export function sceneStatisticsHtml(statistics?: SceneStatistics): string {
   if (!statistics) return '';
-  const fields = compact ? statisticFields.filter(field => field.key !== 'cameraModels') : statisticFields;
-  return `<dl class="dataset-statistics${compact ? ' dataset-statistics-compact' : ''}" aria-label="Scene statistics">` + fields.map(({ key, label, note }) => {
+  return '<dl class="dataset-statistics" aria-label="Scene statistics">' + statisticFields.map(({ key, label, note }) => {
     const value = statistics[key];
-    const title = compact ? key === 'cameraPoses' ? 'Cameras' : 'Points' : label;
-    return `<div title="${note}"><dt>${title}</dt><dd data-stat="${key}">${value === null ? 'Unknown' : value.toLocaleString('en-US')}</dd></div>`;
+    return `<div title="${note}"><dt>${label}</dt><dd data-stat="${key}">${value === null ? 'Unknown' : value.toLocaleString('en-US')}</dd></div>`;
   }).join('') + '</dl>';
 }
 
@@ -104,7 +102,7 @@ export function sceneDataText(contents?: SceneContents): string {
 
 export function gaussianAvailabilityHtml(contents?: SceneContents): string {
   return contents?.splats?.status === 'checked'
-    ? '<span class="dataset-gaussians" title="Verified Gaussian data. Sparse-point counts exclude Gaussians.">Gaussians available</span>' : '';
+    ? '<span class="dataset-gaussians" aria-label="Gaussians available" title="Gaussians available. Verified Gaussian data; sparse-point counts exclude Gaussians.">Gaussians</span>' : '';
 }
 
 export function sceneContentsHtml(contents?: SceneContents): string {

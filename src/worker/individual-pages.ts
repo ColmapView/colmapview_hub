@@ -23,7 +23,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const values = (items: string[]) => [...new Set(items)].sort((a, b) => a.localeCompare(b, 'en')).map(value => ({ value, label: value }));
   const dataset = individualSelection(index.sources, filters.get('dataset') || '');
   const offset = (result.page - 1) * INDIVIDUAL_PAGE_SIZE;
-  const advanced = ['kind', 'provider', 'license', 'status', 'photos', 'data'].some(field => filters.has(field));
+  const advanced = ['dataset', 'licenseCategory', 'sort', 'kind', 'provider', 'license', 'status', 'photos', 'data', 'delivery', 'viewer'].some(field => filters.has(field));
   const savedFilters = savedFilterSummary(filters);
   const shuffle = new URLSearchParams(filters);
   shuffle.set('seed', [...crypto.getRandomValues(new Uint8Array(8))].map(byte => byte.toString(16).padStart(2, '0')).join(''));
@@ -31,10 +31,10 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const filterForm = `<form id="individual-search" class="catalog-filters" role="search" action="/hub/datasets/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
     + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"></label>`
     + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''), true)
-    + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })), true)
-    + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }], true)
     + `<button type="submit" class="button button-primary icon-button" aria-label="Search" title="Search">${icon('search')}</button>`
     + `<details class="catalog-advanced"${advanced ? ' data-active' : ''}><summary class="button icon-button" title="More filters"><span class="sr-only">More filters</span>${icon('filters')}</summary><div class="catalog-secondary">`
+    + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })))
+    + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }])
     + select('kind', 'Type', 'All scene types', values(Object.keys(index.kinds)))
     + select('provider', 'Source', 'All sources', [{ value: 'huggingface', label: 'Hugging Face' }, { value: 'public', label: 'Public sources' }])
     + select('license', 'License', 'All reported licenses', values(index.sources.map(source => source.license)))

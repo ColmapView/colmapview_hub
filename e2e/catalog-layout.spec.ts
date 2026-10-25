@@ -5,8 +5,10 @@ test.use({ hasTouch: true });
 test('catalog controls stay on one row and responsive filters keep their values', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/hub/datasets/');
+  await page.locator('.catalog-advanced > summary').click();
   await page.getByLabel('License category', { exact: true }).selectOption('commercial');
   await expect.poll(() => new URL(page.url()).searchParams.get('licenseCategory')).toBe('commercial');
+  await page.keyboard.press('Escape');
   for (const width of [1440, 960, 360, 320, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     const toolbar = (await page.locator('.catalog-toolbar').boundingBox())!;

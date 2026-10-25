@@ -5,7 +5,8 @@ test('verified Gaussians have a visible card note while ordinary point clouds do
   await page.mouse.move(0, 0);
   const gaussian = page.locator('[data-entry-id="data-d28cbb0f5daf045780e9b015"]');
   await expect(gaussian.locator('.dataset-card-hover')).toHaveCSS('opacity', '0');
-  await expect(gaussian.locator('.dataset-card-summary .dataset-gaussians')).toHaveText('Gaussians available');
+  await expect(gaussian.locator('.dataset-card-body .dataset-gaussians')).toHaveText('Gaussians');
+  await expect(gaussian.locator('.dataset-gaussians')).toHaveAttribute('aria-label', 'Gaussians available');
   await expect(gaussian.locator('.dataset-gaussians')).toBeVisible();
   await expect(gaussian.locator('[data-stat="points"]')).toHaveText('0');
   await gaussian.getByRole('button', { name: 'Metadata for mic', exact: true }).click();
@@ -114,14 +115,15 @@ test('cards show content roles, load same-origin photos and open metadata only o
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com|wikimedia\.org/.test(request.url())) providerRequests.push(request.url()); });
   await page.goto('/hub/datasets/?q=scene0024_01&licenseCategory=commercial&photos=available&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9');
   const first = page.locator('.dataset-card').filter({ has: page.getByRole('link', { name: 'Open in viewer: scene0024_01 · i2slam_colmap', exact: true }) });
-  await expect(first.getByRole('list', { name: 'Available data' })).toBeVisible();
-  await expect(first.locator('[data-asset="cameras"]')).toBeVisible();
-  await expect(first.locator('[data-asset="images"]')).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(first.locator('.dataset-card-hover')).toHaveCSS('visibility', 'hidden');
+  await expect(first.locator('.dataset-card-body .dataset-statistics')).toHaveCount(0);
+  await expect(first.locator('.dataset-card-body .dataset-label')).toHaveCount(0);
   await expect(first.locator('[data-stat="cameraPoses"]')).toHaveText('227');
   await expect(first.locator('[data-stat="cameraModels"]')).toHaveText('1');
   await expect(first.locator('[data-stat="points"]')).toHaveText('23,659');
-  await expect(first.locator('[data-stat="cameraPoses"]')).toBeVisible();
-  await expect(first.locator('[data-stat="points"]')).toBeVisible();
+  await expect(first.locator('[data-stat="cameraPoses"]')).not.toBeVisible();
+  await expect(first.locator('[data-stat="points"]')).not.toBeVisible();
   await expect(first.locator('[data-stat="cameraModels"]')).not.toBeVisible();
   await expect(first.locator('[data-photo-status]')).not.toBeVisible();
   await expect(first.locator('.dataset-card-footer')).toHaveCount(0);
@@ -132,18 +134,13 @@ test('cards show content roles, load same-origin photos and open metadata only o
   await expect(first.locator('.dataset-open')).toHaveText('scene0024_01 · i2slam_colmap');
   await expect(first.locator('figcaption')).toHaveCount(0);
   await expect(first.locator('.dataset-photo-credit')).not.toBeVisible();
-  const textStyle = (selector: string) => first.locator(selector).first().evaluate(element => {
-    const style = getComputedStyle(element);
-    return [style.fontSize, style.fontWeight, style.color];
-  });
-  const secondaryStyle = await textStyle('.dataset-label');
-  for (const selector of ['[data-asset="cameras"]', '[data-stat="cameraPoses"]', '[data-stat="points"]', '.dataset-statistics-compact dt']) {
-    expect(await textStyle(selector)).toEqual(secondaryStyle);
-  }
   const info = first.getByRole('button', { name: /Metadata/ });
   const panel = first.getByRole('dialog', { name: /Metadata/ });
   const catalogUrl = page.url();
   await first.hover();
+  await expect(first.getByRole('list', { name: 'Available data' })).toBeVisible();
+  await expect(first.locator('[data-asset="cameras"]')).toBeVisible();
+  await expect(first.locator('[data-asset="images"]')).toBeVisible();
   await expect(panel).not.toBeVisible();
   await info.focus();
   await expect(panel).not.toBeVisible();
@@ -391,6 +388,7 @@ test('model-only ArmGS cards show masks and cameras without claiming photos', as
   await page.goto('/hub/datasets/?dataset=' + source.id);
   await expect(page.locator('#catalog-count')).toHaveAccessibleName(/of 11 scene datasets/);
   const first = page.locator('.dataset-card').first();
+  await first.hover();
   await expect(first.locator('[data-asset="cameras"]')).toBeVisible();
   await expect(first.locator('[data-asset="masks"]')).toBeVisible();
   await expect(first.locator('[data-asset="images"]')).toHaveCount(0);

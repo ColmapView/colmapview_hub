@@ -10,21 +10,18 @@ function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
   article.className = 'card dataset-card';
   article.dataset.datasetCard = '';
   article.dataset.entryId = `shared-${entry.id}`;
-  const heading = document.createElement('div'); heading.className = 'dataset-card-heading';
-  const headingText = document.createElement('div');
   const title = document.createElement('h2');
   const link = document.createElement('a'); link.className = 'dataset-open'; link.href = `/s/${entry.id}`; link.textContent = entry.title;
   link.title = entry.title;
   link.setAttribute('aria-label', `Open in viewer: ${entry.title}`); title.append(link);
   const info = document.createElement('button'); info.type = 'button'; info.className = 'dataset-info';
-  const infoIcon = document.createElement('span'); infoIcon.textContent = 'i'; infoIcon.setAttribute('aria-hidden', 'true'); info.append(infoIcon);
+  info.innerHTML = icon('info');
   info.setAttribute('aria-label', `Metadata for ${entry.title}`); info.setAttribute('aria-haspopup', 'dialog'); info.setAttribute('aria-expanded', 'false');
   info.setAttribute('aria-controls', `metadata-shared-${entry.id}`);
   const image = document.createElement('img'); image.src = `${hubPath}/${entry.id}/preview.jpg`; image.alt = ''; image.loading = 'lazy';
   image.width = 600; image.height = 315; image.className = 'shared-dataset-preview';
   const originalUrl = publicationSource(entry.viewerUrl);
   const label = document.createElement('p'); label.className = 'dataset-label'; label.textContent = originalUrl.hostname;
-  headingText.append(title, label); heading.append(headingText, info);
   const panel = document.createElement('dialog'); panel.className = 'dataset-metadata'; panel.id = `metadata-shared-${entry.id}`;
   panel.setAttribute('aria-label', `Metadata for ${entry.title}`);
   const header = document.createElement('div'); header.className = 'dataset-metadata-header';
@@ -40,7 +37,7 @@ function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
   const preview = document.createElement('div'); preview.className = 'dataset-card-preview';
   const hover = document.createElement('div'); hover.className = 'dataset-card-hover';
   const hoverLicense = document.createElement('p'); hoverLicense.textContent = `${LICENSE_CATEGORY_LABELS[classifyLicense(entry.license?.id ?? '')]} · ${entry.license?.name || entry.license?.id || 'Not specified'}`;
-  hover.append(hoverLicense); preview.append(image, hover);
+  hover.append(label, hoverLicense); preview.append(image, info, hover);
   const contents = document.createElement('p'); contents.className = 'note';
   contents.textContent = assetLine(entry.assets) ? `Reported contents: ${assetLine(entry.assets)}` : '';
   const proof = document.createElement('p'); proof.className = 'note';
@@ -54,7 +51,7 @@ function sharedCard(entry: SharedDataset, hubPath: string): HTMLElement {
   const copied = document.createElement('span'); copied.className = 'note'; copied.dataset.copyStatus = ''; copied.setAttribute('role', 'status');
   links.append(copy, copied);
   content.append(name, description, license, category, ...(contents.textContent ? [contents] : []), proof, links); panel.append(header, content);
-  const body = document.createElement('div'); body.className = 'dataset-card-body'; body.append(heading);
+  const body = document.createElement('div'); body.className = 'dataset-card-body'; body.append(title);
   article.append(preview, body, panel);
   return article;
 }
