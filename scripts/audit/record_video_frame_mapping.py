@@ -73,8 +73,10 @@ def record(root, scratch, viewer):
         raise ValueError('Retain the earlier selection-bound photo decision before adding imagery')
     evidence = [item for item in previous['evidence'] if item['kind'] != 'video_frame_mapping']
     evidence.append({'kind': 'video_frame_mapping', 'sha256': checked[key]['receiptSha256']})
+    next_action = ('recover_unmapped_capture_correspondence' if len(review['bindings']) < len(review['registeredImages'])
+                   else 'test_remaining_pixels_or_complete_photo_export')
     updated = {**previous, 'decision': 'automatic_video_frames', 'confirmed': True, 'checkedAt': review['checkedAt'],
-        'scope': policy['scope'], 'nextAction': 'test_remaining_pixels_or_complete_photo_export', 'evidence': evidence}
+        'scope': policy['scope'], 'nextAction': next_action, 'evidence': evidence}
     updated['sha256'] = decision_digest(updated)
     decisions['scenes'][decisions['scenes'].index(previous)] = updated
     decisions['checkedAt'] = max(decisions['checkedAt'], review['checkedAt'])
