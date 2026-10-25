@@ -258,7 +258,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
           label: `${kind.replaceAll('_', ' ')} sample`, value: evidence!.samplePath!, ...(parent.provider === 'public' ? {} : { url: file(evidence!.samplePath!) }),
         }, ...(evidence?.archiveMember ? [{ label: `${kind.replaceAll('_', ' ')} archive member`, value: evidence.archiveMember }] : []),
         ...(evidence?.requiresConversion ? [{ label: 'Splat loading', value: 'Compressed Gaussian PLY is supplied. Convert it to standard Gaussian PLY before importing; the current model link does not attach this asset.' }] : [])])] : []),
-      ...(summary.thumbnail ? [{ label: 'Preview attribution', value: `${summary.thumbnail.attribution} · ${summary.thumbnail.license}. ${summary.thumbnail.crop === 'aspect_fit' ? 'Full-frame thumbnail' : 'Center-square crop'} of a checked registered image.` },
+      ...(summary.thumbnail ? [{ label: 'Preview attribution', value: `${summary.thumbnail.attribution} · ${summary.thumbnail.license}. ${summary.thumbnail.crop === 'aspect_fit' ? 'Full-frame thumbnail' : 'Center-square crop'} of a ${summary.thumbnail.videoFrame ? 'mapped video frame' : 'checked registered image'}.` },
         { label: 'Preview source', value: summary.thumbnail.sourcePath, ...(summary.thumbnail.sourceArchive ? {} : { url: file(summary.thumbnail.sourcePath) }) },
         ...(summary.thumbnail.sourceArchive ? [{ label: 'Preview source archive', value: summary.thumbnail.sourceArchive, url: file(summary.thumbnail.sourceArchive) }] : [])] : []),
       ...(proof?.photoAvailability ? [{ label: proof.videoFrameMapping || proof.videoFrameRouting ? 'Camera imagery' : 'Original photographs', value: proof.photoAvailability === 'complete_export_checked'

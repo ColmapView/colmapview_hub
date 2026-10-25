@@ -12,6 +12,45 @@ from scripts.audit.prepare_scene_previews import archive_target, photo_url, prev
 
 
 class SceneContentsTests(unittest.TestCase):
+    def test_video_preview_requires_the_exact_reviewed_sample_source_and_selection(self):
+        receipt = 'a' * 64
+        sample = {'name': 'cam.png', 'width': 800, 'height': 1280}
+        source = {**sample, 'sourcePath': 'scene/cam.mp4', 'sourceSha256': 'b' * 64}
+        review = {'receiptSha256': receipt, 'timestamp': 240, 'sample': sample, 'videos': [source]}
+        proof = {'photoAvailability': 'video_frames', 'videoFrameRouting': {'receiptSha256': receipt}}
+        entry = {'license': 'cc-by-4.0'}
+        thumbnail = {'file': 'c' * 64 + '.jpg', 'sourcePath': source['sourcePath'], 'sourceSha256': source['sourceSha256'],
+                     'originalWidth': 800, 'originalHeight': 1280, 'registeredName': 'cam.png', 'datasetLicense': entry['license'],
+                     'videoFrame': {'receiptSha256': receipt, 'timestamp': 240}}
+        self.assertIn('thumbnail', apply_thumbnail_evidence(entry, proof, thumbnail, review))
+        self.assertNotIn('thumbnail', proof)
+        invalid = [
+            {'sourcePath': 'peer/cam.mp4'}, {'sourceSha256': 'd' * 64}, {'originalHeight': 720}, {'registeredName': 'peer.png'},
+            {'videoFrame': {'receiptSha256': 'd' * 64, 'timestamp': 240}},
+            {'videoFrame': {'receiptSha256': receipt, 'timestamp': 0}},
+            {'videoFrame': {'receiptSha256': receipt, 'timestamp': 240, 'frameIndex': 0}},
+        ]
+        for update in invalid:
+            with self.subTest(update=update), self.assertRaises(ValueError):
+                apply_thumbnail_evidence(entry, proof, {**thumbnail, **update}, review)
+        with self.assertRaisesRegex(ValueError, 'current reviewed media receipt'):
+            apply_thumbnail_evidence(entry, proof, thumbnail)
+
+    def test_frame_index_video_preview_cannot_be_replaced_by_a_time_or_another_frame(self):
+        receipt = 'a' * 64
+        review = {'receiptSha256': receipt, 'samples': [{'name': 'a.jpg', 'width': 2704, 'height': 2028}],
+                  'bindings': [{'name': 'a.jpg', 'video': '00', 'frameIndex': 7}],
+                  'videos': [{'id': '00', 'sourcePath': 'scene/00.MP4', 'sha256': 'b' * 64}]}
+        proof = {'photoAvailability': 'video_frames', 'videoFrameMapping': {'receiptSha256': receipt}}
+        entry = {'license': 'cc-by-4.0'}
+        thumbnail = {'file': 'c' * 64 + '.jpg', 'sourcePath': 'scene/00.MP4', 'sourceSha256': 'b' * 64,
+                     'originalWidth': 2704, 'originalHeight': 2028, 'registeredName': 'a.jpg', 'datasetLicense': entry['license'],
+                     'videoFrame': {'receiptSha256': receipt, 'frameIndex': 7}}
+        self.assertIn('thumbnail', apply_thumbnail_evidence(entry, proof, thumbnail, review))
+        for selection in ({'timestamp': 0.233}, {'frameIndex': 0}, {'frameIndex': 7.5}):
+            with self.subTest(selection=selection), self.assertRaises(ValueError):
+                apply_thumbnail_evidence(entry, proof, {**thumbnail, 'videoFrame': {'receiptSha256': receipt, **selection}}, review)
+
     def test_metadata_sidecars_cannot_be_mask_samples_or_reused_preparation_inputs(self):
         for path in ('scene/mask/._000.png', '__MACOSX/scene/mask/000.png', 'scene/.DS_Store'):
             with self.subTest(path=path):

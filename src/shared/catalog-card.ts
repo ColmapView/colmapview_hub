@@ -43,7 +43,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + '<div class="dataset-metadata-content">'
     + `<p class="dataset-metadata-title">${escape(entry.title)}</p>` + sceneStatisticsHtml(entry.sceneStats)
     + `<dl>${facts.map(([label, value]) => `<div><dt>${label}</dt><dd${label === 'Images' && entry.photoStatus ? ` data-photo-status="${escape(entry.photoStatus)}"` : ''}>${escape(value)}</dd></div>`).join('')}</dl>`
-    + (preview ? `<p class="dataset-photo-credit">Photo: ${sceneThumbnailCreditHtml(entry.thumbnail!)}${entry.thumbnail!.crop === 'center_square' ? ' · Cropped' : ''}</p>` : '')
+    + (preview ? `<p class="dataset-photo-credit">${entry.thumbnail!.videoFrame ? 'Video frame' : 'Photo'}: ${sceneThumbnailCreditHtml(entry.thumbnail!)}${entry.thumbnail!.crop === 'center_square' ? ' · Cropped' : ''}</p>` : '')
     + `<p class="note">${escape(entry.description)}</p>`
     + `<div class="dataset-metadata-links"><a href="${datasetPath(entry)}">Full metadata</a>`
     + (share ? `<button type="button" data-copy-dataset-link="${share}">Copy link</button><span class="note" data-copy-status role="status"></span>` : '')

@@ -550,6 +550,22 @@ test('new full-frame previews retain their aspect ratio and legacy previews stay
   assert.equal(render.isCatalogSummary({ ...summary, thumbnail: { ...thumbnail, height: 320 } }), false);
 });
 
+test('video posters retain their frame provenance and cannot contain ambiguous frame units', () => {
+  const summary = render.individualSummary(row(0, { 7: nativePhotoProof('sample_checked') }), source);
+  const thumbnail = { ...squareThumbnail, sourcePath: 'scene/video.mp4', registeredName: 'a.png',
+    videoFrame: { receiptSha256: 'c'.repeat(64), timestamp: 240 } };
+  const scene = { ...summary, photoStatus: 'video_frames', thumbnail };
+  assert.equal(render.isCatalogSummary(scene), true);
+  assert.match(render.catalogCard(scene), /alt="Video frame from/);
+  assert.match(render.catalogCard(scene), /Video frame: /);
+  for (const videoFrame of [{ timestamp: -1 }, { frameIndex: 1.5 }, { frameIndex: 0, timestamp: 0 },
+    { timestamp: 0, receiptSha256: 'invalid' }, { timestamp: NaN }]) {
+    assert.equal(render.isCatalogSummary({ ...scene, thumbnail: { ...thumbnail,
+      videoFrame: { receiptSha256: 'c'.repeat(64), ...videoFrame } } }), false);
+  }
+  assert.equal(render.isCatalogSummary({ ...scene, thumbnail: { ...thumbnail, registeredName: undefined } }), false);
+});
+
 test('square previews remain same-origin and attributed for every source and image license category', () => {
   const summary = render.individualSummary(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source);
   const html = render.catalogCard(summary);

@@ -277,7 +277,7 @@ def build(root=Path('.')):
     checked_photo_previews = {}
     for key, review in content_reviews.items():
         thumbnail = review.get('thumbnail')
-        if thumbnail and not thumbnail.get('sourceArchive'):
+        if thumbnail and not thumbnail.get('sourceArchive') and not thumbnail.get('videoFrame'):
             checked_photo_previews[(key[0], review['revision'], thumbnail['sourcePath'], thumbnail['sourceSha256'])] = thumbnail
     manifest_bytes = (root / 'data/scene-manifests.json').read_bytes()
     manifest_policy = json.loads(manifest_bytes)
@@ -556,6 +556,9 @@ def build(root=Path('.')):
             if review_key in video_mappings:
                 proof = apply_mapping(proof, video_mappings[review_key], manifest_review or native, entry, hf_url)
                 matched_video_mappings.add(review_key)
+            if 'videoFrame' in (content_review.get('thumbnail') or {}):
+                proof = apply_thumbnail_evidence(entry, proof, content_review['thumbnail'],
+                                                 video_mappings.get(review_key) or video_reviews.get(review_key))
             if native and native.get('calibrationReview'):
                 proof = apply_calibration_review(proof, native['calibrationReview'])
             if native and native.get('sourceIntegrityReview'):

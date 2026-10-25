@@ -44,6 +44,17 @@ def valid_preview_geometry(thumbnail):
             and abs(width * source_height - height * source_width) <= max(source_width, source_height) / 2)
 
 
+def valid_video_preview(thumbnail):
+    frame = thumbnail.get('videoFrame')
+    if not isinstance(frame, dict) or not re.fullmatch(r'[a-f0-9]{64}', str(frame.get('receiptSha256', ''))):
+        return False
+    selection = set(frame) - {'receiptSha256'}
+    return (bool(thumbnail.get('registeredName')) and not thumbnail.get('sourceArchive')
+            and (selection == {'frameIndex'} and type(frame['frameIndex']) is int and 0 <= frame['frameIndex'] < 2**53
+                 or selection == {'timestamp'} and type(frame['timestamp']) in (int, float)
+                 and 0 <= frame['timestamp'] < float('inf')))
+
+
 def content_scene_reviews(catalog, policy, root):
     if (policy.get('schemaVersion') != 1 or policy.get('coverage') != 'all_published_scenes'
             or not isinstance(policy.get('sources'), list) or not policy.get('checkedAt')):
@@ -87,6 +98,7 @@ def content_scene_reviews(catalog, policy, root):
                         or not valid_preview_geometry(thumbnail) or not thumbnail.get('attribution')
                         or not re.fullmatch('[a-f0-9]{64}', thumbnail.get('sourceSha256', ''))
                         or not photo_source_path(thumbnail.get('sourcePath'), parent)
+                        or ('videoFrame' in thumbnail and not valid_video_preview(thumbnail))
                         or is_metadata_sidecar(thumbnail.get('sourcePath'))
                         or (thumbnail.get('sourceArchive') and not source_path(thumbnail['sourceArchive']))):
                     raise ValueError('Preview requires attributed source provenance and checked thumbnail geometry')
@@ -128,18 +140,45 @@ def apply_content_evidence(entry, row, revision, proof, review):
                       else 'checked' if evidence['status'] == 'header_checked' else 'listed')
             data[kind] = {**deepcopy(evidence), 'status': status}
     result['availableData'] = data
-    return apply_thumbnail_evidence(entry, result, review.get('thumbnail'))
+    thumbnail = review.get('thumbnail')
+    # Video receipts are attached after native model and photograph policies.
+    return result if thumbnail and 'videoFrame' in thumbnail else apply_thumbnail_evidence(entry, result, thumbnail)
 
 
-def apply_thumbnail_evidence(entry, proof, thumbnail):
-    """Reuse only a validated crop of this scene's exact, checked photograph."""
+def apply_thumbnail_evidence(entry, proof, thumbnail, video_review=None):
+    """Reuse only this scene's checked photograph or exact reviewed video sample."""
     result = deepcopy(proof)
     state = proof.get('photoAvailability')
     if thumbnail:
         audit = proof.get('photoAudit') or {}
-        if state not in PHOTO_STATES or entry['license'] != thumbnail['datasetLicense']:
+        video = thumbnail.get('videoFrame')
+        if (state not in (PHOTO_STATES | {'video_frames'} if video else PHOTO_STATES)
+                or entry['license'] != thumbnail['datasetLicense']):
             raise ValueError('Preview conflicts with scene photo or license evidence')
-        if thumbnail.get('sourceArchive'):
+        if video:
+            route = proof.get('videoFrameRouting') or proof.get('videoFrameMapping') or {}
+            if (not valid_video_preview(thumbnail) or not video_review
+                    or route.get('receiptSha256') != video_review['receiptSha256']
+                    or video['receiptSha256'] != video_review['receiptSha256']):
+                raise ValueError('Video preview needs its current reviewed media receipt')
+            samples = video_review.get('samples', [video_review.get('sample')])
+            sample = next((item for item in samples if item and item['name'] == thumbnail['registeredName']), None)
+            if not sample:
+                raise ValueError('Video preview is not a checked registered sample')
+            if 'bindings' in video_review:
+                binding = next(item for item in video_review['bindings'] if item['name'] == sample['name'])
+                source = next(item for item in video_review['videos'] if item['id'] == binding['video'])
+                selection = {key: binding[key] for key in ('frameIndex', 'timestamp') if key in binding}
+                source_hash = source['sha256']
+            else:
+                source = next(item for item in video_review['videos'] if item['name'] == sample['name'])
+                selection = {'timestamp': video_review['timestamp']}
+                source_hash = source['sourceSha256']
+            if (video != {'receiptSha256': video_review['receiptSha256'], **selection}
+                    or thumbnail['sourcePath'] != source['sourcePath'] or thumbnail['sourceSha256'] != source_hash
+                    or thumbnail.get('originalWidth') != sample['width'] or thumbnail.get('originalHeight') != sample['height']):
+                raise ValueError('Video preview does not match the selected source frame')
+        elif thumbnail.get('sourceArchive'):
             archive = audit.get('archive') or {}
             if thumbnail['sourceArchive'] != archive.get('path'):
                 raise ValueError('Preview archive does not match this scene')

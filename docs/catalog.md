@@ -6,6 +6,14 @@ hover or keyboard focus. The image opens the viewer directly; the corner info
 button opens full metadata and camera/point statistics. Touch devices keep that
 button visible. Shared-on-Hub photos use the same layout.
 
+Video scenes use cached JPEG previews from their exact reviewed frame mappings.
+The preview may be the first frame or a later selected frame; it must match the
+manifest's source, registered camera and timestamp or frame index. Browsing the
+Hub loads only the same-origin JPEG, never the video. Content-hashed previews
+use immutable browser caching; catalog metadata continues to revalidate. The offline operator command
+`node scripts/audit/prepare-video-previews.mjs --apply` reads bounded keyframe
+groups and records immutable previews with their media-receipt provenance.
+
 The Gaussian label means Gaussian data has verified format evidence and a viewer
 binding. It stays visible without hovering. PLY is a container format: ordinary point clouds and meshes keep their
 own labels. Listed, archive-only and conversion-required assets do not receive an

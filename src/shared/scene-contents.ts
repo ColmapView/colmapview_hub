@@ -41,6 +41,16 @@ export interface SceneThumbnail {
   sourceSha256: string; datasetLicense: string; license: string; attribution: string; crop: 'center_square' | 'aspect_fit';
   originalWidth?: number; originalHeight?: number;
   licenseUrl?: string; creditUrl?: string; registeredName?: string;
+  videoFrame?: { receiptSha256: string; timestamp?: number; frameIndex?: number };
+}
+
+function isVideoPreview(value: unknown): value is NonNullable<SceneThumbnail['videoFrame']> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const frame = value as Record<string, unknown>;
+  return Object.keys(frame).length === 2 && typeof frame.receiptSha256 === 'string' && /^[a-f0-9]{64}$/.test(frame.receiptSha256)
+    && (frame.frameIndex === undefined
+      ? typeof frame.timestamp === 'number' && Number.isFinite(frame.timestamp) && frame.timestamp >= 0
+      : frame.timestamp === undefined && typeof frame.frameIndex === 'number' && Number.isSafeInteger(frame.frameIndex) && frame.frameIndex >= 0);
 }
 export const isThumbnailUrl = (value: unknown): value is string => typeof value === 'string'
   && /^\/hub\/datasets\/individual\/thumbnails\/[a-f0-9]{64}\.jpg$/.test(value);
@@ -65,6 +75,8 @@ export function isSceneThumbnail(value: unknown): value is SceneThumbnail {
     && ['sourcePath', 'sourceSha256', 'datasetLicense', 'license', 'attribution'].every(key => typeof item[key] === 'string' && item[key])
     && /^[a-f0-9]{64}$/.test(String(item.sourceSha256))
     && (item.sourceArchive === undefined || typeof item.sourceArchive === 'string')
+    && (item.videoFrame === undefined || isVideoPreview(item.videoFrame)
+      && typeof item.registeredName === 'string' && Boolean(item.registeredName) && item.sourceArchive === undefined)
     && (item.licenseUrl === undefined || isCreditUrl(item.licenseUrl)) && (item.creditUrl === undefined || isCreditUrl(item.creditUrl));
 }
 
@@ -134,7 +146,7 @@ export function sceneContentsHtml(contents?: SceneContents): string {
 export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }, compact = false): string {
   const thumbnail = entry.thumbnail;
   if (!thumbnail || !isSceneThumbnail(thumbnail) || thumbnail.datasetLicense !== entry.license) return '';
-  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(thumbnail.url)}" width="${thumbnail.width}" height="${thumbnail.height}" loading="lazy" decoding="async" alt="${escape(`Scene photograph from ${entry.title}`)}">`
+  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(thumbnail.url)}" width="${thumbnail.width}" height="${thumbnail.height}" loading="lazy" decoding="async" alt="${escape(`${thumbnail.videoFrame ? 'Video frame' : 'Scene photograph'} from ${entry.title}`)}">`
     + (compact ? '' : `<figcaption>${sceneThumbnailCreditHtml(thumbnail)}</figcaption>`) + '</figure>';
 }
 

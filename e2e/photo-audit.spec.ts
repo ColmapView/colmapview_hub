@@ -57,6 +57,13 @@ test('camera video imagery has its own filter and matching-frame launch while mo
   expect(result.total).toBe(index.photos.video_frames);
   expect(result.entries.every((entry: { photoStatus: string }) => entry.photoStatus === 'video_frames')).toBe(true);
   await page.goto('/hub/datasets/?photos=video_frames');
+  const preview = page.locator('.dataset-thumbnail').first();
+  await expect(preview).toBeVisible();
+  await expect(preview).toHaveAttribute('alt', /^Video frame from/);
+  await expect.poll(() => preview.evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  const poster = await page.request.get((await preview.getAttribute('src'))!);
+  expect(poster.headers()['cache-control']).toContain('immutable');
+  expect(poster.headers()['cache-control']).not.toContain('no-cache');
   await expect(page.locator('#catalog-count')).toHaveAccessibleName(new RegExp(`of ${result.total.toLocaleString('en-US')} scene datasets`));
   await page.locator('.catalog-advanced > summary').click();
   await expect(page.getByRole('combobox', { name: 'Images', exact: true })).toHaveValue('video_frames');
