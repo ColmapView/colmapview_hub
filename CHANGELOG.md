@@ -2,9 +2,14 @@
 
 ## Unreleased
 
-## 0.12.8 — 2026-10-24
+## 0.12.9 — 2026-10-24
 
 - Shorten the analytics explanation and use the existing primary style for Allow analytics, with No thanks beside it. Name Do Not Track or Global Privacy Control when it keeps analytics off. Measurement still requires opt-in.
+- Check contrast and typography for every primary action, including the analytics button. This supersedes prepared 0.12.8 before deployment.
+
+## 0.12.8 — 2026-10-24
+
+- Prepared the concise analytics panel; superseded by 0.12.9 before deployment after browser checks caught selectors that assumed a single primary action.
 
 ## 0.12.7 — 2026-10-24
 

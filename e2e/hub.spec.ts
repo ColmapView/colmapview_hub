@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import { preview } from '../tests/fixtures/preview';
@@ -358,9 +358,13 @@ for (const colorScheme of ['dark', 'light'] as const) {
         expect(fonts).toContain('loaded');
         expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor))
           .toBe(colorScheme === 'dark' ? 'rgb(15, 15, 15)' : 'rgb(245, 245, 244)');
-        const [foreground, background] = await page.locator('.button-primary, .button-danger')
-          .evaluate(element => [getComputedStyle(element).color, getComputedStyle(element).backgroundColor]);
-        expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
+        const actions = await page.locator('.button-primary, .button-danger').all();
+        expect(actions.length).toBeGreaterThan(0);
+        for (const action of actions) {
+          const [foreground, background] = await action
+            .evaluate(element => [getComputedStyle(element).color, getComputedStyle(element).backgroundColor]);
+          expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
+        }
         for (const target of await page.locator('.site-nav a, .footer-links a, .brand, .button').filter({ visible: true }).all()) {
           expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(32);
         }
@@ -399,14 +403,16 @@ test('the appearance icon supports keyboard cycling, persistence and system and 
 
 test('gives the primary and danger buttons the type of link buttons', async ({ page }) => {
   const link = await createLink(page);
-  const type = (selector: string) => page.locator(selector).evaluate(element =>
+  const type = (target: Locator) => target.evaluate(element =>
     [getComputedStyle(element).fontFamily, getComputedStyle(element).fontSize, getComputedStyle(element).fontWeight]);
   try {
     await page.goto('/hub/datasets/');
-    const linkType = await type('#catalog-reset');
-    expect(await type('.button-primary')).toEqual(linkType);
+    const linkType = await type(page.locator('#catalog-reset'));
+    const actions = await page.locator('.button-primary').all();
+    expect(actions.length).toBeGreaterThan(0);
+    for (const action of actions) expect(await type(action)).toEqual(linkType);
     await page.goto(`/hub/manage/${link.id}#${link.owner}`);
-    expect(await type('.button-danger')).toEqual(linkType);
+    expect(await type(page.locator('.button-danger'))).toEqual(linkType);
   } finally { await removeLink(page, link); }
 });
 
