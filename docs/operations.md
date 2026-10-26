@@ -6,6 +6,8 @@ After a Hub UI/backend release, run the viewer repository's **Deploy GitHub Hub 
 
 For release exports, commit the Hub changes, then run `npm run build:github` from that clean checkout before `npm run deploy`. The downloader rejects dirty-source exports. Check the public `/hub/assets/github/site.json`, `/hub/datasets/api/index` and curated `/hub/datasets/api/entry/data-…` routes. API CORS allows the fixed viewer origins; public bundles and fonts allow anonymous cross-origin reads. The optional `preview=inline` public feed returns bounded JPEGs only after fresh checks of verified public opt-ins. Unlisted/private preview lookup protections remain unchanged.
 
+Keep `assets.html_handling` set to `none`: export downloads must return exact `.html` files without redirects. The HTTP browser check verifies this through the asset service, including body hashes and CORS. The Worker preserves the existing `/hub/datasets/audit` aliases with an explicit redirect to `audit.html`.
+
 Authenticate Wrangler with the Cloudflare account that owns the `opsiclear.com` zone. The account ID is set in `wrangler.jsonc`. Deployments need access to Workers routes, D1 and Durable Objects.
 
 The remembered-connection service was retired on October 20, 2026 after approval. The [retirement runbook](account-sessions.md) records namespace-deletion and secret-removal checks. Preserve this migration and the browser-only contract when deploying or rolling back; public Hub cards and the catalog remain available.

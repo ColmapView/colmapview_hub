@@ -32,6 +32,10 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
     return response;
   }
   if (path === '/datasets') return new Response(null, { status: 308, headers: { Location: `${location.base}/datasets/${url.search}` } });
+  // Keep the old operator audit aliases after disabling automatic HTML rewrites.
+  if (/^\/datasets\/audit(?:\/(?:index(?:\.html)?)?)?$/.test(path)) {
+    return new Response(null, { status: 308, headers: { Location: `${location.base}/datasets/audit.html${url.search}` } });
+  }
   const browse = (dataset?: string) => {
     const target = new URL(`${location.base}/datasets/${url.search}`);
     // Collection pages counted sources, not scenes; their page numbers cannot carry over.

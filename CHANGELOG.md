@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.19.1 — 2026-10-26
+
+- Serve content-hashed frontend export HTML at its exact filename so the verified GitHub downloader receives HTTP 200 without Cloudflare canonicalization redirects. Add an HTTP regression check for every exported page's status, bytes, hash and CORS headers.
+
 ## 0.19.0 — 2026-10-26
 
 - Serve the same gallery on GitHub Pages and OpsiClear. Keep browsing, search, filters, metadata and Back on the chosen host, and select its matching viewer. Load current catalog data asynchronously from the shared public API.

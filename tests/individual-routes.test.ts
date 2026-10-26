@@ -7,6 +7,17 @@ import { datasetSharePath } from '../src/shared/dataset-share';
 
 beforeEach(resetState);
 
+it('preserves the existing static audit aliases without a private record or asset read', async () => {
+  const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
+  const records = vi.spyOn(hubStorage, 'get');
+  for (const path of ['/datasets/audit', '/datasets/audit/', '/datasets/audit/index.html']) {
+    const response = await request(path + '?scope=scene');
+    expect(response.status).toBe(308);
+    expect(response.headers.get('Location')).toBe(base + '/datasets/audit.html?scope=scene');
+  }
+  expect(assets).not.toHaveBeenCalled(); expect(records).not.toHaveBeenCalled();
+});
+
 it('keeps catalog short-link misses guarded and rejects embeds before metadata or private reads', async () => {
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
   const records = vi.spyOn(hubStorage, 'get');

@@ -1,9 +1,24 @@
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 
 const github = 'https://colmapview.github.io';
 const production = 'https://colmapview.opsiclear.com';
 const local = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB_E2E_PORT || '5201'}`;
+
+test('public export downloads are exact HTTP 200 files without HTML canonicalization redirects', async ({ request }) => {
+  const metadata = await request.get(local + '/hub/assets/github/site.json');
+  expect(metadata.status()).toBe(200);
+  const manifest = await metadata.json() as { files: { artifact: string; sha256: string; bytes: number }[] };
+  for (const file of manifest.files) {
+    const response = await request.get(local + file.artifact, { maxRedirects: 0, headers: { Origin: github } });
+    expect(response.status()).toBe(200);
+    expect(response.headers()['access-control-allow-origin']).toBe('*');
+    const bytes = await response.body();
+    expect(bytes.length).toBe(file.bytes);
+    expect(createHash('sha256').update(bytes).digest('hex')).toBe(file.sha256);
+  }
+});
 
 test.beforeEach(async ({ page }) => {
   const manifest = JSON.parse(await readFile('public/hub/assets/github/site.json', 'utf8')) as { files: { path: string; artifact: string }[] };

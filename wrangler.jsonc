@@ -32,6 +32,8 @@
   "assets": {
     "directory": "public",
     "binding": "CATALOG_ASSETS",
+    // Public export URLs are exact, content-hashed files; never canonicalize .html downloads.
+    "html_handling": "none",
     // Static files in public/hub/ are served at /hub/… without the Worker. Wrangler's warning that the routes "will attempt
     // to serve Assets on a configured path" is expected for this /hub/* → public/hub/* mapping. Setting run_worker_first
     // back to true would route static files through the Worker again.
