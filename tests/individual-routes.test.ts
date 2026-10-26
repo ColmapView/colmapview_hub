@@ -7,15 +7,13 @@ import { datasetSharePath } from '../src/shared/dataset-share';
 
 beforeEach(resetState);
 
-it('redirects retired metadata and launch URLs without reading private records or changing viewer selection', async () => {
+it('redirects retired metadata URLs without reading private records or changing viewer selection', async () => {
   const id = 'data-' + 'a'.repeat(24);
   const records = vi.spyOn(hubStorage, 'get');
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
-  for (const action of ['entry', 'open']) {
-    const response = await request(`/datasets/${action}/${id}?viewerHost=github`, { method: 'HEAD' });
-    expect(response.status).toBe(308);
-    expect(response.headers.get('Location')).toBe(`${base}/${action}/${id}?viewerHost=github`);
-  }
+  const response = await request(`/datasets/entry/${id}?viewerHost=github`, { method: 'HEAD' });
+  expect(response.status).toBe(308);
+  expect(response.headers.get('Location')).toBe(`${base}/entry/${id}?viewerHost=github`);
   expect(records).not.toHaveBeenCalled(); expect(assets).not.toHaveBeenCalled();
 });
 

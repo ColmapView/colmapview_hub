@@ -79,7 +79,7 @@ For a fresh remote recovery database, configure its `HUB_DB` ID in `wrangler.jso
 
 ## Public route contract
 
-The single gallery is `/hub/` on both hosts. Retired `/hub/datasets/` page URLs redirect within the selected host, preserving filters, page selection and viewer choice. Full metadata uses `/hub/entry/<id>` on OpsiClear and the static `/hub/entry/?id=<id>` document on GitHub. Retired metadata and launch links retain compatibility redirects. Share names and existing manifests remain valid.
+The single gallery is `/hub/` on both hosts. Retired `/hub/datasets/` page URLs redirect within the selected host, preserving filters, page selection and viewer choice. Full metadata uses `/hub/entry/<id>` on OpsiClear and the static `/hub/entry/?id=<id>` document on GitHub. Retired metadata pages redirect; existing launch aliases continue to open the selected data directly. Share names and existing manifests remain valid.
 
 The existing `/hub/datasets/api/` and `/hub/datasets/individual/` namespaces are stable read/asset contracts, not additional gallery pages. Do not replace these prefixes in persisted manifests or older clients. API launch fields and publication receipts retain their legacy paths for archived viewers; current clients normalize these to canonical navigation. The unverified legacy gallery renderer, listing reader, CSS and cache were retired; `HUB_LISTINGS_ENABLED` remains false for legacy creation compatibility, and never selects the root UI. Only verified public opt-ins enter Shared on Hub.
 

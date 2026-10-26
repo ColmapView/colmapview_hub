@@ -54,7 +54,7 @@ it('returns social metadata with the readable copy address and no analytics or d
 
 it('opens the exact curated selection on GitHub only with an explicit navigation hint', async () => {
   const github = 'https://colmapview.github.io/latest/?url=https://example.org/scene.manifest.json';
-  for (const path of ['/../s/HappyTree', '/../s/d/AAAAAAAAAAAAAAAA', '/open/' + datasetId]) {
+  for (const path of ['/../s/HappyTree', '/../s/d/AAAAAAAAAAAAAAAA', '/open/' + datasetId, '/datasets/open/' + datasetId]) {
     const response = await request(path + '?viewerHost=github&url=https://unrelated.example', { headers: navigation });
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe(github);

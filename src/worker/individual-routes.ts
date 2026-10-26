@@ -45,8 +45,8 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   };
   if (['/datasets', '/datasets/', '/datasets/index.html', '/index.html'].includes(path)) return browse();
   if (path === '/entry') return new Response(null, { status: 308, headers: { Location: `${location.base}/entry/${url.search}` } });
-  const legacy = /^\/datasets\/(entry|open)\/(data-[a-f0-9]{24})$/.exec(path);
-  if (legacy) return new Response(null, { status: 308, headers: { Location: `${location.base}/${legacy[1]}/${legacy[2]}${url.search}` } });
+  const legacy = /^\/datasets\/entry\/(data-[a-f0-9]{24})$/.exec(path);
+  if (legacy) return new Response(null, { status: 308, headers: { Location: `${location.base}/entry/${legacy[1]}${url.search}` } });
   if (['/entry/', '/datasets/entry/'].includes(path)) {
     const id = url.searchParams.get('id') || '';
     if (!/^data-[a-f0-9]{24}$/.test(id)) return fail(404, 'Dataset entry not found.');
@@ -58,7 +58,8 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   const entry = /^\/entry\/(data-[a-f0-9]{24})$/.exec(path);
   const apiEntry = /^\/datasets\/api\/entry\/(data-[a-f0-9]{24})$/.exec(path);
   const apiIndex = path === '/datasets/api/index';
-  const open = /^\/open\/(data-[a-f0-9]{24})$/.exec(path);
+  // Existing API clients consume this direct launch URL. Keep its one-hop contract.
+  const open = /^\/(?:datasets\/)?open\/(data-[a-f0-9]{24})$/.exec(path);
   if (path !== '/' && path !== '/datasets/api/entries' && !apiIndex && !apiEntry && !entry && !open && !collection) return fail(404, 'Dataset entry not found.');
   const filters = entry || apiEntry || apiIndex || open || collection ? new URLSearchParams() : individualFilters(url.searchParams);
   // Read the current inventory before the response cache. Removed entries and
