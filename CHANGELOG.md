@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.18.1 — 2026-10-26
+
+- Retry transient Wrangler transport failures during migration and read verified staging records in indexed batches for the final cutover. Supersede the prepared 0.18.0 rollout; the Worker and public API behavior are unchanged.
+
 ## 0.18.0 — 2026-10-26
 
 - Move share records, stable catalog aliases, pending publications and private naming configuration to D1. Store preview JPEG bytes separately from metadata, use atomic create-only reservations and review promotion, and query only verified public metadata for discovery. Remove the runtime R2 binding while preserving legacy links and preview compatibility.
