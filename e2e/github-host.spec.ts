@@ -108,6 +108,8 @@ test('GitHub respects browser privacy signals before any analytics opt-in', asyn
   page.on('request', request => { if (/google-analytics|googletagmanager/.test(request.url())) tags.push(request.url()); });
   await page.goto(github + '/hub/datasets/');
   await expect(page.locator('#catalog-results [data-entry-id]').first()).toBeVisible();
+  // Observe the complete startup before asserting that no analytics request ran.
+  await page.waitForLoadState('networkidle');
   await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
   expect(tags).toEqual([]);
 });
