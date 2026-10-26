@@ -16,8 +16,29 @@ const detail = page(location, 'Dataset', '<p id="catalog-entry-status" role="sta
   `<script type="module" src="https://colmapview.opsiclear.com/hub/assets/catalog-entry.js?v=${HUB_UI_VERSION}"></script>`, true);
 const directory = 'public/hub/assets/github';
 await mkdir(directory, { recursive: true });
+// Keep old HTML usable while the two frontends deploy independently. These
+// immutable public assets are retained; mutable build output is never its dependency.
+const pinned = new Map();
+for (const name of ['colmapview.css', 'styles.css', 'assets/theme.js', 'assets/client.js',
+  'assets/individual-catalog.js', 'assets/catalog-entry.js']) {
+  let content = await readFile(`public/hub/${name}`, 'utf8');
+  if (name.endsWith('.css')) content = content.replaceAll("url('./fonts/", "url('https://colmapview.opsiclear.com/hub/fonts/");
+  const digest = createHash('sha256').update(content).digest('hex');
+  const file = `${digest}.${name.endsWith('.css') ? 'css' : 'js'}`;
+  await writeFile(`${directory}/${file}`, content);
+  pinned.set(`https://colmapview.opsiclear.com/hub/${name}`, `https://colmapview.opsiclear.com/hub/assets/github/${file}`);
+}
 const files = [];
-for (const [paths, html] of [[['index.html', 'datasets/index.html'], gallery], [['datasets/entry/index.html'], detail]]) {
+for (const [paths, template] of [[['index.html', 'datasets/index.html'], gallery], [['datasets/entry/index.html'], detail]]) {
+  let html = template;
+  for (const [original, immutable] of pinned) html = html.replaceAll(`${original}?v=${HUB_UI_VERSION}`, immutable).replaceAll(original, immutable);
+  for (const [, tag, attributes] of html.matchAll(/<(script|link)\b([^>]+)>/g)) {
+    if (tag === 'link' && !attributes.includes('rel="stylesheet"')) continue;
+    const reference = /(?:src|href)="([^"]+)"/.exec(attributes)?.[1];
+    if (reference && !/^https:\/\/colmapview\.opsiclear\.com\/hub\/assets\/github\/[a-f0-9]{64}\.(?:js|css)$/.test(reference)) {
+      throw new Error('GitHub templates must pin every frontend script and stylesheet.');
+    }
+  }
   const bytes = Buffer.from(html);
   const sha256 = createHash('sha256').update(bytes).digest('hex');
   const artifact = `/hub/assets/github/${sha256}.html`;
