@@ -16,7 +16,7 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   const link = document.createElement('a'); link.className = 'dataset-open'; link.href = hubViewerLink(`/s/${entry.id}`, host); link.textContent = entry.title;
   link.title = entry.title;
   link.setAttribute('aria-label', `Open in viewer: ${entry.title}`); title.append(link);
-  const info = document.createElement('button'); info.type = 'button'; info.className = 'dataset-info';
+  const info = document.createElement('button'); info.type = 'button'; info.className = 'dataset-info icon-button'; info.title = 'Dataset information';
   info.innerHTML = icon('info');
   info.setAttribute('aria-label', `Metadata for ${entry.title}`); info.setAttribute('aria-haspopup', 'dialog'); info.setAttribute('aria-expanded', 'false');
   info.setAttribute('aria-controls', `metadata-shared-${entry.id}`);
@@ -49,7 +49,8 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   const original = document.createElement('a'); original.href = originalUrl.href;
   original.target = '_blank'; original.rel = 'noopener noreferrer'; original.textContent = 'Dataset source ↗';
   const links = document.createElement('div'); links.className = 'dataset-metadata-links'; links.append(source, original);
-  const copy = document.createElement('button'); copy.type = 'button'; copy.dataset.copyDatasetLink = `/s/${entry.id}`; copy.textContent = 'Copy link';
+  const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'icon-button'; copy.dataset.copyDatasetLink = `/s/${entry.id}`;
+  copy.setAttribute('aria-label', 'Copy link'); copy.title = 'Copy link'; copy.innerHTML = icon('copy');
   const copied = document.createElement('span'); copied.className = 'note'; copied.dataset.copyStatus = ''; copied.setAttribute('role', 'status');
   links.append(copy, copied);
   content.append(name, description, license, category, ...(contents.textContent ? [contents] : []), proof, links); panel.append(header, content);

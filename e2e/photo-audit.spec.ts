@@ -139,6 +139,29 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   expect(providerRequests).toEqual([]);
 });
 
+test('unmapped source imagery remains a mapping review with a usable model', async ({ page }) => {
+  const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
+  for (const sourceId of ['hf:active-vision-lab/oxford-day-and-night', 'hf:sebothetramp/MBZUAI-Campus']) {
+    const source = index.sources.find((item: { sourceId: string }) => item.sourceId === sourceId);
+    const query = new URLSearchParams({ dataset: source.id, photos: 'review_required' });
+    const result = await (await page.request.get('/hub/datasets/api/entries?' + query)).json();
+    expect(result.total).toBeGreaterThan(0);
+    expect(result.entries.every((entry: { photoStatus: string; hasViewer: boolean }) =>
+      entry.photoStatus === 'review_required' && entry.hasViewer)).toBe(true);
+    await page.goto('/hub/datasets/?' + query);
+    const first = page.locator('.dataset-card').first();
+    await expect(first.getByRole('img', { name: /^No preview:/ })).toBeVisible();
+    await first.hover();
+    await first.getByRole('button', { name: /Metadata/ }).click();
+    await expect(first.locator('[data-photo-status]')).toHaveText('Photos need mapping');
+    await first.getByRole('link', { name: 'Full metadata' }).click();
+    await expect(page.locator('main')).toContainText(sourceId.includes('oxford')
+      ? 'Processed photographs are published in TAR.GZ archives'
+      : 'exact recording/frame correspondence');
+    await expect(page.getByRole('link', { name: 'Try in ColmapView', exact: true })).toBeVisible();
+  }
+});
+
 test('Dynamic Maps keeps all pose statistics and an uncropped detail preview', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:dynamic-maps/hard-intersection-multimodal-sample');

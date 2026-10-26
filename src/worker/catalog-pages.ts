@@ -7,6 +7,7 @@ import { photoLabel } from '../shared/scene-photos';
 import type { PhotoStatus } from '../shared/scene-photos';
 import { sceneContentsHtml, sceneStatisticsHtml, sceneThumbnailHtml } from '../shared/scene-contents';
 import { datasetSharePath } from '../shared/dataset-share';
+import { icon } from '../shared/icons';
 import { hubViewerLink, preferredViewerUrl } from '../shared/viewer-host';
 import type { ViewerHost } from '../shared/viewer-host';
 export { catalogCard };
@@ -53,7 +54,7 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true, host?: V
     + '<div class="dataset-overview-content">'
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
     + sceneContentsHtml(entry.availableData) + sceneStatisticsHtml(entry.sceneStats)
-    + `<div class="actions">${actions}${individualAction}${datasetSharePath(entry.id, entry.shareName) ? `<button type="button" class="button" data-copy-dataset-link="${datasetSharePath(entry.id, entry.shareName)}">Copy link</button><span class="note" data-copy-status role="status"></span>` : ''}</div>`
+    + `<div class="actions">${actions}${individualAction}${datasetSharePath(entry.id, entry.shareName) ? `<button type="button" class="button icon-button" data-copy-dataset-link="${datasetSharePath(entry.id, entry.shareName)}" aria-label="Copy link" title="Copy link">${icon('copy')}</button><span class="note" data-copy-status role="status"></span>` : ''}</div>`
     + (entry.dataset ? `<p class="note">Part of <a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(datasetFilterValue(catalogSummary(entry))), host))}">${escape(entry.dataset.label)}</a>.</p>`
       : `<p class="note"><a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(entry.id), host))}">Browse this dataset’s named scenes</a>.</p>`)
     + '</div></div>'

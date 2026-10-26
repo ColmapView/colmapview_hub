@@ -32,7 +32,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const filterForm = `<form id="individual-search" class="catalog-filters" role="search" action="/hub/datasets/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
     + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"></label>`
     + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''), true)
-    + `<button type="submit" class="button button-primary icon-button" aria-label="Search" title="Search">${icon('search')}</button>`
+    + `<button type="submit" class="button icon-button" aria-label="Search" title="Search">${icon('search')}</button>`
     + `<details class="catalog-advanced"${advanced ? ' data-active' : ''}><summary class="button icon-button" title="More filters"><span class="sr-only">More filters</span>${icon('filters')}</summary><div class="catalog-secondary">`
     + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })))
     + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }])

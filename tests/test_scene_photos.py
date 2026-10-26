@@ -65,6 +65,28 @@ class ScenePhotoTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     photo_scene_reviews({'entries': [self.entry]}, policy)
 
+    def test_published_recordings_or_archives_are_not_absent_or_verified_photos(self):
+        self.audit.update(status='review_required', policy='media_mapping_required',
+                          unmappedMedia={'kind': 'video', 'paths': ['videos/capture.MP4'], 'inventorySha256': 'b' * 64})
+        review = self.review()
+        result = apply_photo_evidence(self.entry, ['colmap', self.scene['path'], self.files, None],
+                                     'a' * 40, {'level': 'native_layout_checked', 'viewerUrl': 'model-url'}, review)
+        self.assertEqual(result['photoAvailability'], 'review_required')
+        self.assertEqual(result['viewerUrl'], 'model-url')
+        for status in ('not_found', 'not_included', 'sample_checked', 'companion_archive'):
+            self.audit['status'] = status
+            with self.subTest(status=status), self.assertRaisesRegex(ValueError, 'Unmapped imagery'):
+                self.review()
+        self.audit.update(status='review_required', unmappedMedia={
+            'kind': 'archive', 'paths': ['processed/rectified.tar.gz'], 'inventorySha256': 'b' * 64})
+        self.review()
+        for change in ({'paths': []}, {'paths': ['../photos.tar.gz']}, {'paths': ['photos.tar.gz', 'photos.tar.gz']},
+                       {'paths': ['mask.png']}, {'inventorySha256': 'invalid'}, {'kind': 'photos'}):
+            policy = copy.deepcopy(self.policy)
+            policy['sources'][0]['scenes'][0]['audit']['unmappedMedia'].update(change)
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, 'Unmapped imagery'):
+                photo_scene_reviews({'entries': [self.entry]}, policy)
+
     def test_partial_photo_counts_cannot_exceed_the_registered_set(self):
         self.audit.update({'status': 'partial', 'nameCheck': {'registered': 48, 'matched': 40}})
         self.assertEqual(self.review()['audit']['nameCheck']['matched'], 40)

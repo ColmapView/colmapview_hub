@@ -39,6 +39,19 @@ def photo_scene_reviews(catalog, policy):
             if any(not isinstance(audit.get(field, ''), str) for field in
                    ('summary', 'checkedAt', 'policy', 'sceneRoot', 'policyNote', 'mediaScope', 'photoCollection', 'mappingFile', 'associationFile', 'samplePath')):
                 raise ValueError('Photo descriptions and source paths must be strings')
+            unmapped = audit.get('unmappedMedia')
+            if unmapped is not None:
+                paths = unmapped.get('paths') if isinstance(unmapped, dict) else None
+                kind = unmapped.get('kind') if isinstance(unmapped, dict) else None
+                suffixes = ('.mp4', '.mov', '.mkv', '.avi', '.webm', '.vrs') if kind == 'video' else ('.zip', '.tar', '.tar.gz', '.tgz')
+                if (status != 'review_required' or kind not in ('video', 'archive')
+                        or not isinstance(paths, list) or not paths
+                        or any(not source_path(path) or is_metadata_sidecar(path)
+                               or not path.lower().endswith(suffixes) for path in paths)
+                        or len(paths) != len(set(paths))
+                        or not isinstance(unmapped.get('inventorySha256'), str)
+                        or re.fullmatch('[a-f0-9]{64}', unmapped['inventorySha256']) is None):
+                    raise ValueError('Unmapped imagery requires scoped media paths, inventory evidence and a mapping-review status')
             if status in SAMPLE_STATES and (not audit.get('samplePath') or audit.get('sampleBrowserRead') is not True
                                            or audit.get('samplePixels') not in ('decoded', 'deferred')):
                 raise ValueError('Found photographs require a matching browser-readable sample')

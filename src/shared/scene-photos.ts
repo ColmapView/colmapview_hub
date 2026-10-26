@@ -5,9 +5,9 @@ export const PHOTO_LABELS = {
   video_frames: 'Matched video frames',
   path_policy_required: 'Photos need setup',
   companion_archive: 'Photos in a separate archive',
-  not_found: 'No loose photos found',
+  not_found: 'No matching photos found',
   not_included: 'Photos not included',
-  review_required: 'Photo association needs review',
+  review_required: 'Photos need mapping',
   not_checked: 'Photos not checked',
   unresolved: 'Photo paths ambiguous',
 } as const;
@@ -28,6 +28,7 @@ export interface ScenePhotoAudit {
   photoCollection?: string;
   mappingFile?: string;
   associationFile?: string;
+  unmappedMedia?: { kind: 'video' | 'archive'; paths: string[]; inventorySha256: string };
   mappingCheck?: { entries: number; matched: number; manifestAgrees?: number };
   nameCheck?: { registered: number; matched: number; missing: number; ambiguous: number; scope?: 'prefix'; totalRegistered?: number };
   proposedNameCheck?: { registered: number; matched: number };

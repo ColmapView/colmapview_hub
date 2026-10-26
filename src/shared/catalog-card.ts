@@ -31,7 +31,7 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost): strin
     + '<div class="dataset-card-preview">' + (preview || scenePlaceholderHtml(entry))
     + (entry.statusLabel === 'Feature links need review' || entry.statusLabel === 'Calibration needs review'
       ? `<p class="dataset-review">${escape(entry.statusLabel)}</p>` : '')
-    + `<button type="button" class="dataset-info" aria-label="${escape(`Metadata for ${entry.title}`)}" aria-haspopup="dialog" aria-controls="${metadataId}" aria-expanded="false">${icon('info')}</button>`
+    + `<button type="button" class="dataset-info icon-button" aria-label="${escape(`Metadata for ${entry.title}`)}" title="Dataset information" aria-haspopup="dialog" aria-controls="${metadataId}" aria-expanded="false">${icon('info')}</button>`
     + `<div class="dataset-card-hover"><p class="dataset-label">${escape(entry.dataset?.label || providerLabel(entry.provider))}</p>` + sceneContentsHtml(entry.availableData)
     + (entry.videoCapture ? `<p>${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</p>` : '')
     + `<p>${escape(LICENSE_CATEGORY_LABELS[category])} · ${escape(entry.license)}</p></div></div>`
@@ -48,7 +48,7 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost): strin
     + (preview ? `<p class="dataset-photo-credit">${entry.thumbnail!.videoFrame ? 'Video frame' : 'Photo'}: ${sceneThumbnailCreditHtml(entry.thumbnail!)}${entry.thumbnail!.crop === 'center_square' ? ' · Cropped' : ''}</p>` : '')
     + `<p class="note">${escape(entry.description)}</p>`
     + `<div class="dataset-metadata-links"><a href="${escape(hubViewerLink(datasetPath(entry), host))}">Full metadata</a>`
-    + (share ? `<button type="button" data-copy-dataset-link="${share}">Copy link</button><span class="note" data-copy-status role="status"></span>` : '')
+    + (share ? `<button type="button" class="icon-button" data-copy-dataset-link="${share}" aria-label="Copy link" title="Copy link">${icon('copy')}</button><span class="note" data-copy-status role="status"></span>` : '')
     + (entry.dataset ? `<a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(datasetFilterValue(entry)), host))}">Related scenes</a>` : '')
     + (isCatalogSourceUrl(entry.sourceUrl) ? `<a href="${escape(entry.sourceUrl)}" target="_blank" rel="noopener noreferrer">Original source ↗</a>` : '')
     + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></dialog></article>`;

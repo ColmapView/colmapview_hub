@@ -186,7 +186,7 @@ test('camera metadata with a verified XYZ companion shows the loaded count and e
 
 test('photo availability is displayed separately without changing model actions', () => {
   for (const [status, label] of [['partial', 'Images partially available'], ['path_policy_required', 'Photos need setup'],
-    ['companion_archive', 'Photos in a separate archive'], ['not_found', 'No loose photos found'], ['not_included', 'Photos not included']]) {
+    ['companion_archive', 'Photos in a separate archive'], ['not_found', 'No matching photos found'], ['not_included', 'Photos not included']]) {
     const item = row(0, { 7: nativePhotoProof(status) });
     const summary = render.individualSummary(item, source);
     assert.equal(summary.photoStatus, status);
@@ -617,15 +617,16 @@ test('a scene cannot inherit the collection thumbnail or its sibling asset list'
   assert.equal(entry.thumbnail, undefined);
   assert.equal(entry.availableData, undefined);
   assert.doesNotMatch(render.catalogCard(render.catalogSummary(entry)), /dataset-thumbnail|data-asset="splats"/);
-  assert.match(render.catalogCard(render.catalogSummary(entry)), /dataset-preview-placeholder.*No photo:/);
+  assert.match(render.catalogCard(render.catalogSummary(entry)), /dataset-preview-placeholder.*No preview:/);
 });
 
-test('placeholder cards distinguish absent photos from unavailable previews', () => {
+test('missing previews never imply original photographs do not exist', () => {
   const summary = render.individualSummary(row(), source);
   for (const photoStatus of ['not_found', 'not_included', 'review_required', 'sample_checked', 'path_policy_required', undefined]) {
     const html = render.catalogCard({ ...summary, photoStatus });
     assert.match(html, /dataset-preview-placeholder/);
-    assert.ok(html.includes(['not_found', 'not_included'].includes(photoStatus) ? '<span>No photo</span>' : '<span>No preview</span>'));
+    assert.ok(html.includes('<span>No preview</span>'));
+    assert.doesNotMatch(html, /No photo/);
     assert.doesNotMatch(html, /<img|dataset-photo-credit|data-asset="images"/);
   }
   const licensed = { ...summary, photoStatus: 'sample_checked', thumbnail: squareThumbnail };

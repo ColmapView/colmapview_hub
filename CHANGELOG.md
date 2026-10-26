@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.18.4 — 2026-10-26
+
+- Match Hub icon controls to the viewer, with consistent ghost buttons, keyboard focus, tooltips and touch targets. Use compact metadata and copy controls across static, asynchronous and shared cards.
+- Recheck all 1,718 photo-negative selections against complete pinned inventories from 17 sources. Correct 23 recording/archive mapping cases and 14 explicit photo exclusions, retain scoped absence findings and distinguish missing previews from missing originals. Preserve model launches and existing verified mappings; reject unmapped imagery being labeled absent or verified.
+
 ## 0.18.3 — 2026-10-26
 
 - Retire the approved legacy R2 bucket and remove the one-time importer and optional R2 operator binding. Preserve the verified SQL backup outside Git.

@@ -1,5 +1,14 @@
 # Dataset catalog
 
+The [October 26 photo review](../docs/photo-negative-audit-2026-10-26.md) checks all
+1,718 published photo-negative selections against 307 paginated pinned tree
+responses (268,732 files across 17 sources). Its
+`photo-negative-audit-2026-10-26.json.gz` receipt separates 23 imagery-mapping
+cases, 95 photo exclusions and 1,600 scoped non-findings. These are source-file
+and association checks; separately available originals, complete pixels and
+exports retain their own evidence. No model or existing verified photo route is
+changed.
+
 `gaussian-routing.json.gz` adds explicit, revision-bound Gaussian companions to
 696 existing scene selections. `gaussian-link-audit.json.gz` records the complete
 4,559-scene / 144-collection review, including exclusions and temporal alternatives.
