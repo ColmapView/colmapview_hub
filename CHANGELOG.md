@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.20.0 — 2026-10-26
+
+- Make `/hub/` the single gallery on both hosts. Move metadata and launch navigation under `/hub/entry/` and `/hub/open/`, with compatibility redirects for retired catalog pages and existing bookmarks. Preserve source manifests, APIs and readable share names.
+- Remove the dormant unverified link gallery, listing reader, cache, styling and obsolete tests. Keep public discovery restricted to verified opt-ins.
+- Make static exports reproducible, publish compact compatibility documents, and use export schema 2 for the canonical page set. Normalize exported CSS without changing the pinned viewer stylesheet.
+- Migrate optional analytics cookies to the Hub path, remove retired-path cookies and refresh consent for older allowances. Preserve refusals and browser privacy signals; omit ambient cookies from share creation and deletion.
+
 ## 0.19.1 — 2026-10-26
 
 - Serve content-hashed frontend export HTML at its exact filename so the verified GitHub downloader receives HTTP 200 without Cloudflare canonicalization redirects. Add an HTTP regression check for every exported page's status, bytes, hash and CORS headers.

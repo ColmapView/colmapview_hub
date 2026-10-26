@@ -17,7 +17,7 @@ const location: HubLocation = { origin: 'https://colmapview.opsiclear.com', path
 const number = (value: number) => value.toLocaleString('en-US');
 const factList = (facts: CatalogFact[]) => `<dl class="dataset-facts">${facts.map(fact => `<div><dt>${escape(fact.label)}</dt><dd>${fact.url
   ? `<a href="${escape(fact.url)}" rel="noreferrer">${escape(fact.value)}</a>` : escape(fact.value)}</dd></div>`).join('')}</dl>`;
-const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Collection: ${escape(entry.dataset.label)}</a>` : ''}`
+const tags = (entry: CatalogSummary) => `<p class="dataset-tags">${entry.dataset ? `<a class="dataset-tag" href="/hub/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Collection: ${escape(entry.dataset.label)}</a>` : ''}`
   + `${entry.itemKind ? `<span class="dataset-tag">${escape(entry.itemKind)}</span>` : ''}<span class="dataset-tag">${escape(providerLabel(entry.provider))}</span>`
   + `<span class="dataset-tag dataset-license-category">License: ${LICENSE_CATEGORY_LABELS[licenseCategory(entry)]}</span>`
   + `<span class="dataset-tag">${escape(entry.statusLabel)}</span>${entry.photoStatus ? `<span class="dataset-tag">${escape(photoLabel(entry.photoStatus))}</span>` : ''}${entry.delivery ? `<span class="dataset-tag">${escape(deliveryLabel(entry.delivery))}</span>` : ''}${entry.testOrFixture ? '<span class="dataset-tag">Test / demo</span>' : ''}</p>`;
@@ -51,15 +51,15 @@ export function catalogEntryContent(entry: CatalogEntry, host?: ViewerHost, fron
   }).join('');
   const preview = sceneThumbnailHtml(entry, false, frontend === 'github' ? HUB_ORIGIN : '');
   return (
-    `<p class="dataset-back"><a href="${escape(hubViewerLink('/hub/datasets/', host))}">← All datasets</a></p>`
+    `<p class="dataset-back"><a href="${escape(hubViewerLink('/hub/', host))}">← All datasets</a></p>`
     + `<div class="dataset-overview${preview ? ' dataset-overview-has-preview' : ''}" data-entry-id="${escape(entry.id)}">`
     + (preview ? `<div class="dataset-overview-preview">${preview}</div>` : '')
     + '<div class="dataset-overview-content">'
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
     + sceneContentsHtml(entry.availableData) + sceneStatisticsHtml(entry.sceneStats)
     + `<div class="actions">${actions}${individualAction}${datasetSharePath(entry.id, entry.shareName) ? `<button type="button" class="button icon-button" data-copy-dataset-link="${datasetSharePath(entry.id, entry.shareName)}" aria-label="Copy link" title="Copy link">${icon('copy')}</button><span class="note" data-copy-status role="status"></span>` : ''}</div>`
-    + (entry.dataset ? `<p class="note">Part of <a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(datasetFilterValue(catalogSummary(entry))), host))}">${escape(entry.dataset.label)}</a>.</p>`
-      : `<p class="note"><a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(entry.id), host))}">Browse this dataset’s named scenes</a>.</p>`)
+    + (entry.dataset ? `<p class="note">Part of <a href="${escape(hubViewerLink('/hub/?dataset=' + encodeURIComponent(datasetFilterValue(catalogSummary(entry))), host))}">${escape(entry.dataset.label)}</a>.</p>`
+      : `<p class="note"><a href="${escape(hubViewerLink('/hub/?dataset=' + encodeURIComponent(entry.id), host))}">Browse this dataset’s named scenes</a>.</p>`)
     + '</div></div>'
     + (entry.verification ? '<section class="dataset-section"><h2>Loading status</h2>'
       + facts([{ label: 'Loading qualification', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },
@@ -98,7 +98,7 @@ export function catalogAuditPage(snapshot: CatalogSnapshot): string {
     camera_only: 'Camera filenames without a complete geometry file set', no_native_assets: 'No native assets found in inspected files',
     unavailable: 'Public source metadata unavailable', unverified: 'Further verification needed', audit_error: 'Audit incomplete' };
   const status = (level: string) => levelLabels[level] || level.replace(/_/g, ' ');
-  return page(location, 'Dataset audit', '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
+  return page(location, 'Dataset audit', '<p class="dataset-back"><a href="/hub/">← All datasets</a></p>'
     + intro('Dataset audit', `${number(audit.sourcesAudited)} sources assessed on ${audit.checkedAt}, including previously supported and rejected inventory records.`)
     + `<p>${number(snapshot.sceneSummary?.entries || 0)} named scenes are published with scoped model/layout evidence. Original photographs are optional. Complete camera-and-photo export checks form a separate evidence tier: <a href="/hub/datasets/individual/verified-scenes.json" download>Download verified scene checks (JSON)</a>. Historical source research below retains its own scope and dates.</p>`
     + (snapshot.photoAudit ? '<section class="dataset-section"><h2>Image availability</h2>'

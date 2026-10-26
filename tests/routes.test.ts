@@ -3,7 +3,7 @@ import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN } from '../src/shared/model';
 import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
-import { base, create, input, ip, listings, request, resetState } from './helpers';
+import { base, create, input, ip, request, resetState } from './helpers';
 
 beforeEach(resetState);
 
@@ -161,13 +161,6 @@ describe('routes', () => {
     for (const [name, value] of [['Cache-Control', 'no-store'], ['X-Content-Type-Options', 'nosniff'],
       ['X-Robots-Tag', 'noindex, nofollow, noarchive'], ['Referrer-Policy', 'no-referrer']]) expect(response.headers.get(name), name).toBe(value);
     expect(response.headers.get('Content-Security-Policy')).toContain("frame-ancestors 'none'");
-  });
-
-  it('answers an invalid gallery cursor with an HTML 400 page', async () => {
-    const response = await request(`/?cursor=${'a'.repeat(2049)}`, {}, ip, listings);
-    expect(response.status).toBe(400);
-    expect(response.headers.get('Content-Type')).toBe('text/html; charset=utf-8');
-    expect(await response.text()).toContain('Invalid page cursor.');
   });
 
   it('drops a trailing slash from the raw path and keeps the query', async () => {

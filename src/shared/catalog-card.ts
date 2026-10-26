@@ -49,7 +49,7 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
     + `<p class="note">${escape(entry.description)}</p>`
     + `<div class="dataset-metadata-links"><a href="${escape(hubViewerLink(datasetPath(entry), host, frontend))}">Full metadata</a>`
     + (share ? `<button type="button" class="icon-button" data-copy-dataset-link="${share}" aria-label="Copy link" title="Copy link">${icon('copy')}</button><span class="note" data-copy-status role="status"></span>` : '')
-    + (entry.dataset ? `<a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(datasetFilterValue(entry)), host))}">Related scenes</a>` : '')
+    + (entry.dataset ? `<a href="${escape(hubViewerLink('/hub/?dataset=' + encodeURIComponent(datasetFilterValue(entry)), host))}">Related scenes</a>` : '')
     + (isCatalogSourceUrl(entry.sourceUrl) ? `<a href="${escape(entry.sourceUrl)}" target="_blank" rel="noopener noreferrer">Original source ↗</a>` : '')
     + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></dialog></article>`;
 }

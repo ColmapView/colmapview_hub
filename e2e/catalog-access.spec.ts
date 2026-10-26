@@ -9,10 +9,10 @@ test('refinement variants have one scene card while historical model links keep 
   const selected = await page.request.get(result.entries[0].openUrl, { maxRedirects: 0 });
   expect(selected.status()).toBe(302);
   expect(new URL(selected.headers().location).searchParams.get('url')).toMatch(/\/scene0000_00\/sparse\/refined_aligned$/);
-  const original = await page.request.get('/hub/datasets/open/data-93580dd2921e94e0c8d2e4e6', { maxRedirects: 0 });
+  const original = await page.request.get('/hub/open/data-93580dd2921e94e0c8d2e4e6', { maxRedirects: 0 });
   expect(original.status()).toBe(302);
   expect(new URL(original.headers().location).searchParams.get('url')).toMatch(/\/scene0000_00\/sparse\/init$/);
-  await page.goto(`/hub/datasets/?dataset=${source.id}&q=scene0000_00`);
+  await page.goto(`/hub/?dataset=${source.id}&q=scene0000_00`);
   await expect(page.locator('.dataset-card')).toHaveCount(1);
   await expect(page.locator('.catalog-totals')).toContainText(`${index.total.toLocaleString('en-US')} scene entries`);
 });
@@ -23,7 +23,7 @@ test('the Gaussian scene filter returns the same kind and count reported by its 
   expect(result.total).toBe(index.kinds['Gaussian scene']);
   expect(result.total).toBeGreaterThan(0);
   expect(result.entries.every((entry: { itemKind: string }) => entry.itemKind === 'Gaussian scene')).toBe(true);
-  await page.goto('/hub/datasets/?kind=Gaussian+scene');
+  await page.goto('/hub/?kind=Gaussian+scene');
   await expect(page.locator('select[name="kind"]')).toHaveValue('Gaussian scene');
 });
 
@@ -57,7 +57,7 @@ test('feed modes are seeded, paginated and respect collection balance or chronol
 });
 
 test('fresh visits get independent orders and Back keeps each visit', async ({ page }) => {
-  const path = '/hub/datasets/?kind=COLMAP+reconstruction';
+  const path = '/hub/?kind=COLMAP+reconstruction';
   await page.goto(path);
   await expect.poll(() => page.evaluate(() => history.state?.colmapviewFeedSeed)).toMatch(/^[a-f0-9]{16}$/);
   await expect(page).toHaveURL(new URL(path, page.url()).href);
@@ -65,7 +65,7 @@ test('fresh visits get independent orders and Back keeps each visit', async ({ p
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
   const firstIds = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
-  await page.goto('/hub/datasets/entry/' + firstIds[0]);
+  await page.goto('/hub/entry/' + firstIds[0]);
   await page.goto(path);
   await expect.poll(() => page.evaluate(() => history.state?.colmapviewFeedSeed)).toMatch(/^[a-f0-9]{16}$/);
   await expect(page).toHaveURL(new URL(path, page.url()).href);
@@ -82,7 +82,7 @@ test('fresh visits get independent orders and Back keeps each visit', async ({ p
 });
 
 test('scrolling appends scenes without duplicates and shuffle preserves active filters', async ({ page }) => {
-  await page.goto('/hub/datasets/?sort=random&seed=12345678&kind=COLMAP+reconstruction');
+  await page.goto('/hub/?sort=random&seed=12345678&kind=COLMAP+reconstruction');
   await expect(page).toHaveURL(/sort=random&kind=COLMAP\+reconstruction$/);
   expect(await page.evaluate(() => history.state.colmapviewFeedSeed)).toBe('12345678');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
@@ -119,7 +119,7 @@ test('failed automatic loading pauses until an explicit retry', async ({ page })
       await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Temporary failure' }) });
     } else await route.continue();
   });
-  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.goto('/hub/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('#catalog-status')).toContainText('Could not load more');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
@@ -141,7 +141,7 @@ test('reading catalog notes defers an in-flight append until the notes close', a
     await held;
     await route.fulfill({ response });
   });
-  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.goto('/hub/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await started;
   await page.locator('.catalog-notes > summary').click();
@@ -162,7 +162,7 @@ test('duplicate response pages never append repeated cards', async ({ page }) =>
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...original, page: 2 }) });
     } else await route.continue();
   });
-  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.goto('/hub/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('#catalog-status')).toContainText('catalog changed');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
@@ -181,7 +181,7 @@ for (const width of [1280, 390]) test(`Back restores the visible scene and refre
     observer.observe(document, { childList: true, subtree: true });
   });
   await page.route('**/s/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Viewer navigation fixture</h1>' }));
-  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.goto('/hub/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
   const ids = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
@@ -226,7 +226,7 @@ test('a catalog update restarts the feed instead of mixing generations', async (
     if (pageNumber !== '2') refreshed = true;
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...(pageNumber === '2' ? next : first), generation: 'updated-catalog-fixture' }) });
   });
-  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.goto('/hub/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect.poll(() => refreshed).toBe(true);
   await expect(page.locator('.dataset-card')).toHaveCount(24);
@@ -236,7 +236,7 @@ test('a catalog update restarts the feed instead of mixing generations', async (
 });
 
 for (const action of ['navigate', 'close']) test(`pending searches retain open metadata until ${action}`, async ({ page }) => {
-  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.goto('/hub/?sort=random&seed=12345678');
   const initial = JSON.parse((await page.locator('#catalog-initial-data').textContent())!);
   const identity = initial.entries[0].id;
   let releaseSearch: (() => void) | undefined;
@@ -262,7 +262,7 @@ for (const action of ['navigate', 'close']) test(`pending searches retain open m
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   if (action === 'navigate') {
     await panel.getByRole('link', { name: 'Full metadata', exact: true }).click();
-    expect(new URL(page.url()).pathname).toBe('/hub/datasets/entry/' + identity);
+    expect(new URL(page.url()).pathname).toBe('/hub/entry/' + identity);
   } else {
     await panel.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(page.locator('.dataset-card')).toHaveCount(1);
@@ -278,7 +278,7 @@ for (const malformed of ['short page', 'duplicate within page']) test(`rejects a
   await page.route('**/hub/datasets/api/entries?**', async route => {
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify(next) });
   });
-  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.goto('/hub/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('#catalog-status')).toContainText('incomplete metadata');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
@@ -291,12 +291,12 @@ test('blocked storage and unavailable intersection observers retain manual pagin
   });
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/hub/datasets/?sort=random&seed=12345678');
+  await page.goto('/hub/?sort=random&seed=12345678');
   await page.getByRole('button', { name: 'Load more', exact: true }).click();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
   const first = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
   const identity = first[0];
-  await page.goto('/hub/datasets/entry/' + identity);
+  await page.goto('/hub/entry/' + identity);
   await page.goBack();
   await expect.poll(() => page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(first.slice(0, 24));
   expect(await page.evaluate(() => history.state.colmapviewFeedSeed)).toBe('12345678');
@@ -308,7 +308,7 @@ test('blocked storage and unavailable intersection observers retain manual pagin
 });
 
 test('a finite filtered feed stops automatically and retains source metadata panels', async ({ page }) => {
-  await page.goto('/hub/datasets/?q=large_overlap+basketball+sparse_native');
+  await page.goto('/hub/?q=large_overlap+basketball+sparse_native');
   await expect(page.locator('.dataset-card')).toHaveCount(1);
   await expect(page.locator('#catalog-end')).toBeVisible();
   await expect(page.locator('#catalog-more')).toBeHidden();
@@ -324,7 +324,7 @@ test('retired collection pages open the current scene browser and retain source 
     const response = await page.request.get(`/hub/datasets/${source.id}`, { maxRedirects: 0 });
     expect(response.status(), source.id).toBe(308);
     const target = new URL(response.headers().location);
-    expect(target.pathname).toBe('/hub/datasets/');
+    expect(target.pathname).toBe('/hub/');
     expect(target.searchParams.get('dataset')).toBe(source.id);
   }
   const source = index.sources[0];
@@ -357,7 +357,7 @@ test('the reported gated PLY is no longer published', async ({ page }) => {
   const providerRequests: string[] = [];
   page.on('request', request => { if (new URL(request.url()).hostname === 'huggingface.co') providerRequests.push(request.url()); });
   await page.setViewportSize({ width: 360, height: 900 });
-  expect((await page.goto(`/hub/datasets/entry/${gatedId}`))!.status()).toBe(404);
+  expect((await page.goto(`/hub/entry/${gatedId}`))!.status()).toBe(404);
   await expect(page.locator('main')).toContainText('Dataset entry not found.');
   await expect(page.locator('main')).not.toContainText(gatedPath);
   await expect(page.getByRole('link', { name: /Try in ColmapView|Try listed model|Dataset URL/ })).toHaveCount(0);
@@ -367,7 +367,7 @@ test('the reported gated PLY is no longer published', async ({ page }) => {
 
 test('removed gated collections have no page, search result or dataset option', async ({ page }) => {
   expect((await page.goto(`/hub/datasets/${gatedSource}`))!.status()).toBe(404);
-  await page.goto(`/hub/datasets/?dataset=${gatedSource}`);
+  await page.goto(`/hub/?dataset=${gatedSource}`);
   await expect(page.locator('#catalog-count')).toHaveText('No matching datasets');
   await expect(page.locator(`option[value="${gatedSource}"]`)).toHaveCount(0);
   const response = await page.request.get(`/hub/datasets/api/entries?dataset=${gatedSource}`);
@@ -386,7 +386,7 @@ test('extraction-only collections are removed from pages and public metadata', a
 
 test('standalone extracted members and their nonopening collections are absent', async ({ page }) => {
   const member = id('hf:paroj/ycbev', 'ply', 'models_eval/obj_000001.ply', 'ycbv_models.zip');
-  expect((await page.goto(`/hub/datasets/entry/${member}`))!.status()).toBe(404);
+  expect((await page.goto(`/hub/entry/${member}`))!.status()).toBe(404);
   expect((await page.goto('/hub/datasets/hf-paroj-ycbev-sd-c89da44da829'))!.status()).toBe(404);
 });
 
@@ -411,14 +411,14 @@ test('reviewed missing models and unsupported spherical cameras have no public s
     expect((await page.request.get(`/hub/datasets/individual/sources/${source}.json`)).status()).toBe(404);
   }
   const removed = id('hf:SiminKou/DyOmni', 'colmap', 'Ayutthaya/output_dir/colmap');
-  expect((await page.goto(`/hub/datasets/entry/${removed}`))!.status()).toBe(404);
-  expect((await page.request.get(`/hub/datasets/open/${removed}`, { maxRedirects: 0 })).status()).toBe(404);
+  expect((await page.goto(`/hub/entry/${removed}`))!.status()).toBe(404);
+  expect((await page.request.get(`/hub/open/${removed}`, { maxRedirects: 0 })).status()).toBe(404);
 });
 
 test('Hourglass and other standalone file names are absent from scene browsing', async ({ page }) => {
   const hourglass = id('hf:adfa5456/FastRobustICP', 'stl', 'data/Hourglass.stl');
-  expect((await page.goto(`/hub/datasets/entry/${hourglass}`))!.status()).toBe(404);
-  await page.goto('/hub/datasets/?q=Hourglass');
+  expect((await page.goto(`/hub/entry/${hourglass}`))!.status()).toBe(404);
+  await page.goto('/hub/?q=Hourglass');
   await expect(page.locator('#catalog-count')).toHaveText('No matching datasets');
   const response = await page.request.get('/hub/datasets/api/entries?q=Hourglass');
   expect(await response.json()).toMatchObject({ unit: 'named_scene', total: 0, entries: [] });
@@ -432,7 +432,7 @@ test('native layouts remain listed with optional or missing photographs', async 
     const target = await page.request.get(data.entries[0].openUrl, { maxRedirects: 0 });
     expect(target.status()).toBe(302);
     expect(new URL(target.headers().location).searchParams.get('url')).not.toMatch(/\.ply$/);
-    await page.goto(`/hub/datasets/entry/${data.entries[0].id}`);
+    await page.goto(`/hub/entry/${data.entries[0].id}`);
     await expect(page.locator('main')).toContainText('Original photographs');
     await expect(page.locator('main')).toContainText('Native layout check');
     if (count === 11) {
@@ -466,10 +466,10 @@ test('complete-export evidence stays scoped while other model layouts remain loa
   for (const scene of completePhotoExports) {
     const sceneId = id(scene.sourceId, scene.kind, scene.path);
     expect([...data.entries, ...reviews.entries].some(row => row.id === sceneId)).toBe(true);
-    const open = await page.request.get(`/hub/datasets/open/${sceneId}`, { maxRedirects: 0 });
+    const open = await page.request.get(`/hub/open/${sceneId}`, { maxRedirects: 0 });
     expect(open.status()).toBe(302);
     expect(open.headers().location).toBe(scene.viewerUrl);
-    await page.goto(`/hub/datasets/entry/${sceneId}`);
+    await page.goto(`/hub/entry/${sceneId}`);
     const name = [...data.entries, ...reviews.entries].find(row => row.id === sceneId)!.shareName;
     await expect(page.getByRole('link', { name: 'Try in ColmapView' })).toHaveAttribute('href', `/s/${name}`);
     await expect(page.locator('main')).toContainText('Verified original photographs');
@@ -498,8 +498,8 @@ test('a checked companion PLY cannot qualify a scene or collection for publicati
     const response = await page.request.get(`/hub/datasets/api/entries?dataset=${sample.collection}`);
     expect(await response.json()).toMatchObject({ total: 0, entries: [], dataset: null });
     const entry = id(sample.source, 'camera-scene', sample.path);
-    expect((await page.goto(`/hub/datasets/entry/${entry}`))!.status()).toBe(404);
-    expect((await page.request.get(`/hub/datasets/open/${entry}`, { maxRedirects: 0 })).status()).toBe(404);
+    expect((await page.goto(`/hub/entry/${entry}`))!.status()).toBe(404);
+    expect((await page.request.get(`/hub/open/${entry}`, { maxRedirects: 0 })).status()).toBe(404);
     expect((await page.request.get(`/hub/datasets/${sample.collection}`)).status()).toBe(404);
     expect((await page.request.get(`/hub/datasets/individual/sources/${sample.collection}.json`)).status()).toBe(404);
   }
@@ -517,24 +517,24 @@ test('camera metadata opens its checked camera source and camera-only scenes ret
   expect(result.entries.every((entry: { hasViewer: boolean; photoStatus: string }) => entry.hasViewer && entry.photoStatus !== 'complete_export_checked')).toBe(true);
   const scene = modelExports.find(scene => scene.sourceId === 'hf:HaoqinHong/Physics-Informed-Deformable-Gaussian-Splatting')!;
   const entry = id(scene.sourceId, scene.kind, scene.path);
-  const open = await page.request.get(`/hub/datasets/open/${entry}`, { maxRedirects: 0 });
+  const open = await page.request.get(`/hub/open/${entry}`, { maxRedirects: 0 });
   expect(open.status()).toBe(302);
   expect(open.headers().location).toBe(scene.viewerUrl);
   expect(new URL(scene.viewerUrl).searchParams.get('url')).toMatch(/dry_ice\/transforms.*\.json$/);
-  await page.goto(`/hub/datasets/entry/${entry}`);
+  await page.goto(`/hub/entry/${entry}`);
   await expect(page.locator('main')).toContainText('COLMAP model export SHA-256');
   await expect(page.locator('main')).not.toContainText('Verified original photographs');
   await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('97');
   await expect(page.locator('[data-stat="points"]')).toHaveText('100,000');
   const cameraOnly = id('hf:Bugjudger/HDR_Pretrain', 'cameras', 'scenes/102343992/sparse/0');
-  const target = await page.request.get(`/hub/datasets/open/${cameraOnly}`, { maxRedirects: 0 });
+  const target = await page.request.get(`/hub/open/${cameraOnly}`, { maxRedirects: 0 });
   expect(target.status()).toBe(302);
   const url = new URL(target.headers().location).searchParams.get('url')!;
   const manifest = await (await page.request.get(url.replace('https://colmapview.opsiclear.com', ''))).json();
   expect(Object.keys(manifest.files).sort()).toEqual(['cameras', 'images']);
   expect(manifest.imagesPath).toContain('/scenes/102343992/images/');
   expect(manifest.baseUrl).toBe('https://colmapview.opsiclear.com/hub/datasets/individual/manifests/');
-  await page.goto(`/hub/datasets/entry/${cameraOnly}`);
+  await page.goto(`/hub/entry/${cameraOnly}`);
   await expect(page.locator('[data-stat="cameraPoses"]')).toHaveText('35');
   await expect(page.locator('[data-stat="points"]')).toHaveText('0');
 });

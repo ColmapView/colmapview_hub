@@ -62,7 +62,6 @@ export interface LinkRecord extends LinkMetadata {
   access?: 'private';
 }
 
-export interface ListedLink { id: string; title: string; createdAt: string; assets?: AssetSummary }
 
 /** The fields pages render. */
 export interface CardRecord {

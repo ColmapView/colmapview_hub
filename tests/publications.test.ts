@@ -95,8 +95,9 @@ describe('public Hub submissions', () => {
     const [challengeUrl, challengeOptions] = vi.mocked(fetch).mock.calls[0];
     const challengeRequest = new Request(challengeUrl, challengeOptions);
     expect(challengeRequest.redirect).toBe('manual');
-    const result = await response.json<{ id: string; status: string; shareUrl: string }>();
+    const result = await response.json<{ id: string; status: string; shareUrl: string; catalogUrl: string }>();
     expect(result.status).toBe('published');
+    expect(result.catalogUrl).toBe(`${origin}/hub/datasets/#shared-datasets`);
     const object = await hubStorage.get(env.HUB_DB, recordKey(result.id));
     const record = await object!.json<Record<string, unknown>>();
     expect(record.verification).toMatchObject({ method: 'hf_colmap_headers', revision, cameras: 2, registeredImages: 2 });

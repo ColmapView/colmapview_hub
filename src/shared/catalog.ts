@@ -73,10 +73,10 @@ export interface CatalogSnapshot {
   photoAudit?: { checkedAt: string; scenes: number; photos: Partial<Record<PhotoStatus, number>> };
 }
 export type CatalogSummary = Pick<CatalogEntry, 'id' | 'title' | 'provider' | 'license' | 'licenseCategory' | 'access' | 'statusLabel' | 'formats' | 'description' | 'testOrFixture' | 'dataset' | 'itemKind' | 'photoStatus' | 'availableData' | 'sceneStats' | 'thumbnail' | 'shareName' | 'videoCapture'> & { sourceUrl?: string; delivery?: string; hasViewer?: boolean; openUrl?: string };
-export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => `/hub/datasets/${entry.id.startsWith('data-') ? 'entry/' : ''}${entry.id}`;
+export const datasetPath = (entry: Pick<CatalogEntry, 'id'>) => entry.id.startsWith('data-') ? `/hub/entry/${entry.id}` : `/hub/?dataset=${encodeURIComponent(entry.id)}`;
 export function isCatalogOpenUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
-  if (/^\/hub\/datasets\/open\/data-[a-f0-9]{24}$/.test(value)) return true;
+  if (/^\/hub\/(?:datasets\/)?open\/data-[a-f0-9]{24}$/.test(value)) return true;
   try {
     const url = new URL(value);
     return ['https://colmapview.opsiclear.com', 'https://colmapview.github.io'].includes(url.origin)

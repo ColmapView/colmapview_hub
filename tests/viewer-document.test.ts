@@ -1,8 +1,8 @@
 import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { create, input, mockViewerDocument, request, resetState } from './helpers';
-import { hubLocation } from '../src/worker/pages';
 import { viewerDocument } from '../src/worker/viewer-document';
+import { hubLocation } from '../src/worker/pages';
 
 const navigation = { 'Sec-Fetch-Dest': 'document', Cookie: 'private-cookie', Authorization: 'Bearer private-token' };
 beforeEach(resetState);
@@ -63,7 +63,7 @@ it('rejects loopback and arbitrary document origins on the production Hub', asyn
 });
 
 it('does not let a request header disable the Hub page policy', async () => {
-  const response = await request('/datasets/', { headers: { 'X-Hub-Viewer-Document': '1' } });
+  const response = await request('/', { headers: { 'X-Hub-Viewer-Document': '1' } });
   expect(response.headers.get('Content-Security-Policy')).toContain("default-src 'none'");
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer');
 });

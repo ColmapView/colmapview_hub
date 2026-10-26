@@ -1,5 +1,5 @@
 import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, SHARE_PATH, VIEWER_ORIGINS, waitText } from '../shared/model';
-import type { CardRecord, ListedLink } from '../shared/model';
+import type { CardRecord } from '../shared/model';
 import { escapeHtml } from '../shared/html';
 import { HUB_UI_VERSION } from '../shared/ui-version';
 import { ANALYTICS_CONSENT_REVISION } from '../shared/analytics-consent';
@@ -46,10 +46,10 @@ const viewerControl = (host?: ViewerHost) => `<a class="button icon-button" href
 
 const header = (path: string, filters?: string, host?: ViewerHost) => [
   `<header class="site-header${filters ? ' catalog-toolbar' : ''}">`,
-  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/datasets/', host))}" aria-label="ColmapView Hub"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></a>`,
+  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="ColmapView Hub"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></a>`,
   ...(filters ? [filters] : [
   '<nav class="site-nav" aria-label="Main navigation">',
-  `<a class="button icon-button" href="${escapeHtml(hubViewerLink(path + '/datasets/', host))}" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
+  `<a class="button icon-button" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
   viewerControl(host),
   '</nav>',
   themeControl(),
@@ -102,7 +102,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
     '<a class="skip-link" href="#main">Skip to content</a>',
     header(location.path, catalog?.filters, location.viewerHost),
     `<main id="main" tabindex="-1"><div class="hub-content">${body}</div></main>`,
-    ...(location.frontend ? ['<noscript><p>This gallery needs JavaScript. <a href="https://colmapview.opsiclear.com/hub/datasets/?viewerHost=github">Browse the server-rendered catalog</a>.</p></noscript>'] : []),
+    ...(location.frontend ? ['<noscript><p>This gallery needs JavaScript. <a href="https://colmapview.opsiclear.com/hub/?viewerHost=github">Browse the server-rendered catalog</a>.</p></noscript>'] : []),
     footer(publicCatalog),
     catalog ? `<section class="catalog-footbar" aria-label="Catalog status">${catalog.status}${viewerControl(location.viewerHost)}${themeControl()}</section>` : '',
     '</body></html>',
@@ -160,24 +160,6 @@ export function managementPage(location: HubLocation, record: CardRecord): strin
     + `<img class="thumbnail" src="${location.base}/${record.id}/preview.jpg" width="${PREVIEW_WIDTH}" height="${PREVIEW_HEIGHT}" alt="">`
     + '<form id="delete-link" class="actions"><button type="submit" class="button button-danger">Delete permanently</button></form>'
     + '<p id="status" class="status" role="status" tabindex="-1"></p>');
-}
-
-export function galleryPage(location: HubLocation, { links, cursor }: { links: ListedLink[]; cursor?: string }): string {
-  const cards = links.map(link => {
-    const assets = assetLine(link.assets);
-    return `<a class="card gallery-card" href="${SHARE_PATH}/${link.id}">`
-      + `<img src="${location.path}/${link.id}/preview.jpg" width="${PREVIEW_WIDTH}" height="${PREVIEW_HEIGHT}" loading="lazy" alt="">`
-      + `<span class="gallery-title">${escapeHtml(link.title)}</span>${assets ? `<span class="meta">${escapeHtml(assets)}</span>` : ''}</a>`;
-  }).join('');
-  // A page whose entries were all skipped as invalid still links onward.
-  const more = cursor ? `<div class="actions"><a class="button" href="${location.path}/?cursor=${encodeURIComponent(cursor)}">More results</a></div>` : '';
-  return page(location, 'Shared results', intro('Shared results', 'Results listed by their creators.')
-    + (cards ? `<div class="cards">${cards}</div>` : cursor ? '' : '<p>No results listed yet.</p>') + more);
-}
-
-/** The Cache API key of a gallery page. Only the cursor picks a page, so any other query shares the first page's entry, which purges clear. */
-export function galleryKey(location: HubLocation, cursor?: string): string {
-  return `${location.base}/${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`;
 }
 
 export function notFoundPage(location: HubLocation): string {

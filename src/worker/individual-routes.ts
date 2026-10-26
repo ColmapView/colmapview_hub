@@ -31,25 +31,35 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
     response.headers.set('Allow', 'GET, HEAD');
     return response;
   }
-  if (path === '/datasets') return new Response(null, { status: 308, headers: { Location: `${location.base}/datasets/${url.search}` } });
   // Keep the old operator audit aliases after disabling automatic HTML rewrites.
   if (/^\/datasets\/audit(?:\/(?:index(?:\.html)?)?)?$/.test(path)) {
     return new Response(null, { status: 308, headers: { Location: `${location.base}/datasets/audit.html${url.search}` } });
   }
   const browse = (dataset?: string) => {
-    const target = new URL(`${location.base}/datasets/${url.search}`);
+    const target = new URL(`${location.base}/`);
+    target.search = individualFilters(url.searchParams).toString();
     // Collection pages counted sources, not scenes; their page numbers cannot carry over.
-    target.searchParams.delete('page');
+    if (dataset || /^\/datasets\/(?:collections|(?:collection-)?page-\d+)/.test(path)) target.searchParams.delete('page');
     if (dataset) target.searchParams.set('dataset', dataset);
     return new Response(null, { status: 308, headers: { Location: target.href } });
   };
+  if (['/datasets', '/datasets/', '/datasets/index.html', '/index.html'].includes(path)) return browse();
+  if (path === '/entry') return new Response(null, { status: 308, headers: { Location: `${location.base}/entry/${url.search}` } });
+  const legacy = /^\/datasets\/(entry|open)\/(data-[a-f0-9]{24})$/.exec(path);
+  if (legacy) return new Response(null, { status: 308, headers: { Location: `${location.base}/${legacy[1]}/${legacy[2]}${url.search}` } });
+  if (['/entry/', '/datasets/entry/'].includes(path)) {
+    const id = url.searchParams.get('id') || '';
+    if (!/^data-[a-f0-9]{24}$/.test(id)) return fail(404, 'Dataset entry not found.');
+    const query = new URLSearchParams(url.searchParams); query.delete('id');
+    return new Response(null, { status: 308, headers: { Location: `${location.base}/entry/${id}${query.size ? '?' + query : ''}` } });
+  }
   if (/^\/datasets\/(?:collections|(?:collection-)?page-\d+)(?:\.html)?\/?$/.test(path)) return browse();
   const collection = /^\/datasets\/((?:hf|public)-[a-z0-9-]+-[a-f0-9]{12})(?:\.html)?\/?$/.exec(path);
-  const entry = /^\/datasets\/entry\/(data-[a-f0-9]{24})$/.exec(path);
+  const entry = /^\/entry\/(data-[a-f0-9]{24})$/.exec(path);
   const apiEntry = /^\/datasets\/api\/entry\/(data-[a-f0-9]{24})$/.exec(path);
   const apiIndex = path === '/datasets/api/index';
-  const open = /^\/datasets\/open\/(data-[a-f0-9]{24})$/.exec(path);
-  if (path !== '/datasets/' && path !== '/datasets/api/entries' && !apiIndex && !apiEntry && !entry && !open && !collection) return fail(404, 'Dataset entry not found.');
+  const open = /^\/open\/(data-[a-f0-9]{24})$/.exec(path);
+  if (path !== '/' && path !== '/datasets/api/entries' && !apiIndex && !apiEntry && !entry && !open && !collection) return fail(404, 'Dataset entry not found.');
   const filters = entry || apiEntry || apiIndex || open || collection ? new URLSearchParams() : individualFilters(url.searchParams);
   // Read the current inventory before the response cache. Removed entries and
   // search results must not survive a catalog deployment in an older cache.

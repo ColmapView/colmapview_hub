@@ -7,6 +7,18 @@ import { datasetSharePath } from '../src/shared/dataset-share';
 
 beforeEach(resetState);
 
+it('redirects retired metadata and launch URLs without reading private records or changing viewer selection', async () => {
+  const id = 'data-' + 'a'.repeat(24);
+  const records = vi.spyOn(hubStorage, 'get');
+  const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
+  for (const action of ['entry', 'open']) {
+    const response = await request(`/datasets/${action}/${id}?viewerHost=github`, { method: 'HEAD' });
+    expect(response.status).toBe(308);
+    expect(response.headers.get('Location')).toBe(`${base}/${action}/${id}?viewerHost=github`);
+  }
+  expect(records).not.toHaveBeenCalled(); expect(assets).not.toHaveBeenCalled();
+});
+
 it('preserves the existing static audit aliases without a private record or asset read', async () => {
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
   const records = vi.spyOn(hubStorage, 'get');
@@ -100,15 +112,16 @@ it('keeps seeded feed caches separate and retains deterministic pages without pr
 it('redirects retired browse pages without reading metadata or private records', async () => {
   const records = vi.spyOn(hubStorage, 'get');
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
-  for (const path of ['', '/', '/datasets/collections', '/datasets/collections.html', '/datasets/collections/',
+  for (const path of ['', '/datasets', '/datasets/', '/datasets/index.html', '/datasets/collections', '/datasets/collections.html', '/datasets/collections/',
     '/datasets/collection-page-2', '/datasets/collection-page-2.html', '/datasets/page-3/']) {
-    const response = await request(`${path}?q=room&licenseCategory=commercial&page=4`, { method: 'HEAD' });
-    expect(response.status, path).toBe(path === '' || path === '/' ? 307 : 308);
+    const response = await request(`${path}?q=room&licenseCategory=commercial&page=4&url=discarded`, { method: 'HEAD' });
+    expect(response.status, path).toBe(path === '' ? 307 : 308);
     const target = new URL(response.headers.get('Location')!);
-    expect(target.pathname).toBe('/hub/datasets/');
+    expect(target.pathname).toBe('/hub/');
     expect(target.searchParams.get('q')).toBe('room');
     expect(target.searchParams.get('licenseCategory')).toBe('commercial');
-    expect(target.searchParams.get('page')).toBe(path === '' || path === '/' ? '4' : null);
+    if (path) expect(target.searchParams.has('url')).toBe(false);
+    expect(target.searchParams.get('page')).toBe(path === '' || ['/datasets', '/datasets/', '/datasets/index.html'].includes(path) ? '4' : null);
     expect(await response.text()).toBe('');
   }
   expect(assets).not.toHaveBeenCalled();
@@ -126,7 +139,7 @@ it('redirects only current collection identities and preserves their scene filte
     const response = await request(`/datasets/${id}${suffix}?q=room&dataset=another&page=5`);
     expect(response.status).toBe(308);
     const target = new URL(response.headers.get('Location')!);
-    expect(target.pathname).toBe('/hub/datasets/');
+    expect(target.pathname).toBe('/hub/');
     expect(target.searchParams.get('dataset')).toBe(id);
     expect(target.searchParams.get('q')).toBe('room');
     expect(target.searchParams.has('page')).toBe(false);
@@ -141,7 +154,7 @@ it('redirects only current collection identities and preserves their scene filte
 it('keeps public catalog misses separate from private share-link lookups and their cooldown', async () => {
   const records = vi.spyOn(hubStorage, 'get');
   for (let attempt = 0; attempt < 5; attempt++) {
-    const response = await request('/datasets/entry/not-a-valid-model-id');
+    const response = await request('/entry/not-a-valid-model-id');
     expect(response.status).toBe(404);
     expect(await response.text()).toContain('Dataset entry not found.');
   }
@@ -168,13 +181,13 @@ it('does not expose catalog writes and preserves HEAD and document security head
   expect(response.status).toBe(405);
   expect(response.headers.get('Allow')).toBe('GET, HEAD');
   expect(response.headers.get('Content-Security-Policy')).toContain("script-src 'self'");
-  const missing = await request('/datasets/entry/not-a-model', { method: 'HEAD' });
+  const missing = await request('/entry/not-a-model', { method: 'HEAD' });
   expect(missing.status).toBe(404);
   expect(await missing.text()).toBe('');
 });
 
 it('does not serve a removed model from a legacy or previous-generation cache', async () => {
-  const path = `/datasets/entry/data-${'c'.repeat(24)}`;
+  const path = `/entry/data-${'c'.repeat(24)}`;
   const cached = new Response('Removed gated model', { headers: { 'Cache-Control': 'public, max-age=300', ETag: '"old-model"' } });
   const legacyKey = new Request(base + path);
   const oldKey = new Request(`${base}${path}?_catalog=${'a'.repeat(64)}`);
@@ -269,21 +282,21 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   expect(publicHtml).toContain(`data-entry-id="${id}"`);
   expect(publicHtml).toContain('&lt;script&gt;');
   expect(publicHtml).not.toContain('<script>');
-  expect(publicHtml).toContain('/hub/datasets/?viewerHost=github');
+  expect(publicHtml).toContain('/hub/?viewerHost=github');
   source.title = 'owner/data';
   expect((await request('/datasets/api/entry/HappyTree', { headers: github })).status).toBe(404);
   expect((await request('/datasets/api/index', { headers: { Origin: 'https://attacker.example' } })).headers.get('Access-Control-Allow-Origin')).toBeNull();
   expect(records).not.toHaveBeenCalled();
   expect(fetch).not.toHaveBeenCalled();
   keys.length = 0;
-  const unchecked = await request(`/datasets/open/${id}`);
-  expect(unchecked.headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  const unchecked = await request(`/open/${id}`);
+  expect(unchecked.headers.get('Location')).toBe(`/hub/entry/${id}`);
   keys.length = 0;
   const viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent('https://huggingface.co/datasets/owner/data/resolve/revision/room/sparse/0');
   row[7] = { level: 'scene_verified', delivery: 'browser_readable', viewerUrl, checkedAt: '2026-10-25', summary: 'Fixture native model verified.', scope: 'Fixture model and pixels only.', viewerVersion: 'v0.23.6',
     sceneValidation: { status: 'passed', revision: 'revision', cameras: 1, images: 2, points: 3, photoCount: 2,
       export: 'colmap_images', exportSha256: 'a'.repeat(64) } };
-  const response = await request(`/datasets/open/${id}`);
+  const response = await request(`/open/${id}`);
   expect(response.status).toBe(302);
   const target = new URL(response.headers.get('Location')!);
   expect(target.origin).toBe('https://colmapview.opsiclear.com');
@@ -308,7 +321,7 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   expect(socialHtml).not.toContain('id="analytics-choice"');
   expect((await request(`/..${datasetSharePath('data-' + 'f'.repeat(24))}`)).status).toBe(404);
   source.access = 'gated';
-  expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  expect((await request(`/open/${id}`)).headers.get('Location')).toBe(`/hub/entry/${id}`);
   const gated = await request(`/..${short}`, { headers: { 'Sec-Fetch-Dest': 'document' } });
   expect(gated.status).toBe(200);
   expect(gated.headers.get('Location')).toBeNull();
@@ -316,14 +329,14 @@ it('opens the exact public model without a provider fetch and keeps restricted m
   source.access = 'public';
   row[5] = 'scene.zip';
   row[7] = { level: 'header_checked', delivery: 'browser_readable', viewerUrl: target.href };
-  expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  expect((await request(`/open/${id}`)).headers.get('Location')).toBe(`/hub/entry/${id}`);
   row[5] = null;
   row[7] = { level: 'header_checked', delivery: 'rate_limited', viewerUrl: target.href };
-  expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
+  expect((await request(`/open/${id}`)).headers.get('Location')).toBe(`/hub/entry/${id}`);
   row[7] = { level: 'header_checked', delivery: 'browser_readable', viewerUrl: target.href, opening: { status: 'load_failed', summary: 'Failed import.' } };
-  expect((await request(`/datasets/open/${id}`)).headers.get('Location')).toBe(`/hub/datasets/entry/${id}`);
-  expect((await request(`/datasets/open/not-an-id`)).status).toBe(404);
-  const write = await request(`/datasets/open/${id}`, { method: 'POST' });
+  expect((await request(`/open/${id}`)).headers.get('Location')).toBe(`/hub/entry/${id}`);
+  expect((await request(`/open/not-an-id`)).status).toBe(404);
+  const write = await request(`/open/${id}`, { method: 'POST' });
   expect(write.status).toBe(405);
   expect(records).not.toHaveBeenCalled();
 });

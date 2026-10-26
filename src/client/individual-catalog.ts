@@ -94,7 +94,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const urlFor = (values: URLSearchParams) => {
     const visible = new URLSearchParams(values);
     visible.delete('seed');
-    return '/hub/datasets/' + (visible.size ? `?${visible}` : '');
+    return '/hub/' + (visible.size ? `?${visible}` : '');
   };
   const documentNavigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
   const serverSeed = committed.get('seed') || undefined;

@@ -1,11 +1,11 @@
-import { ID_PATTERN, isListedId, LOOPBACK_HOSTS, SECRET_PATTERN, SHARE_PATH, VIEWER_ORIGINS } from '../shared/model';
+import { ID_PATTERN, LOOPBACK_HOSTS, SECRET_PATTERN, SHARE_PATH, VIEWER_ORIGINS } from '../shared/model';
 import type { CardRecord, LinkMetadata, LinkRecord, Ownership } from '../shared/model';
 import { clientIdentity, deriveLongId, deriveShortId, equalHashes, equalSecrets, hash } from './crypto';
 import { MAX_MISSES, REFUSAL_FLOOR_MS, VERIFIED_BOT_MAX_MISSES } from './guard';
 import { lookupTarget, missKey } from './ids';
-import { blockedPage, cardPage, errorPage, galleryKey, galleryPage, hubLocation, managementPage, notFoundPage, unavailablePage } from './pages';
+import { blockedPage, cardPage, errorPage, hubLocation, managementPage, notFoundPage, unavailablePage } from './pages';
 import type { HubLocation } from './pages';
-import { listPublicRecords, metadataFingerprint, readShareRecord, readOwnership, readWordlists, recordKey } from './records';
+import { metadataFingerprint, readShareRecord, readOwnership, readWordlists, recordKey } from './records';
 import { base64Bytes, InputError, isLoopbackOrigin, parseCreateInput, readBoundedJson } from './validation';
 import { individualRoute } from './individual-routes';
 import { individualIndex, readIndividual } from './individual-data';
@@ -48,11 +48,6 @@ function missLimit(request: Request, env: Env): number {
 }
 
 const listingsEnabled = (env: Env) => env.HUB_LISTINGS_ENABLED === 'true';
-
-/** Purges this data center's cached first gallery page; elsewhere it expires within a minute, so a failed purge is ignored too. */
-async function purgeGallery(location: HubLocation): Promise<void> {
-  try { await caches.default.delete(galleryKey(location)); } catch { /* The page expires within a minute anyway. */ }
-}
 
 /** Page routes answer with HTML pages; API routes answer with JSON. */
 function failure(location: HubLocation, api: boolean, status: number, message?: string): Response {
@@ -99,7 +94,7 @@ function withSharedHeaders(request: Request, result: Response, location?: HubLoc
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   if (!viewer) headers.set('Referrer-Policy', 'no-referrer');
   const publicCatalog = result.status === 200 && headers.get('Content-Type')?.startsWith('text/html')
-    && /^\/hub\/datasets\/(?:$|entry\/data-[a-f0-9]{24}$)/.test(new URL(request.url).pathname);
+    && /^\/hub\/(?:$|entry\/data-[a-f0-9]{24}$)/.test(new URL(request.url).pathname);
   if (!viewer) headers.set('Content-Security-Policy', publicCatalog ? contentSecurityPolicy(Boolean(location?.local), true) : location?.local ? LOCAL_CSP : CSP);
   return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });
 }
@@ -133,7 +128,7 @@ async function lookupGuard(request: Request, env: Env, location: HubLocation, ap
   };
 }
 
-async function createLink(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation): Promise<Response> {
+async function createLink(request: Request, env: Env, location: HubLocation): Promise<Response> {
   if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot create links.' }, 403);
   const guard = await guardFor(request, env);
   const wait = await guard.admitCreation();
@@ -169,7 +164,6 @@ async function createLink(request: Request, env: Env, ctx: ExecutionContext, loc
         ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
     });
     if (stored) {
-      if (record.listed) ctx.waitUntil(purgeGallery(location));
       return created(id);
     }
     const current = await readOwnership(env.HUB_DB, id);
@@ -226,7 +220,7 @@ async function miss(request: Request, env: Env, location: HubLocation, id: strin
   return (await check(await hash(missKey(id)))) ?? failure(location, false, 404);
 }
 
-async function deleteLink(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, id: string): Promise<Response> {
+async function deleteLink(request: Request, env: Env, location: HubLocation, id: string): Promise<Response> {
   if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot manage links.' }, 403);
   const check = await lookupGuard(request, env, location, true, MAX_MISSES);
   const presented = request.headers.get('Authorization')?.match(/^Bearer (.*)$/)?.[1];
@@ -247,24 +241,7 @@ async function deleteLink(request: Request, env: Env, ctx: ExecutionContext, loc
   if (refusal) return refusal;
   if (!owned) return failure(location, true, 404);
   await hubStorage.delete(env.HUB_DB, recordKey(id), ownerHash);
-  if (isListedId(id)) ctx.waitUntil(purgeGallery(location));
   return new Response(null, { status: 204 });
-}
-
-async function home(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
-  if (!listingsEnabled(env)) return redirect(`${location.base}/datasets/${url.search}`, 307);
-  const check = await lookupGuard(request, env, location, false, MAX_MISSES);
-  const refusal = await check(null);
-  if (refusal) return refusal;
-  const cursor = url.searchParams.get('cursor') ?? undefined;
-  if (cursor && cursor.length > 2048) throw new InputError('Invalid page cursor.');
-  // Listed pages change rarely; a minute of caching spares the database listing.
-  const key = galleryKey(location, cursor);
-  const cached = await caches.default.match(key);
-  if (cached) return cached;
-  const page = html(galleryPage(location, await listPublicRecords(env.HUB_DB, cursor)), 200, { 'Cache-Control': 'public, max-age=60' });
-  ctx.waitUntil(caches.default.put(key, page.clone()));
-  return page;
 }
 
 function decodeId(value: string): string {
@@ -301,7 +278,7 @@ async function lookupDataset(request: Request, env: Env, location: HubLocation, 
 async function route(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
   if (url.origin === location.origin && (url.pathname === SHARE_PATH || url.pathname.startsWith(`${SHARE_PATH}/`))) {
     if (!['GET', 'HEAD'].includes(request.method)) return failure(location, false, 404);
-    if (url.pathname === SHARE_PATH || url.pathname === `${SHARE_PATH}/`) return redirect(`${location.base}/datasets/`, 307);
+    if (url.pathname === SHARE_PATH || url.pathname === `${SHARE_PATH}/`) return redirect(`${location.base}/`, 307);
     const parts = url.pathname.slice(SHARE_PATH.length + 1).split('/').map(decodeId);
     if (parts[0] === 'd') {
       if (crossSiteSubresource(request)) return failure(location, false, 404);
@@ -315,9 +292,8 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, location
   }
   if (url.origin !== location.origin || (url.pathname !== location.path && !url.pathname.startsWith(`${location.path}/`))) return failure(location, false, 404);
   const path = url.pathname.slice(location.path.length);
-  if (path === '') return redirect(`${location.base}${listingsEnabled(env) ? '/' : '/datasets/'}${url.search}`, 307);
-  if (path === '/datasets/index.html') return redirect(`${location.base}/datasets/${url.search}`, 308);
-  if (path === '/datasets' || path.startsWith('/datasets/')) {
+  if (path === '') return redirect(`${location.base}/${url.search}`, 307);
+  if (path === '/' || path === '/index.html' || path === '/entry' || path.startsWith('/entry/') || path.startsWith('/open/') || path === '/datasets' || path.startsWith('/datasets/')) {
     return individualRoute(request, env, ctx, location, url);
   }
   if (path.startsWith('/api/')) {
@@ -338,13 +314,12 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, location
       if (wait) return blocked(location, true, wait);
       return submitPublication(request, env, location);
     }
-    if (path === '/api/links' && request.method === 'POST') return createLink(request, env, ctx, location);
+    if (path === '/api/links' && request.method === 'POST') return createLink(request, env, location);
     const deletion = /^\/api\/links\/([^/]+)$/.exec(path);
-    if (deletion && request.method === 'DELETE') return deleteLink(request, env, ctx, location, decodeId(deletion[1]));
+    if (deletion && request.method === 'DELETE') return deleteLink(request, env, location, decodeId(deletion[1]));
     return failure(location, true, 404);
   }
   if (!['GET', 'HEAD'].includes(request.method)) return failure(location, false, 404);
-  if (path === '/') return home(request, env, ctx, location, url);
   const parts = path.slice(1).split('/').map(decodeId);
   // Static files are served before the Worker runs; a request that still arrives here is a plain miss, not a strike.
   if (parts[0] === 'assets' || parts[0] === 'fonts' || parts[0].includes('.')) return failure(location, false, 404);

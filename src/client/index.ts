@@ -62,7 +62,7 @@ if (deletion) {
     button.disabled = true;
     const id = location.pathname.split('/').at(-1)!;
     try {
-      const response = await fetch(`${path}/api/links/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } });
+      const response = await fetch(`${path}/api/links/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'omit', headers: { Authorization: `Bearer ${owner}` } });
       if (response.status === 204) {
         phase = 'done';
         history.replaceState(null, '', location.pathname);

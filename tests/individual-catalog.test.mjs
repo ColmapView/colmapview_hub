@@ -7,6 +7,17 @@ import { applyIndividualListings } from '../scripts/catalog/individual-listings.
 import { applyDatasetLabels } from '../scripts/catalog/dataset-labels.mjs';
 
 const render = await catalogRenderer();
+
+test('static gallery exports are reproducible and use the single public root', () => {
+  const index = { schemaVersion: 1, generation: 'a'.repeat(64), total: 1, sources: [], kinds: {}, levels: {}, photos: {}, contents: {} };
+  const result = { entries: [], total: 0, page: 1, pages: 1, generation: index.generation };
+  const location = { origin: 'https://colmapview.github.io', path: '/hub', base: 'https://colmapview.github.io/hub',
+    local: false, viewerHost: 'github', frontend: 'github' };
+  const first = render.individualIndexPage(location, index, result, new URLSearchParams());
+  assert.equal(first, render.individualIndexPage(location, index, result, new URLSearchParams()));
+  assert.match(first, /action="\/hub\/"/);
+  assert.doesNotMatch(first, /href="\/hub\/datasets\//);
+});
 const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));
 
 test('inconsistent native feature links stay visible on cards and details while preserving direct viewing', () => {
@@ -728,7 +739,7 @@ test('individual models inherit labels and licenses while sibling checks stay at
   assert.equal(model.statusLabel, 'Files listed; load not checked');
   assert.equal(model.audits[1].scope, 'collection');
   assert.equal(model.candidateViewerUrl, undefined);
-  assert.equal(render.datasetPath(model), `/hub/datasets/entry/${model.id}`);
+  assert.equal(render.datasetPath(model), `/hub/entry/${model.id}`);
   assert.equal(render.catalogSummary(model).hasViewer, false);
 });
 
@@ -895,7 +906,7 @@ test('license category filtering inherits each source terms and composes with ex
   assert.equal(unknown.entries[0].license, 'other');
   const filters = render.individualFilters(new URLSearchParams('licenseCategory=non-commercial&page=2'));
   assert.equal(filters.get('licenseCategory'), 'non-commercial');
-  assert.equal(render.individualBrowseUrl(filters, 3), '/hub/datasets/?licenseCategory=non-commercial&page=3');
+  assert.equal(render.individualBrowseUrl(filters, 3), '/hub/?licenseCategory=non-commercial&page=3');
   const html = render.individualIndexPage({ origin: 'https://colmapview.opsiclear.com', path: '/hub', base: '/hub', local: false }, index, unknown, new URLSearchParams('licenseCategory=not-specified'));
   assert.match(html, /<option value="not-specified" selected>Not specified<\/option>/);
   assert.match(html, /<dt>License category<\/dt><dd>Not specified/);

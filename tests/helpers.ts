@@ -5,7 +5,6 @@ import { expect, vi } from 'vitest';
 import worker from '../src/worker/index';
 import type { AssetSummary, CreateLinkInput, LinkAccess } from '../src/shared/model';
 import { clientIdentity } from '../src/worker/crypto';
-import { galleryKey, hubLocation } from '../src/worker/pages';
 import { resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { sharedFeedCacheKey } from '../src/worker/publications';
 import { preview } from './fixtures/preview';
@@ -22,6 +21,15 @@ export const assets: AssetSummary = { format: 'zip', imageFormat: 'jpeg', colmap
   images: 83, masks: 82, splats: 1, viewerSettings: true, preview: false };
 /** Turns gallery listings on for one request. */
 export const listings: Partial<Env> = { HUB_LISTINGS_ENABLED: 'true' };
+
+export function mockPublicCatalog(): void {
+  const source = { id: 'hf-root-fixture-0123456789ab', sourceId: 'hf:owner/root', title: 'Root', label: 'Root',
+    provider: 'huggingface', license: 'mit', access: 'public', start: 0, count: 1, listingComplete: true };
+  vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async resource => String(resource instanceof Request ? resource.url : resource).endsWith('/index.json')
+    ? Response.json({ schemaVersion: 1, generation: '0'.repeat(64), total: 1, packSize: 24, checkedAt: '2026-10-26',
+      sources: [source], facets: {}, kinds: {}, levels: {}, delivery: {}, incompleteCollections: 0, scope: 'Public catalog fixture.' })
+    : Response.json([['data-' + '0'.repeat(24), 0, 'colmap', 'room/sparse/0', 'COLMAP', null, null, null]]));
+}
 
 /** An explicit app-shell fixture; no submitted dataset URL may be fetched by the Worker. */
 export function mockViewerDocument() {
@@ -81,7 +89,6 @@ export async function guard(clientIp = ip) { return env.LOOKUP_GUARDS.getByName(
 
 /** Clears this local fixture's cached gallery page, database and guards. The Workers test plugin keeps storage and the Cache API between tests. Never touches production. */
 export async function resetState(): Promise<void> {
-  await caches.default.delete(galleryKey(hubLocation(env)));
   await caches.default.delete(sharedFeedCacheKey(base));
   await env.HUB_DB.batch([env.HUB_DB.prepare('DELETE FROM hub_entries'), env.HUB_DB.prepare('DELETE FROM hub_settings')]);
   for (const id of await listDurableObjectIds(env.LOOKUP_GUARDS)) {

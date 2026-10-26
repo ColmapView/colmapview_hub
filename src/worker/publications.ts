@@ -70,6 +70,7 @@ export async function submitPublication(request: Request, env: Env, location: Hu
     ...(input.license ? { license: input.license } : {}), ...(input.assets ? { assets: input.assets } : {}) };
   const fingerprint = await hash(metadataFingerprint(card));
   const result = (published: boolean) => json(published ? { status: 'published', id, shareUrl: `${location.origin}${SHARE_PATH}/${id}`,
+    // Older viewers validate this exact API receipt. Current viewers normalize it to /hub/.
     catalogUrl: `${location.base}/datasets/#shared-datasets` } : { status: 'pending', id, message: 'Submitted for review. It will appear on Hub after its source is verified.' }, published ? 201 : 202);
   const previous = await storedSubmission(env, recordKey(id));
   const existing = previous ?? await storedSubmission(env, pendingPublicationKey(id));

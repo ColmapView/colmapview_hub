@@ -6,12 +6,12 @@ const origin = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB
 
 const production = 'https://colmapview.opsiclear.com';
 const choiceKey = 'colmapview-hub-analytics-v1';
-const analyticsCatalog = production + '/hub/datasets/?q=private-query#private-fragment';
+const analyticsCatalog = production + '/hub/?q=private-query#private-fragment';
 const analyticsCookieNames = ['cvh_ga', 'cvh_ga_7K5H83SEMY'];
 
 async function seedAnalyticsCookies(context: BrowserContext): Promise<void> {
   await context.addCookies(analyticsCookieNames.map(name => ({ name, value: 'synthetic-browser-session',
-    domain: 'colmapview.opsiclear.com', path: '/hub/datasets', secure: true, sameSite: 'Lax' as const })));
+    domain: 'colmapview.opsiclear.com', path: '/hub', secure: true, sameSite: 'Lax' as const })));
 }
 
 async function mockCatalogAnalytics(page: Page): Promise<string[]> {
@@ -74,9 +74,9 @@ test('public catalog analytics waits for cookie consent and uses clean URLs with
   expect(commands).toContainEqual(['set', 'url_passthrough', false]);
   expect(commands).toContainEqual(['set', 'linker', { domains: [], accept_incoming: false, decorate_forms: false }]);
   expect(commands).toContainEqual(['config', 'G-7K5H83SEMY', expect.objectContaining({
-    page_location: production + '/hub/datasets/', page_referrer: '', send_page_view: false,
-    cookie_prefix: 'cvh', cookie_domain: 'colmapview.opsiclear.com', cookie_path: '/hub/datasets',
-    cookie_update: false, cookie_flags: 'SameSite=Lax;Secure', consent_revision: 2,
+    page_location: production + '/hub/', page_referrer: '', send_page_view: false,
+    cookie_prefix: 'cvh', cookie_domain: 'colmapview.opsiclear.com', cookie_path: '/hub',
+    cookie_update: false, cookie_flags: 'SameSite=Lax;Secure', consent_revision: 3,
     allow_google_signals: false, allow_ad_personalization_signals: false, campaign_source: 'other',
   })]);
   expect(JSON.stringify(commands)).not.toContain('private-');
@@ -123,7 +123,7 @@ for (const signal of ['doNotTrack', 'globalPrivacyControl'] as const) {
   test(`public catalog analytics defaults off for ${signal} and accepts a specific analytics choice`, async ({ page }) => {
     const tags = await mockCatalogAnalytics(page);
     await page.addInitScript(({ key, signal }) => {
-      localStorage.setItem(key, JSON.stringify({ choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now() }));
+      localStorage.setItem(key, JSON.stringify({ choice: 'allow', policyVersion: 3, signals: 0, updatedAt: Date.now() }));
       Object.defineProperty(navigator, signal, { value: signal === 'doNotTrack' ? '1' : true });
     }, { key: choiceKey, signal });
     await page.goto(analyticsCatalog);
@@ -136,7 +136,7 @@ for (const signal of ['doNotTrack', 'globalPrivacyControl'] as const) {
     await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
     await expect.poll(() => tags.length).toBe(1);
     expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), choiceKey))
-      .toMatchObject({ choice: 'allow', policyVersion: 2, signals: signal === 'doNotTrack' ? 1 : 2 });
+      .toMatchObject({ choice: 'allow', policyVersion: 3, signals: signal === 'doNotTrack' ? 1 : 2 });
     await page.unrouteAll({ behavior: 'wait' });
   });
 }
@@ -145,9 +145,9 @@ test('public catalog analytics rejects an outdated notice even with saved cookie
   const tags = await mockCatalogAnalytics(page);
   await seedAnalyticsCookies(context);
   await page.addInitScript(key => localStorage.setItem(key, JSON.stringify({
-    choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now(),
+    choice: 'allow', policyVersion: 3, signals: 0, updatedAt: Date.now(),
   })), choiceKey);
-  await page.route(production + '/hub/datasets/?*', async route => {
+  await page.route(production + '/hub/?*', async route => {
     const url = new URL(route.request().url());
     const response = await route.fetch({ url: origin + url.pathname + url.search });
     const body = (await response.text()).replace(/ data-analytics-consent-version="\d+"/, '');
@@ -196,7 +196,7 @@ test('public catalog analytics expires while the page remains open and removes i
   const now = Date.now();
   await page.clock.install({ time: now });
   await page.addInitScript(({ key, now }) => localStorage.setItem(key, JSON.stringify({
-    choice: 'allow', policyVersion: 2, signals: 0, updatedAt: now - 180 * 86400000 + 2000,
+    choice: 'allow', policyVersion: 3, signals: 0, updatedAt: now - 180 * 86400000 + 2000,
   })), { key: choiceKey, now });
   await page.goto(analyticsCatalog);
   await expect.poll(() => tags.length).toBe(1);
@@ -213,7 +213,7 @@ test('public catalog analytics expires while the page remains open and removes i
 
 test('public catalog analytics measures bounded actions without search text, hrefs or shared-link identifiers', async ({ page }) => {
   const tags = await mockCatalogAnalytics(page);
-  await page.goto(production + '/hub/datasets/?utm_campaign=private-campaign#private-fragment');
+  await page.goto(production + '/hub/?utm_campaign=private-campaign#private-fragment');
   await page.locator('#hub-theme').click();
   expect(tags).toHaveLength(0);
   expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
@@ -244,17 +244,21 @@ test('public catalog analytics measures bounded actions without search text, hre
 for (const [label, saved] of [
   ['malformed', 'invalid-json'],
   ['previous cookieless allowance', JSON.stringify({ choice: 'allow', updatedAt: Date.now() })],
-  ['expired', JSON.stringify({ choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now() - 181 * 86400000 })],
-  ['future date', JSON.stringify({ choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now() + 86400000 })],
-  ['unknown consent revision', JSON.stringify({ choice: 'allow', policyVersion: 3, signals: 0, updatedAt: Date.now() })],
+  ['retired catalog-path allowance', JSON.stringify({ choice: 'allow', policyVersion: 2, signals: 0, updatedAt: Date.now() })],
+  ['expired', JSON.stringify({ choice: 'allow', policyVersion: 3, signals: 0, updatedAt: Date.now() - 181 * 86400000 })],
+  ['future date', JSON.stringify({ choice: 'allow', policyVersion: 3, signals: 0, updatedAt: Date.now() + 86400000 })],
+  ['unknown consent revision', JSON.stringify({ choice: 'allow', policyVersion: 4, signals: 0, updatedAt: Date.now() })],
 ]) {
-  test(`public catalog analytics rejects invalid permission: ${label}`, async ({ page }) => {
+  test(`public catalog analytics rejects invalid permission: ${label}`, async ({ page, context }) => {
     const tags = await mockCatalogAnalytics(page);
     await page.addInitScript(({ key, saved }) => localStorage.setItem(key, saved), { key: choiceKey, saved });
+    await context.addCookies(analyticsCookieNames.map(name => ({ name, value: 'retired-scope', domain: 'colmapview.opsiclear.com',
+      path: '/hub/datasets', secure: true, sameSite: 'Lax' as const })));
     await page.goto(analyticsCatalog);
     await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeVisible();
     expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
     expect(tags).toHaveLength(0);
+    expect((await context.cookies()).filter(cookie => analyticsCookieNames.includes(cookie.name))).toEqual([]);
     await page.unrouteAll({ behavior: 'wait' });
   });
 }
@@ -451,7 +455,7 @@ test('opens a private Drive result directly so the viewer can request access', a
 test('opens datasets from the Hub home without an upload form or horizontal scroll', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   expect((await page.goto('/hub/'))!.status()).toBe(200);
-  await expect(page).toHaveURL(/\/hub\/datasets\/$/);
+  await expect(page).toHaveURL(/\/hub\/$/);
   await expect(page.locator('input[type="file"], textarea')).toHaveCount(0);
   expect(await noHorizontalScroll(page)).toBe(true);
 });
@@ -462,7 +466,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
     await page.addInitScript(() => localStorage.setItem('colmap-viewer-theme', 'system'));
     const link = await createLink(page);
     try {
-      for (const path of ['/hub/datasets/', `/hub/manage/${link.id}#${link.owner}`]) {
+      for (const path of ['/hub/', `/hub/manage/${link.id}#${link.owner}`]) {
         await page.goto(path);
         const fonts = await page.evaluate(async () => {
           await document.fonts.ready;
@@ -491,7 +495,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
 
 test('the appearance icon supports keyboard cycling, persistence and system and cross-tab changes', async ({ page, context }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
-  await page.goto('/hub/datasets/?q=SceauxCastle');
+  await page.goto('/hub/?q=SceauxCastle');
   const theme = page.getByRole('button', { name: /^Appearance:/ });
   const root = page.locator('html');
   await expect(theme).toHaveAccessibleName('Appearance: Dark. Switch to Light.');
@@ -507,7 +511,7 @@ test('the appearance icon supports keyboard cycling, persistence and system and 
   await expect(root).toHaveAttribute('data-ui-theme', 'light');
   const other = await context.newPage();
   try {
-    await other.goto('/hub/datasets/?q=SceauxCastle');
+    await other.goto('/hub/?q=SceauxCastle');
     await other.getByRole('button', { name: 'Appearance: System. Switch to Dark.', exact: true }).click();
     await expect(theme).toHaveAccessibleName('Appearance: Dark. Switch to Light.');
     await expect(root).toHaveAttribute('data-ui-theme', 'dark');
@@ -519,7 +523,7 @@ test('gives the primary and danger buttons the type of link buttons', async ({ p
   const type = (target: Locator) => target.evaluate(element =>
     [getComputedStyle(element).fontFamily, getComputedStyle(element).fontSize, getComputedStyle(element).fontWeight]);
   try {
-    await page.goto('/hub/datasets/');
+    await page.goto('/hub/');
     const linkType = await type(page.locator('#catalog-reset'));
     const actions = await page.locator('.button-primary').all();
     expect(actions.length).toBeGreaterThan(0);
@@ -549,7 +553,7 @@ test('long titles stay within a narrow management page and delete keys never ent
 });
 
 test('preserves saved filters after their redundant controls are removed', async ({ page, browser }) => {
-  const path = '/hub/datasets/?delivery=cors_headers_checked&viewer=available';
+  const path = '/hub/?delivery=cors_headers_checked&viewer=available';
   await page.goto(path);
   await expect(page.locator('select[name="delivery"],select[name="viewer"]')).toHaveCount(0);
   await expect(page.locator('#catalog-saved-filters')).toContainText('Model links only');
@@ -575,7 +579,7 @@ test('preserves saved filters after their redundant controls are removed', async
     expect(next.searchParams.get('page')).toBe('2');
     await expect(serverPage.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('large_overlap');
     await serverPage.getByRole('link', { name: 'Reset', exact: true }).click();
-    await expect(serverPage).toHaveURL(origin + '/hub/datasets/');
+    await expect(serverPage).toHaveURL(origin + '/hub/');
     await expect(serverPage.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
     await expect(serverPage.locator('#catalog-saved-filters')).toBeHidden();
     await expect(serverPage.locator('.dataset-card')).toHaveCount(24);
@@ -584,9 +588,9 @@ test('preserves saved filters after their redundant controls are removed', async
 
 test('opens the scene browser directly in the ColmapView frame', async ({ page }) => {
   await page.goto('/hub/');
-  await expect(page).toHaveURL(/\/hub\/datasets\/$/);
+  await expect(page).toHaveURL(/\/hub\/$/);
   await expect(page.getByRole('region', { name: 'Catalog status' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
-  await expect(page.getByRole('link', { name: 'ColmapView Hub', exact: true })).toHaveAttribute('href', '/hub/datasets/');
+  await expect(page.getByRole('link', { name: 'ColmapView Hub', exact: true })).toHaveAttribute('href', '/hub/');
   await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Source', 'Contact']);
   await expect(page.getByLabel('Collection', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Public datasets', exact: true })).toBeVisible();

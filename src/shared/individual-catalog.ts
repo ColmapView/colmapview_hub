@@ -172,6 +172,7 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
     ...(proof?.thumbnail ? { thumbnail: proof.thumbnail } : {}),
     sceneStats: sceneStatistics(hasCheckedSceneManifest(proof) ? proof.sceneManifest.counts
       : proof?.sceneValidation ?? proof?.sceneCompatibility),
+    // The public JSON contract remains compatible with older pinned clients.
     ...(canOpenIndividual(row, source) ? { openUrl: `/hub/datasets/open/${id}` } : {}),
     description: gated ? 'The source lists this model, but its files require access and cannot be downloaded anonymously. File compatibility and complete loading remain unverified.'
       : proof?.summary || `${kindLabel} listed in ${source.title}${archive ? ` inside ${archive}; extract it before attempting to load this model` : ''}. This individual model has not passed a complete load check.`,
@@ -201,7 +202,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
     dataUrl, viewerUrl, candidateViewerUrl: undefined, modelManifest: undefined,
     availableData: summary.availableData, thumbnail: summary.thumbnail,
     status: proof ? `audited_${proof.level}` : 'individual_file_listing', verification,
-    facts: [{ label: 'Dataset label', value: source.label }, { label: 'Source collection', value: source.title, url: `/hub/datasets/${source.id}` },
+    facts: [{ label: 'Dataset label', value: source.label }, { label: 'Source collection', value: source.title, url: `/hub/?dataset=${encodeURIComponent(source.id)}` },
       { label: 'Entry type', value: summary.itemKind! }, { label: 'Model path', value: path || '/' },
       ...(archive ? [{ label: 'Containing archive', value: archive }, { label: 'Opening this model', value: ['colmap', 'ply', 'spz', 'sog', 'splat', 'splat-scene'].includes(kind)
         ? `Extract the archive and select ${path || 'the root model folder'}. This entry’s loading evidence records the remaining checks.`

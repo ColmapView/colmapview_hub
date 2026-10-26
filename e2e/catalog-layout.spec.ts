@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('GitHub arrivals keep their viewer through async results, pagination, reset and metadata', async ({ page }) => {
-  await page.goto('/hub/datasets/?viewerHost=github&seed=12345678');
+  await page.goto('/hub/?viewerHost=github&seed=12345678');
   await expect(page.getByRole('link', { name: 'Open viewer', exact: true })).toHaveAttribute('href', 'https://colmapview.github.io/latest/');
   const cards = page.locator('#catalog-results .dataset-card');
   const checkLinks = async () => {
@@ -21,7 +21,7 @@ test('GitHub arrivals keep their viewer through async results, pagination, reset
   const card = cards.first();
   const path = (await card.locator('.dataset-open').getAttribute('href'))!;
   const id = await card.getAttribute('data-entry-id');
-  const normal = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  const normal = await page.request.get('/hub/open/' + id, { maxRedirects: 0 });
   const github = await page.request.get(path, { headers: { 'Sec-Fetch-Dest': 'document' }, maxRedirects: 0 });
   expect(github.status()).toBe(302);
   const selected = new URL(github.headers().location), original = new URL(normal.headers().location);
@@ -48,7 +48,7 @@ test.use({ hasTouch: true });
 
 test('catalog controls stay on one row and responsive filters keep their values', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/hub/datasets/');
+  await page.goto('/hub/');
   await page.locator('.catalog-advanced > summary').click();
   await page.getByLabel('License category', { exact: true }).selectOption('commercial');
   await expect.poll(() => new URL(page.url()).searchParams.get('licenseCategory')).toBe('commercial');
@@ -91,7 +91,7 @@ test('every rendered and asynchronously replaced scene has a copyable short link
   await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
     writeText: async (value: string) => { (window as Window & { copiedDatasetLink?: string }).copiedDatasetLink = value; },
   } }));
-  await page.goto('/hub/datasets/');
+  await page.goto('/hub/');
   for (const query of ['', 'SceauxCastle']) {
     if (query) {
       await page.getByRole('searchbox', { name: 'Search datasets' }).fill(query);
@@ -108,7 +108,7 @@ test('every rendered and asynchronously replaced scene has a copyable short link
     await expect.poll(() => page.evaluate(() => (window as Window & { copiedDatasetLink?: string }).copiedDatasetLink)).toBe(shortUrl);
     await expect(panel.locator('[data-copy-status]')).toHaveText('Link copied');
     const viewer = await page.request.get(path, { headers: { 'Sec-Fetch-Dest': 'document' }, maxRedirects: 0 });
-    const original = await page.request.get(`/hub/datasets/open/${id}`, { maxRedirects: 0 });
+    const original = await page.request.get(`/hub/open/${id}`, { maxRedirects: 0 });
     expect(viewer.status()).toBe(200);
     expect(viewer.headers().location).toBeUndefined();
     expect(await viewer.text()).toContain(JSON.stringify({ version: 1, viewerUrl: original.headers().location }));

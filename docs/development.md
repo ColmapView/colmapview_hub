@@ -114,7 +114,7 @@ The build refreshes source-detail inventory facts from the pinned registry even 
 
 Evidence, photograph availability, licensing and complete export proof have separate meanings. Use the existing publication fixtures across JavaScript and Python when changing qualification rules. See [catalog behavior](catalog.md) and [input evidence](../data/README.md) before refreshing data.
 
-Generated assets under `public/hub/assets/` and `public/hub/datasets/` are Git-ignored. Do not edit them directly or commit local reports, credentials, private word lists or generated runtime state.
+Generated assets under `public/hub/assets/` and `public/hub/` are Git-ignored. Do not edit them directly or commit local reports, credentials, private word lists or generated runtime state.
 
 ## Shared styles
 

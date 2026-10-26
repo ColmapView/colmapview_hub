@@ -15,13 +15,18 @@ const detail = page(location, 'Dataset', '<p id="catalog-entry-status" role="sta
   + '<button id="catalog-entry-retry" type="button" class="button" hidden>Try again</button><div id="catalog-entry"></div>',
   `<script type="module" src="https://colmapview.opsiclear.com/hub/assets/catalog-entry.js?v=${HUB_UI_VERSION}"></script>`, true);
 const directory = 'public/hub/assets/github';
+const redirect = '<!doctype html><html lang="en" data-hub-redirect="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+  + '<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow,noarchive">'
+  + '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src https://colmapview.opsiclear.com; base-uri \'none\'">'
+  + '<title>ColmapView Hub</title><script type="module" crossorigin="anonymous" src="https://colmapview.opsiclear.com/hub/assets/catalog-redirect.js"></script>'
+  + '<noscript><meta http-equiv="refresh" content="0; url=/hub/"></noscript></head><body><p>Open <a href="/hub/">ColmapView Hub</a>.</p></body></html>';
 await mkdir(directory, { recursive: true });
 // Keep old HTML usable while the two frontends deploy independently. These
 // immutable public assets are retained; mutable build output is never its dependency.
 const pinned = new Map();
 for (const name of ['colmapview.css', 'styles.css', 'assets/theme.js', 'assets/client.js',
-  'assets/individual-catalog.js', 'assets/catalog-entry.js']) {
-  let content = await readFile(`public/hub/${name}`, 'utf8');
+  'assets/individual-catalog.js', 'assets/catalog-entry.js', 'assets/catalog-redirect.js']) {
+  let content = (await readFile(`public/hub/${name}`, 'utf8')).replaceAll('\r\n', '\n');
   if (name.endsWith('.css')) content = content.replaceAll("url('./fonts/", "url('https://colmapview.opsiclear.com/hub/fonts/");
   const digest = createHash('sha256').update(content).digest('hex');
   const file = `${digest}.${name.endsWith('.css') ? 'css' : 'js'}`;
@@ -29,7 +34,8 @@ for (const name of ['colmapview.css', 'styles.css', 'assets/theme.js', 'assets/c
   pinned.set(`https://colmapview.opsiclear.com/hub/${name}`, `https://colmapview.opsiclear.com/hub/assets/github/${file}`);
 }
 const files = [];
-for (const [paths, template] of [[['index.html', 'datasets/index.html'], gallery], [['datasets/entry/index.html'], detail]]) {
+for (const [paths, template] of [[['index.html'], gallery], [['entry/index.html'], detail],
+  [['datasets/index.html', 'datasets/entry/index.html'], redirect]]) {
   let html = template;
   for (const [original, immutable] of pinned) html = html.replaceAll(`${original}?v=${HUB_UI_VERSION}`, immutable).replaceAll(original, immutable);
   for (const [, tag, attributes] of html.matchAll(/<(script|link)\b([^>]+)>/g)) {
@@ -47,6 +53,6 @@ for (const [paths, template] of [[['index.html', 'datasets/index.html'], gallery
 }
 const { version } = JSON.parse(await readFile('package.json', 'utf8'));
 const git = args => execFileSync('git', args, { encoding: 'utf8' }).trim();
-await writeFile(`${directory}/site.json`, JSON.stringify({ schemaVersion: 1, version,
+await writeFile(`${directory}/site.json`, JSON.stringify({ schemaVersion: 2, version,
   source: git(['rev-parse', 'HEAD']), dirty: Boolean(git(['status', '--porcelain'])), files }, null, 2) + '\n');
 console.log(`Exported GitHub Hub frontend ${version}: ${files.length} pages, public API data loaded asynchronously.`);

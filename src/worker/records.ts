@@ -1,37 +1,15 @@
-import { ID_PATTERN, isListedId, MAX_RECORD_BYTES, MAX_WORDLIST_BYTES } from '../shared/model';
-import type { AssetSummary, CardRecord, LicenseInfo, ListedLink, LinkMetadata, Ownership } from '../shared/model';
+import { isListedId, MAX_RECORD_BYTES, MAX_WORDLIST_BYTES } from '../shared/model';
+import type { AssetSummary, CardRecord, LicenseInfo, LinkMetadata, Ownership } from '../shared/model';
 import type { Wordlists } from './crypto';
 import { isHttpUrl, isObject, parseAssetSummary } from './validation';
 import { CATALOG_SHARE_NAME } from '../shared/dataset-share';
 import { hubStorage, WORDLIST_KEY } from './storage';
-import type { StoredListing } from './storage';
 
 /** Operator-reserved public names share the upload namespace without taking upload ownership. */
 export interface CatalogAliasRecord { schemaVersion: 1; kind: 'catalog'; id: string; datasetId: string; createdAt: string }
 
 export { WORDLIST_KEY } from './storage';
 export const recordKey = (id: string) => `${isListedId(id) ? 'listed' : 'links'}/${id}.json`;
-
-/** Listing and content are committed in the same database row; unlisted entries are never scanned. */
-export async function listPublicRecords(database: D1Database, cursor?: string): Promise<{ links: ListedLink[]; cursor?: string }> {
-  const page = await hubStorage.list(database, { namespace: 'listed', limit: 12, ...(cursor ? { cursor } : {}) });
-  const links = page.objects.flatMap(object => {
-    try { return [listedLink(object)]; }
-    catch (error) { console.warn('Skipping an invalid listing', object.key, error); return []; }
-  });
-  return { links, ...(page.truncated ? { cursor: page.cursor } : {}) };
-}
-
-function listedLink(object: StoredListing): ListedLink {
-  const id = object.key.slice('listed/'.length, -'.json'.length);
-  const title = object.customMetadata?.title;
-  const createdAt = object.customMetadata?.createdAt;
-  if (!ID_PATTERN.test(id) || !isListedId(id) || !title || title.length > 120 || !createdAt || !Number.isFinite(Date.parse(createdAt))) {
-    throw new Error('Invalid public listing');
-  }
-  const assets = object.customMetadata?.assets;
-  return { id, title, createdAt, ...(assets ? { assets: parseAssetSummary(JSON.parse(assets)) } : {}) };
-}
 
 async function readStoredJson(database: D1Database, id: string): Promise<unknown> {
   const object = await hubStorage.get(database, recordKey(id));

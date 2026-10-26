@@ -54,7 +54,7 @@ it('returns social metadata with the readable copy address and no analytics or d
 
 it('opens the exact curated selection on GitHub only with an explicit navigation hint', async () => {
   const github = 'https://colmapview.github.io/latest/?url=https://example.org/scene.manifest.json';
-  for (const path of ['/../s/HappyTree', '/../s/d/AAAAAAAAAAAAAAAA', '/datasets/open/' + datasetId]) {
+  for (const path of ['/../s/HappyTree', '/../s/d/AAAAAAAAAAAAAAAA', '/open/' + datasetId]) {
     const response = await request(path + '?viewerHost=github&url=https://unrelated.example', { headers: navigation });
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe(github);
@@ -66,7 +66,7 @@ it('opens the exact curated selection on GitHub only with an explicit navigation
 });
 
 it('keeps cache validators and metadata links separate between viewer destinations', async () => {
-  const path = '/datasets/entry/' + datasetId;
+  const path = '/entry/' + datasetId;
   const original = await request(path);
   const github = await request(path + '?viewerHost=github', { headers: { 'If-None-Match': original.headers.get('ETag')! } });
   expect(github.status).toBe(200);
@@ -74,7 +74,7 @@ it('keeps cache validators and metadata links separate between viewer destinatio
   const body = await github.text();
   expect(body).toContain('href="/s/HappyTree?viewerHost=github"');
   expect(body).toContain('href="https://colmapview.github.io/latest/"');
-  expect(body).toContain('href="/hub/datasets/?viewerHost=github"');
+  expect(body).toContain('href="/hub/?viewerHost=github"');
   expect(body).toContain('data-copy-dataset-link="/s/HappyTree"');
   const neutral = await request(path);
   expect(await neutral.text()).not.toContain('viewerHost=github');

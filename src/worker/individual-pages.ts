@@ -15,7 +15,7 @@ const number = (value: number) => value.toLocaleString('en-US');
 export function individualBrowseUrl(filters: URLSearchParams, pageNumber = 1): string {
   const query = new URLSearchParams(filters);
   if (pageNumber > 1) query.set('page', String(pageNumber)); else query.delete('page');
-  return '/hub/datasets/' + (query.size ? `?${query}` : '');
+  return '/hub/' + (query.size ? `?${query}` : '');
 }
 
 export function individualIndexPage(location: HubLocation, index: IndividualIndex, result: IndividualPage, filters: URLSearchParams): string {
@@ -28,9 +28,9 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const advanced = ['dataset', 'licenseCategory', 'sort', 'kind', 'provider', 'license', 'status', 'photos', 'data', 'delivery', 'viewer'].some(field => filters.has(field));
   const savedFilters = savedFilterSummary(filters);
   const shuffle = new URLSearchParams(filters);
-  shuffle.set('seed', [...crypto.getRandomValues(new Uint8Array(8))].map(byte => byte.toString(16).padStart(2, '0')).join(''));
+  shuffle.set('seed', location.frontend ? '0000000000000000' : [...crypto.getRandomValues(new Uint8Array(8))].map(byte => byte.toString(16).padStart(2, '0')).join(''));
   shuffle.delete('page');
-  const filterForm = `<form id="individual-search" class="catalog-filters" role="search" action="/hub/datasets/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
+  const filterForm = `<form id="individual-search" class="catalog-filters" role="search" action="/hub/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
     + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"></label>`
     + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''), true)
     + `<button type="submit" class="button icon-button" aria-label="Search" title="Search">${icon('search')}</button>`
@@ -55,7 +55,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const status = `<div class="catalog-result-summary"><p id="catalog-count" class="catalog-count" role="status" tabindex="-1" aria-label="${countDescription}" title="${countDescription}">${result.total ? `${number(offset + 1)}–${number(offset + result.entries.length)} / ${number(result.total)}` : loading ? 'Loading…' : 'No matching datasets'}</p>`
     + '<p id="catalog-status" class="catalog-status" role="status"></p></div>'
     + `<a id="catalog-shuffle" class="button icon-button" href="${escape(individualBrowseUrl(shuffle))}" aria-label="Shuffle" title="Shuffle">${icon('shuffle')}</a>`
-    + `<a id="catalog-reset" class="button icon-button" href="${escape(hubViewerLink('/hub/datasets/', location.viewerHost))}" aria-label="Reset" title="Reset filters">${icon('reset')}</a>` + notes;
+    + `<a id="catalog-reset" class="button icon-button" href="${escape(hubViewerLink('/hub/', location.viewerHost))}" aria-label="Reset" title="Reset filters">${icon('reset')}</a>` + notes;
   return page(location, 'Public datasets', '<div class="catalog-index"><h1 class="sr-only">Public datasets</h1>'
     + '<section id="shared-datasets" class="shared-datasets" aria-label="Shared on Hub" hidden><h2>Shared on Hub</h2>'
     + '<p role="status">Loading shared datasets…</p><div class="dataset-grid" aria-label="Shared datasets"></div>'

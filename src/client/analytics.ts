@@ -6,7 +6,8 @@ const DISABLE_KEY = `ga-disable-${MEASUREMENT_ID}` as const;
 const CHOICE_KEY = 'colmapview-hub-analytics-v1';
 const CHOICE_AGE = 180 * 24 * 60 * 60 * 1000;
 const COOKIE_PREFIX = 'cvh';
-const COOKIE_PATH = '/hub/datasets';
+const COOKIE_PATH = '/hub';
+const RETIRED_COOKIE_PATHS = ['/hub/datasets', '/hub/datasets/'];
 type Choice = { choice: 'allow' | 'decline'; updatedAt: number; signals: number };
 type Gtag = (...args: unknown[]) => void;
 type AnalyticsWindow = Window & { [DISABLE_KEY]?: boolean; dataLayer?: unknown[] };
@@ -32,11 +33,11 @@ function storeChoice(choice: Choice['choice']): void {
   localStorage.setItem(CHOICE_KEY, JSON.stringify({ choice, updatedAt: Date.now(), policyVersion: POLICY_VERSION, signals: privacySignals() }));
 }
 
-function clearAnalyticsCookies(): void {
+function clearAnalyticsCookies(paths = [COOKIE_PATH, ...RETIRED_COOKIE_PATHS]): void {
   for (const name of [`${COOKIE_PREFIX}_ga`, `${COOKIE_PREFIX}_ga_${MEASUREMENT_ID.slice(2)}`]) {
     // Cover both explicit-domain and host-only cookies; leave other site data alone.
-    for (const domain of ['', `; Domain=${location.hostname}`]) {
-      try { document.cookie = `${name}=; Max-Age=0; Path=${COOKIE_PATH}${domain}; SameSite=Lax; Secure`; }
+    for (const path of paths) for (const domain of ['', `; Domain=${location.hostname}`]) {
+      try { document.cookie = `${name}=; Max-Age=0; Path=${path}${domain}; SameSite=Lax; Secure`; }
       catch { /* A browser that blocks cookie writes may require clearing site data. */ }
     }
   }
@@ -46,6 +47,7 @@ function clearAnalyticsCookies(): void {
 export function initializeAnalytics(): void {
   if (document.documentElement.dataset.hubPublicCatalog !== 'true'
     || !['https://colmapview.opsiclear.com', 'https://colmapview.github.io'].includes(location.origin)) return;
+  clearAnalyticsCookies(RETIRED_COOKIE_PATHS);
 
   const panel = document.querySelector<HTMLElement>('#analytics-choice');
   const settings = document.querySelector<HTMLButtonElement>('#analytics-settings');

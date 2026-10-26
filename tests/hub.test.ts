@@ -8,7 +8,7 @@ import { base64Url, deriveLongId, deriveShortId } from '../src/worker/crypto';
 import type { GuardState } from '../src/worker/guard';
 import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { preview } from './fixtures/preview';
-import { assets, base, create, guard, input, ip, listings, origin, owner, request, resetState, words } from './helpers';
+import { assets, base, create, guard, input, origin, owner, request, resetState, words } from './helpers';
 
 beforeEach(resetState);
 
@@ -354,58 +354,5 @@ describe('ownership and request validation', () => {
     const denied = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ managementSecret: 'Z'.repeat(43) })) });
     expect(denied.status).toBe(429);
     expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(20);
-  });
-});
-
-describe('opt-in results gallery', () => {
-  it('has no submission form and shows only explicit listings', async () => {
-    const unlisted = await create();
-    const listed = await create(input({ listed: true, title: 'Public result', managementSecret: 'B'.repeat(43), assets }), ip, listings);
-    const html = await (await request('/', {}, ip, listings)).text();
-    expect(html).toContain(listed.id);
-    expect(html).toContain('Public result');
-    expect(html).toContain('83 images · 83,749 points · 82 masks · 1 splat');
-    expect(html).not.toContain(unlisted.id);
-    expect(html).not.toContain('type="file"');
-    expect(html).not.toContain('create-link');
-    expect(html).not.toContain('challenges.cloudflare.com');
-    expect(await hubStorage.get(env.HUB_DB, recordKey(listed.id))).not.toBeNull();
-    const deleted = await request(`/api/links/${listed.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${'B'.repeat(43)}` } });
-    expect(deleted.status).toBe(204);
-    expect(await (await request('/', {}, ip, listings)).text()).not.toContain(listed.id);
-    expect((await request(`/${unlisted.id}`)).status).toBe(200);
-  });
-
-  it('separates the link: and listed-link: names even when an owner reuses a management key', async () => {
-    const unlisted = await create(input({ access: 'private' }));
-    const listed = await create(input({ listed: true }), ip, listings);
-    expect(listed.id).not.toBe(unlisted.id);
-    expect(listed.id.replace('-L', '-')).not.toBe(unlisted.id);
-    expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(1);
-    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(1);
-    expect(await create(input({ listed: true }), ip, listings)).toEqual(listed);
-  });
-
-  it('paginates only opted-in records without exposing unlisted keys or cursor data', async () => {
-    const privateLink = await create();
-    const listed = [];
-    for (let index = 0; index < 13; index++) listed.push(await create(input({ listed: true, title: `Result ${index}`, managementSecret: 'B'.repeat(42) + String.fromCharCode(65 + index) }), ip, listings));
-    const first = await (await request('/', {}, ip, listings)).text();
-    const next = first.match(/href="\/hub\/\?cursor=([^"]+)"/);
-    expect(next).not.toBeNull();
-    const second = await (await request(`/?cursor=${next![1]}`, {}, ip, listings)).text();
-    expect(listed.filter(link => first.includes(link.id))).toHaveLength(12);
-    expect(listed.filter(link => second.includes(link.id))).toHaveLength(1);
-    expect(first + second).not.toContain(privateLink.id);
-    expect(decodeURIComponent(next![1])).not.toContain(privateLink.id);
-  });
-
-  it('continues to read existing unlisted records that predate the listing field', async () => {
-    const link = await create();
-    const record = await (await hubStorage.get(env.HUB_DB, recordKey(link.id)))!.json<Record<string, unknown>>();
-    delete record.listed;
-    await hubStorage.put(env.HUB_DB, recordKey(link.id), JSON.stringify(record));
-    expect((await request(`/${link.id}`)).status).toBe(200);
-    expect(await (await request('/', {}, ip, listings)).text()).not.toContain(link.id);
   });
 });

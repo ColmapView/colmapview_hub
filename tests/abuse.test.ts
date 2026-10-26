@@ -1,7 +1,7 @@
 import { hubStorage } from '../src/worker/storage';
 import { runInDurableObject } from 'cloudflare:test';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { create, guard, input, ip, listings, mockViewerDocument, origin, post, remove, request, resetState } from './helpers';
+import { create, guard, input, ip, listings, mockPublicCatalog, mockViewerDocument, post, remove, request, resetState } from './helpers';
 
 beforeEach(resetState);
 
@@ -72,10 +72,16 @@ describe('verified bots', () => {
 });
 
 describe('listings flag', () => {
-  it('opens the dataset browser and refuses listings while off', async () => {
-    const page = await request('/');
-    expect(page.status).toBe(307);
-    expect(page.headers.get('Location')).toBe(`${origin}/hub/datasets/`);
+  it('serves only the public catalog at the root even when legacy listing writes are enabled', async () => {
+    mockPublicCatalog();
+    const scan = vi.spyOn(hubStorage, 'list');
+    for (const overrides of [{}, listings]) {
+      const page = await request('/', {}, ip, overrides);
+      expect(page.status).toBe(200);
+      expect(page.headers.get('Location')).toBeNull();
+      expect(await page.text()).toContain('id="catalog-results"');
+    }
+    expect(scan).not.toHaveBeenCalled();
     expect((await post(input({ listed: true }))).status).toBe(403);
   });
 
@@ -83,51 +89,6 @@ describe('listings flag', () => {
     const listed = await create(input({ listed: true }), ip, listings);
     expect((await request(`/${listed.id}`)).status).toBe(200);
     expect((await remove(listed.id)).status).toBe(204);
-  });
-
-  it('caches the gallery for a minute, refreshing its first page when a listing is created or deleted', async () => {
-    const listed = await create(input({ listed: true, title: 'Listed result' }), ip, listings);
-    const page = await request('/', {}, ip, listings);
-    expect(page.headers.get('Cache-Control')).toBe('public, max-age=60');
-    expect(await page.text()).toContain(listed.id);
-    const cached = await caches.default.match(new Request(`${origin}/hub/`));
-    expect(await cached?.text()).toContain(listed.id);
-    expect((await remove(listed.id)).status).toBe(204);
-    expect(await (await request('/', {}, ip, listings)).text()).not.toContain(listed.id);
-    const another = await create(input({ listed: true, title: 'Another result', managementSecret: 'B'.repeat(43) }), ip, listings);
-    expect(await (await request('/', {}, ip, listings)).text()).toContain(another.id);
-  });
-
-  it('queries public records once for two gallery requests within the minute', async () => {
-    await create(input({ listed: true }), ip, listings);
-    const list = vi.spyOn(hubStorage, 'list');
-    for (let index = 0; index < 2; index++) expect((await request('/', {}, ip, listings)).status).toBe(200);
-    expect(list).toHaveBeenCalledTimes(1);
-  });
-
-  it('keys gallery pages by cursor alone, so other query parameters share the first page that purges clear', async () => {
-    const listed = await create(input({ listed: true }), ip, listings);
-    const list = vi.spyOn(hubStorage, 'list');
-    expect(await (await request('/?utm_source=share', {}, ip, listings)).text()).toContain(listed.id);
-    expect(await (await request('/?cursor=', {}, ip, listings)).text()).toContain(listed.id);
-    expect(list).toHaveBeenCalledTimes(1);
-    expect((await remove(listed.id)).status).toBe(204);
-    expect(await (await request('/?utm_source=share', {}, ip, listings)).text()).not.toContain(listed.id);
-  });
-
-  it('refuses a blocked client even while the gallery page is cached', async () => {
-    expect((await request('/', {}, '192.0.2.2', listings)).status).toBe(200);
-    expect(await caches.default.match(`${origin}/hub/`)).toBeDefined();
-    await request('/one'); await request('/two');
-    expect((await request('/three')).status).toBe(429);
-    expect((await request('/', {}, ip, listings)).status).toBe(429);
-  });
-
-  it('still answers a listed creation and deletion when the cache purge fails, since the page expires within a minute', async () => {
-    const purge = vi.spyOn(caches.default, 'delete').mockRejectedValue(new Error('Cache unavailable'));
-    const listed = await create(input({ listed: true }), ip, listings);
-    expect((await remove(listed.id)).status).toBe(204);
-    expect(purge).toHaveBeenCalledTimes(2);
   });
 });
 

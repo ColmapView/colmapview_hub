@@ -94,20 +94,19 @@ describe('lookup guard', () => {
     const link = await create(input());
     const guards = countingGuards();
     const cases: Array<[string, RequestInit, string[]]> = [
-      [`/${link.id}`, {}, ['lookup']], [`/${link.id}/preview.jpg`, {}, ['lookup']], ['/', {}, ['lookup']], ['/missing', {}, ['lookup-miss']],
+      [`/${link.id}`, {}, ['lookup']], [`/${link.id}/preview.jpg`, {}, ['lookup']], ['/missing', {}, ['lookup-miss']],
       [`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${'B'.repeat(43)}` } }, ['lookup-miss']],
       ['/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ managementSecret: 'C'.repeat(43) })) }, ['admitCreation']],
     ];
-    // With listings on, '/' is the gallery.
     for (const [path, init, expected] of cases) {
       guards.calls.length = 0;
       await request(path, init, ip, { ...guards.overrides, ...listings });
       expect(guards.calls, path).toEqual(expected);
     }
-    // While listings are off, '/' redirects to datasets without calling the guard.
+    // Public browsing is independent of private-link lookup cooldowns.
     guards.calls.length = 0;
     await request('/', {}, ip, guards.overrides);
-    expect(guards.calls, 'dataset redirect').toEqual([]);
+    expect(guards.calls, 'public catalog').toEqual([]);
   });
 
   it('groups IPv6 clients by their /64 network and IPv4-mapped clients with IPv4', async () => {

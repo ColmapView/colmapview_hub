@@ -56,7 +56,7 @@ test('camera video imagery has its own filter and matching-frame launch while mo
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   expect(result.total).toBe(index.photos.video_frames);
   expect(result.entries.every((entry: { photoStatus: string }) => entry.photoStatus === 'video_frames')).toBe(true);
-  await page.goto('/hub/datasets/?photos=video_frames');
+  await page.goto('/hub/?photos=video_frames');
   const preview = page.locator('.dataset-thumbnail').first();
   await expect(preview).toBeVisible();
   await expect(preview).toHaveAttribute('alt', /^Video frame from/);
@@ -70,7 +70,7 @@ test('camera video imagery has its own filter and matching-frame launch while mo
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Matched video frames');
   const id = 'data-7ab128e89d676305e079e729';
-  const open = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  const open = await page.request.get('/hub/open/' + id, { maxRedirects: 0 });
   expect(open.status()).toBe(302);
   const target = new URL(new URL(open.headers().location).searchParams.get('url')!);
   const response = await page.request.get(target.pathname);
@@ -83,7 +83,7 @@ test('camera video imagery has its own filter and matching-frame launch while mo
     expect(video.timestamp).toBe(240); expect(video.bytes).toBeGreaterThan(0);
   }
   expect(manifest.geometryFiles[0].member.path).toBe('0000242.ply');
-  await page.goto('/hub/datasets/entry/' + id);
+  await page.goto('/hub/entry/' + id);
   await expect(page.locator('main')).toContainText('Model-only export SHA-256');
   await expect(page.locator('main')).toContainText('One frame per scene decoded at camera resolution');
   await expect(page.locator('main')).not.toContainText('All registered originals checked');
@@ -94,7 +94,7 @@ test('per-pose video mappings expose view/source counts and source feature warni
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com/.test(request.url())) providerRequests.push(request.url()); });
   const id = 'data-92baac9828db4bc141448f90';
-  const open = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  const open = await page.request.get('/hub/open/' + id, { maxRedirects: 0 });
   expect(open.status()).toBe(302);
   const target = new URL(new URL(open.headers().location).searchParams.get('url')!);
   const response = await page.request.get(target.pathname), manifest = await response.json();
@@ -107,7 +107,7 @@ test('per-pose video mappings expose view/source counts and source feature warni
   expect(manifest.videoImages['campus_nlp/cam03/000170_d.jpg'].frameIndex).toBe(67);
   expect(manifest.videoImages['campus_nlp/cam05/000278_f.jpg'].frameIndex).toBe(22);
   expect(manifest.files.points3D).toContain('/resolve/4c18714ad982888d453ec88e2dc335f8dce5928d/reconstructions/scenes/campus_nlp/0/points3D.bin');
-  await page.goto('/hub/datasets/entry/' + id);
+  await page.goto('/hub/entry/' + id);
   await expect(page.locator('main')).toContainText('285 matched views from 6 source videos');
   await expect(page.locator('main')).toContainText('18 decoded samples');
   await expect(page.locator('main')).toContainText('668 duplicate-image');
@@ -122,7 +122,7 @@ test('photo filtering survives Back and Forward and makes no provider requests',
   const count = (total: number) => new RegExp(`of ${total.toLocaleString('en-US')} scene datasets`);
   const providerRequests: string[] = [];
   page.on('request', request => { if (/huggingface\.co|github\.com|amazonaws\.com/.test(request.url())) providerRequests.push(request.url()); });
-  await page.goto('/hub/datasets/?photos=not_included');
+  await page.goto('/hub/?photos=not_included');
   await expect(page.locator('#catalog-count')).toHaveAccessibleName(count(index.photos.not_included));
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos not included');
   await page.locator('.catalog-advanced > summary').click();
@@ -148,7 +148,7 @@ test('unmapped source imagery remains a mapping review with a usable model', asy
     expect(result.total).toBeGreaterThan(0);
     expect(result.entries.every((entry: { photoStatus: string; hasViewer: boolean }) =>
       entry.photoStatus === 'review_required' && entry.hasViewer)).toBe(true);
-    await page.goto('/hub/datasets/?' + query);
+    await page.goto('/hub/?' + query);
     const first = page.locator('.dataset-card').first();
     await expect(first.getByRole('img', { name: /^No preview:/ })).toBeVisible();
     await first.hover();
@@ -168,7 +168,7 @@ test('Dynamic Maps keeps all pose statistics and an uncropped detail preview', a
   const result = await (await page.request.get('/hub/datasets/api/entries?dataset=' + source.id)).json();
   expect(result.total).toBe(1);
   expect(result.entries[0].sceneStats).toMatchObject({ cameraPoses: 896, cameraModels: 32, points: 0 });
-  await page.goto('/hub/datasets/?dataset=' + source.id);
+  await page.goto('/hub/?dataset=' + source.id);
   const thumbnail = page.locator('.dataset-thumbnail');
   await expect(thumbnail).toBeVisible();
   await expect(thumbnail).toHaveJSProperty('naturalWidth', 320);
@@ -194,7 +194,7 @@ test('OpenMVG retains its embedded sparse points in API, cards and the pinned vi
   const scene = result.entries[0];
   expect(scene.sceneStats).toEqual({ cameraPoses: 11, cameraModels: 11, points: 6586 });
   expect(scene.availableData.point_cloud).toMatchObject({ status: 'checked', count: 6586 });
-  await page.goto('/hub/datasets/?q=SceauxCastle');
+  await page.goto('/hub/?q=SceauxCastle');
   await expect(page.locator('[data-stat="points"]')).toHaveText('6,586');
   await expect(page.locator('.dataset-contents')).toContainText('Point cloud');
   const opened = await page.request.get(scene.openUrl, { maxRedirects: 0 });
@@ -218,7 +218,7 @@ test('zero-point audit updates embedded OpenSfM and all eight NeRF companion-clo
   const berlin=result.entries.find((item:{dataset:{title:string}})=>item.dataset.title.includes('OpenSfM Berlin'));
   expect(berlin.sceneStats).toEqual({cameraPoses:3,cameraModels:3,points:1430});
   expect(berlin.availableData.point_cloud).toMatchObject({status:'checked',count:1430});
-  await page.goto('/hub/datasets/?q=Berlin');
+  await page.goto('/hub/?q=Berlin');
   const card=page.locator('.dataset-card').filter({hasText:'OpenSfM Berlin'});
   await expect(card.locator('[data-stat="points"]')).toHaveText('1,430');
   const opened=await page.request.get(berlin.openUrl,{maxRedirects:0});expect(opened.status()).toBe(302);
@@ -230,11 +230,11 @@ test('all newly bound clouds retain explicit model, photo and temporal selection
     ['data-2cbe117bb42a638692c46147',319,69532],['data-ebfee4a083e682fe67645034',560,983145],
     ['data-ab3b0f737ecd74be64152988',477,601496],['data-f6f812cfaf2b1c7c1f5605c9',263,1051142]];
   for(const [id,poses,points] of expected){
-    const response=await page.request.get('/hub/datasets/open/'+id,{maxRedirects:0});expect(response.status()).toBe(302);
+    const response=await page.request.get('/hub/open/'+id,{maxRedirects:0});expect(response.status()).toBe(302);
     const url=new URL(new URL(response.headers().location).searchParams.get('url')!);
     expect(url.pathname).toContain('/manifests/');
     const manifest=await(await page.request.get(url.pathname)).json();
-    const html=await(await page.request.get('/hub/datasets/entry/'+id)).text();
+    const html=await(await page.request.get('/hub/entry/'+id)).text();
     expect(html).toContain(`data-stat="points">${points.toLocaleString('en-US')}`);expect(html).toContain(`data-stat="cameraPoses">${poses.toLocaleString('en-US')}`);
     if(manifest.format==='colmapview-camera-dataset'){
       expect(manifest.metadataUrl).toContain('/resolve/');expect(manifest.pointCloud.url).toContain('/resolve/');
@@ -250,12 +250,12 @@ test('companion ZIP requirements remain explicit and Waymo mappings launch throu
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json() as {
     sources: { id: string; sourceId: string }[] };
   const archiveSource = index.sources.find(source => source.sourceId === 'hf:cornell-vailab/megaunscene')!;
-  await page.goto('/hub/datasets/?photos=companion_archive&dataset=' + archiveSource.id);
+  await page.goto('/hub/?photos=companion_archive&dataset=' + archiveSource.id);
   await expect(page.locator('#catalog-count')).toHaveAccessibleName(/of 478 scene datasets/);
   await expect(page.locator('[data-photo-status]').first()).toHaveText('Photos in a separate archive');
   const zipped = await (await page.request.get('/hub/datasets/api/entries?photos=companion_archive&dataset=' + archiveSource.id)).json() as {
     entries: { id: string; openUrl: string; photoStatus: string }[] };
-  await page.goto('/hub/datasets/entry/' + zipped.entries[0].id);
+  await page.goto('/hub/entry/' + zipped.entries[0].id);
   await expect(page.locator('main')).toContainText('Separate image archive');
   await expect(page.locator('main')).toContainText('Archive members are indexed and read lazily');
   await expect(page.locator('main')).not.toContainText('current model link does not attach that ZIP');
@@ -270,7 +270,7 @@ test('companion ZIP requirements remain explicit and Waymo mappings launch throu
     total: number; entries: { id: string; openUrl: string; photoStatus: string; sceneStats: { cameraPoses: number } }[] };
   expect(mapping.total).toBe(10);
   expect(mapping.entries.every(entry => entry.photoStatus === 'sample_checked')).toBe(true);
-  await page.goto('/hub/datasets/entry/' + mapping.entries[0].id);
+  await page.goto('/hub/entry/' + mapping.entries[0].id);
   await expect(page.locator('main')).toContainText('Image-name mapping');
   await expect(page.locator('main')).toContainText('mapping.json');
   await expect(page.locator('main')).toContainText('Six-digit COLMAP image names map explicitly to eight-digit cache PNG paths');
@@ -298,7 +298,7 @@ test('TAR manifests attach checked photographs and retain calibration limitation
   page.on('request', request => { if (/huggingface\.co|amazonaws\.com/.test(request.url())) providers.push(request.url()); });
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   const source = index.sources.find((source: { sourceId: string }) => source.sourceId === 'hf:whc/fastmap_sfm');
-  await page.goto('/hub/datasets/?photos=companion_archive&dataset=' + source.id + '&q=m360_bicycle');
+  await page.goto('/hub/?photos=companion_archive&dataset=' + source.id + '&q=m360_bicycle');
   const card = page.locator('.dataset-card').first();
   await expect(card.locator('[data-asset="images"]')).toHaveText('Images · archive');
   await expect(card.locator('.dataset-thumbnail')).toBeVisible();
@@ -307,24 +307,24 @@ test('TAR manifests attach checked photographs and retain calibration limitation
   await card.getByRole('link', { name: 'Full metadata', exact: true }).click();
   await expect(page.locator('main')).toContainText('At least 1 image member listed');
   await expect(page.locator('main')).toContainText('Archive members are indexed and read lazily');
-  const open = await page.request.get('/hub/datasets/open/data-c11e028799bfa121d0f8ea13', { maxRedirects: 0 });
+  const open = await page.request.get('/hub/open/data-c11e028799bfa121d0f8ea13', { maxRedirects: 0 });
   expect(open.status()).toBe(302);
   const manifestUrl = new URL(new URL(open.headers().location).searchParams.get('url')!);
   const manifest = await (await page.request.get(manifestUrl.pathname)).json();
   expect(manifest.version).toBe(2);
   expect(manifest.files.cameras).toContain('/ground_truths/m360_bicycle/cameras.bin');
   expect(manifest.mediaArchives[0].stripPrefix).toBe('m360_bicycle');
-  const dunhuang = await page.request.get('/hub/datasets/open/data-f330ea4fdfd07c8466468e10', { maxRedirects: 0 });
+  const dunhuang = await page.request.get('/hub/open/data-f330ea4fdfd07c8466468e10', { maxRedirects: 0 });
   expect(dunhuang.status()).toBe(302);
   const dunhuangUrl = new URL(new URL(dunhuang.headers().location).searchParams.get('url')!);
   const capture = await (await page.request.get(dunhuangUrl.pathname)).json();
   expect(capture.files.cameras).toContain('/native_ply/dunhuang/cam/sparse/0/cameras.bin');
   expect(capture.mediaArchives[0]).toMatchObject({ bytes: 11167590400, indexBytes: 52564992,
     stripPrefix: 'Dance_Dunhuang_Pair_1080/frame000000/images' });
-  await page.goto('/hub/datasets/entry/data-f330ea4fdfd07c8466468e10');
+  await page.goto('/hub/entry/data-f330ea4fdfd07c8466468e10');
   await expect(page.locator('main')).toContainText('Photos in a separate archive');
   await expect(page.locator('.dataset-thumbnail')).toHaveCount(0);
-  await page.goto('/hub/datasets/entry/data-0c5127dab3fe12c39f4c4660');
+  await page.goto('/hub/entry/data-0c5127dab3fe12c39f4c4660');
   await expect(page.locator('main')).toContainText('camera dimensions differ');
   await expect(page.locator('main')).toContainText('extraction and renaming alone do not establish correct projection');
   expect(providers).toEqual([]);
@@ -333,23 +333,23 @@ test('TAR manifests attach checked photographs and retain calibration limitation
 test('later TV photographs show partial sampled coverage without changing camera loading', async ({ page }) => {
   for (const [id, count] of [['data-9f28674f0f884957979b0a58', '9/139 inspected names from 5493 registered poses'],
     ['data-8110d379a298766a8274b55d', '1/30 inspected names from 1485 registered poses']]) {
-    await page.goto('/hub/datasets/entry/' + id);
+    await page.goto('/hub/entry/' + id);
     await expect(page.locator('.dataset-thumbnail')).toBeVisible();
     await expect(page.locator('[data-asset="images"]')).toHaveText('Images · partial');
     await expect(page.locator('main')).toContainText(count);
     await expect(page.locator('main')).not.toContainText('All photos verified in export');
-    expect((await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 })).status()).toBe(302);
+    expect((await page.request.get('/hub/open/' + id, { maxRedirects: 0 })).status()).toBe(302);
   }
 });
 
 test('compressed splats require conversion and empty geometry does not receive a presence badge', async ({ page }) => {
   const packed = sceneId('hf:promc/reconstruction-scenes', 'lawn-tree');
-  await page.goto('/hub/datasets/entry/' + packed);
+  await page.goto('/hub/entry/' + packed);
   await expect(page.locator('[data-asset="splats"]')).toHaveText('Gaussians · setup');
   await expect(page.locator('[data-asset="geometry"]')).toHaveCount(0);
   await expect(page.locator('main')).toContainText('Convert it to standard Gaussian PLY');
-  expect((await page.request.get('/hub/datasets/open/' + packed, { maxRedirects: 0 })).status()).toBe(302);
-  await page.goto('/hub/datasets/entry/' + sceneId('hf:lishenyu/Plant3D', 'plant/plant_000/dense/sparse'));
+  expect((await page.request.get('/hub/open/' + packed, { maxRedirects: 0 })).status()).toBe(302);
+  await page.goto('/hub/entry/' + sceneId('hf:lishenyu/Plant3D', 'plant/plant_000/dense/sparse'));
   await expect(page.locator('[data-asset="geometry"]')).toHaveCount(0);
   await expect(page.locator('[data-asset="cameras"]')).toBeVisible();
   await expect(page.locator('[data-asset="images"]')).toBeVisible();
@@ -358,8 +358,8 @@ test('compressed splats require conversion and empty geometry does not receive a
 test('confirmed truncated native models are absent from detail, open and search routes', async ({ page }) => {
   for (const path of ['Eiffel_Tower_Scene/sparse/0', 'Eiffel_Tower_Scene/distorted/sparse/0']) {
     const id = sceneId('hf:AmirHossein-razlighi/Confident_Splatting', path);
-    expect((await page.request.get('/hub/datasets/entry/' + id)).status()).toBe(404);
-    expect((await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 })).status()).toBe(404);
+    expect((await page.request.get('/hub/entry/' + id)).status()).toBe(404);
+    expect((await page.request.get('/hub/open/' + id, { maxRedirects: 0 })).status()).toBe(404);
   }
   const search = await (await page.request.get('/hub/datasets/api/entries?q=Eiffel%20Tower')).json();
   expect(search).toMatchObject({ total: 0, entries: [] });

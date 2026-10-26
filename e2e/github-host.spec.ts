@@ -48,7 +48,7 @@ test('GitHub gallery keeps browsing, search, metadata and Back on GitHub using p
   const google: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (/google-analytics|googletagmanager/.test(request.url())) google.push(request.url()); });
-  await page.goto(github + '/hub/datasets/?q=SceauxCastle');
+  await page.goto(github + '/hub/?q=SceauxCastle');
   const cards = page.locator('#catalog-results [data-entry-id]');
   await expect(cards.first()).toBeVisible();
   expect(new URL(page.url()).origin).toBe(github);
@@ -61,7 +61,7 @@ test('GitHub gallery keeps browsing, search, metadata and Back on GitHub using p
   await page.getByRole('dialog').getByRole('button', { name: 'Copy link', exact: true }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/^https:\/\/colmapview.opsiclear.com\/s\/[A-Z][a-z]+[A-Z][a-z]+$/);
   await page.getByRole('dialog').getByRole('link', { name: 'Full metadata', exact: true }).click();
-  await expect(page).toHaveURL(/^https:\/\/colmapview.github.io\/hub\/datasets\/entry\/\?id=data-/);
+  await expect(page).toHaveURL(/^https:\/\/colmapview.github.io\/hub\/entry\/\?id=data-/);
   await expect(page.locator('.dataset-overview')).toBeVisible();
   await page.goBack();
   await expect(cards.first()).toBeVisible();
@@ -89,14 +89,14 @@ test('GitHub analytics waits for consent, saves the first-party choice and exclu
   await page.route('https://www.googletagmanager.com/**', route => {
     tags.push(route.request().url()); return route.fulfill({ contentType: 'application/javascript', body: '' });
   });
-  await page.goto(github + '/hub/datasets/?q=private-query#private-fragment');
+  await page.goto(github + '/hub/?q=private-query#private-fragment');
   await expect(page.getByRole('button', { name: 'Allow analytics', exact: true })).toBeVisible();
   expect(tags).toEqual([]);
   await page.getByRole('button', { name: 'Allow analytics', exact: true }).click();
   await expect.poll(() => tags.length).toBe(1);
   const commands = await page.evaluate(() => (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer?.map(value => Array.from(value)) || []);
   expect(JSON.stringify(commands)).not.toMatch(/private-query|private-fragment/);
-  expect(commands).toContainEqual(['config', 'G-7K5H83SEMY', expect.objectContaining({ cookie_domain: 'colmapview.github.io', cookie_path: '/hub/datasets' })]);
+  expect(commands).toContainEqual(['config', 'G-7K5H83SEMY', expect.objectContaining({ cookie_domain: 'colmapview.github.io', cookie_path: '/hub' })]);
   await page.reload();
   await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
   await expect.poll(() => tags.length).toBe(2);
@@ -106,10 +106,23 @@ test('GitHub respects browser privacy signals before any analytics opt-in', asyn
   await page.addInitScript(() => Object.defineProperty(navigator, 'globalPrivacyControl', { value: true }));
   const tags: string[] = [];
   page.on('request', request => { if (/google-analytics|googletagmanager/.test(request.url())) tags.push(request.url()); });
-  await page.goto(github + '/hub/datasets/');
+  await page.goto(github + '/hub/');
   await expect(page.locator('#catalog-results [data-entry-id]').first()).toBeVisible();
   // Observe the complete startup before asserting that no analytics request ran.
   await page.waitForLoadState('networkidle');
   await expect(page.getByRole('region', { name: 'Optional analytics' })).toBeHidden();
   expect(tags).toEqual([]);
+});
+
+test('retired gallery bookmarks preserve filters and metadata on the same frontend', async ({ page }) => {
+  await page.goto(github + '/hub/datasets/?q=SceauxCastle&url=discarded');
+  const cards = page.locator('#catalog-results [data-entry-id]');
+  await expect(cards.first()).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/hub/');
+  expect(new URL(page.url()).searchParams.get('q')).toBe('SceauxCastle');
+  expect(new URL(page.url()).searchParams.has('url')).toBe(false);
+  const id = await cards.first().getAttribute('data-entry-id');
+  await page.goto(github + '/hub/datasets/entry/?id=' + id);
+  await expect(page.locator('.dataset-overview')).toBeVisible();
+  await expect(page).toHaveURL(github + '/hub/entry/?id=' + id);
 });

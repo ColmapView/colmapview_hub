@@ -1,7 +1,5 @@
-import { hubStorage } from '../src/worker/storage';
-import { env } from 'cloudflare:workers';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { assets, base, create, input, ip, listings, request, resetState } from './helpers';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { assets, base, create, input, request, resetState } from './helpers';
 import { HUB_UI_VERSION } from '../src/shared/ui-version';
 
 beforeEach(resetState);
@@ -33,8 +31,8 @@ describe('Hub pages', () => {
     const link = await create(input());
     for (const path of [`/${link.id}`, '/missing-frame']) {
       const html = await (await request(path)).text();
-      expect(html).toContain('<a class="brand" href="/hub/datasets/" aria-label="ColmapView Hub">');
-      for (const [href, label] of [['/hub/datasets/', 'Datasets'], ['https://colmapview.opsiclear.com/', 'Open viewer']]) {
+      expect(html).toContain('<a class="brand" href="/hub/" aria-label="ColmapView Hub">');
+      for (const [href, label] of [['/hub/', 'Datasets'], ['https://colmapview.opsiclear.com/', 'Open viewer']]) {
         expect(html).toContain(`href="${href}" aria-label="${label}" title="${label}"`);
       }
       for (const [href, label] of [['/about.html', 'About'], ['/privacy.html', 'Privacy'], ['/terms.html', 'Terms']]) {
@@ -80,27 +78,5 @@ describe('Hub pages', () => {
 
   it('allows fonts from the Hub itself', async () => {
     expect((await request('/missing-font')).headers.get('Content-Security-Policy')).toContain("font-src 'self'");
-  });
-
-  it('gives gallery images empty alt text, because the card text names the link', async () => {
-    const link = await create(input({ listed: true, title: 'Listed result' }), ip, listings);
-    const html = await (await request('/', {}, ip, listings)).text();
-    expect(html).toContain(`<img src="/hub/${link.id}/preview.jpg" width="320" height="168" loading="lazy" alt="">`);
-    expect(html).not.toContain('alt="Listed result"');
-  });
-
-  it('keeps pagination when a whole page of listings is skipped as invalid', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    // These keys sort before every test word pair, so they fill the first page.
-    for (let index = 0; index < 12; index++) {
-      await hubStorage.put(env.HUB_DB, `listed/Aaa${String(index).padStart(2, '0')}.json`, '{}', { listing: { title: '', createdAt: 'never' } });
-    }
-    const valid = await create(input({ listed: true, title: 'Listed result' }), ip, listings);
-    const first = await (await request('/', {}, ip, listings)).text();
-    expect(first).not.toContain(valid.id);
-    expect(first).not.toContain('No results listed yet.');
-    const next = /href="\/hub\/\?cursor=([^"]+)"/.exec(first);
-    expect(next).not.toBeNull();
-    expect(await (await request(`/?cursor=${next![1]}`, {}, ip, listings)).text()).toContain(valid.id);
   });
 });

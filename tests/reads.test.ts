@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
 import { base64Bytes } from '../src/worker/validation';
 import { preview } from './fixtures/preview';
-import { create, input, ip, listings, post, remove, request, resetState } from './helpers';
+import { create, input, ip, post, remove, request, resetState } from './helpers';
 
 beforeEach(resetState);
 
@@ -68,16 +68,6 @@ describe('tolerant reads', () => {
     expect((await request(`/${link.id}`)).status).toBe(200);
     await rewrite(link.id, record => ({ ...record, viewerUrl: `https://colmapview.opsiclear.com/?url=x${'a'.repeat(200 * 1024)}` }));
     expect((await request(`/${link.id}`)).status).toBe(503);
-  });
-
-  it('logs and skips an invalid gallery listing', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const valid = await create(input({ listed: true, title: 'Listed result' }), ip, listings);
-    await hubStorage.put(env.HUB_DB, 'listed/BadListing-LAAAAAAAAAAAAAAAA.json', '{}', { listing: { title: '', createdAt: 'never' } });
-    const page = await request('/', {}, ip, listings);
-    expect(page.status).toBe(200);
-    expect(await page.text()).toContain(valid.id);
-    expect(warn).toHaveBeenCalledWith('Skipping an invalid listing', 'listed/BadListing-LAAAAAAAAAAAAAAAA.json', expect.any(Error));
   });
 
   it('reads the word lists once per isolate and retries after a failed read', async () => {
