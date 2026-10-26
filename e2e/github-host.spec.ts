@@ -7,6 +7,9 @@ const production = 'https://colmapview.opsiclear.com';
 const local = process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB_E2E_PORT || '5201'}`;
 
 test('public export downloads are exact HTTP 200 files without HTML canonicalization redirects', async ({ request }) => {
+  const audit = await request.get(local + '/hub/datasets/audit', { maxRedirects: 0 });
+  expect(audit.status()).toBe(308);
+  expect(audit.headers().location).toBe(local + '/hub/datasets/audit.html');
   const metadata = await request.get(local + '/hub/assets/github/site.json');
   expect(metadata.status()).toBe(200);
   const manifest = await metadata.json() as { files: { artifact: string; sha256: string; bytes: number }[] };
