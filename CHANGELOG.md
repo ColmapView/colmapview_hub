@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.18.5 — 2026-10-26
+
+- Recognize truncated public selection digests in the new photo-audit receipt using the existing field-, path- and detector-scoped secret-scan exception. Independently recompute every selection digest and retain all provider-specific and other generic-key checks. Supersede 0.18.4 after its history scan reported three false positives.
+
 ## 0.18.4 — 2026-10-26
 
 - Match Hub icon controls to the viewer, with consistent ghost buttons, keyboard focus, tooltips and touch targets. Use compact metadata and copy controls across static, asynchronous and shared cards.

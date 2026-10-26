@@ -13,12 +13,12 @@ regexes = ['''(?:selectionKey|evidenceKey)"\s*:\s*"[a-f0-9]{64}"''']
 
 # Gitleaks splits large minified JSON into fragments, sometimes cutting either
 # the digest's field name or value. Limit that fallback to hexadecimal digests
-# in the four reviewed, public evidence files; other detectors remain enabled.
+# in the reviewed, public evidence files; other detectors remain enabled.
 [[allowlists]]
 description = "SHA-256 fragments in reviewed public evidence"
 targetRules = ["generic-api-key"]
 condition = "AND"
-paths = ['''^data/(?:photo-audit-decisions|zero-point-audit|zero-point-reaudit-2026-10-22|catalog-source-resolution-audit-2026-10-22)\.json\.gz$''']
+paths = ['''^data/(?:photo-audit-decisions|photo-negative-audit-2026-10-26|zero-point-audit|zero-point-reaudit-2026-10-22|catalog-source-resolution-audit-2026-10-22)\.json\.gz$''']
 regexTarget = "match"
 regexes = ['''^(?:(?:selection|election|lection|ection|ction|tion|ion|on|n)Key|evidenceKey)"\s*:\s*"[a-f0-9]{16,64}"?$''']
 

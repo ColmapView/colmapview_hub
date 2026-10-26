@@ -89,3 +89,11 @@ and all 102 Chromium browser cases. All 3,477 referenced manifest schemas are
 valid, with none missing; all 3,557 retained immutable manifest files are
 byte-identical to the preceding build. The rebuilt catalog retains 4,559 scenes,
 144 sources and 2,840 scene previews using 2,534 distinct attributed JPEGs.
+
+The release history scan identified three truncated `selectionKey` fragments in
+the new minified gzip receipt. Every one of its 1,718 selection digests was
+independently recomputed from the public source identity and selected paths.
+The existing generic-key exception now also covers hexadecimal selection-digest
+fragments in this exact public evidence file. Provider-specific detectors and
+other generic-key matches remain enabled. The full-history scan passes with no
+credential findings; Hub 0.18.5 carries this scan configuration correction.
