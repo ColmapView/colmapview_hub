@@ -2,7 +2,7 @@
 
 This project stores ColmapView share links and small JPEG previews. Keep the Worker, browser client, and tests small and separate. Do not add a database or framework without a concrete need.
 
-- `src/worker/` contains routing, validation, private R2 record access, and the `LookupGuard` Durable Object.
+- `src/worker/` contains routing, validation, private D1 record access, and the `LookupGuard` Durable Object.
 - `src/client/` contains browser-only play and delete controls. Thumbnail preparation belongs to the viewer.
 - `src/shared/` contains runtime-neutral models, catalog rules and HTML helpers. Keep imports between client and Worker code out of this layer; ESLint enforces these boundaries.
 - `scripts/build/` creates deployable assets. `scripts/catalog/` contains offline import and publication rules. `scripts/audit/` contains operator preparation and network audits; normal builds must not run them. Python commands use `python -m scripts.<package>.<module>` from the repository root, with package-relative imports instead of modifying `sys.path`.

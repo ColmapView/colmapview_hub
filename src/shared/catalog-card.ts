@@ -6,10 +6,12 @@ import { photoLabel } from './scene-photos';
 import { catalogCardTitle } from './catalog-title';
 import { icon } from './icons';
 import { datasetSharePath } from './dataset-share';
+import { hubViewerLink } from './viewer-host';
+import type { ViewerHost } from './viewer-host';
 import { VIDEO_CAPTURE_LABELS } from './video-capture';
 import { gaussianAvailabilityHtml, sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
 
-export function catalogCardHtml(entry: CatalogSummary): string {
+export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost): string {
   const category = licenseCategory(entry);
   const canOpen = catalogOpenUrl(entry) !== datasetPath(entry);
   const action = canOpen ? entry.hasViewer ? 'Open in viewer' : 'Try in viewer · unchecked' : 'Source details';
@@ -34,7 +36,7 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + (entry.videoCapture ? `<p>${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</p>` : '')
     + `<p>${escape(LICENSE_CATEGORY_LABELS[category])} · ${escape(entry.license)}</p></div></div>`
     + '<div class="dataset-card-body">'
-    + `<h2><a class="dataset-open" href="${escape(share || catalogOpenUrl(entry))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
+    + `<h2><a class="dataset-open" href="${escape(hubViewerLink(share || catalogOpenUrl(entry), host))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
     + gaussianAvailabilityHtml(entry.availableData)
     + (!canOpen ? '<p class="dataset-link-note">Source only</p>' : !entry.hasViewer ? '<p class="dataset-link-note">Try · unchecked ↗</p>' : '')
     + '</div>'
@@ -45,9 +47,9 @@ export function catalogCardHtml(entry: CatalogSummary): string {
     + `<dl>${facts.map(([label, value]) => `<div><dt>${label}</dt><dd${label === 'Images' && entry.photoStatus ? ` data-photo-status="${escape(entry.photoStatus)}"` : ''}>${escape(value)}</dd></div>`).join('')}</dl>`
     + (preview ? `<p class="dataset-photo-credit">${entry.thumbnail!.videoFrame ? 'Video frame' : 'Photo'}: ${sceneThumbnailCreditHtml(entry.thumbnail!)}${entry.thumbnail!.crop === 'center_square' ? ' · Cropped' : ''}</p>` : '')
     + `<p class="note">${escape(entry.description)}</p>`
-    + `<div class="dataset-metadata-links"><a href="${datasetPath(entry)}">Full metadata</a>`
+    + `<div class="dataset-metadata-links"><a href="${escape(hubViewerLink(datasetPath(entry), host))}">Full metadata</a>`
     + (share ? `<button type="button" data-copy-dataset-link="${share}">Copy link</button><span class="note" data-copy-status role="status"></span>` : '')
-    + (entry.dataset ? `<a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(entry))}">Related scenes</a>` : '')
+    + (entry.dataset ? `<a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(datasetFilterValue(entry)), host))}">Related scenes</a>` : '')
     + (isCatalogSourceUrl(entry.sourceUrl) ? `<a href="${escape(entry.sourceUrl)}" target="_blank" rel="noopener noreferrer">Original source ↗</a>` : '')
     + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></dialog></article>`;
 }

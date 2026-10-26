@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { createExecutionContext, listDurableObjectIds, runInDurableObject, waitOnExecutionContext } from 'cloudflare:test';
 import { expect, vi } from 'vitest';
@@ -78,14 +79,14 @@ export function remove(id: string, secret = owner, clientIp = ip): Promise<Respo
 
 export async function guard(clientIp = ip) { return env.LOOKUP_GUARDS.getByName(await clientIdentity(env.HUB_KEY, clientIp)); }
 
-/** Clears this local fixture's cached gallery page, bucket and guards. The Workers test plugin keeps storage and the Cache API between tests. Never touches production. */
+/** Clears this local fixture's cached gallery page, database and guards. The Workers test plugin keeps storage and the Cache API between tests. Never touches production. */
 export async function resetState(): Promise<void> {
   await caches.default.delete(galleryKey(hubLocation(env)));
   await caches.default.delete(sharedFeedCacheKey(base));
-  for (const object of (await env.LINKS.list()).objects) await env.LINKS.delete(object.key);
+  await env.HUB_DB.batch([env.HUB_DB.prepare('DELETE FROM hub_entries'), env.HUB_DB.prepare('DELETE FROM hub_settings')]);
   for (const id of await listDurableObjectIds(env.LOOKUP_GUARDS)) {
     await runInDurableObject(env.LOOKUP_GUARDS.get(id), async (_, state) => { await state.storage.deleteAll(); });
   }
-  await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, ...words }));
+  await hubStorage.put(env.HUB_DB, WORDLIST_KEY, JSON.stringify({ version: 1, ...words }));
   resetWordlistCache();
 }

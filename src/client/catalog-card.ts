@@ -2,11 +2,12 @@ import { catalogCardHtml } from '../shared/catalog-card';
 import type { CatalogSummary } from '../shared/catalog';
 import { DATASET_SHARE_PATH, datasetShareId } from '../shared/dataset-share';
 import { ID_PATTERN, SHARE_PATH } from '../shared/model';
+import type { ViewerHost } from '../shared/viewer-host';
 
-export function catalogCardElement(entry: CatalogSummary): HTMLElement {
+export function catalogCardElement(entry: CatalogSummary, host?: ViewerHost): HTMLElement {
   const template = document.createElement('template');
   // The shared SSR renderer escapes every text/attribute and restricts load URLs.
-  template.innerHTML = catalogCardHtml(entry);
+  template.innerHTML = catalogCardHtml(entry, host);
   return template.content.firstElementChild as HTMLElement;
 }
 

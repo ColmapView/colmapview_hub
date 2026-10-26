@@ -31,7 +31,7 @@ function setsFor(words: Wordlists) {
  * - Any other word pair with no valid split reads its lowercase form.
  * - When the word lists fail to load, a name with the canonical shape is read as typed, which depends only
  *   on the lists' health, never on the name; for any other name the error propagates.
- * Unused and invalid word pairs both still read R2 and both miss, so neither the answer nor its timing
+ * Unused and invalid word pairs both still read the database and both miss, so neither the answer nor its timing
  * reveals the lists. A name that is not a word pair reads nothing.
  */
 export async function lookupTarget(id: string, words: () => Promise<Wordlists>): Promise<{ key: string; redirect: boolean } | null> {

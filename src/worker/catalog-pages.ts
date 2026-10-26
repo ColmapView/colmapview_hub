@@ -7,6 +7,8 @@ import { photoLabel } from '../shared/scene-photos';
 import type { PhotoStatus } from '../shared/scene-photos';
 import { sceneContentsHtml, sceneStatisticsHtml, sceneThumbnailHtml } from '../shared/scene-contents';
 import { datasetSharePath } from '../shared/dataset-share';
+import { hubViewerLink, preferredViewerUrl } from '../shared/viewer-host';
+import type { ViewerHost } from '../shared/viewer-host';
 export { catalogCard };
 import type { HubLocation } from './pages';
 
@@ -24,9 +26,9 @@ function social(url: string, title: string, description: string): string {
     + `<meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta name="twitter:card" content="summary">`;
 }
 
-export function catalogEntryPage(entry: CatalogEntry, analytics = true): string {
+export function catalogEntryPage(entry: CatalogEntry, analytics = true, host?: ViewerHost): string {
   const share = entry.shareName ? datasetSharePath(entry.id, entry.shareName) : undefined;
-  const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(href)}"${primary ? ' data-analytics-open' : ''} target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
+  const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(hubViewerLink(primary ? preferredViewerUrl(href, host) : href, host))}"${primary ? ' data-analytics-open' : ''} target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
   const gated = entry.access === 'gated' || entry.verification?.delivery === 'gated';
   const blocked = gated || Boolean(entry.verification?.opening);
   const viewerUrl = !blocked && entry.viewerUrl ? share || entry.viewerUrl : undefined;
@@ -35,7 +37,7 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true): string 
   const actions = action(gated ? 'Get source access' : entry.sourceUrl === entry.dataUrl ? dataLabel : 'Source', entry.sourceUrl)
     + (!gated && entry.dataUrl && entry.dataUrl !== entry.sourceUrl ? action(dataLabel, entry.dataUrl) : '')
     + (viewerUrl ? action('Try in ColmapView', viewerUrl, true) : '');
-  const individualAction = candidateViewerUrl ? action('Try listed model (unchecked)', candidateViewerUrl) : '';
+  const individualAction = candidateViewerUrl ? action('Try listed model (unchecked)', preferredViewerUrl(candidateViewerUrl, host)) : '';
   const audits = entry.audits.map(audit => {
     const name = audit.sourceUrl ? decodeURIComponent(new URL(audit.sourceUrl).pathname.split('/').filter(part => part && part !== 'content').at(-1) || audit.sourceId) : audit.sourceId;
     return `<details class="dataset-audit"><summary>${escape(name)} · checked ${escape(audit.checkedAt)}</summary>`
@@ -44,16 +46,16 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true): string 
       + factList(audit.facts) + '</details>';
   }).join('');
   const preview = sceneThumbnailHtml(entry);
-  return page(location, entry.title,
-    '<p class="dataset-back"><a href="/hub/datasets/">← All datasets</a></p>'
+  return page({ ...location, viewerHost: host }, entry.title,
+    `<p class="dataset-back"><a href="${escape(hubViewerLink('/hub/datasets/', host))}">← All datasets</a></p>`
     + `<div class="dataset-overview${preview ? ' dataset-overview-has-preview' : ''}" data-entry-id="${escape(entry.id)}">`
     + (preview ? `<div class="dataset-overview-preview">${preview}</div>` : '')
     + '<div class="dataset-overview-content">'
     + intro(entry.title, entry.description, tags(catalogSummary(entry)))
     + sceneContentsHtml(entry.availableData) + sceneStatisticsHtml(entry.sceneStats)
     + `<div class="actions">${actions}${individualAction}${datasetSharePath(entry.id, entry.shareName) ? `<button type="button" class="button" data-copy-dataset-link="${datasetSharePath(entry.id, entry.shareName)}">Copy link</button><span class="note" data-copy-status role="status"></span>` : ''}</div>`
-    + (entry.dataset ? `<p class="note">Part of <a href="/hub/datasets/?dataset=${encodeURIComponent(datasetFilterValue(catalogSummary(entry)))}">${escape(entry.dataset.label)}</a>.</p>`
-      : `<p class="note"><a href="/hub/datasets/?dataset=${encodeURIComponent(entry.id)}">Browse this dataset’s named scenes</a>.</p>`)
+    + (entry.dataset ? `<p class="note">Part of <a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(datasetFilterValue(catalogSummary(entry))), host))}">${escape(entry.dataset.label)}</a>.</p>`
+      : `<p class="note"><a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(entry.id), host))}">Browse this dataset’s named scenes</a>.</p>`)
     + '</div></div>'
     + (entry.verification ? '<section class="dataset-section"><h2>Loading status</h2>'
       + factList([{ label: 'Loading qualification', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },

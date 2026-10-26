@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,7 +15,7 @@ beforeEach(resetState);
 describe('unlisted records and social cards', () => {
   it('stores the asset summary and shows its nonzero counts', async () => {
     const link = await create(input({ assets }));
-    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<Record<string, unknown>>();
+    const record = await (await hubStorage.get(env.HUB_DB, recordKey(link.id)))!.json<Record<string, unknown>>();
     expect(record.assets).toEqual(assets);
     const html = await (await request(`/${link.id}`)).text();
     expect(html).toContain('83 images · 83,749 points · 82 masks · 1 splat');
@@ -28,7 +29,7 @@ describe('unlisted records and social cards', () => {
     const changed = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input({ assets: { ...assets, images: 84 } })) });
     expect(changed.status).toBe(409);
-    expect(await (await env.LINKS.get(recordKey(first.id)))!.json<Record<string, unknown>>()).toMatchObject({ assets });
+    expect(await (await hubStorage.get(env.HUB_DB, recordKey(first.id)))!.json<Record<string, unknown>>()).toMatchObject({ assets });
   });
 
   it.each([
@@ -39,30 +40,31 @@ describe('unlisted records and social cards', () => {
     const response = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...input(), assets: summary }) });
     expect(response.status).toBe(400);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(0);
   });
 
   it('preserves legacy fingerprints and cards without inventing asset counts', async () => {
     const payload = input();
     const link = await create(payload);
-    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<Record<string, unknown>>();
+    const record = await (await hubStorage.get(env.HUB_DB, recordKey(link.id)))!.json<Record<string, unknown>>();
     const legacyFingerprint = JSON.stringify([payload.viewerUrl, payload.title, payload.description, payload.thumbnailBase64, '', '', '']);
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(legacyFingerprint));
     expect(record.fingerprint).toBe([...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join(''));
     expect(await create(payload)).toEqual(link);
     expect(await (await request(`/${link.id}`)).text()).not.toContain('class="meta"');
   });
-  it('saves one base64 record, emits an HTML card and public JPEG, and preserves the viewer fragment and license', async () => {
+  it('stores metadata and binary preview together, emits an HTML card and JPEG, and preserves the fragment and license', async () => {
     const payload = input({ license: { id: 'cc-by-4.0', name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } });
     const link = await create(payload);
     expect(ID_PATTERN.test(link.id)).toBe(true);
     expect(link.id).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+$/);
     expect(link.url).toBe(`${base}/${link.id}`);
-    const stored = await env.LINKS.get(recordKey(link.id));
-    const raw = await stored!.text();
-    expect(raw).toContain('thumbnailBase64');
-    expect(raw).not.toContain('managementSecret');
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    const stored = await env.HUB_DB.prepare('SELECT body_json, length(preview_jpeg) AS bytes FROM hub_entries WHERE namespace = ? AND id = ?')
+      .bind('links', link.id).first<{ body_json: string; bytes: number }>();
+    expect(stored!.body_json).not.toContain('thumbnailBase64');
+    expect(stored!.body_json).not.toContain('managementSecret');
+    expect(stored!.bytes).toBe(atob(payload.thumbnailBase64).length);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(1);
     const card = await request(`/${link.id}`);
     const html = await card.text();
     expect(html).toContain('name="twitter:card" content="summary_large_image"');
@@ -85,7 +87,7 @@ describe('unlisted records and social cards', () => {
     const second = await create();
     expect(second).toEqual(first);
     expect(vi.mocked(fetch)).not.toHaveBeenCalled();
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(1);
     const changed = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ title: 'Changed' })) });
     expect(changed.status).toBe(409);
     expect(await (await request(`/${first.id}`)).text()).toContain('Demo reconstruction');
@@ -96,12 +98,12 @@ describe('unlisted records and social cards', () => {
     expect(one.id).toBe(two.id);
     const other = await create(input({ managementSecret: 'B'.repeat(43) }));
     expect(other.id).not.toBe(one.id);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(2);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(2);
   });
 
   it('allocates colliding word pairs atomically and replays the assigned name after the first vacancy returns', async () => {
     const small = { adjectives: ['happy', 'funny'], nouns: ['tree', 'ball'] };
-    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, ...small }));
+    await hubStorage.put(env.HUB_DB, WORDLIST_KEY, JSON.stringify({ version: 1, ...small }));
     resetWordlistCache();
     const firstChoice = await deriveShortId(env.HUB_KEY, owner, small, 0);
     let otherOwner = '';
@@ -113,39 +115,39 @@ describe('unlisted records and social cards', () => {
     const payloads = [input(), input({ managementSecret: otherOwner, title: 'Other result' })];
     const links = await Promise.all(payloads.map(payload => create(payload)));
     expect(new Set(links.map(link => link.id)).size).toBe(2);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(2);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(2);
     for (const [index, link] of links.entries()) expect(await (await request(`/${link.id}`)).text()).toContain(payloads[index].title);
     const winner = links.findIndex(link => link.id === firstChoice);
     expect(winner).toBeGreaterThanOrEqual(0);
     await request(`/api/links/${links[winner].id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${payloads[winner].managementSecret}` } });
     const remaining = 1 - winner;
     expect(await create(payloads[remaining])).toEqual(links[remaining]);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(1);
     const changed = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...payloads[remaining], title: 'Changed after collision' }) });
     expect(changed.status).toBe(409);
   });
 
   it('fails bounded allocation without replacing a link when all candidate names are occupied', async () => {
-    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
+    await hubStorage.put(env.HUB_DB, WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
     resetWordlistCache();
     const original = await create();
     const blocked = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input({ managementSecret: 'B'.repeat(43), title: 'Replacement' })) });
     expect(blocked.status).toBe(409);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(1);
     expect(await (await request(`/${original.id}`)).text()).toContain('Demo reconstruction');
     expect(await (await guard()).lookup(null)).toBe(0);
   });
 
   it('treats seventeen-letter word-pair names as unlisted across reading, previews and deletion', async () => {
-    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['bright'], nouns: ['watermelons'] }));
+    await hubStorage.put(env.HUB_DB, WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['bright'], nouns: ['watermelons'] }));
     resetWordlistCache();
     const link = await create();
     expect(link.id).toBe('BrightWatermelons');
     expect(link.id).toHaveLength(17);
     expect(isListedId(link.id)).toBe(false);
-    expect(await env.LINKS.get(`links/${link.id}.json`)).not.toBeNull();
+    expect(await hubStorage.get(env.HUB_DB, `links/${link.id}.json`)).not.toBeNull();
     expect((await request(`/${link.id}`)).status).toBe(200);
     expect((await request(`/${link.id}/preview.jpg`, { method: 'HEAD' })).status).toBe(200);
     expect((await request(`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } })).status).toBe(204);
@@ -153,10 +155,10 @@ describe('unlisted records and social cards', () => {
 
   it('keeps legacy suffixed links readable and deletable, and replays them for private requests', async () => {
     const link = await create();
-    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<LinkRecord>();
+    const record = await (await hubStorage.get(env.HUB_DB, recordKey(link.id)))!.json<LinkRecord>();
     const legacyId = await deriveLongId(env.HUB_KEY, owner, words);
-    await env.LINKS.delete(recordKey(link.id));
-    await env.LINKS.put(recordKey(legacyId), JSON.stringify({ ...record, id: legacyId }));
+    await hubStorage.delete(env.HUB_DB, recordKey(link.id));
+    await hubStorage.put(env.HUB_DB, recordKey(legacyId), JSON.stringify({ ...record, id: legacyId }));
     expect((await request(`/${legacyId}`)).status).toBe(200);
     expect((await request(`/${legacyId}/preview.jpg`, { method: 'HEAD' })).status).toBe(200);
     expect(await create(input({ access: 'private' }))).toEqual({ id: legacyId, url: `${base}/${legacyId}`,
@@ -169,7 +171,7 @@ describe('unlisted records and social cards', () => {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ title })),
     })));
     expect(responses.map(response => response.status).sort()).toEqual([201, 409]);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(1);
   });
 
   it('escapes supplied metadata and never exposes ownership material on public pages', async () => {
@@ -248,7 +250,7 @@ describe('three-distinct-miss guard', () => {
   it('counts malformed IDs uniformly, while static misses and storage failures do not become strikes', async () => {
     const link = await create();
     for (let index = 0; index < 4; index++) expect((await request(`/assets/absent-${index}.js`)).status).toBe(404);
-    await env.LINKS.put(recordKey(link.id), 'not-json');
+    await hubStorage.put(env.HUB_DB, recordKey(link.id), 'not-json');
     for (let index = 0; index < 4; index++) expect((await request(`/${link.id}`)).status).toBe(503);
     expect(await (await guard()).lookup(null)).toBe(0);
     expect((await request('/%E0%A4%A')).status).toBe(404);
@@ -287,7 +289,7 @@ describe('ownership and request validation', () => {
     expect(await denied.text()).toBe(await missing.text());
     const deleted = await request(`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } });
     expect(deleted.status).toBe(204);
-    expect(await env.LINKS.get(recordKey(link.id))).toBeNull();
+    expect(await hubStorage.get(env.HUB_DB, recordKey(link.id))).toBeNull();
     expect((await request(`/${link.id}`)).status).toBe(404);
   });
 
@@ -311,7 +313,7 @@ describe('ownership and request validation', () => {
   ])('rejects invalid or unsafe input without saving a record: %j', async override => {
     const response = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...input(), ...override }) });
     expect(response.status).toBe(400);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(0);
     expect(vi.mocked(fetch)).not.toHaveBeenCalled();
   });
 
@@ -351,7 +353,7 @@ describe('ownership and request validation', () => {
     for (let index = 0; index < 20; index++) await create(input({ managementSecret: 'A'.repeat(42) + String.fromCharCode(65 + index) }));
     const denied = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input({ managementSecret: 'Z'.repeat(43) })) });
     expect(denied.status).toBe(429);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(20);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(20);
   });
 });
 
@@ -367,7 +369,7 @@ describe('opt-in results gallery', () => {
     expect(html).not.toContain('type="file"');
     expect(html).not.toContain('create-link');
     expect(html).not.toContain('challenges.cloudflare.com');
-    expect(await env.LINKS.get(recordKey(listed.id))).not.toBeNull();
+    expect(await hubStorage.get(env.HUB_DB, recordKey(listed.id))).not.toBeNull();
     const deleted = await request(`/api/links/${listed.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${'B'.repeat(43)}` } });
     expect(deleted.status).toBe(204);
     expect(await (await request('/', {}, ip, listings)).text()).not.toContain(listed.id);
@@ -379,8 +381,8 @@ describe('opt-in results gallery', () => {
     const listed = await create(input({ listed: true }), ip, listings);
     expect(listed.id).not.toBe(unlisted.id);
     expect(listed.id.replace('-L', '-')).not.toBe(unlisted.id);
-    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(1);
-    expect((await env.LINKS.list({ prefix: 'links/' })).objects).toHaveLength(1);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(1);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects).toHaveLength(1);
     expect(await create(input({ listed: true }), ip, listings)).toEqual(listed);
   });
 
@@ -400,9 +402,9 @@ describe('opt-in results gallery', () => {
 
   it('continues to read existing unlisted records that predate the listing field', async () => {
     const link = await create();
-    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<Record<string, unknown>>();
+    const record = await (await hubStorage.get(env.HUB_DB, recordKey(link.id)))!.json<Record<string, unknown>>();
     delete record.listed;
-    await env.LINKS.put(recordKey(link.id), JSON.stringify(record));
+    await hubStorage.put(env.HUB_DB, recordKey(link.id), JSON.stringify(record));
     expect((await request(`/${link.id}`)).status).toBe(200);
     expect(await (await request('/', {}, ip, listings)).text()).not.toContain(link.id);
   });

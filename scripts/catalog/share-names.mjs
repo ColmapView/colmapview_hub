@@ -12,15 +12,13 @@ export function validateNames(value) {
   return value.names;
 }
 
-export async function reserveCatalogName(bucket, datasetId, nextName) {
+export async function reserveCatalogName(reserve, datasetId, nextName) {
   if (!datasetPattern.test(datasetId)) throw new Error('Invalid public dataset ID');
   for (let attempt = 0; attempt < 64; attempt++) {
     const id = await nextName();
     if (!namePattern.test(id)) throw new Error('Invalid catalog name candidate');
     const value = { schemaVersion: 1, kind: 'catalog', id, datasetId, createdAt: new Date().toISOString() };
-    if (await bucket.put(`links/${id}.json`, JSON.stringify(value), {
-      onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType: 'application/json' },
-    })) return id;
+    if (await reserve(`links/${id}.json`, JSON.stringify(value))) return id;
   }
   throw new Error('Could not reserve a free catalog name');
 }

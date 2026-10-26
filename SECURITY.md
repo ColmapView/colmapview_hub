@@ -14,7 +14,7 @@ with the deployed Worker, its bindings and trusted maintainers:
   credentials stay outside Git. Use Cloudflare secret bindings. Public OAuth
   client IDs, the Turnstile site key and Cloudflare account/resource identifiers
   are configuration identifiers; they do not grant deployment or storage access.
-- Keep the R2 bucket private. Runtime records, pending submissions and private
+- Keep D1 accessible only through Worker bindings and authenticated operator tools. Runtime records, pending submissions and private
   dictionaries are not repository inputs or public build assets. The public feed
   returns only explicitly listed, server-verified metadata. Management keys are
   checked against stored hashes; they are not included in public records.
@@ -27,7 +27,7 @@ with the deployed Worker, its bindings and trusted maintainers:
   sources remain pending operator review. Origin/CORS checks alone do not
   authenticate callers, and Turnstile is not an ownership check.
 - Operator review uses the operator's Cloudflare credentials. Copying or forking
-  the source grants no access to the production bucket or deployment account.
+  the source grants no access to the production database or deployment account.
 
 See [publication](docs/publication.md) for checks and review, and
 [operations](docs/operations.md) for secrets and deployment.

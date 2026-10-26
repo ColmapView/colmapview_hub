@@ -1,16 +1,16 @@
 # Production setup
 
-Authenticate Wrangler with the Cloudflare account that owns the `opsiclear.com` zone. The account ID is set in `wrangler.jsonc`. Deployments need access to Workers routes, R2 and Durable Objects.
+Authenticate Wrangler with the Cloudflare account that owns the `opsiclear.com` zone. The account ID is set in `wrangler.jsonc`. Deployments need access to Workers routes, D1 and Durable Objects.
 
-The remembered-connection service was retired on October 20, 2026 after approval. The [retirement runbook](account-sessions.md) records namespace-deletion and secret-removal checks. Preserve this migration and the browser-only contract when deploying or rolling back; public Hub cards and the catalog keep their existing storage.
+The remembered-connection service was retired on October 20, 2026 after approval. The [retirement runbook](account-sessions.md) records namespace-deletion and secret-removal checks. Preserve this migration and the browser-only contract when deploying or rolling back; public Hub cards and the catalog remain available.
 
-1. Create the private R2 bucket `colmapview-hub`. Don't enable an R2 public URL or custom domain.
+1. Create D1 with `npx wrangler d1 create colmapview-hub`, set its `HUB_DB` binding/ID in `wrangler.jsonc`, then run `npx wrangler d1 migrations apply colmapview-hub --remote`. Existing deployments retain their configured database ID. No R2 binding or public database endpoint is used.
 2. Set `HUB_KEY` with `npx wrangler secret put HUB_KEY`: 32 cryptographically random bytes, encoded as unpadded base64url. Never put it in source, public assets or GitHub output.
-3. Prepare and upload the immutable private dictionary configuration from its private folder:
+3. Prepare and store the immutable private dictionary configuration from its private folder:
 
 ```sh
 node scripts/prepare-wordlists.mjs /absolute/private/dictionary-folder
-npx wrangler r2 object put colmapview-hub/internal/wordlists-v1.json --remote --file /absolute/private/dictionary-folder/wordlists-v1.json
+node scripts/set-wordlists.mjs --remote --file /absolute/private/dictionary-folder/wordlists-v1.json
 ```
 
 4. Optional: add a Transform Rule that sets `X-Hub-Verified-Bot` for Cloudflare's verified bots on `/hub/*` and `/s/*`, then run `npx wrangler secret put VERIFIED_BOT_TOKEN` with the same value. Also optional: a WAF rate-limiting rule covering both prefixes.
@@ -32,7 +32,7 @@ names. With the existing Wrangler account, run `npm run catalog:names -- --apply
 to reserve missing adjective/noun pairs, then `npm run catalog:names -- --verify`
 to check exact assigned keys. The allocator uses the existing private naming
 configuration only in process memory, samples with Web Crypto, and never lists
-unlisted records. Conditional R2 writes share the upload namespace, so an existing
+unlisted records. Conditional SQL inserts share the upload namespace, so an existing
 upload or concurrent reservation cannot be overwritten. No new credential is
 created.
 
@@ -46,3 +46,9 @@ management secret, source credential or duplicated preview. Public APIs cannot
 create or delete these reservations. The old dataset-code routes keep working.
 
 Public community submissions use a separate rollout. Production enables `HUB_PUBLICATIONS_ENABLED` with a managed Turnstile widget restricted to the two viewer hosts; keep `HUB_LISTINGS_ENABLED=false`. A missing Turnstile secret disables submissions. Follow [the publication setup and review runbook](publication.md), then test one verified listing, one pending source and one rejected challenge. Deploy the Hub before releasing the viewer button. Existing share links and the curated catalog do not depend on this flag.
+
+## Moving legacy share records to D1
+
+`node scripts/audit/migrate-links-to-d1.mjs --remote` inventories the detached legacy bucket without changing it. Add `--apply` for create-only import and verification of record contents, exact preview bytes and private naming configuration. `--verify` checks without inserting. A successful full pass also saves a private, Git-ignored ETag/checksum snapshot. Add `--incremental` for catch-up: unchanged source ETags reuse that verified source evidence while every database row is rechecked against its checksum. New sources are read and verified in full; missing or altered rows stop cutover. Counts and aggregate byte totals are saved under `.tmp/`; record contents and private dictionaries are not printed. Curated static assets stay in the normal build.
+
+Before the final copy, briefly pause link creation, publication and deletion while keeping existing reads available. Allow already-running writes to finish, rerun the import and verification, and deploy the D1 Worker. Keep the old bucket untouched and unbound for rollback; do not delete it as part of this migration. After cutover, new links exist only in D1, so rolling back to an old R2-only Worker requires reconciling post-cutover changes first. D1 migrations are append-only and must be applied before deploying code that needs them.

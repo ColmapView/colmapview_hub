@@ -5,13 +5,12 @@ import { reserveCatalogName, validateNames } from '../scripts/catalog/share-name
 const dataset = 'data-' + '0'.repeat(24);
 test('reserving a catalog name never overwrites an upload collision', async () => {
   const stored = new Map([['links/HappyTree.json', 'existing upload']]);
-  const bucket = { async put(key, value, options) {
-    assert.deepEqual(options.onlyIf, { etagDoesNotMatch: '*' });
+  const reserve = async (key, value) => {
     if (stored.has(key)) return null;
-    stored.set(key, value); return { key };
-  } };
+    stored.set(key, value); return true;
+  };
   const candidates = ['HappyTree', 'CalmStone'];
-  assert.equal(await reserveCatalogName(bucket, dataset, async () => candidates.shift()), 'CalmStone');
+  assert.equal(await reserveCatalogName(reserve, dataset, async () => candidates.shift()), 'CalmStone');
   assert.equal(stored.get('links/HappyTree.json'), 'existing upload');
   const alias = JSON.parse(stored.get('links/CalmStone.json'));
   assert.equal(alias.kind, 'catalog');
@@ -22,25 +21,25 @@ test('reserving a catalog name never overwrites an upload collision', async () =
 
 test('concurrent reservations cannot assign one name to two datasets', async () => {
   const stored = new Map();
-  const bucket = { async put(key, value) { if (stored.has(key)) return null; stored.set(key, value); return { key }; } };
+  const reserve = async (key, value) => { if (stored.has(key)) return false; stored.set(key, value); return true; };
   const first = ['HappyTree', 'CalmStone'], second = ['HappyTree', 'BrightRiver'];
   const result = await Promise.all([
-    reserveCatalogName(bucket, dataset, async () => first.shift()),
-    reserveCatalogName(bucket, 'data-' + '1'.repeat(24), async () => second.shift()),
+    reserveCatalogName(reserve, dataset, async () => first.shift()),
+    reserveCatalogName(reserve, 'data-' + '1'.repeat(24), async () => second.shift()),
   ]);
   assert.equal(new Set(result).size, 2);
   assert.equal(stored.size, 2);
 });
 
 test('invalid IDs and candidates cannot write to other namespaces', async () => {
-  const bucket = { put() { throw new Error('Unexpected write'); } };
-  await assert.rejects(reserveCatalogName(bucket, '../private', async () => 'HappyTree'), /Invalid public dataset/);
-  await assert.rejects(reserveCatalogName(bucket, dataset, async () => '../private'), /Invalid catalog name/);
+  const reserve = () => { throw new Error('Unexpected write'); };
+  await assert.rejects(reserveCatalogName(reserve, '../private', async () => 'HappyTree'), /Invalid public dataset/);
+  await assert.rejects(reserveCatalogName(reserve, dataset, async () => '../private'), /Invalid catalog name/);
 });
 
 test('an occupied namespace stops after a bounded number of attempts', async () => {
   let calls = 0;
-  await assert.rejects(reserveCatalogName({ async put() { calls++; return null; } }, dataset, async () => 'HappyTree'), /free catalog name/);
+  await assert.rejects(reserveCatalogName(async () => { calls++; return false; }, dataset, async () => 'HappyTree'), /free catalog name/);
   assert.equal(calls, 64);
 });
 

@@ -13,9 +13,11 @@ import { datasetShareId } from '../shared/dataset-share';
 import { isCatalogOpenUrl } from '../shared/catalog';
 import type { CatalogEntry } from '../shared/catalog';
 import { catalogEntryPage } from './catalog-pages';
+import { hubStorage } from './storage';
 import { retiredAuthRoute } from './retired-auth';
 import { publicationConfiguration, sharedDatasetResponse, submitPublication } from './publications';
 import { VIEWER_DOCUMENT_HEADER, viewerDocument } from './viewer-document';
+import { preferredViewerUrl, viewerHost } from '../shared/viewer-host';
 export { LookupGuard } from './guard';
 
 const UNAVAILABLE = 'The Hub is temporarily unavailable. Please try again.';
@@ -29,7 +31,7 @@ function json(value: unknown, status = 200, headers: Record<string, string> = {}
   return new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', ...headers } });
 }
 
-const redirect = (target: string, status: 307 | 308) => new Response(null, { status, headers: { Location: target } });
+const redirect = (target: string, status: 302 | 307 | 308) => new Response(null, { status, headers: { Location: target } });
 
 /**
  * Another site embedding or prefetching a card or preview gets a plain 404: no record read, no strike. A cross-site
@@ -138,7 +140,7 @@ async function createLink(request: Request, env: Env, ctx: ExecutionContext, loc
   if (wait) return blocked(location, true, wait);
   const input = parseCreateInput(await readBoundedJson(request), location.local);
   if (input.listed && !listingsEnabled(env)) return json({ error: 'Listings are turned off.' }, 403);
-  const words = await readWordlists(env.LINKS);
+  const words = await readWordlists(env.HUB_DB);
   const ownerHash = await hash(input.managementSecret);
   const metadata: LinkMetadata = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
     ...(input.license ? { license: input.license } : {}), ...(input.assets ? { assets: input.assets } : {}) };
@@ -155,22 +157,22 @@ async function createLink(request: Request, env: Env, ctx: ExecutionContext, loc
     : [...new Set(await Promise.all(Array.from({ length: 16 }, (_, attempt) => deriveShortId(env.HUB_KEY, input.managementSecret, words, attempt))))];
   // Check every candidate before using a vacancy: an earlier collision may have been deleted
   // since this owner's first request. Its existing link must still win on a retry.
-  const existing = await Promise.all(ids.map(id => readOwnership(env.LINKS, id)));
+  const existing = await Promise.all(ids.map(id => readOwnership(env.HUB_DB, id)));
   for (const [index, record] of existing.entries()) if (record && equalHashes(record.ownerHash, ownerHash)) return replay(ids[index], record);
   for (const [index, id] of ids.entries()) {
     if (existing[index]) continue;
     const record: LinkRecord = { ...metadata, schemaVersion: 1, id, ownerHash, fingerprint, createdAt: new Date().toISOString(),
       listed: input.listed, ...(input.access === 'private' ? { access: 'private' as const } : {}) };
-    const stored = await env.LINKS.put(recordKey(id), JSON.stringify(record), {
-      onlyIf: new Headers({ 'If-None-Match': '*' }), httpMetadata: { contentType: 'application/json' },
-      ...(record.listed ? { customMetadata: { title: record.title, createdAt: record.createdAt,
+    const stored = await hubStorage.put(env.HUB_DB, recordKey(id), JSON.stringify(record), {
+      createOnly: true,
+      ...(record.listed ? { listing: { title: record.title, createdAt: record.createdAt,
         ...(record.assets ? { assets: JSON.stringify(record.assets) } : {}) } } : {}),
     });
     if (stored) {
       if (record.listed) ctx.waitUntil(purgeGallery(location));
       return created(id);
     }
-    const current = await readOwnership(env.LINKS, id);
+    const current = await readOwnership(env.HUB_DB, id);
     if (current && equalHashes(current.ownerHash, ownerHash)) return replay(id, current);
   }
   return json({ error: long ? 'This link name is taken. Create a new link.' : 'No free link name. Create a new link.' }, 409);
@@ -183,8 +185,8 @@ async function lookup(request: Request, env: Env, location: HubLocation, url: UR
   let record: CardRecord | null = null;
   let dataset: CatalogEntry | null = null;
   try {
-    target = await lookupTarget(id, () => readWordlists(env.LINKS));
-    const stored = target ? await readShareRecord(env.LINKS, target.key) : null;
+    target = await lookupTarget(id, () => readWordlists(env.HUB_DB));
+    const stored = target ? await readShareRecord(env.HUB_DB, target.key) : null;
     if (stored && 'datasetId' in stored) {
       if (view === 'card') {
         const entry = await readIndividual(env.CATALOG_ASSETS, location.origin,
@@ -209,7 +211,8 @@ async function lookup(request: Request, env: Env, location: HubLocation, url: UR
     return datasetResponse(request, env, location, dataset);
   }
   if (!record) return failure(location, false, 404);
-  if (view === 'card' && navigation) return viewerDocument(env, location, record.viewerUrl);
+  if (view === 'card' && navigation) return location.viewerHost
+    ? redirect(preferredViewerUrl(record.viewerUrl, location.viewerHost), 302) : viewerDocument(env, location, record.viewerUrl);
   const linkBase = url.pathname.startsWith(`${SHARE_PATH}/`) ? `${location.origin}${SHARE_PATH}` : location.base;
   if (target?.redirect) return redirect(`${linkBase}${view === 'manage' ? '/manage' : ''}/${record.id}${view === 'preview' ? '/preview.jpg' : ''}${url.search}`, 308);
   if (view === 'preview') return new Response(base64Bytes(record.thumbnailBase64), { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=300' } });
@@ -230,7 +233,7 @@ async function deleteLink(request: Request, env: Env, ctx: ExecutionContext, loc
   const secret = presented && SECRET_PATTERN.test(presented) ? presented : undefined;
   let owned: boolean;
   try {
-    const record = secret && ID_PATTERN.test(id) ? await readOwnership(env.LINKS, id) : null;
+    const record = secret && ID_PATTERN.test(id) ? await readOwnership(env.HUB_DB, id) : null;
     owned = secret ? equalHashes(record?.ownerHash ?? '0'.repeat(64), await hash(secret)) : false;
   } catch (error) {
     const refusal = await check(null);
@@ -241,7 +244,7 @@ async function deleteLink(request: Request, env: Env, ctx: ExecutionContext, loc
   const refusal = await check(owned ? null : await hash(missKey(id)));
   if (refusal) return refusal;
   if (!owned) return failure(location, true, 404);
-  await env.LINKS.delete(recordKey(id));
+  await hubStorage.delete(env.HUB_DB, recordKey(id));
   if (isListedId(id)) ctx.waitUntil(purgeGallery(location));
   return new Response(null, { status: 204 });
 }
@@ -253,11 +256,11 @@ async function home(request: Request, env: Env, ctx: ExecutionContext, location:
   if (refusal) return refusal;
   const cursor = url.searchParams.get('cursor') ?? undefined;
   if (cursor && cursor.length > 2048) throw new InputError('Invalid page cursor.');
-  // Listed pages change rarely; a minute of caching spares the R2 listing.
+  // Listed pages change rarely; a minute of caching spares the database listing.
   const key = galleryKey(location, cursor);
   const cached = await caches.default.match(key);
   if (cached) return cached;
-  const page = html(galleryPage(location, await listPublicRecords(env.LINKS, cursor)), 200, { 'Cache-Control': 'public, max-age=60' });
+  const page = html(galleryPage(location, await listPublicRecords(env.HUB_DB, cursor)), 200, { 'Cache-Control': 'public, max-age=60' });
   ctx.waitUntil(caches.default.put(key, page.clone()));
   return page;
 }
@@ -270,9 +273,10 @@ function decodeId(value: string): string {
 async function datasetResponse(request: Request, env: Env, location: HubLocation, entry: CatalogEntry): Promise<Response> {
   if (request.headers.get('Sec-Fetch-Dest') === 'document' || request.headers.get('Sec-Fetch-Mode') === 'navigate') {
     const target = entry.openUrl && (entry.viewerUrl || entry.candidateViewerUrl);
-    if (target && isCatalogOpenUrl(target)) return viewerDocument(env, location, target);
+    if (target && isCatalogOpenUrl(target)) return location.viewerHost
+      ? redirect(preferredViewerUrl(target, location.viewerHost), 302) : viewerDocument(env, location, target);
   }
-  return html(catalogEntryPage(entry, false), 200, { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' });
+  return html(catalogEntryPage(entry, false, location.viewerHost), 200, { Vary: 'Sec-Fetch-Dest, Sec-Fetch-Mode' });
 }
 
 async function lookupDataset(request: Request, env: Env, location: HubLocation, code: string, validPath: boolean): Promise<Response> {
@@ -357,6 +361,7 @@ export default {
     try { location = hubLocation(env); }
     catch { return withSharedHeaders(request, json({ error: UNAVAILABLE }, 503)); }
     const url = new URL(request.url);
+    location = { ...location, viewerHost: viewerHost(url.searchParams) };
     const api = url.pathname.startsWith(`${location.path}/api/`) || url.pathname.startsWith(`${location.path}/datasets/api/`);
     let result: Response;
     try { result = await route(request, env, ctx, location, url); }

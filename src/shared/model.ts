@@ -1,5 +1,5 @@
-export const PREVIEW_WIDTH = 600;
-export const PREVIEW_HEIGHT = 315;
+export const PREVIEW_WIDTH = 320;
+export const PREVIEW_HEIGHT = 168;
 export const MAX_PREVIEW_BYTES = 64 * 1024;
 export const MAX_REQUEST_BYTES = 128 * 1024;
 /** A stored record adds hashes, an ID and timestamps to a request; this keeps every accepted request readable. */

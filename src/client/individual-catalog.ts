@@ -6,9 +6,11 @@ import { catalogHistory } from './catalog-history';
 import type { CatalogHistoryMode } from './catalog-history';
 import { recallFeed, rememberFeed, restoreFeedPosition } from './feed-memory';
 import { defaultFeedSeed, FEED_MODES } from '../shared/discovery';
+import { viewerHost } from '../shared/viewer-host';
 
 const form = document.querySelector<HTMLFormElement>('#individual-search');
 if (form && document.querySelector('#catalog-more') && document.querySelector('#catalog-status')) {
+  const host = viewerHost(new URLSearchParams(location.search));
   const results = document.querySelector<HTMLElement>('#catalog-results')!;
   const count = document.querySelector<HTMLElement>('#catalog-count')!;
   const status = document.querySelector<HTMLElement>('#catalog-status')!;
@@ -155,7 +157,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (firstPage > 1) committed.set('page', String(firstPage)); else committed.delete('page');
     entries = saved.data.entries; loaded = entries.length; total = saved.data.total; pages = saved.data.pages;
     for (const field of fields) field.value = committed.get(field.name) || '';
-    results.replaceChildren(...entries.map(catalogCardElement));
+    results.replaceChildren(...entries.map(entry => catalogCardElement(entry, host)));
     results.removeAttribute('aria-busy');
     selection.textContent = saved.collectionText; selection.hidden = !saved.collectionText;
     status.textContent = ''; canAppend = true; more.disabled = false; automaticPaused = false;
@@ -233,7 +235,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
         });
         if (controller.signal.aborted || sequence !== request) return;
       }
-      const cards = data.entries.map(catalogCardElement);
+      const cards = data.entries.map(entry => catalogCardElement(entry, host));
       if (data.feed) {
         if (options.append && (data.feed.seed !== committed.get('seed') || data.feed.mode !== (committed.get('sort') || 'discover'))) {
           failure = 'The feed order changed. Use Search to refresh these results.';
@@ -311,7 +313,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   document.querySelector<HTMLAnchorElement>('#catalog-reset')!.addEventListener('click', event => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    for (const field of fields) field.value = '';
+    for (const field of fields) if (field.name !== 'viewerHost') field.value = '';
     search();
   });
   const freshSeed = () => {

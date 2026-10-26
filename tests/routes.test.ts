@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ID_PATTERN } from '../src/shared/model';
@@ -6,11 +7,11 @@ import { base, create, input, ip, listings, request, resetState } from './helper
 
 beforeEach(resetState);
 
-/** Counts R2 record reads: each call returns the keys read since the previous call. Word-list reads don't count. */
+/** Counts database record reads: each call returns the keys read since the previous call. Word-list reads don't count. */
 function recordReads(): () => string[] {
-  const get = vi.spyOn(env.LINKS, 'get');
+  const get = vi.spyOn(hubStorage, 'get');
   return () => {
-    const keys = get.mock.calls.map(([key]) => key).filter(key => key !== WORDLIST_KEY);
+    const keys = get.mock.calls.map(([, key]) => key).filter(key => key !== WORDLIST_KEY);
     get.mockClear();
     return keys;
   };
@@ -77,7 +78,7 @@ describe('routes', () => {
 
   it('shows the unavailable page for storage failures and keeps API errors in JSON', async () => {
     const link = await create(input());
-    await env.LINKS.put(recordKey(link.id), 'not-json');
+    await hubStorage.put(env.HUB_DB, recordKey(link.id), 'not-json');
     const page = await request(`/${link.id}`);
     expect(page.status).toBe(503);
     expect(await page.text()).toContain('ColmapView Hub is unavailable');
@@ -125,11 +126,11 @@ describe('routes', () => {
   });
 
   it('never reroutes a name whose own split is a valid word pair', async () => {
-    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['quick', 'quickf'], nouns: ['forest', 'orest'] }));
+    await hubStorage.put(env.HUB_DB, WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['quick', 'quickf'], nouns: ['forest', 'orest'] }));
     resetWordlistCache();
     const link = await create(input());
-    const record = await (await env.LINKS.get(recordKey(link.id)))!.json<Record<string, unknown>>();
-    for (const id of ['QuickForest', 'QuickfOrest']) await env.LINKS.put(recordKey(id), JSON.stringify({ ...record, id, title: `Result ${id}` }));
+    const record = await (await hubStorage.get(env.HUB_DB, recordKey(link.id)))!.json<Record<string, unknown>>();
+    for (const id of ['QuickForest', 'QuickfOrest']) await hubStorage.put(env.HUB_DB, recordKey(id), JSON.stringify({ ...record, id, title: `Result ${id}` }));
     for (const id of ['QuickfOrest', 'QuickForest']) {
       const response = await request(`/${id}`);
       expect(response.status, id).toBe(200);
@@ -139,7 +140,7 @@ describe('routes', () => {
 
   it('reads canonical names as typed while the word lists are unavailable', async () => {
     const link = await create(input());
-    await env.LINKS.delete(WORDLIST_KEY);
+    await hubStorage.delete(env.HUB_DB, WORDLIST_KEY);
     resetWordlistCache();
     expect((await request(`/${link.id}`)).status).toBe(200);
     expect((await request(`/${link.id.toLowerCase()}`)).status).toBe(503);

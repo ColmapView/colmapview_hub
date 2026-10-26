@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { recordKey, resetWordlistCache, WORDLIST_KEY } from '../src/worker/records';
@@ -8,8 +9,8 @@ import { create, input, ip, listings, post, remove, request, resetState } from '
 beforeEach(resetState);
 
 async function rewrite(id: string, change: (record: Record<string, unknown>) => Record<string, unknown>) {
-  const record = await (await env.LINKS.get(recordKey(id)))!.json<Record<string, unknown>>();
-  await env.LINKS.put(recordKey(id), JSON.stringify(change(record)));
+  const record = await (await hubStorage.get(env.HUB_DB, recordKey(id)))!.json<Record<string, unknown>>();
+  await hubStorage.put(env.HUB_DB, recordKey(id), JSON.stringify(change(record)));
 }
 
 describe('tolerant reads', () => {
@@ -72,7 +73,7 @@ describe('tolerant reads', () => {
   it('logs and skips an invalid gallery listing', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const valid = await create(input({ listed: true, title: 'Listed result' }), ip, listings);
-    await env.LINKS.put('listed/BadListing-LAAAAAAAAAAAAAAAA.json', '{}', { customMetadata: { title: '', createdAt: 'never' } });
+    await hubStorage.put(env.HUB_DB, 'listed/BadListing-LAAAAAAAAAAAAAAAA.json', '{}', { listing: { title: '', createdAt: 'never' } });
     const page = await request('/', {}, ip, listings);
     expect(page.status).toBe(200);
     expect(await page.text()).toContain(valid.id);
@@ -81,11 +82,11 @@ describe('tolerant reads', () => {
 
   it('reads the word lists once per isolate and retries after a failed read', async () => {
     await create(input());
-    await env.LINKS.delete(WORDLIST_KEY);
+    await hubStorage.delete(env.HUB_DB, WORDLIST_KEY);
     await create(input({ managementSecret: 'B'.repeat(43) }));
     resetWordlistCache();
     expect((await post(input({ managementSecret: 'C'.repeat(43) }))).status).toBe(503);
-    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['calm'], nouns: ['river'] }));
+    await hubStorage.put(env.HUB_DB, WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['calm'], nouns: ['river'] }));
     expect((await create(input({ managementSecret: 'D'.repeat(43) }))).id).toBe('CalmRiver');
   });
 
@@ -95,9 +96,13 @@ describe('tolerant reads', () => {
     const started = new Promise<void>(resolve => { reading = resolve; });
     const gate = new Promise<void>(resolve => { release = resolve; });
     // Stands in for a read whose request was cancelled: it settles only when released.
-    const stalling = { put: env.LINKS.put.bind(env.LINKS),
-      get: async (key: string) => { if (key === WORDLIST_KEY) { reading(); await gate; } return env.LINKS.get(key); } } as unknown as R2Bucket;
-    const first = post(input(), ip, { LINKS: stalling });
+    const read = hubStorage.get;
+    let stalled = false;
+    vi.spyOn(hubStorage, 'get').mockImplementation(async (database, key) => {
+      if (key === WORDLIST_KEY && !stalled) { stalled = true; reading(); await gate; }
+      return read(database, key);
+    });
+    const first = post(input(), ip);
     await started;
     const second = post(input({ managementSecret: 'B'.repeat(43) }));
     const outcome = await Promise.race([second.then(() => 'finished'), scheduler.wait(2000).then(() => 'waited')]);
@@ -111,7 +116,7 @@ describe('tolerant reads', () => {
     const nouns = Array.from({ length: 8192 }, (_, index) => `noun${letters(index).padStart(10, 'a')}`);
     const body = JSON.stringify({ version: 1, adjectives: ['calm'], nouns });
     expect(body.length).toBeGreaterThan(128 * 1024);
-    await env.LINKS.put(WORDLIST_KEY, body);
+    await hubStorage.put(env.HUB_DB, WORDLIST_KEY, body);
     resetWordlistCache();
     expect((await create(input())).id).toMatch(/^Calm[A-Z][a-z]+$/);
   });

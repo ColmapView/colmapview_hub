@@ -37,10 +37,12 @@
     // back to true would route static files through the Worker again.
     "run_worker_first": ["/auth/*", "/s", "/s/*", "/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/datasets/individual/*", "!/hub/datasets/*.manifest.json", "!/hub/datasets/audit*", "!/hub/datasets/catalog*", "!/hub/datasets/dataset-audit.json"]
   },
-  "r2_buckets": [
+  "d1_databases": [
     {
-      "binding": "LINKS",
-      "bucket_name": "colmapview-hub"
+      "binding": "HUB_DB",
+      "database_name": "colmapview-hub",
+      "database_id": "2cf3f730-e26e-405e-9842-502ac73af761",
+      "migrations_dir": "migrations"
     }
   ],
   "ratelimits": [

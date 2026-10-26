@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { base, mockViewerDocument, request, resetState } from './helpers';
@@ -8,7 +9,7 @@ beforeEach(resetState);
 
 it('keeps catalog short-link misses guarded and rejects embeds before metadata or private reads', async () => {
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   for (const code of ['not-one', 'not-two', 'not-three']) {
     expect((await request(`/../s/d/${code}`, { headers: { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'iframe' } })).status).toBe(404);
     expect((await request(`/../s/d/${code}`, { headers: { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'document', 'Sec-Purpose': 'prefetch' } })).status).toBe(404);
@@ -24,7 +25,7 @@ it('keeps catalog short-link misses guarded and rejects embeds before metadata o
 
 it('rejects invalid feed modes and seeds before any public or private data read', async () => {
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   for (const query of ['sort=trending', 'sort=constructor', 'seed=short', 'seed=../private', `seed=${'a'.repeat(33)}`]) {
     const response = await request(`/datasets/api/entries?${query}`);
     expect(response.status).toBe(400);
@@ -42,7 +43,7 @@ it('keeps seeded feed caches separate and retains deterministic pages without pr
     { level: 'native_layout_checked', delivery: 'cors_headers_checked', viewerUrl: 'https://colmapview.opsiclear.com/?url=https%3A%2F%2Fexample.org%2Fscene',
       sceneCompatibility: { status: 'native_headers_checked', cameraRecordChecked: true, poseRecordChecked: true, cameras: 1, images: 2, points: 0 } },
   ]);
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async input => {
     const key = new URL(input instanceof Request ? input.url : String(input)).pathname.split('/individual/')[1];
     if (key === 'index.json') return Response.json({ schemaVersion: 1, generation: 'feed-cache', total: rows.length, packSize: 24,
@@ -86,7 +87,7 @@ it('keeps seeded feed caches separate and retains deterministic pages without pr
 });
 
 it('redirects retired browse pages without reading metadata or private records', async () => {
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
   for (const path of ['', '/', '/datasets/collections', '/datasets/collections.html', '/datasets/collections/',
     '/datasets/collection-page-2', '/datasets/collection-page-2.html', '/datasets/page-3/']) {
@@ -106,7 +107,7 @@ it('redirects retired browse pages without reading metadata or private records',
 it('redirects only current collection identities and preserves their scene filters', async () => {
   const id = 'hf-kept-source-0123456789ab';
   const removed = 'public-removed-source-0123456789ab';
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async () => Response.json({
     schemaVersion: 1, generation: 'a'.repeat(64), total: 1, packSize: 2048, sources: [{ id, count: 1 }, { id: removed, count: 0 }],
   }));
@@ -127,7 +128,7 @@ it('redirects only current collection identities and preserves their scene filte
 });
 
 it('keeps public catalog misses separate from private share-link lookups and their cooldown', async () => {
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   for (let attempt = 0; attempt < 5; attempt++) {
     const response = await request('/datasets/entry/not-a-valid-model-id');
     expect(response.status).toBe(404);
@@ -140,7 +141,7 @@ it('keeps public catalog misses separate from private share-link lookups and the
 });
 
 it('validates bounded public searches before any catalog or private-record read', async () => {
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch');
   const response = await request('/datasets/api/entries?q=one+two+three+four+five+six+seven');
   expect(response.status).toBe(400);
@@ -232,7 +233,7 @@ it('opens the exact public model without a provider fetch and keeps restricted m
       kinds: {}, levels: {}, delivery: {}, incompleteCollections: 0, scope: 'Test model.' },
     'ids/00.json': { [id]: 0 }, 'packs/0.json': [row], [`sources/${source.id}.json`]: parent,
   };
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   const keys: string[] = [];
   vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async resource => {
     const url = new URL(resource instanceof Request ? resource.url : String(resource));
@@ -331,7 +332,7 @@ it.each([0, -1, 1.5, 2049, '24'])('rejects invalid metadata pack size %s before 
   const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async () => Response.json({
     schemaVersion: 1, generation: 'invalid-pack-size', total: 1, packSize, sources: [],
   }));
-  const records = vi.spyOn(env.LINKS, 'get');
+  const records = vi.spyOn(hubStorage, 'get');
   const response = await request('/datasets/api/entries');
   expect(response.status).toBe(503);
   expect(assets).toHaveBeenCalledTimes(1);

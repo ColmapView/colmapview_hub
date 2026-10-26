@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { assets, base, create, input, ip, listings, request, resetState } from './helpers';
@@ -57,7 +58,7 @@ describe('Hub pages', () => {
     const html = await (await request(`/manage/${link.id}`)).text();
     expect(html).toContain('<h1>Delete Hub link “Demo reconstruction”?</h1>');
     expect(html).toContain('<p class="lede">The dataset stays where it is.</p>');
-    expect(html).toContain(`<img class="thumbnail" src="${base}/${link.id}/preview.jpg" width="600" height="315" alt="">`);
+    expect(html).toContain(`<img class="thumbnail" src="${base}/${link.id}/preview.jpg" width="320" height="168" alt="">`);
     expect(html).toContain('<button type="submit" class="button button-danger">Delete permanently</button>');
     expect(html).not.toContain('type="checkbox"');
     expect((await request('/manage/MissingOne')).status).toBe(404);
@@ -84,7 +85,7 @@ describe('Hub pages', () => {
   it('gives gallery images empty alt text, because the card text names the link', async () => {
     const link = await create(input({ listed: true, title: 'Listed result' }), ip, listings);
     const html = await (await request('/', {}, ip, listings)).text();
-    expect(html).toContain(`<img src="/hub/${link.id}/preview.jpg" width="600" height="315" loading="lazy" alt="">`);
+    expect(html).toContain(`<img src="/hub/${link.id}/preview.jpg" width="320" height="168" loading="lazy" alt="">`);
     expect(html).not.toContain('alt="Listed result"');
   });
 
@@ -92,7 +93,7 @@ describe('Hub pages', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     // These keys sort before every test word pair, so they fill the first page.
     for (let index = 0; index < 12; index++) {
-      await env.LINKS.put(`listed/Aaa${String(index).padStart(2, '0')}.json`, '{}', { customMetadata: { title: '', createdAt: 'never' } });
+      await hubStorage.put(env.HUB_DB, `listed/Aaa${String(index).padStart(2, '0')}.json`, '{}', { listing: { title: '', createdAt: 'never' } });
     }
     const valid = await create(input({ listed: true, title: 'Listed result' }), ip, listings);
     const first = await (await request('/', {}, ip, listings)).text();

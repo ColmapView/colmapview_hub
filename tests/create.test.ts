@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MAX_RECORD_BYTES } from '../src/shared/model';
@@ -7,9 +8,9 @@ import { assets, create, input, ip, listings, origin, owner, post, remove, reque
 
 beforeEach(resetState);
 
-const stored = async (id: string) => (await env.LINKS.get(recordKey(id)))!.json<Record<string, unknown>>();
-const recordCount = async () => (await env.LINKS.list({ prefix: 'links/' })).objects.length
-  + (await env.LINKS.list({ prefix: 'listed/' })).objects.length;
+const stored = async (id: string) => (await hubStorage.get(env.HUB_DB, recordKey(id)))!.json<Record<string, unknown>>();
+const recordCount = async () => (await hubStorage.list(env.HUB_DB, { namespace: 'links', limit: 1000 })).objects.length
+  + (await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects.length;
 
 describe('creation contract', () => {
   it('treats a request without access as public and stores access only on private links', async () => {
@@ -106,7 +107,7 @@ describe('creation contract', () => {
     const license = { id: '€'.repeat(80), name: '€'.repeat(160), url: `https://licenses.example/${'a'.repeat(2048 - 25)}` };
     expect(license.url).toHaveLength(2048);
     const link = await create(input({ viewerUrl, title: '€'.repeat(120), description: '€'.repeat(280), license, assets }));
-    expect((await env.LINKS.head(recordKey(link.id)))!.size).toBeLessThan(MAX_RECORD_BYTES);
+    expect((await hubStorage.get(env.HUB_DB, recordKey(link.id)))!.size).toBeLessThan(MAX_RECORD_BYTES);
     expect((await request(`/${link.id}`)).status).toBe(200);
     expect((await remove(link.id)).status).toBe(204);
     expect(await recordCount()).toBe(0);
@@ -128,7 +129,7 @@ describe('names follow access', () => {
     const legacy = await create(input({ access: 'private' }));
     const record = await stored(legacy.id);
     delete record.access;
-    await env.LINKS.put(recordKey(legacy.id), JSON.stringify(record));
+    await hubStorage.put(env.HUB_DB, recordKey(legacy.id), JSON.stringify(record));
     const short = await create(input());
     expect(short.id).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+$/);
     expect((await request(`/${legacy.id}`)).status).toBe(200);
@@ -137,14 +138,14 @@ describe('names follow access', () => {
   it('refuses a private request whose long name another owner holds', async () => {
     const id = await deriveLongId(env.HUB_KEY, owner, words, false);
     const other = await create(input({ access: 'private', managementSecret: 'B'.repeat(43) }));
-    await env.LINKS.put(recordKey(id), JSON.stringify({ ...await stored(other.id), id }));
+    await hubStorage.put(env.HUB_DB, recordKey(id), JSON.stringify({ ...await stored(other.id), id }));
     const response = await post(input({ access: 'private' }));
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ error: 'This link name is taken. Create a new link.' });
   });
 
   it('answers 409 when every short name is taken', async () => {
-    await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
+    await hubStorage.put(env.HUB_DB, WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
     resetWordlistCache();
     await create(input());
     const response = await post(input({ managementSecret: 'B'.repeat(43), title: 'Replacement' }));

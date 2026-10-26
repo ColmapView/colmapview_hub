@@ -7,6 +7,7 @@ import { individualSelection } from '../shared/individual-catalog';
 import { isCatalogOpenUrl, datasetPath } from '../shared/catalog';
 import { HUB_UI_VERSION } from '../shared/ui-version';
 import { defaultFeedSeed } from '../shared/discovery';
+import { preferredViewerUrl } from '../shared/viewer-host';
 
 const REVALIDATE = 'public, no-cache, must-revalidate, no-transform';
 const respond = (request: Request, response: Response, freshFeed = false) => {
@@ -19,7 +20,7 @@ const respond = (request: Request, response: Response, freshFeed = false) => {
 };
 
 /** A public, operator-built metadata namespace. No user-created share record,
- * management secret, R2 listing, or private lookup path is reachable here. */
+ * management secret, database listing, or private lookup path is reachable here. */
 export async function individualRoute(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
   const path = url.pathname.slice(location.path.length);
   const api = path.startsWith('/datasets/api/');
@@ -55,9 +56,10 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
     const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, open[1]);
     if (!model) return fail(404, 'Dataset entry not found.');
     const target = model.openUrl && (model.viewerUrl || model.candidateViewerUrl);
-    return new Response(null, { status: 302, headers: { Location: target && isCatalogOpenUrl(target) ? target : datasetPath(model), 'Cache-Control': 'no-store' } });
+    return new Response(null, { status: 302, headers: { Location: target && isCatalogOpenUrl(target) ? preferredViewerUrl(target, location.viewerHost) : datasetPath(model), 'Cache-Control': 'no-store' } });
   }
   const cacheQuery = new URLSearchParams(filters);
+  if (location.viewerHost) cacheQuery.set('viewerHost', location.viewerHost);
   cacheQuery.set('_catalog', index.generation);
   cacheQuery.set('_ui', HUB_UI_VERSION);
   const key = new Request(`${location.origin}${url.pathname}?${cacheQuery}`);
@@ -67,7 +69,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   if (entry) {
     const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, entry[1]);
     if (!model) return fail(404, 'Dataset entry not found.');
-    body = catalogEntryPage(model);
+    body = catalogEntryPage(model, true, location.viewerHost);
   } else {
     const result = await searchIndividuals(env.CATALOG_ASSETS, location.origin, index, filters);
     body = api ? JSON.stringify({ ...result, ...(index.unit ? { unit: index.unit } : {}), dataset: individualSelection(index.sources, filters.get('dataset') || '') })

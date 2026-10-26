@@ -81,6 +81,7 @@ export function intersectPostings(left: Uint32Array, right: Uint32Array): Uint32
 export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'license', 'licenseCategory', 'kind', 'status', 'delivery', 'viewer', 'photos', 'data', 'sort', 'seed', 'page'] as const;
 export function individualFilters(input: URLSearchParams): URLSearchParams {
   const filters = new URLSearchParams();
+  if (input.get('viewerHost') === 'github') filters.set('viewerHost', 'github');
   for (const key of INDIVIDUAL_FILTERS) {
     const value = input.get(key)?.trim();
     if (!value) continue;

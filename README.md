@@ -17,7 +17,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5201/hub/`. Development uses local R2/Durable Object state and public fixture word lists. The launcher creates `.dev.vars` from the example only when the file does not exist. See the [development guide](docs/development.md) for environment overrides, tests and shared styles.
+Open `http://localhost:5201/hub/`. Development uses local D1/Durable Object state and public fixture word lists. The launcher creates `.dev.vars` from the example only when the file does not exist. See the [development guide](docs/development.md) for environment overrides, tests and shared styles.
 
 ## Commands
 

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.18.0 — 2026-10-26
+
+- Move share records, stable catalog aliases, pending publications and private naming configuration to D1. Store preview JPEG bytes separately from metadata, use atomic create-only reservations and review promotion, and query only verified public metadata for discovery. Remove the runtime R2 binding while preserving legacy links and preview compatibility.
+- Accept compact 320 × 168 browser previews alongside legacy 600 × 315 images. Document migration, backups and local D1 tooling.
+- Keep visitors arriving from the GitHub viewer on GitHub when launching datasets through catalog searches, asynchronous results, metadata and shared cards. Preserve canonical copied links and avoid saved preferences.
+
 ## 0.15.0 — 2026-10-25
 
 - Give every curated dataset a stable adjective-and-noun address in the same `/s/Name` format as upload shares. Reserve names conditionally in R2 to prevent collisions, retain the public ID-to-name registry and keep old dataset-code links working without redirects.

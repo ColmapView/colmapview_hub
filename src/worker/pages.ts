@@ -5,6 +5,8 @@ import { HUB_UI_VERSION } from '../shared/ui-version';
 import { ANALYTICS_CONSENT_REVISION } from '../shared/analytics-consent';
 import { assetLine } from '../shared/asset-summary';
 import { icon } from '../shared/icons';
+import { hubViewerLink, viewerHome } from '../shared/viewer-host';
+import type { ViewerHost } from '../shared/viewer-host';
 export { assetLine } from '../shared/asset-summary';
 export { escapeHtml } from '../shared/html';
 
@@ -17,6 +19,7 @@ export interface HubLocation {
   base: string;
   /** True when the Hub itself runs on loopback, for local development. */
   local: boolean;
+  viewerHost?: ViewerHost;
 }
 
 export function hubLocation(env: Env): HubLocation {
@@ -38,15 +41,15 @@ const themeControl = () => [
   '</button>',
 ].join('');
 
-const viewerControl = () => `<a class="button icon-button" href="${VIEWER}/" aria-label="Open viewer" title="Open viewer">${icon('viewer')}</a>`;
+const viewerControl = (host?: ViewerHost) => `<a class="button icon-button" href="${viewerHome(host)}" aria-label="Open viewer" title="Open viewer">${icon('viewer')}</a>`;
 
-const header = (path: string, filters?: string) => [
+const header = (path: string, filters?: string, host?: ViewerHost) => [
   `<header class="site-header${filters ? ' catalog-toolbar' : ''}">`,
-  `<a class="brand" href="${escapeHtml(path)}/datasets/" aria-label="ColmapView Hub"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></a>`,
+  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/datasets/', host))}" aria-label="ColmapView Hub"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></a>`,
   ...(filters ? [filters] : [
   '<nav class="site-nav" aria-label="Main navigation">',
-  `<a class="button icon-button" href="${escapeHtml(path)}/datasets/" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
-  viewerControl(),
+  `<a class="button icon-button" href="${escapeHtml(hubViewerLink(path + '/datasets/', host))}" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
+  viewerControl(host),
   '</nav>',
   themeControl(),
   ]),
@@ -91,10 +94,10 @@ export function page(location: HubLocation, title: string, body: string, metadat
     `<script type="module" src="${asset('assets/client.js')}?v=${HUB_UI_VERSION}"></script>`,
     `</head><body${catalog ? ' class="catalog-browse"' : ''}>`,
     '<a class="skip-link" href="#main">Skip to content</a>',
-    header(location.path, catalog?.filters),
+    header(location.path, catalog?.filters, location.viewerHost),
     `<main id="main" tabindex="-1"><div class="hub-content">${body}</div></main>`,
     footer(publicCatalog),
-    catalog ? `<section class="catalog-footbar" aria-label="Catalog status">${catalog.status}${viewerControl()}${themeControl()}</section>` : '',
+    catalog ? `<section class="catalog-footbar" aria-label="Catalog status">${catalog.status}${viewerControl(location.viewerHost)}${themeControl()}</section>` : '',
     '</body></html>',
   ].join('');
 }
@@ -116,8 +119,6 @@ function socialMetadata(pageUrl: string, title: string, description: string): st
     `<meta property="og:description" content="${safeDescription}">`,
     `<meta property="og:image" content="${image}">`,
     '<meta property="og:image:type" content="image/jpeg">',
-    `<meta property="og:image:width" content="${PREVIEW_WIDTH}">`,
-    `<meta property="og:image:height" content="${PREVIEW_HEIGHT}">`,
     `<meta property="og:image:alt" content="${safeTitle}">`,
     '<meta name="twitter:card" content="summary_large_image">',
     `<meta name="twitter:title" content="${safeTitle}">`,

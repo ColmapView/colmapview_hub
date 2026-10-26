@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { input, ip, listings, origin, post, request, resetState } from './helpers';
@@ -50,8 +51,8 @@ describe('public Hub submissions', () => {
     { viewerUrl: `${origin}/?url=${encodeURIComponent('https://x.example/file.zip?access_token=do-not-save')}` },
   ])('rejects invalid submissions before saving anything: %j', async overrides => {
     expect((await submit(body(overrides))).status).toBe(400);
-    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(0);
-    expect((await env.LINKS.list({ prefix: 'pending-publications/' })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'pending-publications', limit: 1000 })).objects).toHaveLength(0);
   });
   it.each([
     { success: false }, { success: true, hostname: 'attacker.example', action: 'hub-publication' },
@@ -60,7 +61,7 @@ describe('public Hub submissions', () => {
     vi.mocked(fetch).mockResolvedValue(Response.json(result));
     expect((await submit()).status).toBe(403);
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(0);
   });
   it('does not accept dummy Turnstile secrets on a production host', async () => {
     expect((await submit(body(), { ...settings, HUB_TURNSTILE_SECRET: '1x0000000000000000000000000000000AA' })).status).toBe(503);
@@ -81,7 +82,7 @@ describe('public Hub submissions', () => {
   });
   it('limits feed reads before storage access, using a hashed network identity', async () => {
     const limit = vi.fn(async () => ({ success: false }));
-    const list = vi.spyOn(env.LINKS, 'list');
+    const list = vi.spyOn(hubStorage, 'list');
     const response = await request('/api/publications', {}, ip, { HUB_PUBLICATION_READS: { limit } });
     expect(response.status).toBe(429); expect(response.headers.get('Retry-After')).toBe('60');
     expect(limit).toHaveBeenCalledWith({ key: await clientIdentity(env.HUB_KEY, ip) });
@@ -95,7 +96,7 @@ describe('public Hub submissions', () => {
     expect(challengeRequest.redirect).toBe('manual');
     const result = await response.json<{ id: string; status: string; shareUrl: string }>();
     expect(result.status).toBe('published');
-    const object = await env.LINKS.get(recordKey(result.id));
+    const object = await hubStorage.get(env.HUB_DB, recordKey(result.id));
     const record = await object!.json<Record<string, unknown>>();
     expect(record.verification).toMatchObject({ method: 'hf_colmap_headers', revision, cameras: 2, registeredImages: 2 });
     expect(new URL(String(record.viewerUrl)).searchParams.get('url')).toBe(`https://huggingface.co/datasets/owner/scene/resolve/${revision}/`);
@@ -110,8 +111,8 @@ describe('public Hub submissions', () => {
     const response = await submit(body({ viewerUrl: `${origin}/?url=https://bucket.example/scene.zip` }));
     expect(response.status).toBe(202);
     const result = await response.json<{ id: string }>();
-    expect(await env.LINKS.get(pendingPublicationKey(result.id))).not.toBeNull();
-    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(0);
+    expect(await hubStorage.get(env.HUB_DB, pendingPublicationKey(result.id))).not.toBeNull();
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(0);
     expect((await (await request('/api/publications')).json<{ entries: unknown[] }>()).entries).toEqual([]);
     expect(fetch).toHaveBeenCalledTimes(1);
   });
@@ -121,8 +122,8 @@ describe('public Hub submissions', () => {
     expect(response.status).toBe(422);
     expect((await response.json<{ error: string }>()).error).toMatch(/selected COLMAP file is missing/);
     expect(fetch).toHaveBeenCalledTimes(2);
-    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(0);
-    expect((await env.LINKS.list({ prefix: 'pending-publications/' })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'pending-publications', limit: 1000 })).objects).toHaveLength(0);
   });
   it.each([
     { path: 'tree/main/sparse/0', directory: 'sparse/0/', pinnedPath: 'sparse/0/' },
@@ -134,7 +135,7 @@ describe('public Hub submissions', () => {
     const response = await submit(body({ viewerUrl: `${origin}/?url=${encodeURIComponent(`${source}/${path}`)}` }));
     expect(response.status).toBe(201);
     const result = await response.json<{ id: string }>();
-    const record = await (await env.LINKS.get(recordKey(result.id)))!.json<{ viewerUrl: string }>();
+    const record = await (await hubStorage.get(env.HUB_DB, recordKey(result.id)))!.json<{ viewerUrl: string }>();
     expect(new URL(record.viewerUrl).searchParams.get('url')).toBe(`${source}/resolve/${revision}/${pinnedPath}`);
     const reads = vi.mocked(fetch).mock.calls.map(([value]) => String(value));
     expect(reads).toContain(`${source}/resolve/${revision}/${directory.split('/').map(encodeURIComponent).join('/')}cameras.bin`);
@@ -146,8 +147,8 @@ describe('public Hub submissions', () => {
     reads.mockImplementationOnce(async () => Response.json({ ...access, sha: revision, siblings: [] }));
     expect((await submit()).status).toBe(422);
     expect(fetch).toHaveBeenCalledTimes(2);
-    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(0);
-    expect((await env.LINKS.list({ prefix: 'pending-publications/' })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'pending-publications', limit: 1000 })).objects).toHaveLength(0);
   });
   it('keeps malformed model headers pending rather than claiming a valid dataset', async () => {
     const reads = successfulReads();
@@ -160,8 +161,8 @@ describe('public Hub submissions', () => {
     });
     const response = await submit(); expect(response.status).toBe(202);
     const result = await response.json<{ id: string }>();
-    expect(await env.LINKS.get(recordKey(result.id))).toBeNull();
-    expect(await env.LINKS.get(pendingPublicationKey(result.id))).not.toBeNull();
+    expect(await hubStorage.get(env.HUB_DB, recordKey(result.id))).toBeNull();
+    expect(await hubStorage.get(env.HUB_DB, pendingPublicationKey(result.id))).not.toBeNull();
   });
   it('does not verify a different model in an ambiguous multi-scene repository', async () => {
     const reads = successfulReads();
@@ -170,7 +171,7 @@ describe('public Hub submissions', () => {
       siblings: ['scene-a/cameras.bin', 'scene-a/images.bin', 'scene-b/cameras.bin', 'scene-b/images.bin'].map(rfilename => ({ rfilename })) }));
     expect((await submit()).status).toBe(202);
     expect(fetch).toHaveBeenCalledTimes(2);
-    expect((await env.LINKS.list({ prefix: 'listed/' })).objects).toHaveLength(0);
+    expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(0);
   });
   it('requires a fresh valid challenge even when replaying an existing submission', async () => {
     const reads = successfulReads(); expect((await submit()).status).toBe(201);

@@ -9,6 +9,7 @@ import type { HubLocation } from './pages';
 import { HUB_UI_VERSION } from '../shared/ui-version';
 import { SCENE_DATA_LABELS } from '../shared/scene-contents';
 import { icon } from '../shared/icons';
+import { hubViewerLink } from '../shared/viewer-host';
 
 const number = (value: number) => value.toLocaleString('en-US');
 export function individualBrowseUrl(filters: URLSearchParams, pageNumber = 1): string {
@@ -43,7 +44,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + select('photos', 'Images', 'All image availability', [{ value: 'available', label: 'Images on current paths' },
       ...Object.keys(index.photos || {}).sort().map(value => ({ value, label: photoLabel(value as PhotoStatus) }))])
     + '</div></details></div>'
-    + ['delivery', 'viewer', 'seed'].map(field => `<input type="hidden" name="${field}" value="${escape(filters.get(field) || '')}">`).join('') + '</form>';
+    + ['delivery', 'viewer', 'viewerHost', 'seed'].map(field => `<input type="hidden" name="${field}" value="${escape(filters.get(field) || '')}">`).join('') + '</form>';
   const notes = '<details class="catalog-notes"><summary class="button icon-button" title="About this catalog"><span class="sr-only">About this catalog</span>' + icon('info') + '</summary><div>'
     + `<p class="catalog-totals">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p>`
     + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
@@ -53,12 +54,12 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const status = `<div class="catalog-result-summary"><p id="catalog-count" class="catalog-count" role="status" tabindex="-1" aria-label="${countDescription}" title="${countDescription}">${result.total ? `${number(offset + 1)}–${number(offset + result.entries.length)} / ${number(result.total)}` : 'No matching datasets'}</p>`
     + '<p id="catalog-status" class="catalog-status" role="status"></p></div>'
     + `<a id="catalog-shuffle" class="button icon-button" href="${escape(individualBrowseUrl(shuffle))}" aria-label="Shuffle" title="Shuffle">${icon('shuffle')}</a>`
-    + `<a id="catalog-reset" class="button icon-button" href="/hub/datasets/" aria-label="Reset" title="Reset filters">${icon('reset')}</a>` + notes;
+    + `<a id="catalog-reset" class="button icon-button" href="${escape(hubViewerLink('/hub/datasets/', location.viewerHost))}" aria-label="Reset" title="Reset filters">${icon('reset')}</a>` + notes;
   return page(location, 'Public datasets', '<div class="catalog-index"><h1 class="sr-only">Public datasets</h1>'
     + '<section id="shared-datasets" class="shared-datasets" aria-label="Shared on Hub" hidden><h2>Shared on Hub</h2>'
     + '<p role="status">Loading shared datasets…</p><div class="dataset-grid" aria-label="Shared datasets"></div>'
     + '<button type="button" class="button" data-shared-more hidden>Load more shared datasets</button></section>'
-    + `<div id="catalog-results" class="dataset-grid dataset-feed" aria-label="Scene feed">${result.entries.length ? result.entries.map(catalogCard).join('') : '<p>No datasets match these filters.</p>'}</div>`
+    + `<div id="catalog-results" class="dataset-grid dataset-feed" aria-label="Scene feed">${result.entries.length ? result.entries.map(entry => catalogCard(entry, location.viewerHost)).join('') : '<p>No datasets match these filters.</p>'}</div>`
     + '<div id="catalog-sentinel" aria-hidden="true"></div>'
     + `<p id="catalog-end" class="catalog-end"${result.page === result.pages && result.total ? '' : ' hidden'}>You’ve reached the end of these scenes. <a id="catalog-reshuffle" href="${escape(individualBrowseUrl(shuffle))}">Shuffle again</a></p>`
     + '<nav class="catalog-pagination" aria-label="Dataset pages">'

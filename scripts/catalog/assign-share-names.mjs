@@ -1,7 +1,6 @@
 import { webcrypto } from 'node:crypto';
-import { appendFile, mkdir, mkdtemp, readFile, rename, writeFile } from 'node:fs/promises';
-import { build } from 'esbuild';
-import { getPlatformProxy } from 'wrangler';
+import { appendFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { openHubDatabase, workerModules } from '../lib/hub-database.mjs';
 import { datasetPattern, namePattern, reserveCatalogName, validateNames } from './share-names.mjs';
 import { runPython } from '../lib/python.mjs';
 
@@ -38,15 +37,9 @@ if (!apply && !verify) process.exit(0);
 if (verify && missing.length) throw new Error('Assign missing catalog names before verification');
 
 await mkdir('.tmp', { recursive: true });
-const temporary = await mkdtemp('.tmp/catalog-share-proxy-');
-const source = await readFile('wrangler.jsonc', 'utf8');
-const account = source.match(/"account_id"\s*:\s*"([a-f0-9]{32})"/)?.[1];
-if (!account) throw new Error('Hub account ID unavailable');
-const configPath = `${temporary}/wrangler.jsonc`;
-await writeFile(configPath, JSON.stringify({ name: 'colmapview-catalog-aliases', account_id: account,
-  compatibility_date: '2026-10-25', r2_buckets: [{ binding: 'LINKS', bucket_name: 'colmapview-hub', remote: true }] }));
-const proxy = await getPlatformProxy({ configPath, persist: false, envFiles: [], remoteBindings: true });
-const bucket = proxy.env.LINKS;
+const proxy = await openHubDatabase({ remote: true });
+const database = proxy.database;
+const { hubStorage, readWordlists, lookupTarget } = await workerModules(['storage', 'records', 'ids']);
 const save = async () => {
   validateNames({ schemaVersion: 1, names });
   await writeFile(filename + '.tmp', JSON.stringify({ schemaVersion: 1, names: Object.fromEntries(Object.entries(names).sort()) }, null, 2) + '\n');
@@ -54,25 +47,21 @@ const save = async () => {
 };
 const check = async (id, name) => {
   if (!datasetPattern.test(id) || typeof name !== 'string' || !namePattern.test(name)) throw new Error('Invalid reserved catalog name');
-  const stored = await bucket.get(`links/${name}.json`);
+  const stored = await hubStorage.get(database, `links/${name}.json`);
   const value = stored && stored.size < 1024 ? await stored.json() : null;
   if (value?.kind !== 'catalog' || value.schemaVersion !== 1 || value.id !== name || value.datasetId !== id) throw new Error('Reserved catalog name does not match its dataset');
 };
 try {
   if (apply) {
-    // Recover only this allocator's journal. No bucket listing or unlisted-link enumeration.
+    // Recover only this allocator's journal. No database listing or unlisted-link enumeration.
     try {
       for (const line of (await readFile(journal, 'utf8')).trim().split('\n').filter(Boolean)) {
         const { id, name } = JSON.parse(line);
         if (ids.includes(id) && !names[id]) { await check(id, name); names[id] = name; }
       }
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
-    const bundle = await build({ entryPoints: ['src/worker/records.ts', 'src/worker/ids.ts'], bundle: true, write: false,
-      outdir: temporary, format: 'esm', platform: 'node' });
-    const modules = await Promise.all(bundle.outputFiles.map(file => import('data:text/javascript;base64,' + Buffer.from(file.contents).toString('base64'))));
-    const { readWordlists, lookupTarget } = Object.assign({}, ...modules);
     // Private naming lists remain in process memory; only selected public names are saved.
-    const words = await readWordlists(bucket);
+    const words = await readWordlists(database);
     const used = new Set(Object.values(names).map(name => name.toLowerCase()));
     const nextName = async () => {
       for (;;) {
@@ -88,7 +77,7 @@ try {
     const pending = ids.filter(id => !names[id]);
     for (let start = 0; start < pending.length; start += 16) {
       const results = await Promise.allSettled(pending.slice(start, start + 16).map(async id => {
-        const name = await reserveCatalogName(bucket, id, nextName);
+        const name = await reserveCatalogName((key, body) => hubStorage.put(database, key, body, { createOnly: true }), id, nextName);
         await appendFile(journal, JSON.stringify({ id, name }) + '\n');
         names[id] = name;
       }));

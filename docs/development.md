@@ -9,11 +9,11 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5201/hub/`. `scripts/dev.mjs` seeds public fixture word lists in local R2 and starts Wrangler with local Durable Object state. It copies `.dev.vars.example` only when `.dev.vars` does not exist. Production credentials and private dictionaries are unnecessary.
+Open `http://localhost:5201/hub/`. `scripts/dev.mjs` applies local D1 migrations, seeds public fixture word lists in local D1 and starts Wrangler with local Durable Object state. It copies `.dev.vars.example` only when `.dev.vars` does not exist. Production credentials and private dictionaries are unnecessary.
 
 The local server explicitly disables remote bindings and uses an ephemeral inspector port, so separate worktrees can run without sharing a debugger port. Set `HUB_DEV_PORT` or `HUB_E2E_PORT` to give their HTTP servers separate ports too.
 
-The launcher seeds committed public name reservations into local R2 alongside
+The launcher seeds committed public name reservations into local D1 alongside
 the public test word lists. It uses Wrangler's local binding proxy with remote
 bindings explicitly disabled; it does not need production dictionaries or access.
 
@@ -28,6 +28,18 @@ Set `HUB_VIEWER_ORIGIN` when launching the dev script to override the shell with
 an HTTP loopback origin. A full local viewer still needs its root/assets served on
 the same origin as the Hub share path; the fixture checks the document contract,
 while the viewer repository's browser tests exercise actual dataset loading.
+
+GitHub's **Explore Hub** link adds `viewerHost=github` to the catalog URL. The
+Hub carries that fixed choice through forms, asynchronous results, pagination,
+reset, metadata and published cards. Their viewer navigations redirect to
+`https://colmapview.github.io/latest/`, preserving the exact dataset parameters
+and saved-view fragment. Existing explicitly versioned GitHub targets are retained.
+Direct visits without the hint keep the existing viewer document at the short
+address. Canonical copied links and source/preview URLs are unchanged. This hint
+creates no cookie, credential or saved user preference; arbitrary return URLs are
+not accepted. Rendered metadata caches include the destination to avoid serving
+another destination's links or validators. Google Drive remains subject to the
+selected viewer's existing explicit custom-host handoff.
 
 | Environment variable | Use |
 | --- | --- |
@@ -53,9 +65,11 @@ npm run test:browser
 | `npm run check:code` | Worker, client and browser-test TypeScript; JavaScript/TypeScript lint; pinned stylesheet |
 | `npm run test:catalog` | JavaScript catalog policy, rendering, search and count regressions |
 | `npm run test:python` | Python scene projection and evidence validation |
-| `npm test` | Worker routes, R2 records and real SQLite Durable Object runtime |
+| `npm test` | Worker routes, D1 records and real SQLite Durable Object runtime |
 | `npm run build` | Offline assets and a Wrangler deployment dry run |
 | `npm run test:browser` | Catalog, share-card, management, theme and static asset flows |
+
+D1 schema changes live in `migrations/`. Runtime access is centralized in `src/worker/storage.ts`; operator tools use the same SQL repository through an authenticated Wrangler binding proxy. Metadata and preview deletion is one row operation. Public feeds query the verified listing index without loading preview blobs. Tests apply the real migrations to local D1, including atomic reservations and review promotion.
 
 The browser suite starts its own isolated local server and storage. Viewer frames are intercepted so the suite checks the integration contract without rendering complete remote datasets. Tests use public fixtures; keep raw audit receipts and runtime state under `.tmp/`.
 
@@ -66,7 +80,7 @@ The browser suite starts its own isolated local server and storage. Viewer frame
 The existing application layers have distinct jobs:
 
 - `src/client/` owns browser state, DOM events and asynchronous browsing. It may import shared code.
-- `src/worker/` owns HTTP routing, validation, R2 records and lookup protection. It may import shared code.
+- `src/worker/` owns HTTP routing, validation, D1 records and lookup protection. It may import shared code.
 - `src/shared/` owns models, pure catalog rules and HTML string helpers. It must work in both runtimes.
 
 ESLint rejects imports between client and Worker modules and server platform imports in shared code. Shared modules compile under the Worker and client configurations. Avoid adding barrel files or new abstractions solely to hide those boundaries.

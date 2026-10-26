@@ -1,5 +1,6 @@
 import { deriveLongId, equalHashes, hash } from './crypto';
-import { metadataFingerprint, readWordlists, recordKey, toCardRecord } from './records';
+import { metadataFingerprint, readWordlists, recordKey, toPublicMetadata } from './records';
+import { hubStorage } from './storage';
 import { InputError, isObject, parseCreateInput, readBoundedJson } from './validation';
 import { publicationEnabled, verifyPublicationChallenge } from './publication-turnstile';
 import { verifyPublicationSource } from './publication-verification';
@@ -14,7 +15,7 @@ export const pendingPublicationKey = (id: string) => `pending-publications/${id}
 export const sharedFeedCacheKey = (base: string, cursor?: string) => `${base}/api/publications${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`;
 
 async function storedSubmission(env: Env, key: string): Promise<Record<string, unknown> | null> {
-  const object = await env.LINKS.get(key);
+  const object = await hubStorage.get(env.HUB_DB, key);
   if (!object) return null;
   if (object.size > MAX_RECORD_BYTES) throw new Error('Stored submission is too large');
   const record: unknown = await object.json();
@@ -26,26 +27,25 @@ export function publicationConfiguration(env: Env): Response {
   return json({ enabled: publicationEnabled(env), ...(publicationEnabled(env) ? { siteKey: env.HUB_TURNSTILE_SITE_KEY } : {}) });
 }
 
-/** Public discovery scans only explicit listings carrying a server verification, never share-link or pending namespaces. */
+/** Public discovery queries the verified listing index, never unlisted or pending entries. */
 export async function sharedDatasets(env: Env, cursor?: string): Promise<SharedDatasetPage> {
   if (cursor && (cursor.length > 2048 || [...cursor].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127))) throw new InputError('Invalid page cursor.');
-  // Cursor is an opaque R2 value. Bind it only to this fixed namespace and bounded page size.
-  const selected = await env.LINKS.list({ prefix: 'listed/', limit: 4, ...(cursor ? { cursor } : {}) });
-  const entries = await Promise.all(selected.objects.map(async object => {
+  // Keyset cursors are scoped to the verified public namespace and bounded page size.
+  const selected = await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 4, verifiedOnly: true, includeMetadata: true, ...(cursor ? { cursor } : {}) });
+  const entries = selected.objects.map(object => {
     const id = object.key.slice('listed/'.length, -'.json'.length);
     if (!ID_PATTERN.test(id) || !isListedId(id) || object.size > MAX_RECORD_BYTES) return null;
-    const value = await env.LINKS.get(object.key);
-    if (!value || value.size > MAX_RECORD_BYTES) return null;
-    const record: unknown = await value.json().catch(() => null);
+    let record: unknown;
+    try { record = JSON.parse(object.metadataJson ?? 'null'); } catch { return null; }
     if (!isObject(record) || record.access === 'private' || record.listed !== true || !isSourceVerification(record.verification)
       || typeof record.createdAt !== 'string') return null;
     try {
-      const card = toCardRecord(record, id);
+      const card = toPublicMetadata(record, id);
       return { id, title: card.title, description: card.description, viewerUrl: card.viewerUrl,
         ...(card.license ? { license: card.license } : {}), ...(card.assets ? { assets: card.assets } : {}),
         createdAt: record.createdAt, verification: record.verification } satisfies SharedDataset;
     } catch { return null; }
-  }));
+  });
   return { entries: entries.filter((entry): entry is SharedDataset => entry !== null), ...(selected.truncated ? { cursor: selected.cursor } : {}) };
 }
 
@@ -59,7 +59,7 @@ export async function submitPublication(request: Request, env: Env, location: Hu
   const input = parseCreateInput({ ...metadata, listed: true }, location.local);
   if (input.access !== 'public') throw new InputError('Only public datasets can be shared on Hub.', 400);
   await verifyPublicationChallenge(request, turnstileToken, env);
-  const words = await readWordlists(env.LINKS);
+  const words = await readWordlists(env.HUB_DB);
   const id = await deriveLongId(env.HUB_KEY, input.managementSecret, words, true);
   const ownerHash = await hash(input.managementSecret);
   const card = { viewerUrl: input.viewerUrl, title: input.title, description: input.description, thumbnailBase64: input.thumbnailBase64,
@@ -80,9 +80,9 @@ export async function submitPublication(request: Request, env: Env, location: Hu
   const checked = await verifyPublicationSource(card.viewerUrl, env, location.origin);
   const record: PublicationRecord = { ...card, viewerUrl: checked.viewerUrl, id, schemaVersion: 1, ownerHash, fingerprint,
     createdAt: new Date().toISOString(), listed: true, ...(checked.verification ? { verification: checked.verification } : { reviewReason: checked.reviewReason }) };
-  const stored = await env.LINKS.put(checked.verification ? recordKey(id) : pendingPublicationKey(id), JSON.stringify(record), {
-    onlyIf: new Headers({ 'If-None-Match': '*' }), httpMetadata: { contentType: 'application/json' },
-    ...(checked.verification ? { customMetadata: { title: record.title, createdAt: record.createdAt } } : {}),
+  const stored = await hubStorage.put(env.HUB_DB, checked.verification ? recordKey(id) : pendingPublicationKey(id), JSON.stringify(record), {
+    createOnly: true,
+    ...(checked.verification ? { listing: { title: record.title, createdAt: record.createdAt } } : {}),
   });
   if (!stored) throw new InputError('This submission is already being processed. Try again.', 409);
   if (checked.verification) await caches.default.delete(sharedFeedCacheKey(location.base)).catch(() => undefined);

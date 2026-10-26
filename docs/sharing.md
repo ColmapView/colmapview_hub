@@ -6,14 +6,14 @@ Share links use `/s/<id>` and browser navigations open the saved viewer URL dire
 
 ## What is stored
 
-One JSON object per link in a private R2 bucket:
+One D1 row per link, with metadata and its preview committed together:
 - the viewer URL, including any permitted display fragment;
 - the title, description, optional license name and URL, and an asset summary;
-- a base64 JPEG preview;
+- a binary JPEG preview, kept outside the metadata JSON;
 - the creation time and ownership hashes;
 - `access: "private"`, on private links only.
 
-The viewer crops its preview to fill 600 × 315 and keeps it under 64 KiB. The Hub rejects JPEGs that carry EXIF (APP1) or comment segments. `og:image` is an ordinary public HTTPS JPEG endpoint, cached for five minutes.
+The viewer makes a low-quality 320 × 168 JPEG in the browser, capped at 16 KiB, and sends it as base64. D1 stores the decoded bytes; base64 is only the API format. Legacy 600 × 315 previews up to 64 KiB remain accepted. Curated catalog previews and manifests are built static assets, not database blobs. No runtime bucket or source-image proxy is required. The Hub rejects JPEGs that carry EXIF (APP1) or comment segments. `og:image` is an ordinary public HTTPS JPEG endpoint, cached for five minutes.
 
 New cards use an explicit dataset URL in the viewer's `url` query parameter. Creation rejects credential parameters in the viewer, source and license URLs, including duplicate `url` values. Combined `#d=` source fragments are rejected because they can hide credentials inside encoded or compressed data. Display-only camera fragments remain supported. Previously stored records are still read compatibly.
 
@@ -26,7 +26,7 @@ Anyone with a link can read its card, and publicly disclosed links can be collec
 ## IDs and ownership
 
 **Public, unlisted requests** (no `access`, or `access: "public"`):
-- They try sixteen deterministic HMAC word-pair candidates, with create-only R2 writes, so no write replaces another owner's record.
+- They try sixteen deterministic HMAC word-pair candidates, with create-only SQL inserts, so no write replaces another owner's record.
 - Every candidate is checked for this owner's record before a vacancy is used, so retries keep the same name even after an earlier collision is deleted.
 - When all sixteen are taken, the Hub answers 409.
 

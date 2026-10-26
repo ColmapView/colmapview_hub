@@ -1,3 +1,4 @@
+import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { create, input, mockViewerDocument, post, remove, request, resetState } from './helpers';
@@ -9,7 +10,7 @@ const navigation = { 'Sec-Fetch-Dest': 'document' };
 beforeEach(async () => {
   await resetState();
   mockViewerDocument();
-  await env.LINKS.put(recordKey('HappyTree'), JSON.stringify({ schemaVersion: 1, kind: 'catalog',
+  await hubStorage.put(env.HUB_DB, recordKey('HappyTree'), JSON.stringify({ schemaVersion: 1, kind: 'catalog',
     id: 'HappyTree', datasetId, createdAt: '2026-10-25T00:00:00Z' }));
   const source = { id: 'hf-alias-fixture-0123456789ab', sourceId: 'hf:owner/fixture', title: 'Fixture', label: 'Fixture',
     provider: 'huggingface', access: 'public', license: 'cc0', start: 0, count: 1, listingComplete: true };
@@ -51,8 +52,46 @@ it('returns social metadata with the readable copy address and no analytics or d
   expect(canonical.headers.get('Location')).toBe('https://colmapview.opsiclear.com/s/HappyTree');
 });
 
+it('opens the exact curated selection on GitHub only with an explicit navigation hint', async () => {
+  const github = 'https://colmapview.github.io/latest/?url=https://example.org/scene.manifest.json';
+  for (const path of ['/../s/HappyTree', '/../s/d/AAAAAAAAAAAAAAAA', '/datasets/open/' + datasetId]) {
+    const response = await request(path + '?viewerHost=github&url=https://unrelated.example', { headers: navigation });
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toBe(github);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+  }
+  const untrusted = await request('/../s/HappyTree?viewerHost=https://evil.example', { headers: navigation });
+  expect(untrusted.status).toBe(200);
+  expect(await untrusted.text()).toContain(JSON.stringify({ version: 1, viewerUrl: target }));
+});
+
+it('keeps cache validators and metadata links separate between viewer destinations', async () => {
+  const path = '/datasets/entry/' + datasetId;
+  const original = await request(path);
+  const github = await request(path + '?viewerHost=github', { headers: { 'If-None-Match': original.headers.get('ETag')! } });
+  expect(github.status).toBe(200);
+  expect(github.headers.get('ETag')).not.toBe(original.headers.get('ETag'));
+  const body = await github.text();
+  expect(body).toContain('href="/s/HappyTree?viewerHost=github"');
+  expect(body).toContain('href="https://colmapview.github.io/latest/"');
+  expect(body).toContain('href="/hub/datasets/?viewerHost=github"');
+  expect(body).toContain('data-copy-dataset-link="/s/HappyTree"');
+  const neutral = await request(path);
+  expect(await neutral.text()).not.toContain('viewerHost=github');
+  const unchanged = await request(path + '?viewerHost=github', { headers: { 'If-None-Match': github.headers.get('ETag')! } });
+  expect(unchanged.status).toBe(304);
+});
+
+it('applies the destination choice to published shares without modifying their stored target', async () => {
+  const link = await create(input());
+  const github = await request('/../s/' + link.id + '?viewerHost=github', { headers: navigation });
+  expect(github.status).toBe(302);
+  expect(new URL(github.headers.get('Location')!).origin).toBe('https://colmapview.github.io');
+  expect((await request('/../s/' + link.id, { headers: navigation })).status).toBe(200);
+});
+
 it('keeps catalog reservations occupied for upload creation and inaccessible to upload delete keys', async () => {
-  await env.LINKS.put(WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
+  await hubStorage.put(env.HUB_DB, WORDLIST_KEY, JSON.stringify({ version: 1, adjectives: ['happy'], nouns: ['tree'] }));
   resetWordlistCache();
   expect((await post(input())).status).toBe(409);
   expect((await remove('HappyTree')).status).toBe(404);
@@ -66,7 +105,7 @@ it('retains lookup cooldowns, including reserved names and both namespaces', asy
 });
 
 it('rejects cross-site embeds before any public or private record read', async () => {
-  const reads = vi.spyOn(env.LINKS, 'get');
+  const reads = vi.spyOn(hubStorage, 'get');
   expect((await request('/../s/HappyTree', { headers: { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'iframe' } })).status).toBe(404);
   expect(reads).not.toHaveBeenCalled();
   expect((await request('/../s/HappyTree', { headers: navigation })).status).toBe(200);
@@ -79,7 +118,7 @@ it('leaves ordinary uploaded shares on their existing route', async () => {
 });
 
 it('does not serve an orphaned or mismatched reservation as another scene’s named link', async () => {
-  await env.LINKS.put(recordKey('CalmStone'), JSON.stringify({ schemaVersion: 1, kind: 'catalog',
+  await hubStorage.put(env.HUB_DB, recordKey('CalmStone'), JSON.stringify({ schemaVersion: 1, kind: 'catalog',
     id: 'CalmStone', datasetId, createdAt: '2026-10-25T00:00:00Z' }));
   expect((await request('/../s/CalmStone', { headers: navigation })).status).toBe(404);
   expect((await request('/../s/HappyTree', { headers: navigation })).status).toBe(200);

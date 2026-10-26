@@ -138,7 +138,9 @@ export function decodePreview(value: unknown): Uint8Array {
       if (length < 8 || bytes[offset + 2] !== 8) throw new InputError('Preview JPEG is invalid.');
       const height = (bytes[offset + 3] << 8) | bytes[offset + 4];
       const width = (bytes[offset + 5] << 8) | bytes[offset + 6];
-      if (width !== PREVIEW_WIDTH || height !== PREVIEW_HEIGHT) throw new InputError('Preview must be 600 × 315 pixels.');
+      if (!(width === PREVIEW_WIDTH && height === PREVIEW_HEIGHT) && !(width === 600 && height === 315)) {
+        throw new InputError('Preview must be 320 × 168 pixels (or legacy 600 × 315).');
+      }
       dimensionsFound = true;
     }
     if (marker === 0xda) { scanFound = offset + length < bytes.length - 2; break; }

@@ -1,5 +1,49 @@
 import { expect, test } from '@playwright/test';
 
+test('GitHub arrivals keep their viewer through async results, pagination, reset and metadata', async ({ page }) => {
+  await page.goto('/hub/datasets/?viewerHost=github&seed=12345678');
+  await expect(page.getByRole('link', { name: 'Open viewer', exact: true })).toHaveAttribute('href', 'https://colmapview.github.io/latest/');
+  const cards = page.locator('#catalog-results .dataset-card');
+  const checkLinks = async () => {
+    const links = await cards.locator('.dataset-open').evaluateAll(elements => elements.map(element => (element as HTMLAnchorElement).href));
+    expect(links.length).toBeGreaterThan(0);
+    expect(links.every(href => new URL(href).searchParams.get('viewerHost') === 'github')).toBe(true);
+  };
+  await checkLinks();
+  const initial = await cards.count();
+  await page.locator('#catalog-more').click();
+  await expect.poll(() => cards.count()).toBeGreaterThan(initial);
+  await checkLinks();
+  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('SceauxCastle');
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('SceauxCastle');
+  expect(new URL(page.url()).searchParams.get('viewerHost')).toBe('github');
+  await checkLinks();
+  const card = cards.first();
+  const path = (await card.locator('.dataset-open').getAttribute('href'))!;
+  const id = await card.getAttribute('data-entry-id');
+  const normal = await page.request.get('/hub/datasets/open/' + id, { maxRedirects: 0 });
+  const github = await page.request.get(path, { headers: { 'Sec-Fetch-Dest': 'document' }, maxRedirects: 0 });
+  expect(github.status()).toBe(302);
+  const selected = new URL(github.headers().location), original = new URL(normal.headers().location);
+  expect(selected.origin).toBe('https://colmapview.github.io');
+  expect(selected.pathname).toBe('/latest/');
+  expect(selected.search).toBe(original.search); expect(selected.hash).toBe(original.hash);
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
+  await expect(page.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
+  expect(new URL(page.url()).searchParams.get('viewerHost')).toBe('github');
+  await checkLinks();
+  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('SceauxCastle');
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('SceauxCastle');
+  await cards.first().locator('.dataset-info').click();
+  const panel = cards.first().getByRole('dialog');
+  await panel.getByRole('link', { name: 'Full metadata', exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Open viewer', exact: true })).toHaveAttribute('href', 'https://colmapview.github.io/latest/');
+  const action = page.getByRole('link', { name: 'Try in ColmapView', exact: false });
+  await expect(action).toHaveAttribute('href', /viewerHost=github/);
+  await page.getByRole('link', { name: 'All datasets', exact: false }).click();
+  expect(new URL(page.url()).searchParams.get('viewerHost')).toBe('github');
+});
+
 test.use({ hasTouch: true });
 
 test('catalog controls stay on one row and responsive filters keep their values', async ({ page }) => {

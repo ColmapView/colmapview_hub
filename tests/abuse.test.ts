@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { hubStorage } from '../src/worker/storage';
 import { runInDurableObject } from 'cloudflare:test';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { create, guard, input, ip, listings, mockViewerDocument, origin, post, remove, request, resetState } from './helpers';
@@ -21,7 +21,7 @@ describe('cross-site subresources', () => {
   });
 
   it('answer embedded sub-path misses the same way, and read no record', async () => {
-    const reads = vi.spyOn(env.LINKS, 'get');
+    const reads = vi.spyOn(hubStorage, 'get');
     for (const path of ['/one/extra', '/two/extra', '/manage/three/extra', '/HappyTree', '/HappyTree/preview.jpg']) {
       expect((await request(path, crossSite('image'), '192.0.2.7')).status, path).toBe(404);
     }
@@ -31,7 +31,7 @@ describe('cross-site subresources', () => {
 
   it('answer a cross-site prefetch, which arrives as a document request, the same way', async () => {
     const link = await create(input());
-    const reads = vi.spyOn(env.LINKS, 'get');
+    const reads = vi.spyOn(hubStorage, 'get');
     const prefetch = (purpose: string) => ({ headers: { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'document', 'Sec-Purpose': purpose } });
     for (const path of [`/${link.id}`, '/MissingOne', '/MissingTwo', '/MissingThree']) {
       expect((await request(path, prefetch('prefetch'), '192.0.2.7')).status, path).toBe(404);
@@ -98,16 +98,16 @@ describe('listings flag', () => {
     expect(await (await request('/', {}, ip, listings)).text()).toContain(another.id);
   });
 
-  it('lists the bucket once for two gallery requests within the minute', async () => {
+  it('queries public records once for two gallery requests within the minute', async () => {
     await create(input({ listed: true }), ip, listings);
-    const list = vi.spyOn(env.LINKS, 'list');
+    const list = vi.spyOn(hubStorage, 'list');
     for (let index = 0; index < 2; index++) expect((await request('/', {}, ip, listings)).status).toBe(200);
     expect(list).toHaveBeenCalledTimes(1);
   });
 
   it('keys gallery pages by cursor alone, so other query parameters share the first page that purges clear', async () => {
     const listed = await create(input({ listed: true }), ip, listings);
-    const list = vi.spyOn(env.LINKS, 'list');
+    const list = vi.spyOn(hubStorage, 'list');
     expect(await (await request('/?utm_source=share', {}, ip, listings)).text()).toContain(listed.id);
     expect(await (await request('/?cursor=', {}, ip, listings)).text()).toContain(listed.id);
     expect(list).toHaveBeenCalledTimes(1);
