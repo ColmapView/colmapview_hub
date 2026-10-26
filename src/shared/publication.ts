@@ -16,6 +16,8 @@ export interface PublicationRecord extends LinkRecord {
 export interface SharedDataset extends Omit<CardRecord, 'thumbnailBase64' | 'access'> {
   createdAt: string;
   verification: SourceVerification;
+  /** Bounded JPEG for cross-origin public galleries; never present for unlisted shares. */
+  previewBase64?: string;
 }
 
 export interface SharedDatasetPage { entries: SharedDataset[]; cursor?: string }

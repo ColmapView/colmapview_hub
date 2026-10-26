@@ -1,5 +1,15 @@
 import { expect, it } from 'vitest';
-import { hubViewerLink, preferredViewerUrl, viewerHome, viewerHost } from '../src/shared/viewer-host';
+import { hubAssetUrl, hubViewerLink, preferredViewerUrl, viewerHome, viewerHost } from '../src/shared/viewer-host';
+
+it('keeps GitHub gallery navigation local and backend launches and assets on the fixed backend', () => {
+  const id = 'data-' + 'a'.repeat(24);
+  expect(hubViewerLink(`/hub/datasets/entry/${id}`, 'github', 'github')).toBe(`/hub/datasets/entry/?id=${id}`);
+  expect(hubViewerLink('/hub/datasets/?q=scene', 'github', 'github')).toBe('/hub/datasets/?q=scene&viewerHost=github');
+  expect(hubViewerLink('/s/HappyTree', 'github', 'github')).toBe('https://colmapview.opsiclear.com/s/HappyTree?viewerHost=github');
+  expect(hubViewerLink(`/hub/datasets/open/${id}`, 'github', 'github')).toBe(`https://colmapview.opsiclear.com/hub/datasets/open/${id}?viewerHost=github`);
+  expect(hubAssetUrl('/hub/assets/client.js', 'github')).toBe('https://colmapview.opsiclear.com/hub/assets/client.js');
+  expect(hubAssetUrl('/hub/assets/client.js')).toBe('/hub/assets/client.js');
+});
 
 it('accepts only the explicit fixed GitHub destination', () => {
   expect(viewerHost(new URLSearchParams('viewerHost=github'))).toBe('github');

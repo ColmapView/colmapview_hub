@@ -8,8 +8,8 @@ import type { PhotoStatus } from '../shared/scene-photos';
 import { sceneContentsHtml, sceneStatisticsHtml, sceneThumbnailHtml } from '../shared/scene-contents';
 import { datasetSharePath } from '../shared/dataset-share';
 import { icon } from '../shared/icons';
-import { hubViewerLink, preferredViewerUrl } from '../shared/viewer-host';
-import type { ViewerHost } from '../shared/viewer-host';
+import { HUB_ORIGIN, hubAssetUrl, hubViewerLink, preferredViewerUrl } from '../shared/viewer-host';
+import type { ViewerHost, HubFrontend } from '../shared/viewer-host';
 export { catalogCard };
 import type { HubLocation } from './pages';
 
@@ -27,9 +27,12 @@ function social(url: string, title: string, description: string): string {
     + `<meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta name="twitter:card" content="summary">`;
 }
 
-export function catalogEntryPage(entry: CatalogEntry, analytics = true, host?: ViewerHost): string {
+export function catalogEntryContent(entry: CatalogEntry, host?: ViewerHost, frontend?: HubFrontend): string {
+  const facts = (values: CatalogFact[]) => factList(values.map(fact => ({ ...fact, ...(fact.url ? { url:
+    /\.(?:json|csv|gz)(?:$|[?#])|^\/hub\/datasets\/individual\//.test(fact.url)
+      ? hubAssetUrl(fact.url, frontend) : hubViewerLink(fact.url, host, frontend) } : {}) })));
   const share = entry.shareName ? datasetSharePath(entry.id, entry.shareName) : undefined;
-  const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(hubViewerLink(primary ? preferredViewerUrl(href, host) : href, host))}"${primary ? ' data-analytics-open' : ''} target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
+  const action = (label: string, href: string, primary = false) => `<a class="button${primary ? ' button-primary' : ''}" href="${escape(hubViewerLink(primary ? preferredViewerUrl(href, host) : href, host, frontend))}"${primary ? ' data-analytics-open' : ''} target="_blank" rel="noopener noreferrer">${label}<span aria-hidden="true"> ↗</span></a>`;
   const gated = entry.access === 'gated' || entry.verification?.delivery === 'gated';
   const blocked = gated || Boolean(entry.verification?.opening);
   const viewerUrl = !blocked && entry.viewerUrl ? share || entry.viewerUrl : undefined;
@@ -44,10 +47,10 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true, host?: V
     return `<details class="dataset-audit"><summary>${escape(name)} · checked ${escape(audit.checkedAt)}</summary>`
       + (audit.scope === 'collection' ? '<p class="note">Another file in the same source collection; these checks do not certify this entry’s scene.</p>' : '')
       + (audit.sourceUrl ? `<p><a href="${escape(audit.sourceUrl)}" rel="noreferrer">Inspected source ↗</a></p>` : '')
-      + factList(audit.facts) + '</details>';
+      + facts(audit.facts) + '</details>';
   }).join('');
-  const preview = sceneThumbnailHtml(entry);
-  return page({ ...location, viewerHost: host }, entry.title,
+  const preview = sceneThumbnailHtml(entry, false, frontend === 'github' ? HUB_ORIGIN : '');
+  return (
     `<p class="dataset-back"><a href="${escape(hubViewerLink('/hub/datasets/', host))}">← All datasets</a></p>`
     + `<div class="dataset-overview${preview ? ' dataset-overview-has-preview' : ''}" data-entry-id="${escape(entry.id)}">`
     + (preview ? `<div class="dataset-overview-preview">${preview}</div>` : '')
@@ -59,7 +62,7 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true, host?: V
       : `<p class="note"><a href="${escape(hubViewerLink('/hub/datasets/?dataset=' + encodeURIComponent(entry.id), host))}">Browse this dataset’s named scenes</a>.</p>`)
     + '</div></div>'
     + (entry.verification ? '<section class="dataset-section"><h2>Loading status</h2>'
-      + factList([{ label: 'Loading qualification', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },
+      + facts([{ label: 'Loading qualification', value: entry.statusLabel }, { label: 'Download delivery', value: deliveryLabel(entry.verification.delivery) },
         ...(entry.verification.opening ? [{ label: 'Opening this entry', value: entry.verification.opening.summary }] : []),
         { label: 'Check scope', value: entry.verification.scope }, { label: 'Released viewer', value: entry.verification.viewerVersion }])
       + (!viewerUrl ? `<p class="note">${escape(gated
@@ -73,12 +76,17 @@ export function catalogEntryPage(entry: CatalogEntry, analytics = true, host?: V
           : 'Use the source link for the original files. The evidence below records the conversion, missing assets or checks needed before opening this source in ColmapView.')}</p>` : '')
       + '</section>' : '')
     + '<section class="dataset-section"><h2>Dataset information</h2>'
-    + factList([{ label: 'Source', value: providerLabel(entry.provider) }, { label: 'Access', value: accessLabel(entry.access) },
+    + facts([{ label: 'Source', value: providerLabel(entry.provider) }, { label: 'Access', value: accessLabel(entry.access) },
       { label: 'License category', value: LICENSE_CATEGORY_LABELS[licenseCategory(entry)] },
       { label: 'License (source metadata)', value: entry.license }, { label: 'Recorded formats', value: entry.formats.join(' · ') || 'Not established' },
       { label: 'Scan date', value: entry.checkedAt }, ...entry.facts]) + '</section>'
     + '<section class="dataset-section"><h2>Loading evidence</h2><p class="note">Checks cover the recorded files and samples. Inclusion does not certify every scene or image. Source access and license terms apply.</p>'
-    + (audits || '<p>No additional dataset loading audit is recorded for this entry.</p>') + '</section>',
+    + (audits || '<p>No additional dataset loading audit is recorded for this entry.</p>') + '</section>');
+}
+
+export function catalogEntryPage(entry: CatalogEntry, analytics = true, host?: ViewerHost): string {
+  const share = entry.shareName ? datasetSharePath(entry.id, entry.shareName) : undefined;
+  return page({ ...location, viewerHost: host }, entry.title, catalogEntryContent(entry, host),
     social(`${location.origin}${!analytics && share ? share : datasetPath(entry)}`, entry.title, entry.description), analytics);
 }
 

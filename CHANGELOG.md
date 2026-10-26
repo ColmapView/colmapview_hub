@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.19.0 — 2026-10-26
+
+- Serve the same gallery on GitHub Pages and OpsiClear. Keep browsing, search, filters, metadata and Back on the chosen host, and select its matching viewer. Load current catalog data asynchronously from the shared public API.
+- Export only public frontend HTML with content hashes and source provenance. Keep Worker code, private shares, credentials and naming configuration on the backend. Preserve private preview guards; cross-host shared cards receive bounded JPEGs only for freshly checked, verified public opt-ins.
+- Support the existing optional analytics consent on both gallery hosts, with separate first-party choices and no pre-consent Google requests. Serve licensed fonts from the Hub CDN.
+
 ## 0.18.5 — 2026-10-26
 
 - Recognize truncated public selection digests in the new photo-audit receipt using the existing field-, path- and detector-scoped secret-scan exception. Independently recompute every selection digest and retain all provider-specific and other generic-key checks. Supersede 0.18.4 after its history scan reported three false positives.

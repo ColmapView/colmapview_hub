@@ -5,8 +5,8 @@ import { HUB_UI_VERSION } from '../shared/ui-version';
 import { ANALYTICS_CONSENT_REVISION } from '../shared/analytics-consent';
 import { assetLine } from '../shared/asset-summary';
 import { icon } from '../shared/icons';
-import { hubViewerLink, viewerHome } from '../shared/viewer-host';
-import type { ViewerHost } from '../shared/viewer-host';
+import { hubAssetUrl, hubViewerLink, viewerHome } from '../shared/viewer-host';
+import type { ViewerHost, HubFrontend } from '../shared/viewer-host';
 export { assetLine } from '../shared/asset-summary';
 export { escapeHtml } from '../shared/html';
 
@@ -20,6 +20,7 @@ export interface HubLocation {
   /** True when the Hub itself runs on loopback, for local development. */
   local: boolean;
   viewerHost?: ViewerHost;
+  frontend?: HubFrontend;
 }
 
 export function hubLocation(env: Env): HubLocation {
@@ -80,22 +81,28 @@ const footer = (publicCatalog: boolean) => [
 /** Every Hub page: ColmapView's public-page frame, stylesheets and icon. */
 export function page(location: HubLocation, title: string, body: string, metadata = '', publicCatalog = false,
   catalog?: { filters: string; status: string }): string {
-  const asset = (file: string) => `${location.path}/${file}`;
+  const asset = (file: string) => hubAssetUrl(`${location.path}/${file}`, location.frontend);
+  const anonymous = location.frontend ? ' crossorigin="anonymous"' : '';
   return [
-    `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"${publicCatalog ? ' data-hub-public-catalog="true"' : ''}><head>`,
+    `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"${location.frontend ? ' data-hub-frontend="github"' : ''}${publicCatalog ? ' data-hub-public-catalog="true"' : ''}><head>`,
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">',
+    ...(location.frontend ? [
+      '<meta name="referrer" content="no-referrer">',
+      '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src https://colmapview.opsiclear.com https://www.googletagmanager.com; style-src https://colmapview.opsiclear.com; img-src https://colmapview.opsiclear.com https://www.googletagmanager.com https://*.google-analytics.com data:; font-src https://colmapview.opsiclear.com; connect-src https://colmapview.opsiclear.com https://www.googletagmanager.com https://*.google-analytics.com; base-uri \'none\'; form-action \'self\'">',
+    ] : []),
     '<meta name="robots" content="noindex,nofollow,noarchive">',
     `<title>${escapeHtml(title)} · ColmapView Hub</title>`,
     metadata,
     `<link rel="icon" href="${asset('favicon.ico')}">`,
-    `<link rel="stylesheet" href="${asset('colmapview.css')}">`,
-    `<script src="${asset('assets/theme.js')}?v=${HUB_UI_VERSION}"></script>`,
-    `<link rel="stylesheet" href="${asset('styles.css')}?v=${HUB_UI_VERSION}">`,
-    `<script type="module" src="${asset('assets/client.js')}?v=${HUB_UI_VERSION}"></script>`,
+    `<link rel="stylesheet" href="${asset('colmapview.css')}"${anonymous}>`,
+    `<script src="${asset('assets/theme.js')}?v=${HUB_UI_VERSION}"${anonymous}></script>`,
+    `<link rel="stylesheet" href="${asset('styles.css')}?v=${HUB_UI_VERSION}"${anonymous}>`,
+    `<script type="module" src="${asset('assets/client.js')}?v=${HUB_UI_VERSION}"${anonymous}></script>`,
     `</head><body${catalog ? ' class="catalog-browse"' : ''}>`,
     '<a class="skip-link" href="#main">Skip to content</a>',
     header(location.path, catalog?.filters, location.viewerHost),
     `<main id="main" tabindex="-1"><div class="hub-content">${body}</div></main>`,
+    ...(location.frontend ? ['<noscript><p>This gallery needs JavaScript. <a href="https://colmapview.opsiclear.com/hub/datasets/?viewerHost=github">Browse the server-rendered catalog</a>.</p></noscript>'] : []),
     footer(publicCatalog),
     catalog ? `<section class="catalog-footbar" aria-label="Catalog status">${catalog.status}${viewerControl(location.viewerHost)}${themeControl()}</section>` : '',
     '</body></html>',

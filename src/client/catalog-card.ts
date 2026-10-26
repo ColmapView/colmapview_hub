@@ -3,11 +3,12 @@ import type { CatalogSummary } from '../shared/catalog';
 import { DATASET_SHARE_PATH, datasetShareId } from '../shared/dataset-share';
 import { ID_PATTERN, SHARE_PATH } from '../shared/model';
 import type { ViewerHost } from '../shared/viewer-host';
+import { canonicalHubOrigin, hubFrontend } from './hosting';
 
 export function catalogCardElement(entry: CatalogSummary, host?: ViewerHost): HTMLElement {
   const template = document.createElement('template');
   // The shared SSR renderer escapes every text/attribute and restricts load URLs.
-  template.innerHTML = catalogCardHtml(entry, host);
+  template.innerHTML = catalogCardHtml(entry, host, hubFrontend());
   return template.content.firstElementChild as HTMLElement;
 }
 
@@ -33,7 +34,7 @@ export function initializeCatalogMetadata(): void {
       if (!(path.startsWith(`${DATASET_SHARE_PATH}/`) && datasetShareId(path.slice(DATASET_SHARE_PATH.length + 1)))
         && !(path.startsWith(`${SHARE_PATH}/`) && ID_PATTERN.test(path.slice(SHARE_PATH.length + 1)))) return;
       const status = copy.parentElement?.querySelector<HTMLElement>('[data-copy-status]');
-      const url = new URL(path, location.origin).href;
+      const url = new URL(path, canonicalHubOrigin()).href;
       copy.disabled = true;
       void Promise.resolve().then(() => navigator.clipboard.writeText(url)).then(() => {
         if (status) status.textContent = 'Link copied';

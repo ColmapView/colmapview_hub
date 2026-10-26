@@ -45,7 +45,7 @@ function clearAnalyticsCookies(): void {
 /** Catalog traffic only: never initialize on share/manage pages or local previews. */
 export function initializeAnalytics(): void {
   if (document.documentElement.dataset.hubPublicCatalog !== 'true'
-    || location.origin !== 'https://colmapview.opsiclear.com') return;
+    || !['https://colmapview.opsiclear.com', 'https://colmapview.github.io'].includes(location.origin)) return;
 
   const panel = document.querySelector<HTMLElement>('#analytics-choice');
   const settings = document.querySelector<HTMLButtonElement>('#analytics-settings');

@@ -142,10 +142,10 @@ export function sceneContentsHtml(contents?: SceneContents): string {
     }).join('') + '</ul>';
 }
 
-export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }, compact = false): string {
+export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }, compact = false, assetOrigin = ''): string {
   const thumbnail = entry.thumbnail;
   if (!thumbnail || !isSceneThumbnail(thumbnail) || thumbnail.datasetLicense !== entry.license) return '';
-  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(thumbnail.url)}" width="${thumbnail.width}" height="${thumbnail.height}" loading="lazy" decoding="async" alt="${escape(`${thumbnail.videoFrame ? 'Video frame' : 'Scene photograph'} from ${entry.title}`)}">`
+  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(assetOrigin + thumbnail.url)}" width="${thumbnail.width}" height="${thumbnail.height}" loading="lazy" decoding="async" alt="${escape(`${thumbnail.videoFrame ? 'Video frame' : 'Scene photograph'} from ${entry.title}`)}">`
     + (compact ? '' : `<figcaption>${sceneThumbnailCreditHtml(thumbnail)}</figcaption>`) + '</figure>';
 }
 

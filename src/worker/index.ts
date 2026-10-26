@@ -330,7 +330,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, location
       if (!ip) throw new Error('Client identity unavailable');
       const admitted = await env.HUB_PUBLICATION_READS.limit({ key: await clientIdentity(env.HUB_KEY, ip) });
       if (!admitted.success) return blocked(location, true, 60);
-      return sharedDatasetResponse(env, location, ctx, url.searchParams.get('cursor') ?? undefined);
+      return sharedDatasetResponse(env, location, ctx, url.searchParams.get('cursor') ?? undefined, url.searchParams.get('preview') === 'inline');
     }
     if (path === '/api/publications' && request.method === 'POST') {
       if (!allowedOrigin(request, location)) return json({ error: 'This origin cannot publish datasets.' }, 403);

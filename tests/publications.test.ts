@@ -7,6 +7,7 @@ import { boundedBytes, verifyPublicationSource } from '../src/worker/publication
 import { recordKey } from '../src/worker/records';
 import { reviewPublication } from '../src/worker/publication-review';
 import { clientIdentity } from '../src/worker/crypto';
+import { preview } from './fixtures/preview';
 
 const settings: Partial<Env> = { HUB_PUBLICATIONS_ENABLED: 'true', HUB_TURNSTILE_SITE_KEY: 'public-widget', HUB_TURNSTILE_SECRET: 'server-secret' };
 const token = 'single-use-fixture';
@@ -102,6 +103,16 @@ describe('public Hub submissions', () => {
     expect(new URL(String(record.viewerUrl)).searchParams.get('url')).toBe(`https://huggingface.co/datasets/owner/scene/resolve/${revision}/`);
     expect(JSON.stringify(record)).not.toContain(token); expect(record).not.toHaveProperty('managementSecret');
     const feed = await (await request('/api/publications')).json<{ entries: Record<string, unknown>[] }>();
+    expect(feed.entries[0]).not.toHaveProperty('previewBase64');
+    const publicFeed = await request('/api/publications?preview=inline', { headers: { Origin: 'https://colmapview.github.io' } });
+    expect(publicFeed.headers.get('Access-Control-Allow-Origin')).toBe('https://colmapview.github.io');
+    expect(publicFeed.headers.get('Cache-Control')).toBe('no-store');
+    const inline = await publicFeed.json<{ entries: Record<string, unknown>[] }>();
+    expect(inline.entries).toHaveLength(1);
+    expect(inline.entries[0].previewBase64).toBe(preview);
+    expect(JSON.stringify(inline)).not.toMatch(/managementSecret|ownerHash|deleteKey|turnstileToken/);
+    // The new public feed never relaxes the private lookup/subresource guard.
+    expect((await request(`/${result.id}/preview.jpg`, { headers: { Origin: 'https://colmapview.github.io', 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Dest': 'image' } })).status).toBe(404);
     expect(feed.entries.map(entry => entry.id)).toEqual([result.id]);
     for (const name of ['ownerHash', 'fingerprint', 'managementSecret', 'thumbnailBase64']) expect(feed.entries[0]).not.toHaveProperty(name);
     const replay = await submit(); expect(replay.status).toBe(201); expect(await replay.json()).toEqual(result);
@@ -113,8 +124,18 @@ describe('public Hub submissions', () => {
     const result = await response.json<{ id: string }>();
     expect(await hubStorage.get(env.HUB_DB, pendingPublicationKey(result.id))).not.toBeNull();
     expect((await hubStorage.list(env.HUB_DB, { namespace: 'listed', limit: 1000 })).objects).toHaveLength(0);
-    expect((await (await request('/api/publications')).json<{ entries: unknown[] }>()).entries).toEqual([]);
+    for (const path of ['/api/publications', '/api/publications?preview=inline']) {
+      expect((await (await request(path)).json<{ entries: unknown[] }>()).entries).toEqual([]);
+    }
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it('does not return an inline preview from listing metadata after its full record disappears', async () => {
+    successfulReads(); expect((await submit()).status).toBe(201);
+    expect((await (await request('/api/publications')).json<{ entries: unknown[] }>()).entries).toHaveLength(1);
+    const records = vi.spyOn(hubStorage, 'get').mockResolvedValue(null);
+    const fresh = await request('/api/publications?preview=inline');
+    expect((await fresh.json<{ entries: unknown[] }>()).entries).toEqual([]);
+    expect(records).toHaveBeenCalled();
   });
   it('does not approve a missing selected COLMAP file because its sibling model exists', async () => {
     successfulReads();

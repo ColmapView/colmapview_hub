@@ -6,11 +6,13 @@ import { catalogHistory } from './catalog-history';
 import type { CatalogHistoryMode } from './catalog-history';
 import { recallFeed, rememberFeed, restoreFeedPosition } from './feed-memory';
 import { defaultFeedSeed, FEED_MODES } from '../shared/discovery';
-import { viewerHost } from '../shared/viewer-host';
+import { catalogViewerHost, hubApiBase, hubFrontend } from './hosting';
+import { refreshCatalogFilters } from './catalog-config';
 
 const form = document.querySelector<HTMLFormElement>('#individual-search');
 if (form && document.querySelector('#catalog-more') && document.querySelector('#catalog-status')) {
-  const host = viewerHost(new URLSearchParams(location.search));
+  const host = catalogViewerHost();
+  const staticFrontend = Boolean(hubFrontend());
   const results = document.querySelector<HTMLElement>('#catalog-results')!;
   const count = document.querySelector<HTMLElement>('#catalog-count')!;
   const status = document.querySelector<HTMLElement>('#catalog-status')!;
@@ -24,6 +26,11 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const sentinel = document.querySelector<HTMLElement>('#catalog-sentinel')!;
   const notes = document.querySelector<HTMLDetailsElement>('.catalog-notes');
   const fields = [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[name],select[name]')];
+  if (staticFrontend) {
+    form.inert = true;
+    const values = new URLSearchParams(location.search);
+    for (const field of fields) field.value = field.name === 'viewerHost' ? 'github' : values.get(field.name) || '';
+  }
   const primary = form.querySelector<HTMLElement>('.catalog-primary')!;
   const secondary = form.querySelector<HTMLElement>('.catalog-secondary')!;
   const primaryFilters = [...primary.querySelectorAll<HTMLElement>(':scope > .catalog-field')];
@@ -60,6 +67,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   history.scrollRestoration = 'manual';
   // The select named "dataset" shadows HTMLFormElement.dataset.
   let firstPage = Number(form.getAttribute('data-page')) || 1;
+  if (staticFrontend) firstPage = Math.max(1, Number(new URLSearchParams(location.search).get('page')) || 1);
   let lastPage = firstPage;
   let generation = form.getAttribute('data-generation') || '';
   let loaded = results.querySelectorAll('.dataset-card').length;
@@ -78,7 +86,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
 
   const query = (page = 1) => {
     const values = new URLSearchParams();
-    for (const field of fields) if (field.value.trim()) values.set(field.name, field.value.trim());
+    for (const field of fields) if (field.value.trim() && !(staticFrontend && field.name === 'viewerHost')) values.set(field.name, field.value.trim());
     if (page > 1) values.set('page', String(page));
     return values;
   };
@@ -193,7 +201,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     results.setAttribute('aria-busy', 'true');
     let failure = options.append ? 'Could not load more scenes. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
     try {
-      const response = await fetch(`/hub/datasets/api/entries${values.size ? `?${values}` : ''}`, { signal: controller.signal });
+      const response = await fetch(`${hubApiBase()}/datasets/api/entries${values.size ? `?${values}` : ''}`, { signal: controller.signal, credentials: 'omit' });
       const data: (IndividualPage & { dataset: IndividualSelection | null; error?: string }) | null = await response.json().catch(() => null);
       if (!response.ok) {
         if (response.status === 400 && typeof data?.error === 'string') failure = data.error;
@@ -362,7 +370,15 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     void load(values, { restoring: true });
   });
   updateNavigation();
-  if (committed.has('seed') && documentNavigation?.type === 'reload') {
+  if (staticFrontend) {
+    const requested = new URLSearchParams(location.search);
+    void refreshCatalogFilters(form).then(value => { generation = value; }).catch(() => { /* Existing shell choices remain usable during an index retry. */ })
+      .then(() => {
+        for (const field of fields) field.value = field.name === 'viewerHost' ? 'github' : requested.get(field.name) || '';
+        form.inert = false;
+        if (!restore()) void load(query(firstPage), { history: 'replace' });
+      });
+  } else if (committed.has('seed') && documentNavigation?.type === 'reload') {
     freshSeed();
     void load(query(), { history: 'replace' });
   } else if (!restore() && returningSeed && returningSeed !== serverSeed) {

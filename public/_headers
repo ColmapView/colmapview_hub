@@ -20,3 +20,17 @@
 
 /hub/datasets/individual/manifests/*.state.json
   Access-Control-Allow-Origin: *
+
+# Public frontend bundles and licensed fonts also serve the GitHub-hosted Hub.
+/hub/assets/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, no-cache, must-revalidate
+
+/hub/fonts/*
+  Access-Control-Allow-Origin: *
+
+/hub/styles.css
+  Access-Control-Allow-Origin: *
+
+/hub/colmapview.css
+  Access-Control-Allow-Origin: *

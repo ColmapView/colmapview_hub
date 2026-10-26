@@ -1,5 +1,11 @@
 # Production setup
 
+The gallery is served on both OpsiClear and GitHub Pages. `npm run build:assets` exports only public HTML under `/hub/assets/github/`, with content hashes and a committed-source manifest. Builds are offline. The GitHub frontend reads the current public catalog APIs with credentials omitted and uses OpsiClear for public assets and licensed fonts. Search, metadata, pagination and Back stay on the selected frontend; dataset launches select its matching viewer. Private records, secrets and naming configuration are never exported.
+
+After a Hub UI/backend release, run the viewer repository's **Deploy GitHub Hub frontend** workflow (also checked hourly). It downloads only fixed public export paths, verifies committed-source metadata and exact hashes, tests the gallery with read-only permissions, then publishes only `/hub` in a separate write-permission job. No Cloudflare or cross-repository secret is required. Unchanged exports create no Pages commit. Viewer root releases preserve these gallery pages. See [dual-host deployment](https://github.com/ColmapView/Colmapview.github.io/blob/main/docs/dual-hosting.md).
+
+For release exports, commit the Hub changes, then run `npm run build:github` from that clean checkout before `npm run deploy`. The downloader rejects dirty-source exports. Check the public `/hub/assets/github/site.json`, `/hub/datasets/api/index` and curated `/hub/datasets/api/entry/data-…` routes. API CORS allows the fixed viewer origins; public bundles and fonts allow anonymous cross-origin reads. The optional `preview=inline` public feed returns bounded JPEGs only after fresh checks of verified public opt-ins. Unlisted/private preview lookup protections remain unchanged.
+
 Authenticate Wrangler with the Cloudflare account that owns the `opsiclear.com` zone. The account ID is set in `wrangler.jsonc`. Deployments need access to Workers routes, D1 and Durable Objects.
 
 The remembered-connection service was retired on October 20, 2026 after approval. The [retirement runbook](account-sessions.md) records namespace-deletion and secret-removal checks. Preserve this migration and the browser-only contract when deploying or rolling back; public Hub cards and the catalog remain available.

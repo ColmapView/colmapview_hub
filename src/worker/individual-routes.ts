@@ -1,4 +1,4 @@
-import { catalogEntryPage } from './catalog-pages';
+import { catalogEntryPage, catalogEntryContent } from './catalog-pages';
 import { individualFilters, individualIndex, readIndividual, searchIndividuals } from './individual-data';
 import { individualIndexPage } from './individual-pages';
 import { errorPage } from './pages';
@@ -42,13 +42,15 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   if (/^\/datasets\/(?:collections|(?:collection-)?page-\d+)(?:\.html)?\/?$/.test(path)) return browse();
   const collection = /^\/datasets\/((?:hf|public)-[a-z0-9-]+-[a-f0-9]{12})(?:\.html)?\/?$/.exec(path);
   const entry = /^\/datasets\/entry\/(data-[a-f0-9]{24})$/.exec(path);
+  const apiEntry = /^\/datasets\/api\/entry\/(data-[a-f0-9]{24})$/.exec(path);
+  const apiIndex = path === '/datasets/api/index';
   const open = /^\/datasets\/open\/(data-[a-f0-9]{24})$/.exec(path);
-  if (path !== '/datasets/' && path !== '/datasets/api/entries' && !entry && !open && !collection) return fail(404, 'Dataset entry not found.');
-  const filters = entry || open || collection ? new URLSearchParams() : individualFilters(url.searchParams);
+  if (path !== '/datasets/' && path !== '/datasets/api/entries' && !apiIndex && !apiEntry && !entry && !open && !collection) return fail(404, 'Dataset entry not found.');
+  const filters = entry || apiEntry || apiIndex || open || collection ? new URLSearchParams() : individualFilters(url.searchParams);
   // Read the current inventory before the response cache. Removed entries and
   // search results must not survive a catalog deployment in an older cache.
   const index = await individualIndex(env.CATALOG_ASSETS, location.origin);
-  const freshFeed = Boolean(index.discovery && !entry && !open && !collection && !filters.has('seed'));
+  const freshFeed = Boolean(index.discovery && !entry && !apiEntry && !apiIndex && !open && !collection && !filters.has('seed'));
   if (freshFeed) filters.set('seed', defaultFeedSeed());
   if (collection) return index.sources.some(source => source.id === collection[1] && source.count > 0)
     ? browse(collection[1]) : fail(404, 'Dataset entry not found.');
@@ -66,10 +68,11 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   const cached = freshFeed ? undefined : await caches.default.match(key);
   if (cached) return respond(request, cached);
   let body: string;
-  if (entry) {
-    const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, entry[1]);
+  if (apiIndex) body = JSON.stringify(index);
+  else if (entry || apiEntry) {
+    const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, (entry || apiEntry)![1]);
     if (!model) return fail(404, 'Dataset entry not found.');
-    body = catalogEntryPage(model, true, location.viewerHost);
+    body = apiEntry ? catalogEntryContent(model, 'github', 'github') : catalogEntryPage(model, true, location.viewerHost);
   } else {
     const result = await searchIndividuals(env.CATALOG_ASSETS, location.origin, index, filters);
     body = api ? JSON.stringify({ ...result, ...(index.unit ? { unit: index.unit } : {}), dataset: individualSelection(index.sources, filters.get('dataset') || '') })
@@ -79,7 +82,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   // browser's conditional request, even when the model inventory is unchanged.
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
   const etag = '"' + [...new Uint8Array(digest)].slice(0, 16).map(byte => byte.toString(16).padStart(2, '0')).join('') + '"';
-  const response = new Response(body, { headers: { 'Content-Type': api ? 'application/json; charset=utf-8' : 'text/html; charset=utf-8',
+  const response = new Response(body, { headers: { 'Content-Type': api && !apiEntry ? 'application/json; charset=utf-8' : 'text/html; charset=utf-8',
     'Cache-Control': 'public, max-age=300, no-transform', 'ETag': etag } });
   if (request.method === 'GET' && !freshFeed) ctx.waitUntil(caches.default.put(key, response.clone()));
   // Seeded responses revalidate against the current generation. One-off fresh
