@@ -37,6 +37,11 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test.afterEach(async ({ page }) => {
+  // Finish proxied asset requests before Playwright disposes the browser context.
+  await page.unrouteAll({ behavior: 'wait' });
+});
+
 test('GitHub gallery keeps browsing, search, metadata and Back on GitHub using public APIs', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: github });
   const errors: string[] = [];
