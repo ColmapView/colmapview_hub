@@ -214,7 +214,7 @@ describe('three-distinct-miss guard', () => {
     expect((await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input()) })).status).toBe(429);
     expect((await request(`/api/links/${link.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${owner}` } })).status).toBe(429);
     expect((await request(`/${link.id}`, {}, '192.0.2.2')).status).toBe(200);
-    expect(third.headers.get('Cache-Control')).toBe('no-store');
+    expect(third.headers.get('Cache-Control')).toBe('no-store, no-transform');
   }, 15_000);
 
   it('does not let concurrent misses reset the counter or evade the cooldown', async () => {

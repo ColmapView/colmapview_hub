@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.20.1 — 2026-10-26
+
+- Preserve `no-transform` on every Hub HTML response, including fresh feeds, private share pages and errors. Prevent Cloudflare's automatic beacon injection while retaining the consent-controlled analytics path.
+
 ## 0.20.0 — 2026-10-26
 
 - Make `/hub/` the single gallery on both hosts. Move metadata and launch navigation under `/hub/entry/` and `/hub/open/`, with compatibility redirects for retired catalog pages and existing bookmarks. Preserve source manifests, APIs and readable share names.

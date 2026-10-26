@@ -87,13 +87,18 @@ function allowedOrigin(request: Request, location: HubLocation): string | null {
  */
 function withSharedHeaders(request: Request, result: Response, location?: HubLocation): Response {
   const headers = new Headers(result.headers);
+  const htmlResponse = headers.get('Content-Type')?.startsWith('text/html');
   const viewer = headers.get(VIEWER_DOCUMENT_HEADER) === '1';
   headers.delete(VIEWER_DOCUMENT_HEADER);
   if (!headers.has('Cache-Control')) headers.set('Cache-Control', 'no-store');
+  // Preserve HTML bytes so Cloudflare cannot inject an automatic analytics beacon.
+  if (htmlResponse && !/\bno-transform\b/i.test(headers.get('Cache-Control')!)) {
+    headers.append('Cache-Control', 'no-transform');
+  }
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   if (!viewer) headers.set('Referrer-Policy', 'no-referrer');
-  const publicCatalog = [200, 304].includes(result.status) && headers.get('Content-Type')?.startsWith('text/html')
+  const publicCatalog = [200, 304].includes(result.status) && htmlResponse
     && /^\/hub\/(?:$|entry\/data-[a-f0-9]{24}$)/.test(new URL(request.url).pathname);
   if (!viewer) headers.set('Content-Security-Policy', publicCatalog ? contentSecurityPolicy(Boolean(location?.local), true) : location?.local ? LOCAL_CSP : CSP);
   return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });

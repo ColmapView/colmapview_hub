@@ -113,6 +113,8 @@ it('keeps seeded feed caches separate and retains deterministic pages without pr
     expect(anotherResult.entries).not.toEqual(freshResult.entries);
     queries.push(freshQuery);
     expect((await (await request(`/datasets/api/entries?${freshQuery}`)).json<Result>()).entries).toEqual(freshResult.entries);
+    const document = await request('/');
+    expect(document.headers.get('Cache-Control')).toBe('no-store, no-transform');
     expect(records).not.toHaveBeenCalled();
   } finally {
     for (const query of queries) await caches.default.delete(new Request(`${base}/datasets/api/entries?${query}&_catalog=feed-cache&_ui=${HUB_UI_VERSION}`));
@@ -211,7 +213,7 @@ it('does not serve a removed model from a legacy or previous-generation cache', 
   try {
     const response = await request(path, { headers: { 'If-None-Match': '"old-model"' } }, undefined, { CATALOG_ASSETS: assets });
     expect(response.status).toBe(404);
-    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(response.headers.get('Cache-Control')).toBe('no-store, no-transform');
     expect(await response.text()).not.toContain('Removed gated model');
     expect(assets.fetch).toHaveBeenCalledTimes(2);
   } finally {

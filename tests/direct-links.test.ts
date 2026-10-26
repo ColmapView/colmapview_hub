@@ -18,7 +18,7 @@ describe('direct share links', () => {
       expect(response.headers.get('Cross-Origin-Opener-Policy')).toBe('same-origin-allow-popups');
       expect(response.headers.get('Content-Security-Policy')).toBeNull();
       expect(response.headers.get('X-Hub-Viewer-Document')).toBeNull();
-      expect(response.headers.get('Cache-Control')).toBe('no-store');
+      expect(response.headers.get('Cache-Control')).toBe('no-store, no-transform');
       expect(response.headers.get('Vary')).toBe('Sec-Fetch-Dest, Sec-Fetch-Mode');
       const body = await response.text();
       if (method === 'HEAD') expect(body).toBe('');

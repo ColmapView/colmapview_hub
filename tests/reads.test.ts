@@ -51,7 +51,7 @@ describe('tolerant reads', () => {
     const image = await request(`/${link.id}/preview.jpg`);
     expect(image.headers.get('Cache-Control')).toBe('public, max-age=300');
     expect(new Uint8Array(await image.arrayBuffer())).toEqual(base64Bytes(preview));
-    expect((await request(`/${link.id}`)).headers.get('Cache-Control')).toBe('no-store');
+    expect((await request(`/${link.id}`)).headers.get('Cache-Control')).toBe('no-store, no-transform');
   });
 
   // workerd freezes timers during synchronous work, so this checks the one-pass decode's result, not its speed.
