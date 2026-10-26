@@ -8,6 +8,7 @@
 - Remove the dormant unverified link gallery, listing reader, cache, styling and obsolete tests. Keep public discovery restricted to verified opt-ins.
 - Make static exports reproducible, publish compact compatibility documents, and use export schema 2 for the canonical page set. Normalize exported CSS without changing the pinned viewer stylesheet.
 - Migrate optional analytics cookies to the Hub path, remove retired-path cookies and refresh consent for older allowances. Preserve refusals and browser privacy signals; omit ambient cookies from share creation and deletion.
+- Keep the public gallery's security policy consistent when cached HTML is revalidated.
 
 ## 0.19.1 — 2026-10-26
 

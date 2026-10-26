@@ -1,11 +1,23 @@
 import { hubStorage } from '../src/worker/storage';
 import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { base, mockViewerDocument, request, resetState } from './helpers';
+import { base, mockPublicCatalog, mockViewerDocument, request, resetState } from './helpers';
 import { HUB_UI_VERSION } from '../src/shared/ui-version';
 import { datasetSharePath } from '../src/shared/dataset-share';
 
 beforeEach(resetState);
+
+it('preserves the public gallery security policy when revalidating cached HTML', async () => {
+  mockPublicCatalog();
+  const path = '/?seed=52455678';
+  const first = await request(path);
+  expect(first.status).toBe(200);
+  const policy = first.headers.get('Content-Security-Policy');
+  expect(policy).toContain('https://www.googletagmanager.com');
+  const cached = await request(path, { headers: { 'If-None-Match': first.headers.get('ETag')! } });
+  expect(cached.status).toBe(304);
+  expect(cached.headers.get('Content-Security-Policy')).toBe(policy);
+});
 
 it('redirects retired metadata URLs without reading private records or changing viewer selection', async () => {
   const id = 'data-' + 'a'.repeat(24);
