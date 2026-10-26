@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.18.2 — 2026-10-26
+
+- Enforce the authorized owner in the database delete itself. A stale management request cannot delete a replacement owned by someone else or a new catalog reservation. Add regression cases for both interleavings while preserving lookup protection and ordinary deletion behavior.
+
 ## 0.18.1 — 2026-10-26
 
 - Retry transient Wrangler transport failures during migration and read verified staging records in indexed batches for the final cutover. Supersede the prepared 0.18.0 rollout; the Worker and public API behavior are unchanged.

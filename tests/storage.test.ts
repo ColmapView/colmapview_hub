@@ -1,13 +1,34 @@
 import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { approvePublication, reviewPublication } from '../src/worker/publication-review';
+import { hash } from '../src/worker/crypto';
 import { sharedDatasets } from '../src/worker/publications';
+import { recordKey } from '../src/worker/records';
 import { hubStorage } from '../src/worker/storage';
 import { decodePreview } from '../src/worker/validation';
 import { preview } from './fixtures/preview';
-import { input, resetState } from './helpers';
+import { create, input, remove, resetState } from './helpers';
 
 beforeEach(resetState);
+
+it.each(['another owner', 'catalog reservation'])('keeps a replacement %s when a deletion was authorized for the previous record', async kind => {
+  const link = await create();
+  const key = recordKey(link.id);
+  const original = await (await hubStorage.get(env.HUB_DB, key))!.json<Record<string, unknown>>();
+  const replacement = kind === 'another owner'
+    ? { ...original, ownerHash: await hash('B'.repeat(43)), fingerprint: 'b'.repeat(64) }
+    : { schemaVersion: 1, kind: 'catalog', id: link.id, datasetId: 'data-' + 'a'.repeat(24), createdAt: original.createdAt };
+  const erase = hubStorage.delete;
+  vi.spyOn(hubStorage, 'delete').mockImplementationOnce(async (...args) => {
+    // Another operation reuses the name after authorization but before the SQL delete.
+    await hubStorage.put(env.HUB_DB, key, JSON.stringify(replacement));
+    return erase(...args);
+  });
+  expect((await remove(link.id)).status).toBe(204);
+  const current = await hubStorage.get(env.HUB_DB, key);
+  expect(current).not.toBeNull();
+  expect(await current!.json()).toEqual(replacement);
+});
 
 const publication = (id: string) => ({ ...input(), id, listed: true, schemaVersion: 1,
   ownerHash: 'a'.repeat(64), fingerprint: 'b'.repeat(64), createdAt: '2026-10-25T00:00:00Z',

@@ -86,10 +86,15 @@ async function put(db: D1Database, key: string, body: string, options: WriteOpti
   return (await entryInsert(db, key, body, options).run()).meta.changes > 0;
 }
 
-async function remove(db: D1Database, key: string): Promise<void> {
-  if (key === WORDLIST_KEY) { await db.prepare('DELETE FROM hub_settings WHERE key = ?').bind(key).run(); return; }
+/** Guard management deletes with the authorized owner when a name is reused. */
+async function remove(db: D1Database, key: string, ownerHash?: string): Promise<void> {
+  if (key === WORDLIST_KEY) {
+    if (ownerHash !== undefined) throw new Error('Naming configuration has no upload owner');
+    await db.prepare('DELETE FROM hub_settings WHERE key = ?').bind(key).run(); return;
+  }
   const { namespace, id } = address(key);
-  await db.prepare('DELETE FROM hub_entries WHERE namespace = ? AND id = ?').bind(namespace, id).run();
+  await db.prepare(`DELETE FROM hub_entries WHERE namespace = ? AND id = ?${ownerHash === undefined ? '' : ' AND owner_hash = ?'}`)
+    .bind(namespace, id, ...(ownerHash === undefined ? [] : [ownerHash])).run();
 }
 
 function readCursor(cursor: string | undefined, namespace: Namespace): string {

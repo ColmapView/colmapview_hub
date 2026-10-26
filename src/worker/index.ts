@@ -232,9 +232,11 @@ async function deleteLink(request: Request, env: Env, ctx: ExecutionContext, loc
   const presented = request.headers.get('Authorization')?.match(/^Bearer (.*)$/)?.[1];
   const secret = presented && SECRET_PATTERN.test(presented) ? presented : undefined;
   let owned: boolean;
+  let ownerHash: string;
   try {
     const record = secret && ID_PATTERN.test(id) ? await readOwnership(env.HUB_DB, id) : null;
-    owned = secret ? equalHashes(record?.ownerHash ?? '0'.repeat(64), await hash(secret)) : false;
+    ownerHash = secret ? await hash(secret) : '';
+    owned = secret ? equalHashes(record?.ownerHash ?? '0'.repeat(64), ownerHash) : false;
   } catch (error) {
     const refusal = await check(null);
     if (refusal) return refusal;
@@ -244,7 +246,7 @@ async function deleteLink(request: Request, env: Env, ctx: ExecutionContext, loc
   const refusal = await check(owned ? null : await hash(missKey(id)));
   if (refusal) return refusal;
   if (!owned) return failure(location, true, 404);
-  await hubStorage.delete(env.HUB_DB, recordKey(id));
+  await hubStorage.delete(env.HUB_DB, recordKey(id), ownerHash);
   if (isListedId(id)) ctx.waitUntil(purgeGallery(location));
   return new Response(null, { status: 204 });
 }

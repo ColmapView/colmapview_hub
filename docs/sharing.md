@@ -42,6 +42,7 @@ Anyone with a link can read its card, and publicly disclosed links can be collec
 **Management key:**
 - The browser generates a 256-bit management key before submitting.
 - Its hash is stored. The raw key stays in the browser and in the private delete link's fragment (`/hub/manage/<id>#<key>`).
+- Management deletion checks the key and includes its hash in the SQL delete condition. If the name is concurrently reused by another owner or reserved for the catalog, that replacement survives the earlier request.
 - A retry with the same key and content is idempotent; changed content answers 409.
 - Keep `HUB_KEY` and the version-1 dictionaries stable so retries stay deterministic.
 
