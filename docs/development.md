@@ -66,6 +66,7 @@ npm run test:browser
 | `npm run test:catalog` | JavaScript catalog policy, rendering, search and count regressions |
 | `npm run test:python` | Python scene projection and evidence validation |
 | `npm test` | Worker routes, D1 records and real SQLite Durable Object runtime |
+| `npm run test:backup` | Large-setting and binary-preview recovery in local D1, including refusal to overwrite existing state |
 | `npm run build` | Offline assets and a Wrangler deployment dry run |
 | `npm run test:browser` | Catalog, share-card, management, theme and static asset flows |
 

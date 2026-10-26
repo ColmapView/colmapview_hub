@@ -2,6 +2,8 @@
 
 This revision removes the remembered-connection service. Google and Hugging Face authentication and bucket signing run directly in the viewer tab. The Worker has no credential store, provider token exchange or S3 signer. Public Hub cards and the catalog continue to use their existing storage and routes.
 
+Storage update — October 26, 2026: Hub metadata and previews now use D1. The former R2 bucket was deleted after approval and a verified export-and-restore rehearsal; see [backups and recovery](operations.md#d1-backups-and-recovery). The dated receipts below describe the earlier credential-service retirement.
+
 ## Compatibility behavior
 
 `GET /auth/session` returns all provider capabilities disabled, no accounts, no bucket and zero expiry. Other `/auth/*` requests return 410 with a reconnect message. Neither response reads a credential body, opens old session storage or fetches a provider. Responses have `no-store`, no-referrer and no CORS allowance. A supplied legacy session cookie is expired; anonymous checks set no cookie. Keep invocation URL logging disabled so an obsolete callback does not enter automatic application logs.

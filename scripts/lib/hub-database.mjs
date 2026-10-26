@@ -5,8 +5,7 @@ import { build } from 'esbuild';
 import { getPlatformProxy } from 'wrangler';
 
 /** Operator access uses Wrangler's credentials; no database endpoint or token is exposed to clients. */
-export async function openHubDatabase({ remote = false, state = '.wrangler/state', legacySource = false } = {}) {
-  if (legacySource && !remote) throw new Error('The legacy migration reads production explicitly with --remote.');
+export async function openHubDatabase({ remote = false, state = '.wrangler/state' } = {}) {
   const source = await readFile('wrangler.jsonc', 'utf8');
   const account = source.match(/"account_id"\s*:\s*"([a-f0-9]{32})"/)?.[1];
   const database = source.match(/"database_id"\s*:\s*"([a-f0-9-]{36})"/)?.[1];
@@ -15,11 +14,10 @@ export async function openHubDatabase({ remote = false, state = '.wrangler/state
   const scratch = await mkdtemp(resolve('.tmp/hub-database/run-'));
   const configPath = resolve(scratch, 'wrangler.json');
   await writeFile(configPath, JSON.stringify({ name: 'colmapview-hub-operator', account_id: account,
-    compatibility_date: '2026-10-25', d1_databases: [{ binding: 'HUB_DB', database_name: 'colmapview-hub', database_id: database, remote }],
-    ...(legacySource ? { r2_buckets: [{ binding: 'LEGACY_LINKS', bucket_name: 'colmapview-hub', remote: true }] } : {}) }));
+    compatibility_date: '2026-10-25', d1_databases: [{ binding: 'HUB_DB', database_name: 'colmapview-hub', database_id: database, remote }] }));
   const proxy = await getPlatformProxy({ configPath, persist: remote ? false : { path: resolve(state, 'v3') },
     remoteBindings: remote, envFiles: [] });
-  return { database: proxy.env.HUB_DB, legacy: proxy.env.LEGACY_LINKS, dispose: () => proxy.dispose() };
+  return { database: proxy.env.HUB_DB, dispose: () => proxy.dispose() };
 }
 
 export function applyLocalMigrations(state) {

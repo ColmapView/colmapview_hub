@@ -47,8 +47,24 @@ create or delete these reservations. The old dataset-code routes keep working.
 
 Public community submissions use a separate rollout. Production enables `HUB_PUBLICATIONS_ENABLED` with a managed Turnstile widget restricted to the two viewer hosts; keep `HUB_LISTINGS_ENABLED=false`. A missing Turnstile secret disables submissions. Follow [the publication setup and review runbook](publication.md), then test one verified listing, one pending source and one rejected challenge. Deploy the Hub before releasing the viewer button. Existing share links and the curated catalog do not depend on this flag.
 
-## Moving legacy share records to D1
+## D1 backups and recovery
 
-`node scripts/audit/migrate-links-to-d1.mjs --remote` inventories the detached legacy bucket without changing it. Add `--apply` for create-only import and verification of record contents, exact preview bytes and private naming configuration. `--verify` checks without inserting. A successful full pass also saves a private, Git-ignored ETag/checksum snapshot. Add `--incremental` for catch-up: unchanged source ETags reuse that verified source evidence while every database row is rechecked against its checksum. New sources are read and verified in full; missing or altered rows stop cutover. Counts and aggregate byte totals are saved under `.tmp/`; record contents and private dictionaries are not printed. Curated static assets stay in the normal build.
+The migration completed on October 26, 2026. The former `colmapview-hub` R2 bucket and its 4,569 objects (855,131 bytes) were deleted after approval. A private SQL export was restored and verified against all 4,569 migrated records and all nine preview JPEGs. The one-time R2 importer and its binding configuration have been removed. Roll back only to a D1-compatible Worker; R2-only versions cannot serve this deployment.
 
-Before the final copy, briefly pause link creation, publication and deletion while keeping existing reads available. Allow already-running writes to finish, rerun the import and verification, and deploy the D1 Worker. Keep the old bucket untouched and unbound for rollback; do not delete it as part of this migration. After cutover, new links exist only in D1, so rolling back to an old R2-only Worker requires reconciling post-cutover changes first. D1 migrations are append-only and must be applied before deploying code that needs them.
+Create backups outside the repository:
+
+```sh
+npx wrangler d1 export colmapview-hub --remote --output /secure/path/hub.sql
+```
+
+Exports contain unlisted link metadata, preview bytes, ownership hashes and private naming configuration. Keep them private and out of Git, public artifacts and support tickets. They contain no provider credentials or Cloudflare secret bindings. Keep `HUB_KEY` stable and retain its separately managed secret.
+
+Use only trusted operator exports. Rehearse restoration in a new local state directory:
+
+```sh
+node scripts/restore-hub-backup.mjs --file /secure/path/hub.sql --persist-to .tmp/hub-restore-new
+```
+
+The restore tool parses the export with Node.js 24's SQLite support, applies local migrations, and copies application rows with bound parameters. This avoids D1's SQL-statement length limit for large settings and legacy preview literals. It preserves binary JPEGs and refuses existing local state. A successful rehearsal checks both table counts; the retirement rehearsal also compared every restored value with the original export.
+
+For a fresh remote recovery database, configure its `HUB_DB` ID in `wrangler.jsonc`, apply the migrations, then run the same restore command with `--remote` instead of `--persist-to`. The tool checks both application tables before writing and refuses nonempty databases. It never merges an old backup into a running Hub. After an interrupted restore, use another empty recovery database. Use [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/) for in-place point-in-time recovery.

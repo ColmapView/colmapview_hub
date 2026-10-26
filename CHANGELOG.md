@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.18.3 — 2026-10-26
+
+- Retire the approved legacy R2 bucket and remove the one-time importer and optional R2 operator binding. Preserve the verified SQL backup outside Git.
+- Add recovery through bound D1 parameters, preserving large naming configuration and binary previews without oversized SQL literals. Refuse existing local state and nonempty databases, exercise recovery against local D1, and document the recovery procedure.
+
 ## 0.18.2 — 2026-10-26
 
 - Enforce the authorized owner in the database delete itself. A stale management request cannot delete a replacement owned by someone else or a new catalog reservation. Add regression cases for both interleavings while preserving lookup protection and ordinary deletion behavior.
