@@ -1,6 +1,6 @@
 {
   "name": "colmapview_hub",
-  "version": "0.20.1",
+  "version": "0.20.2",
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -27,10 +27,11 @@
     "test:catalog": "node --test tests/catalog.test.mjs tests/catalog-share-names.test.mjs tests/individual-catalog.test.mjs tests/native-text-counts.test.mjs tests/native-pose-stream.test.mjs tests/photo-routing-records.test.mjs tests/manifest-plan.test.mjs tests/video-frame-authoring.test.mjs",
     "test:python": "node scripts/run-python.mjs -m unittest discover -s tests -p \"test_*.py\"",
     "test:backup": "node --test tests/hub-backup.test.mjs",
+    "test:deployment": "node --test tests/github-assets.test.mjs",
     "test:browser": "playwright test --workers=1",
     "test:manifest-runner": "node --test tests/manifest-runner.test.mjs",
-    "check": "npm run check:code && npm run test:catalog && npm run test:python && npm run test:backup && npm test && npm run build",
-    "deploy": "npm run build:assets && wrangler deploy"
+    "check": "npm run check:code && npm run test:catalog && npm run test:python && npm run test:backup && npm run test:deployment && npm test && npm run build",
+    "deploy": "npm run build:assets && node scripts/deploy/retain-frontend-assets.mjs && wrangler deploy"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.4.0",

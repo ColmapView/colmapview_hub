@@ -23,7 +23,11 @@ test('public export downloads are exact HTTP 200 files without HTML canonicaliza
   }
 });
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, context }) => {
+  // Never let requests fall through to production when page mocks are removed.
+  for (const origin of [github, production]) {
+    await context.route(origin + '/hub/**', route => route.abort('blockedbyclient'));
+  }
   const manifest = JSON.parse(await readFile('public/hub/assets/github/site.json', 'utf8')) as { files: { path: string; artifact: string }[] };
   await page.route(github + '/hub/**', async route => {
     const pathname = new URL(route.request().url()).pathname.replace(/^\/hub\//, '');
@@ -38,8 +42,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.afterEach(async ({ page }) => {
-  // Finish proxied asset requests before Playwright disposes the browser context.
-  await page.unrouteAll({ behavior: 'wait' });
+  // Assertions are complete. Late lazy-image requests must not delay context cleanup.
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
 });
 
 test('GitHub gallery keeps browsing, search, metadata and Back on GitHub using public APIs', async ({ page, context }) => {

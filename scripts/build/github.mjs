@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { catalogRenderer } from './renderer.mjs';
+import { pinnedFrontendAssets, sha256 } from '../lib/github-frontend.mjs';
 
 // Offline export: only public templates and catalog filter choices. Live rows,
 // shares and previews stay on the public API; Worker code/configuration never ship.
@@ -21,14 +21,14 @@ const redirect = '<!doctype html><html lang="en" data-hub-redirect="true"><head>
   + '<title>ColmapView Hub</title><script type="module" crossorigin="anonymous" src="https://colmapview.opsiclear.com/hub/assets/catalog-redirect.js"></script>'
   + '<noscript><meta http-equiv="refresh" content="0; url=/hub/"></noscript></head><body><p>Open <a href="/hub/">ColmapView Hub</a>.</p></body></html>';
 await mkdir(directory, { recursive: true });
-// Keep old HTML usable while the two frontends deploy independently. These
-// immutable public assets are retained; mutable build output is never its dependency.
+// Each document pins its dependencies. Deployment retains the live frontend's
+// files separately, including when this build starts from a clean checkout.
 const pinned = new Map();
 for (const name of ['colmapview.css', 'styles.css', 'assets/theme.js', 'assets/client.js',
   'assets/individual-catalog.js', 'assets/catalog-entry.js', 'assets/catalog-redirect.js']) {
   let content = (await readFile(`public/hub/${name}`, 'utf8')).replaceAll('\r\n', '\n');
   if (name.endsWith('.css')) content = content.replaceAll("url('./fonts/", "url('https://colmapview.opsiclear.com/hub/fonts/");
-  const digest = createHash('sha256').update(content).digest('hex');
+  const digest = sha256(content);
   const file = `${digest}.${name.endsWith('.css') ? 'css' : 'js'}`;
   await writeFile(`${directory}/${file}`, content);
   pinned.set(`https://colmapview.opsiclear.com/hub/${name}`, `https://colmapview.opsiclear.com/hub/assets/github/${file}`);
@@ -38,18 +38,12 @@ for (const [paths, template] of [[['index.html'], gallery], [['entry/index.html'
   [['datasets/index.html', 'datasets/entry/index.html'], redirect]]) {
   let html = template;
   for (const [original, immutable] of pinned) html = html.replaceAll(`${original}?v=${HUB_UI_VERSION}`, immutable).replaceAll(original, immutable);
-  for (const [, tag, attributes] of html.matchAll(/<(script|link)\b([^>]+)>/g)) {
-    if (tag === 'link' && !attributes.includes('rel="stylesheet"')) continue;
-    const reference = /(?:src|href)="([^"]+)"/.exec(attributes)?.[1];
-    if (reference && !/^https:\/\/colmapview\.opsiclear\.com\/hub\/assets\/github\/[a-f0-9]{64}\.(?:js|css)$/.test(reference)) {
-      throw new Error('GitHub templates must pin every frontend script and stylesheet.');
-    }
-  }
+  pinnedFrontendAssets(html);
   const bytes = Buffer.from(html);
-  const sha256 = createHash('sha256').update(bytes).digest('hex');
-  const artifact = `/hub/assets/github/${sha256}.html`;
-  await writeFile(`${directory}/${sha256}.html`, bytes);
-  for (const path of paths) files.push({ path, artifact, sha256, bytes: bytes.length });
+  const digest = sha256(bytes);
+  const artifact = `/hub/assets/github/${digest}.html`;
+  await writeFile(`${directory}/${digest}.html`, bytes);
+  for (const path of paths) files.push({ path, artifact, sha256: digest, bytes: bytes.length });
 }
 const { version } = JSON.parse(await readFile('package.json', 'utf8'));
 const git = args => execFileSync('git', args, { encoding: 'utf8' }).trim();

@@ -67,6 +67,7 @@ npm run test:browser
 | `npm run test:python` | Python scene projection and evidence validation |
 | `npm test` | Worker routes, D1 records and real SQLite Durable Object runtime |
 | `npm run test:backup` | Large-setting and binary-preview recovery in local D1, including refusal to overwrite existing state |
+| `npm run test:deployment` | Offline fresh-checkout retention, fixed public origins, hash/size limits and deploy ordering |
 | `npm run build` | Offline assets and a Wrangler deployment dry run |
 | `npm run test:browser` | Catalog, share-card, management, theme and static asset flows |
 
@@ -89,6 +90,7 @@ ESLint rejects imports between client and Worker modules and server platform imp
 Tooling is organized by task:
 
 - `scripts/build/` explicitly builds the browser bundles, then projects committed inputs into public catalog assets. It performs no provider audits or image downloads.
+- `scripts/deploy/` verifies and retains the live public frontend's files before production upload. This network preparation is separate from offline builds and uses no provider or user credentials.
 - `scripts/catalog/` contains the offline JavaScript/Python rules used by imports, builds and policy tests.
 - `scripts/audit/` contains operator commands that may read source providers, produce audit receipts or prepare canonical inputs. Run them separately using the [catalog refresh instructions](../data/README.md).
 

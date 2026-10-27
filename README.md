@@ -25,11 +25,12 @@ Open `http://localhost:5201/hub/`. Development uses local D1/Durable Object stat
 | --- | --- |
 | `npm run dev` | Build local assets and start the Hub |
 | `npm run check:code` | Fast type, lint and pinned stylesheet checks |
-| `npm run check` | Code checks, catalog/Python/Worker tests and build dry run |
+| `npm run check` | Code checks, offline regression suites and build dry run |
+| `npm run test:deployment` | Offline asset-retention and deployment contract checks |
 | `npm run test:browser` | Browser integration checks; install Chromium first |
 | `npm run build:assets` | Rebuild browser assets and the public catalog offline |
 | `npm run catalog:import -- --viewer-root PATH` | Refresh metadata from the local survey inputs |
-| `npm run deploy` | Build assets and deploy the Hub; see the operations guide |
+| `npm run deploy` | Build, retain verified live frontend assets and deploy; see the operations guide |
 
 CI runs `npm run check`, `npm run test:browser` and a redacted secret scan of the complete Git history. CI has read-only repository access and no production deployment credentials. Individual suites and audit commands are documented below.
 
@@ -41,6 +42,7 @@ CI runs `npm run check`, `npm run test:browser` and a redacted secret scan of th
 | `src/client/` | Browser controls, asynchronous catalog browsing and theme |
 | `src/shared/` | Runtime-neutral models, catalog logic and HTML helpers |
 | `scripts/build/` | Deployable client and catalog asset builds |
+| `scripts/deploy/` | Verify and retain live frontend assets before upload |
 | `scripts/catalog/` | Offline catalog imports, projections and publication policy |
 | `scripts/audit/` | Operator source audits, inventory preparation and preview preparation |
 | `scripts/lib/` | Shared command helpers |

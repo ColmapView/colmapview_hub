@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.20.2 — 2026-10-26
+
+- Make production updates retain verified assets required by the live GitHub gallery and current Hub export, including from a clean checkout. Keep builds offline; reject dirty-source exports before network preparation, bound public downloads, verify hashes and leave the new manifest intact before upload.
+- Stop completed browser checks waiting on optional lazy-image proxy requests during teardown, while keeping active checks strict and blocking unmatched requests to production.
+
 ## 0.20.1 — 2026-10-26
 
 - Preserve `no-transform` on every Hub HTML response, including fresh feeds, private share pages and errors. Prevent Cloudflare's automatic beacon injection while retaining the consent-controlled analytics path.
