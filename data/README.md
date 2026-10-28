@@ -1,10 +1,18 @@
 # Dataset catalog
 
+Reviewed public HF gated sources are listed with a login placeholder and clear
+gate label. Their model compatibility remains tied to its original pinned
+receipt; downloads require the viewer user's own approved HF account. The
+`gatedPublicListing` operator opt-in restores ScanNetPoseRefine's 1,513 entries,
+bringing the curated listing to 4,559 scenes in 144 collections. This does not
+restore missing original photos, share credentials with the Hub, or admit private
+collections. The following October 28 audit totals describe the preceding release.
+
 The [October 28 missing-thumbnail audit](../docs/thumbnail-recovery-2026-10-28.md)
 checks all 1,719 entries without previews in the preceding public catalog.
 Sixteen GS-Pool CL-Splats entries regain original photographs and previews from
 the separately pinned original release. ScanNetPoseRefine now requires access
-approval; its 1,513 entries are excluded from the public projection while research
+approval; its 1,513 entries were excluded from that release's public projection while research
 and historical evidence remain intact. The resulting catalog has 3,046 scenes
 across 143 source collections. The compressed
 `thumbnail-recovery-audit-2026-10-28.json.gz` records every checked selection,

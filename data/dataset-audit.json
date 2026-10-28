@@ -19307,7 +19307,8 @@
           "checkedAt": "2026-10-28T07:00:30.488723+00:00",
           "scope": "Fresh anonymous bounded read; no access credentials used."
         }
-      ]
+      ],
+      "gatedPublicListing": true
     },
     {
       "sourceId": "hf:BlueIsGreen/Edge-Agent-Reasoning-WebSearch-260K",

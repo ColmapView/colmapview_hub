@@ -18,6 +18,7 @@ import { VIDEO_CAPTURE_LABELS } from './video-capture';
 import { isGaussianRoutingEvidence, type GaussianRoutingEvidence } from './gaussian-routing';
 
 export interface IndividualSource {
+  gatedPublicListing?: boolean;
   id: string; sourceId: string; title: string; label: string;
   sourceUrl?: string;
   provider: CatalogEntry['provider']; license: string; licenseCategory?: LicenseCategory; access: CatalogEntry['access'];
@@ -123,7 +124,7 @@ export function canOpenIndividual(row: IndividualRecord, source: IndividualSourc
       proof.sceneCompatibility?.revision ?? proof.sceneValidation?.revision, kind, path, files, proof.viewerUrl)) return false;
     proof = { ...proof, viewerUrl: proof.gaussianRouting.baseViewerUrl };
   }
-  if (source.access !== 'public' || archive || proof?.opening || failedDelivery.has(proof?.delivery || '')) return false;
+  if ((source.access !== 'public' && !(source.access === 'gated' && source.gatedPublicListing)) || archive || proof?.opening || failedDelivery.has(proof?.delivery || '')) return false;
   if (['conversion_needed', 'no_native_assets', 'unavailable'].includes(proof?.level || '')) return false;
   if (proof?.sampleScope === 'companion_asset') return false;
   const compatibility = proof?.sceneCompatibility;
@@ -175,7 +176,7 @@ export function individualSummary(row: IndividualRecord, source: IndividualSourc
       : proof?.sceneValidation ?? proof?.sceneCompatibility),
     // The public JSON contract remains compatible with older pinned clients.
     ...(canOpenIndividual(row, source) ? { openUrl: `/hub/datasets/open/${id}` } : {}),
-    description: gated ? 'The source lists this model, but its files require access and cannot be downloaded anonymously. File compatibility and complete loading remain unverified.'
+    description: gated ? 'Files require an approved Hugging Face account. Existing model checks are retained; complete loading with your account remains a separate check.'
       : proof?.summary || `${kindLabel} listed in ${source.title}${archive ? ` inside ${archive}; extract it before attempting to load this model` : ''}. This individual model has not passed a complete load check.`,
     delivery: gated ? 'gated' : proof?.delivery || 'not_tested', hasViewer: canOpenIndividual(row, source) && Boolean(proof?.viewerUrl) };
 }
@@ -199,7 +200,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
   const verification: CatalogVerification = { ...(proof || { level: 'file_set_only', delivery: summary.delivery!, checkedAt: parent.checkedAt,
     summary: summary.description, scope: 'This model’s filenames only. Source-wide samples do not certify sibling models or their photos and masks.',
     viewerVersion: parent.verification?.viewerVersion || 'Not checked' }),
-    ...(gated ? { delivery: 'gated', opening: { status: 'access_required' as const, summary: 'Obtain access and download this file on Hugging Face, then attempt local import. Direct gated loading and format compatibility have not been verified.' } }
+    ...(gated ? { delivery: 'gated', opening: { status: 'access_required' as const, summary: 'Sign in with a Hugging Face account approved by the publisher. Files download directly to your browser.' } }
       : archive ? { opening: { status: 'extraction_required' as const, summary: `Extract ${path || 'the selected model'} from the source archive before attempting to load this entry. Other archive members do not certify this model.` } } : {}) };
   return { ...parent, ...summary, id, sourceId: `${parent.sourceId}#${kind}:${archive || ''}:${path}`, sourceUrl: parent.provider === 'public' ? parent.sourceUrl
     : archive ? tree(archive.split('/').slice(0, -1).join('/')) : tree(folder ? path : path.split('/').slice(0, -1).join('/')),

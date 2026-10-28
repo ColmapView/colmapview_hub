@@ -3,6 +3,8 @@ import { individualListingSummary } from './individual-listings.mjs';
 /** Keep in sync with is_access_restricted in build_individual_catalog.py.
  * Both consumers run the same publication-policy fixtures. */
 export function isAccessRestricted(entry) {
+  if (entry.private === true) return true;
+  if (entry.gatedPublicListing === true && entry.sourceId?.startsWith('hf:') && (entry.access === 'gated' || entry.gated)) return false;
   return entry.access === 'gated' || Boolean(entry.gated) || entry.delivery === 'gated'
     || entry.verification?.delivery === 'gated' || entry.verification?.opening?.status === 'access_required';
 }

@@ -1,6 +1,9 @@
 [
   { "name": "anonymous source", "entry": { "access": "public" }, "excluded": false },
   { "name": "gated collection", "entry": { "access": "gated" }, "excluded": true },
+  { "name": "reviewed public HF gate", "entry": { "sourceId": "hf:owner/data", "access": "gated", "gatedPublicListing": true }, "excluded": false },
+  { "name": "private metadata never becomes a public gate", "entry": { "sourceId": "hf:owner/data", "access": "gated", "private": true, "gatedPublicListing": true }, "excluded": true },
+  { "name": "public gate opt-in is HF only", "entry": { "sourceId": "public:other", "access": "gated", "gatedPublicListing": true }, "excluded": true },
   { "name": "automatic approval", "entry": { "gated": "auto" }, "excluded": true },
   { "name": "manual approval", "entry": { "gated": "manual" }, "excluded": true },
   { "name": "ungated metadata", "entry": { "gated": false }, "excluded": false },

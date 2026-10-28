@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.20.6 — 2026-10-28
+
+- Restore 1,513 operator-reviewed, publicly listed gated scenes with clear login placeholders and pinned manifests declaring their Hugging Face access requirements. Retain exact model variants and historical evidence.
+- Keep private sources excluded, restricted thumbnails unpublished and user publication subject to anonymous server verification. No viewer credentials reach the Worker.
+- Align viewer availability filters with launch eligibility and include photo-source helpers in the catalog generation fingerprint.
+
 ## 0.20.5 — 2026-10-28
 
 - Audit all 1,719 entries without thumbnails. Restore original public photographs and attributed previews to 16 GS-Pool CL-Splats entries, preserving native models and Gaussian companions.

@@ -1,7 +1,7 @@
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { retainFrontendAssets } from '../scripts/deploy/retain-frontend-assets.mjs';
@@ -9,6 +9,10 @@ import { FRONTEND_FILES, GITHUB_ORIGIN, HUB_ORIGIN, pinnedFrontendAssets, sha256
 
 const githubManifest = GITHUB_ORIGIN + '/hub/deployment.json';
 const currentManifest = HUB_ORIGIN + '/hub/assets/github/site.json';
+const temporaryOutputs = [];
+after(async () => {
+  await Promise.all(temporaryOutputs.map(output => rm(output, { recursive: true, force: true })));
+});
 const assetUrl = (bytes, extension) => `${HUB_ORIGIN}/hub/assets/github/${sha256(bytes)}.${extension}`;
 
 function fixture() {
@@ -40,6 +44,7 @@ function fixture() {
 async function freshOutput() {
   await mkdir('.tmp', { recursive: true });
   const output = await mkdtemp('.tmp/github-assets-test-');
+  temporaryOutputs.push(output);
   const future = Buffer.from('A newer local client build');
   await writeFile(`${output}/${sha256(future)}.js`, future);
   await writeFile(`${output}/site.json`, 'The new build manifest');

@@ -53,7 +53,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
     + '<p>Share your public dataset on the Hub by uploading it to Hugging Face through ColmapView, then selecting “Share on Hub.”</p></div></details>';
   const countDescription = loading ? 'Loading datasets…' : result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
-  const status = '<div class="catalog-result-summary"><p id="catalog-notice" class="catalog-notice" tabindex="-1">ColmapView does not host the source datasets. They are publicly available elsewhere on the web.</p>'
+  const status = '<div class="catalog-result-summary"><p id="catalog-notice" class="catalog-notice" tabindex="-1">ColmapView does not host the source datasets. Some sources require login or approval.</p>'
     + `<p id="catalog-count" class="catalog-count sr-only" role="status" aria-label="${countDescription}">${result.total ? `${number(offset + 1)}–${number(offset + result.entries.length)} / ${number(result.total)}` : loading ? 'Loading…' : 'No matching datasets'}</p>`
     + '<p id="catalog-status" class="catalog-status sr-only" role="status" tabindex="-1"></p></div>'
     + `<a id="catalog-shuffle" class="button icon-button" href="${escape(individualBrowseUrl(shuffle))}" aria-label="Shuffle" title="Shuffle">${icon('shuffle')}</a>`

@@ -1,17 +1,25 @@
 import { expect, test } from '@playwright/test';
 
-test('newly gated sources are excluded from public search, metadata and historical launches', async ({ page }) => {
+test('reviewed public gated sources show login placeholders and keep authenticated viewer launches', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
-  expect(index.sources.some((item: { sourceId: string }) => item.sourceId === 'hf:Bluefish2333/ScannetPoseRefine')).toBe(false);
-  const result = await (await page.request.get('/hub/datasets/api/entries?q=ScannetPoseRefine')).json();
-  expect(result.total).toBe(0);
-  expect(result.entries).toEqual([]);
+  const source = index.sources.find((item: { sourceId: string }) => item.sourceId === 'hf:Bluefish2333/ScannetPoseRefine');
+  expect(source).toMatchObject({ access: 'gated', gatedPublicListing: true });
+  const result = await (await page.request.get(`/hub/datasets/api/entries?dataset=${source.id}&q=scene0000_00`)).json();
+  expect(result.total).toBe(1);
+  expect(result.entries[0]).toMatchObject({ access: 'gated', hasViewer: true });
   const original = await page.request.get('/hub/open/data-93580dd2921e94e0c8d2e4e6', { maxRedirects: 0 });
-  expect(original.status()).toBe(404);
+  expect(original.status()).toBe(302);
+  const launchUrl = new URL(original.headers().location, 'https://colmapview.opsiclear.com').searchParams.get('url');
+  expect(launchUrl).toMatch(/\.manifest\.json$/);
+  const launch = await (await page.request.get(new URL(launchUrl!).pathname)).json();
+  expect(launch.access).toEqual([{ provider: 'huggingface', repository: 'Bluefish2333/ScannetPoseRefine', requirement: 'gated' }]);
+  expect(launch.files.cameras).toContain('/scene0000_00/sparse/init/cameras.bin');
   const metadata = await page.request.get('/hub/datasets/individual/sources/hf-bluefish2333-scannetposerefine-2aaaa366183a.json');
-  expect(metadata.status()).toBe(404);
-  await page.goto('/hub/?q=ScannetPoseRefine');
-  await expect(page.locator('.dataset-card')).toHaveCount(0);
+  expect(metadata.status()).toBe(200);
+  await page.goto(`/hub/?dataset=${source.id}&q=scene0000_00`);
+  await expect(page.locator('.dataset-card')).toHaveCount(1);
+  await expect(page.locator('.dataset-preview-placeholder')).toContainText('Login required');
+  await expect(page.locator('.dataset-review')).toHaveText('Gated · HF login required');
 });
 
 test('the Gaussian scene filter returns the same kind and count reported by its cards', async ({ page }) => {

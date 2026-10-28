@@ -158,9 +158,11 @@ export function sceneThumbnailCreditHtml(thumbnail: SceneThumbnail): string {
   return `${credit} · ${terms}`;
 }
 
-export function scenePlaceholderHtml(entry: { title: string }): string {
-  const label = 'No preview';
+export function scenePlaceholderHtml(entry: { title: string; access?: string }): string {
+  const label = entry.access === 'gated' ? 'Login required' : 'No preview';
   return `<figure class="dataset-preview dataset-preview-placeholder" role="img" aria-label="${escape(`${label}: ${entry.title}`)}">`
-    + '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="26" height="22" rx="2"/><circle cx="11" cy="12" r="2"/><path d="m4 24 8-8 6 6 4-4 7 7"/></svg>'
+    + '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">'
+    + (entry.access === 'gated' ? '<rect x="7" y="14" width="18" height="14" rx="2"/><path d="M11 14V9a5 5 0 0 1 10 0v5M16 20v3"/>'
+      : '<rect x="3" y="5" width="26" height="22" rx="2"/><circle cx="11" cy="12" r="2"/><path d="m4 24 8-8 6 6 4-4 7 7"/>') + '</svg>'
     + `<span>${label}</span></figure>`;
 }

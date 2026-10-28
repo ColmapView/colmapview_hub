@@ -1,5 +1,20 @@
 # Public dataset catalog
 
+Operator-reviewed, publicly listed HF gated sources can opt in through
+`gatedPublicListing`. They retain cached native-model compatibility evidence,
+show a **Login required** placeholder and **Gated** label, and open the viewer's
+browser-only HF sign-in flow. Publisher approval still applies. Private sources
+and other unreviewed restrictions remain excluded. Shared-on-Hub publication
+continues to require anonymous public access; this curated flag is never a
+user-submitted publication option.
+
+Gated native launches include repository-scoped `access` declarations in their
+immutable manifests. The viewer's [access contract](https://github.com/colmapview/colmapview.github.io/blob/main/docs/manifest-access.md)
+defines schema, retry behavior and credential boundaries. Source review metadata
+remains authoritative for curated labels; user-supplied manifest hints never
+override publication checks. Access-only manifests preserve exact pinned model
+files and model-folder scope; they do not claim a checked photo mapping.
+
 The Hub is a photo gallery: each tile has a single-line scene caption and, when
 verified, a small **Gaussians** label. Source, content roles and licence appear on
 hover or keyboard focus. The image opens the viewer directly; the corner info

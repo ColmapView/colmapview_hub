@@ -18,17 +18,24 @@ LAUNCH_ASSETS = 'https://colmapview.opsiclear.com/hub/datasets/individual/manife
 
 
 def native_launch_manifest(entry, review, hf_url):
+    access = ([{'provider': 'huggingface', 'repository': entry['sourceId'][3:], 'requirement': 'gated'}]
+              if entry.get('provider') == 'huggingface' and entry.get('access') == 'gated'
+              and entry.get('gatedPublicListing') is True else None)
     image = review.get('imagePrefix')
     skip_images = review.get('skipImages')
     if skip_images is not None and (skip_images is not True or image or review.get('photos') != 'unresolved'):
         raise ValueError('Skipping native photos requires an unresolved photo review without an image prefix')
-    if not image and not skip_images:
+    if not image and not skip_images and not access:
         return None
     files = {role: hf_url(entry, review['revision'], review['files'][key])
              for role, key in [('cameras', 'cameras'), ('images', 'images'), ('points3D', 'points3d')] if key in review['files']}
+    hints = {'access': access} if access else {}
+    if not image and not skip_images:
+        return {'version': 1, 'baseUrl': hf_url(entry, review['revision'], review['path']) + '/',
+                'files': files, **hints}
     if skip_images:
         return {'version': 1, 'baseUrl': LAUNCH_ASSETS, 'files': files,
-                'skipImages': True, 'images': [], 'masks': [], 'splats': []}
+                'skipImages': True, 'images': [], 'masks': [], 'splats': [], **hints}
     if (not isinstance(image, dict) or not image.get('registeredName') or not image.get('samplePath')
             or not re.fullmatch('[a-f0-9]{64}', image.get('samplePrefixSha256', ''))
             or image.get('browserRead') is not True or image.get('dimensionsMatch') is not True
@@ -42,7 +49,7 @@ def native_launch_manifest(entry, review, hf_url):
             or prefix.rstrip('/') + '/' + image['registeredName'] != image['samplePath']):
         raise ValueError('Native photo prefix does not preserve its registered image name')
     return {'version': 1, 'baseUrl': LAUNCH_ASSETS, 'files': files,
-            'imagesPath': hf_url(entry, review['revision'], prefix.rstrip('/')) + '/', 'splats': []}
+            'imagesPath': hf_url(entry, review['revision'], prefix.rstrip('/')) + '/', 'splats': [], **hints}
 
 
 def launch_manifest_asset(manifest):

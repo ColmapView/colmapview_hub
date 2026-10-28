@@ -7,12 +7,25 @@ from pathlib import Path
 
 from scripts.audit.prepare_individual_datasets import individual_records, group_components
 from scripts.catalog.build_individual_catalog import build, can_open_scene, hf_url, identity, is_access_restricted, item_evidence, retained_scene_selection, reviewed_scene_exclusions, tokens
-from scripts.catalog.scene_qualification import REQUIRED_CHECKS, apply_calibration_review, apply_source_integrity_review, native_evidence, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
+from scripts.catalog.scene_qualification import REQUIRED_CHECKS, apply_calibration_review, apply_source_integrity_review, native_evidence, native_launch_manifest, native_scene_reviews, qualified_evidence, verified_scene_reviews, verified_source_entry
 from scripts.catalog.sampled_individuals import supplement_rows
 from scripts.catalog.scene_datasets import MAX_SCENE_FILE_LINKS, scene_records, named_variant_groups
 
 
 class IndividualDatasetsTests(unittest.TestCase):
+    def test_reviewed_gated_launch_declares_access_and_preserves_exact_native_files(self):
+        entry = {'provider': 'huggingface', 'sourceId': 'hf:owner/data', 'access': 'gated', 'gatedPublicListing': True}
+        review = {'revision': 'a' * 40, 'path': 'scene/sparse/init',
+                  'files': {'cameras': 'scene/sparse/init/cameras.bin', 'images': 'scene/sparse/init/images.bin',
+                            'points3d': 'scene/sparse/init/points3D.bin'}}
+        manifest = native_launch_manifest(entry, review, hf_url)
+        self.assertEqual(manifest['access'], [{'provider': 'huggingface', 'repository': 'owner/data', 'requirement': 'gated'}])
+        self.assertEqual(manifest['files']['points3D'], hf_url(entry, review['revision'], review['files']['points3d']))
+        self.assertEqual(manifest['baseUrl'], hf_url(entry, review['revision'], review['path']) + '/')
+        self.assertNotIn('skipImages', manifest)
+        self.assertIsNone(native_launch_manifest({**entry, 'access': 'public'}, review, hf_url))
+        self.assertIsNone(native_launch_manifest({**entry, 'gatedPublicListing': False}, review, hf_url))
+
     def test_source_integrity_reviews_are_bound_to_native_files_and_keep_geometry_actions(self):
         entry = {'sourceId': 'hf:owner/data', 'facts': [{'label': 'Pinned revision', 'value': 'a' * 40}]}
         files = {'cameras': 'scene/cameras.bin', 'images': 'scene/images.bin', 'points3d': 'scene/points3D.bin'}

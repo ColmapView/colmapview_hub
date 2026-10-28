@@ -49,7 +49,8 @@ def can_open_scene(entry, row, proof):
     """Camera/model compatibility is independent of photographs and export checks."""
     kind, _, _, archive = row
     proof = proof or {}
-    if (entry.get('status') == 'unsupported_content' or entry.get('access') != 'public' or archive
+    if (entry.get('status') == 'unsupported_content' or (entry.get('access') != 'public'
+            and not (entry.get('access') == 'gated' and entry.get('gatedPublicListing') is True)) or archive
             or proof.get('opening') or proof.get('delivery') in FAILED_DELIVERY
             or proof.get('level') in {'conversion_needed', 'no_native_assets', 'unavailable'}):
         return False
@@ -98,6 +99,11 @@ def read(path):
 
 def is_access_restricted(entry):
     """Same policy as catalog-publication.mjs; shared fixtures cover both builds."""
+    if entry.get('private') is True:
+        return True
+    if (entry.get('gatedPublicListing') is True and entry.get('sourceId', '').startswith('hf:')
+            and (entry.get('access') == 'gated' or entry.get('gated'))):
+        return False
     proof = entry.get('verification') or {}
     return (entry.get('access') == 'gated' or bool(entry.get('gated')) or entry.get('delivery') == 'gated'
             or proof.get('delivery') == 'gated' or (proof.get('opening') or {}).get('status') == 'access_required')
@@ -372,6 +378,8 @@ def build(root=Path('.')):
                                 + Path(__file__).with_name('scene_qualification.py').read_bytes()
                                 + Path(__file__).with_name('scene_photos.py').read_bytes()
                                 + Path(__file__).with_name('scene_contents.py').read_bytes()
+                                + Path(__file__).with_name('photo_sources.py').read_bytes()
+                                + Path(__file__).with_name('source_paths.py').read_bytes()
                                 + Path(__file__).with_name('scene_datasets.py').read_bytes()
                                 + Path(__file__).with_name('scene_manifests.py').read_bytes()
                                 + video_bytes + Path(__file__).with_name('video_frames.py').read_bytes()
@@ -488,6 +496,7 @@ def build(root=Path('.')):
             continue
         source = {'id': entry['id'], 'sourceId': entry['sourceId'], 'title': entry['title'], 'label': dataset_label,
                   'sourceUrl': entry['sourceUrl'],
+                  **({'gatedPublicListing': True} if entry.get('gatedPublicListing') else {}),
                   'provider': entry['provider'], 'license': entry['license'],
                   **({'licenseCategory': entry['licenseCategory']} if 'licenseCategory' in entry else {}), 'access': entry['access'],
                   'start': total, 'count': 0, 'listingComplete': complete}
@@ -598,6 +607,8 @@ def build(root=Path('.')):
                     and proof.get('sceneManifest', {}).get('frameGeometry', {}).get('role') != 'splat'):
                 raise ValueError('A Gaussian availability badge requires checked Gaussian companions or a verified Gaussian frame')
             contents.update(proof['availableData'].keys())
+            if entry['access'] == 'gated':
+                proof.pop('thumbnail', None)
             if proof.get('thumbnail'):
                 thumbnails.add(proof['thumbnail']['url'].split('/')[-1])
                 thumbnail_scenes += 1
@@ -650,7 +661,7 @@ def build(root=Path('.')):
             routing_counts[photo_rows[-1]['launchRouting']] += 1
             decision_counts[photo_rows[-1]['auditDecision']] += 1
             for field, value in [('kind', kind_name), ('status', level), ('delivery', delivery), ('photos', photo_status),
-                                 ('viewer', 'available' if proof and proof.get('viewerUrl') and not gated and not archive and not proof.get('opening') else '')]:
+                                 ('viewer', 'available' if can_open_scene(entry, row, proof) else '')]:
                 add_posting(facets[field], value, total)
             for token in sorted(tokens(' '.join([path, dataset_label, entry['title'], entry['license'], format_name, kind_name]))):
                 add_posting(postings, token, total)

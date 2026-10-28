@@ -27877,7 +27877,8 @@
         }
       },
       "datasetLabel": "ScannetPoseRefine",
-      "licenseCategory": "not-specified"
+      "licenseCategory": "not-specified",
+      "gatedPublicListing": true
     },
     {
       "id": "hf-boazkg-gs-pool-cl-splats-f2d8bc7064a4",

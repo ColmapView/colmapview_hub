@@ -20,6 +20,24 @@ test('static gallery exports are reproducible and use the single public root', (
 });
 const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));
 
+test('reviewed public gates retain verified launches and suppress photo previews', () => {
+  const item = row(0, { 7: nativePhotoProof('not_found') });
+  const gated = { ...source, access: 'gated', gatedPublicListing: true };
+  assert.equal(render.canOpenIndividual(item, gated), true);
+  assert.equal(render.canOpenIndividual(item, { ...gated, gatedPublicListing: false }), false);
+  assert.equal(render.canOpenIndividual(row(0, { 7: null }), gated), false);
+  const summary = { ...render.individualSummary(item, gated), thumbnail: {
+    url: `/hub/datasets/individual/thumbnails/${'a'.repeat(64)}.jpg`, width: 320, height: 320,
+    sourcePath: 'photo.png', sourceSha256: 'b'.repeat(64), datasetLicense: source.license,
+    license: source.license, attribution: 'Publisher', crop: 'center_square' } };
+  const html = render.catalogCard(summary);
+  assert.match(html, /Login required/);
+  assert.match(html, /Gated · HF login required/);
+  assert.doesNotMatch(html, /<img\b/);
+  const entry = render.individualEntry(item, gated, { ...parent, access: 'gated', gatedPublicListing: true });
+  assert.equal(render.catalogSummary(entry).hasViewer, true);
+});
+
 test('inconsistent native feature links stay visible on cards and details while preserving direct viewing', () => {
   const note = 'Source track targets name different points. Only bounded samples were checked.';
   const proof = { ...nativePhotoProof('sample_checked'), statusLabel: 'Feature links need review', summary: note,

@@ -17,7 +17,7 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
   const action = canOpen ? entry.hasViewer ? 'Open in viewer' : 'Try in viewer · unchecked' : 'Source details';
   const metadataId = `metadata-${entry.id}`;
   const title = catalogCardTitle(entry);
-  const preview = sceneThumbnailHtml(entry, true, frontend === 'github' ? HUB_ORIGIN : '');
+  const preview = entry.access === 'gated' ? '' : sceneThumbnailHtml(entry, true, frontend === 'github' ? HUB_ORIGIN : '');
   const share = datasetSharePath(entry.id, entry.shareName);
   const facts = [
     ['Dataset', entry.dataset?.title || entry.title], ['Type', entry.itemKind || entry.formats.join(' · ') || 'Collection'],
@@ -29,6 +29,7 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
   ];
   return `<article class="card dataset-card" data-dataset-card data-entry-id="${escape(entry.id)}">`
     + '<div class="dataset-card-preview">' + (preview || scenePlaceholderHtml(entry))
+    + (entry.access === 'gated' ? '<p class="dataset-review">Gated · HF login required</p>' : '')
     + (entry.statusLabel === 'Feature links need review' || entry.statusLabel === 'Calibration needs review'
       ? `<p class="dataset-review">${escape(entry.statusLabel)}</p>` : '')
     + `<button type="button" class="dataset-info icon-button" aria-label="${escape(`Metadata for ${entry.title}`)}" title="Dataset information" aria-haspopup="dialog" aria-controls="${metadataId}" aria-expanded="false">${icon('info')}</button>`

@@ -39,6 +39,7 @@ export interface CatalogEntry {
   license: string;
   licenseCategory?: LicenseCategory;
   access: 'public' | 'gated' | 'terms' | 'unknown';
+  gatedPublicListing?: boolean;
   status: string;
   statusLabel: string;
   formats: string[];
@@ -104,7 +105,10 @@ export const deliveryLabel = (delivery?: string) => deliveryLabels[delivery || '
 
 export function catalogSummary(entry: CatalogEntry): CatalogSummary {
   const { id, title, provider, license, access, statusLabel, formats, description, testOrFixture, dataset, itemKind } = entry;
-  const canOpen = access === 'public' && !entry.verification?.opening
+  const gatedLaunch = access === 'gated' && entry.gatedPublicListing === true
+    && entry.provider === 'huggingface' && entry.verification?.level === 'native_layout_checked'
+    && isCatalogOpenUrl(entry.openUrl);
+  const canOpen = gatedLaunch || access === 'public' && !entry.verification?.opening
     && !['gated', 'access_denied', 'not_found', 'browser_request_failed', 'range_unverified', 'rate_limited', 'http_error'].includes(entry.verification?.delivery || '')
     && !['conversion_needed', 'no_native_assets', 'unavailable'].includes(entry.verification?.level || '');
   return { id, title, sourceUrl: entry.sourceUrl, provider, license, licenseCategory: licenseCategory(entry), access, statusLabel, formats, description, testOrFixture,
