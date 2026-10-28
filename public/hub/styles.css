@@ -120,10 +120,10 @@ html:has(.catalog-browse) { scroll-padding-block: 72px; }
 .dataset-card-preview .dataset-preview { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: none; height: 100%; margin: 0; }
 .dataset-card-preview .dataset-thumbnail, .dataset-card-preview .shared-dataset-preview { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
 .dataset-card-preview .dataset-preview-placeholder { height: 100%; aspect-ratio: auto; }
-.dataset-card-body { grid-area: 1 / 1; z-index: 1; align-self: end; display: flex; align-items: baseline; flex-wrap: wrap; min-width: 0; gap: var(--sp-1) var(--sp-2); padding: 30px var(--sp-3) var(--sp-3); background: linear-gradient(transparent, rgb(0 0 0 / .65)); }
-.dataset-card-hover { position: absolute; inset: auto 0 0; display: grid; gap: var(--sp-1); padding: 28px var(--sp-3) 64px; background: linear-gradient(transparent, rgb(0 0 0 / .88) 24%); color: #e0e0e0; font-size: 11px; opacity: 0; visibility: hidden; transition: opacity .12s ease-out, visibility .12s; pointer-events: none; }
-.dataset-card:hover .dataset-card-hover, .dataset-card:focus-within .dataset-card-hover { opacity: 1; visibility: visible; }
-.dataset-card-hover .dataset-contents { gap: 2px 8px; }
+.dataset-card-body { grid-area: 1 / 1; z-index: 1; align-self: end; display: grid; min-width: 0; gap: var(--sp-1); padding: 20px var(--sp-3) var(--sp-3); background: linear-gradient(transparent, rgb(0 0 0 / .8) 30%); }
+.dataset-card-tags { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; min-width: 0; }
+.dataset-card-tags .dataset-contents { max-width: 100%; }
+.dataset-card-tags .dataset-tag, .dataset-card-tags .dataset-contents li { padding: 1px 5px; border: 1px solid rgb(255 255 255 / .18); border-radius: 3px; background: rgb(0 0 0 / .45); color: #e0e0e0; font-size: 10px; line-height: 1.5; }
 .dataset-review { position: absolute; z-index: 2; left: var(--sp-2); top: var(--sp-2); max-width: calc(100% - 60px); padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--warning); font-size: 11px; pointer-events: none; }
 .dataset-thumbnail { display: block; width: 100%; height: auto; border-radius: 4px; background: var(--bg-tertiary); }
 .dataset-preview { margin: 0; max-width: 320px; }
@@ -133,34 +133,26 @@ html:has(.catalog-browse) { scroll-padding-block: 72px; }
 .dataset-preview figcaption a { position: relative; z-index: 2; }
 .dataset-contents { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0; list-style: none; }
 .dataset-contents li { margin: 0; padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); font-size: 11px; line-height: 1.4; }
-.dataset-card .dataset-contents li { padding: 0; border: 0; white-space: nowrap; }
 .dataset-statistics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); max-width: 400px; margin: 0; padding-block: var(--sp-2); }
 .dataset-statistics dt { color: var(--text-secondary); font-size: 10px; line-height: 1.4; }
 .dataset-statistics dd { margin: 2px 0 0; color: var(--text-primary); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.4; }
-.dataset-gaussians { flex-shrink: 0; color: #e0e0e0; font-size: 11px; line-height: 1.5; white-space: nowrap; }
-.dataset-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dataset-card h2 { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; line-height: 1.5; margin: 0; }
-.dataset-label, .dataset-link-note, .dataset-card .dataset-contents li { font-size: 11px; font-weight: 400; line-height: 1.5; color: var(--text-secondary); }
+.dataset-link-note { font-size: 11px; font-weight: 400; line-height: 1.5; color: var(--text-secondary); }
 .dataset-open { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); text-decoration: none; }
 .dataset-open::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: 6px; }
 .dataset-open:hover { text-decoration: none; }
 .dataset-open:focus-visible { outline: none; }
 .dataset-open:focus-visible::after { outline: 2px solid var(--accent); outline-offset: 3px; }
 .dataset-card .dataset-open { color: #fff; }
-.dataset-card .dataset-label, .dataset-card .dataset-link-note, .dataset-card .dataset-contents li { color: #e0e0e0; }
+.dataset-card .dataset-link-note { color: #e0e0e0; }
 .dataset-card .dataset-open:focus-visible::after { outline-color: #fff; outline-offset: -3px; }
 .dataset-license-category { display: inline-block; padding: 1px 6px; border: 1px solid var(--border-color); border-radius: 4px; }
-.dataset-info { position: absolute; z-index: 3; top: var(--sp-2); right: var(--sp-2); background: rgb(0 0 0 / .55); border-color: rgb(255 255 255 / .18); opacity: 0; transition: opacity .12s ease-out, background-color .12s ease-out, border-color .12s ease-out; }
-.dataset-card:hover .dataset-info, .dataset-card:focus-within .dataset-info { opacity: 1; }
+.dataset-info { position: absolute; z-index: 3; top: var(--sp-2); right: var(--sp-2); background: rgb(0 0 0 / .55); border-color: rgb(255 255 255 / .18); transition: background-color .12s ease-out, border-color .12s ease-out; }
 .dataset-card .dataset-info { color: #fff; }
 .dataset-card .dataset-info:hover, .dataset-card .dataset-info[aria-expanded="true"] { color: #fff; background: rgb(0 0 0 / .8); border-color: rgb(255 255 255 / .45); }
 .dataset-card .dataset-info:focus-visible { outline-color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .icon-button, .dataset-info { transition: none; }
-}
-@media (hover: none) {
-  .dataset-info { opacity: 1; }
-  .dataset-card-hover { display: none; }
 }
 .dataset-metadata { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(440px, 100%); max-width: none; height: 100%; height: 100dvh; max-height: none; padding: 0; overflow: hidden; border: 0; border-left: 1px solid var(--border-light); border-radius: 0; background: var(--bg-secondary); color: var(--text-primary); box-shadow: -8px 0 24px rgb(0 0 0 / .18); font: inherit; font-size: 13px; }
 .dataset-metadata[open] { display: flex; flex-direction: column; }

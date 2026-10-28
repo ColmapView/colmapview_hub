@@ -1,7 +1,9 @@
 import { ID_PATTERN, MAX_PREVIEW_BYTES, isListedId } from '../shared/model';
 import { isSourceVerification, publicationSource, type SharedDataset, type SharedDatasetPage } from '../shared/publication';
 import { classifyLicense, LICENSE_CATEGORY_LABELS } from '../shared/license-categories';
+import { licenseTagLabel } from '../shared/license-tags';
 import { assetLine } from '../shared/asset-summary';
+import { sceneContentsHtml, type SceneContents } from '../shared/scene-contents';
 import { icon } from '../shared/icons';
 import { hubViewerLink } from '../shared/viewer-host';
 import type { ViewerHost } from '../shared/viewer-host';
@@ -24,7 +26,6 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   const image = document.createElement('img'); image.src = entry.previewBase64 ? `data:image/jpeg;base64,${entry.previewBase64}` : `${hubPath}/${entry.id}/preview.jpg`; image.alt = ''; image.loading = 'lazy';
   image.width = 320; image.height = 168; image.className = 'shared-dataset-preview';
   const originalUrl = publicationSource(entry.viewerUrl);
-  const label = document.createElement('p'); label.className = 'dataset-label'; label.textContent = originalUrl.hostname;
   const panel = document.createElement('dialog'); panel.className = 'dataset-metadata'; panel.id = `metadata-shared-${entry.id}`;
   panel.setAttribute('aria-label', `Metadata for ${entry.title}`);
   const header = document.createElement('div'); header.className = 'dataset-metadata-header';
@@ -38,9 +39,19 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   const license = document.createElement('p'); license.textContent = `License: ${entry.license?.name || entry.license?.id || 'Not specified'}`;
   const category = document.createElement('p'); category.textContent = `License category: ${LICENSE_CATEGORY_LABELS[classifyLicense(entry.license?.id ?? '')]}`;
   const preview = document.createElement('div'); preview.className = 'dataset-card-preview';
-  const hover = document.createElement('div'); hover.className = 'dataset-card-hover';
-  const hoverLicense = document.createElement('p'); hoverLicense.textContent = `${LICENSE_CATEGORY_LABELS[classifyLicense(entry.license?.id ?? '')]} · ${entry.license?.name || entry.license?.id || 'Not specified'}`;
-  hover.append(label, hoverLicense); preview.append(image, info, hover);
+  preview.append(image, info);
+  const reported: SceneContents = {};
+  if ((entry.assets?.images ?? 0) > 0) reported.images = { status: 'listed' };
+  if ((entry.assets?.colmap.cameras ?? 0) > 0) reported.cameras = { status: 'listed' };
+  if ((entry.assets?.colmap.points ?? 0) > 0) reported.point_cloud = { status: 'listed' };
+  if ((entry.assets?.masks ?? 0) > 0) reported.masks = { status: 'listed' };
+  if ((entry.assets?.splats ?? 0) > 0) reported.splats = { status: 'listed' };
+  const tags = document.createElement('div'); tags.className = 'dataset-card-tags'; tags.setAttribute('aria-label', 'Dataset tags');
+  // Only static labels from the reported types enter this HTML; user metadata stays textContent.
+  tags.innerHTML = sceneContentsHtml(reported);
+  const licenseTag = document.createElement('span'); licenseTag.className = 'dataset-tag';
+  licenseTag.textContent = licenseTagLabel(entry.license?.name || entry.license?.id || '', classifyLicense(entry.license?.id ?? ''));
+  tags.append(licenseTag);
   const contents = document.createElement('p'); contents.className = 'note';
   contents.textContent = assetLine(entry.assets) ? `Reported contents: ${assetLine(entry.assets)}` : '';
   const proof = document.createElement('p'); proof.className = 'note';
@@ -55,7 +66,7 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   const copied = document.createElement('span'); copied.className = 'note'; copied.dataset.copyStatus = ''; copied.setAttribute('role', 'status');
   links.append(copy, copied);
   content.append(name, description, license, category, ...(contents.textContent ? [contents] : []), proof, links); panel.append(header, content);
-  const body = document.createElement('div'); body.className = 'dataset-card-body'; body.append(title);
+  const body = document.createElement('div'); body.className = 'dataset-card-body'; body.append(title, tags);
   article.append(preview, body, panel);
   return article;
 }

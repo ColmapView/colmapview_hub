@@ -1,4 +1,4 @@
-import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, SHARE_PATH, VIEWER_ORIGINS, waitText } from '../shared/model';
+import { LOOPBACK_HOSTS, PREVIEW_HEIGHT, PREVIEW_WIDTH, SHARE_PATH, waitText } from '../shared/model';
 import type { CardRecord } from '../shared/model';
 import { escapeHtml } from '../shared/html';
 import { HUB_UI_VERSION } from '../shared/ui-version';
@@ -9,9 +9,6 @@ import { hubAssetUrl, hubViewerLink, viewerHome } from '../shared/viewer-host';
 import type { ViewerHost, HubFrontend } from '../shared/viewer-host';
 export { assetLine } from '../shared/asset-summary';
 export { escapeHtml } from '../shared/html';
-
-/** ColmapView's own pages; the Hub shares their header and footer. */
-const VIEWER = VIEWER_ORIGINS[0];
 
 export interface HubLocation {
   origin: string;
@@ -32,9 +29,9 @@ export function hubLocation(env: Env): HubLocation {
   return { origin: origin.origin, path, base: origin.origin + path, local };
 }
 
-/** The policy pages both the header and the footer link to. */
-const policyLinks = ([['About', 'about.html'], ['Privacy', 'privacy.html'], ['Terms', 'terms.html']] as const)
-  .map(([label, path]) => `<a href="${VIEWER}/${path}">${label}</a>`).join('');
+/** Keep policy links available in both the compact Info panel and full-page footer. */
+export const policyLinks = (host?: ViewerHost) => ([['About', 'about.html'], ['Privacy', 'privacy.html'], ['Terms', 'terms.html']] as const)
+  .map(([label, path]) => `<a href="${viewerHome(host)}${path}" target="_blank" rel="noopener noreferrer">${label}</a>`).join('');
 
 const themeControl = () => [
   '<button type="button" class="button icon-button hub-theme" id="hub-theme" aria-label="Appearance: Dark. Switch to Light." title="Appearance: Dark. Switch to Light." data-theme="dark" disabled>',
@@ -46,7 +43,7 @@ const viewerControl = (host?: ViewerHost) => `<a class="button icon-button" href
 
 const header = (path: string, filters?: string, host?: ViewerHost) => [
   `<header class="site-header${filters ? ' catalog-toolbar' : ''}">`,
-  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="ColmapView Hub"><span class="brand-title"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></span></a>`,
+  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" target="_blank" rel="noopener noreferrer" aria-label="ColmapView Hub"><span class="brand-title"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></span></a>`,
   ...(filters ? [filters] : [
   '<nav class="site-nav" aria-label="Main navigation">',
   `<a class="button icon-button" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
@@ -57,11 +54,11 @@ const header = (path: string, filters?: string, host?: ViewerHost) => [
   '</header>',
 ].join('');
 
-const footer = (publicCatalog: boolean) => [
+const footer = (publicCatalog: boolean, host?: ViewerHost) => [
   '<footer class="site-footer">',
   `<p>${publicCatalog ? 'Explore public spatial datasets.<br>' : ''}Built with ColmapView by OpsiClear</p>`,
   '<nav class="footer-links" aria-label="Footer navigation">',
-  policyLinks,
+  policyLinks(host),
   '<a href="https://github.com/ColmapView/colmapview_hub">Source</a>',
   '<a href="mailto:info@opsiclear.com">Contact</a>',
   publicCatalog ? '<button type="button" id="analytics-settings" aria-controls="analytics-choice" aria-expanded="false" hidden>Analytics settings</button>' : '',
@@ -103,7 +100,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
     header(location.path, catalog?.filters, location.viewerHost),
     `<main id="main" tabindex="-1"><div class="hub-content">${body}</div></main>`,
     ...(location.frontend ? ['<noscript><p>This gallery needs JavaScript. <a href="https://colmapview.opsiclear.com/hub/?viewerHost=github">Browse the server-rendered catalog</a>.</p></noscript>'] : []),
-    footer(publicCatalog),
+    footer(publicCatalog, location.viewerHost),
     catalog ? `<section class="catalog-footbar" aria-label="Catalog status">${catalog.status}${viewerControl(location.viewerHost)}${themeControl()}</section>` : '',
     '</body></html>',
   ].join('');

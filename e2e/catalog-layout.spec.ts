@@ -1,5 +1,48 @@
 import { expect, test } from '@playwright/test';
 
+test('the Hub brand opens a fresh tab and Info retains policy links', async ({ page }) => {
+  await page.goto('/hub/?q=SceauxCastle&viewerHost=github');
+  const opened = page.waitForEvent('popup');
+  await page.getByRole('link', { name: 'ColmapView Hub', exact: true }).click();
+  const hub = await opened;
+  try {
+    await expect(hub).toHaveURL(/\/hub\/\?viewerHost=github$/);
+    expect(await hub.evaluate(() => window.opener)).toBeNull();
+    await expect(page.getByRole('searchbox')).toHaveValue('SceauxCastle');
+    await hub.locator('.catalog-notes > summary').click();
+    const policies = hub.getByRole('navigation', { name: 'About and policies' });
+    for (const [name, path] of [['About', 'about.html'], ['Privacy', 'privacy.html'], ['Terms', 'terms.html']]) {
+      const link = policies.getByRole('link', { name, exact: true });
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute('href', `https://colmapview.github.io/latest/${path}`);
+      await expect(link).toHaveAttribute('target', '_blank');
+    }
+  } finally { await hub.close(); }
+});
+
+for (const hasTouch of [false, true]) test.describe(`thumbnail tags with touch=${hasTouch}`, () => {
+  test.use({ hasTouch });
+  test('shows data and license tags without hover', async ({ page }) => {
+    await page.setViewportSize({ width: hasTouch ? 390 : 1280, height: 900 });
+    await page.goto('/hub/?q=SceauxCastle');
+    await page.mouse.move(0, 0);
+    const card = page.locator('.dataset-card').first();
+    const tags = card.locator('.dataset-card-tags');
+    await expect(tags).toBeVisible();
+    await expect(tags).toHaveCSS('opacity', '1');
+    await expect(tags).toHaveCSS('visibility', 'visible');
+    await expect(tags.locator('[data-asset="images"]')).toBeVisible();
+    await expect(tags.locator('[data-asset="cameras"]')).toBeVisible();
+    await expect(tags.locator('[aria-label^="License:"]')).toBeVisible();
+    await expect(card.locator('.dataset-info')).toHaveCSS('opacity', '1');
+    const image = (await card.locator('.dataset-card-preview').boundingBox())!;
+    const labels = (await tags.boundingBox())!;
+    expect(labels.y + labels.height).toBeLessThanOrEqual(image.y + image.height + 1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: test.info().outputPath(`catalog-tags-${hasTouch ? 'touch' : 'desktop'}.png`), fullPage: false });
+  });
+});
+
 test('GitHub arrivals keep their viewer through async results, pagination, reset and metadata', async ({ page }) => {
   await page.goto('/hub/?viewerHost=github&seed=12345678');
   await expect(page.getByRole('link', { name: 'Open viewer', exact: true })).toHaveAttribute('href', 'https://colmapview.github.io/latest/');

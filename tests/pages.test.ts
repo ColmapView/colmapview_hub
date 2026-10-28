@@ -31,12 +31,12 @@ describe('Hub pages', () => {
     const link = await create(input());
     for (const path of [`/${link.id}`, '/missing-frame']) {
       const html = await (await request(path)).text();
-      expect(html).toContain('<a class="brand" href="/hub/" aria-label="ColmapView Hub">');
+      expect(html).toContain('<a class="brand" href="/hub/" target="_blank" rel="noopener noreferrer" aria-label="ColmapView Hub">');
       for (const [href, label] of [['/hub/', 'Datasets'], ['https://colmapview.opsiclear.com/', 'Open viewer']]) {
         expect(html).toContain(`href="${href}" aria-label="${label}" title="${label}"`);
       }
       for (const [href, label] of [['/about.html', 'About'], ['/privacy.html', 'Privacy'], ['/terms.html', 'Terms']]) {
-        expect(html).toContain(`<a href="https://colmapview.opsiclear.com${href}">${label}</a>`);
+        expect(html).toContain(`<a href="https://colmapview.opsiclear.com${href}" target="_blank" rel="noopener noreferrer">${label}</a>`);
       }
       expect(html).toContain('<p>Built with ColmapView by OpsiClear</p>');
       expect(html).toContain('<a href="https://github.com/ColmapView/colmapview_hub">Source</a>');

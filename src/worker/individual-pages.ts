@@ -4,7 +4,7 @@ import type { IndividualIndex, IndividualPage } from '../shared/individual-catal
 import { photoLabel } from '../shared/scene-photos';
 import type { PhotoStatus } from '../shared/scene-photos';
 import { catalogCard } from './catalog-pages';
-import { escapeHtml as escape, page } from './pages';
+import { escapeHtml as escape, page, policyLinks } from './pages';
 import type { HubLocation } from './pages';
 import { HUB_UI_VERSION } from '../shared/ui-version';
 import { SCENE_DATA_LABELS } from '../shared/scene-contents';
@@ -51,7 +51,8 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<p class="catalog-totals">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p>`
     + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
     + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
-    + '<p>Share your public dataset on the Hub by uploading it to Hugging Face through ColmapView, then selecting “Share on Hub.”</p></div></details>';
+    + '<p>Share your public dataset on the Hub by uploading it to Hugging Face through ColmapView, then selecting “Share on Hub.”</p>'
+    + `<nav class="footer-links" aria-label="About and policies">${policyLinks(location.viewerHost)}</nav></div></details>`;
   const countDescription = loading ? 'Loading datasets…' : result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
   const status = '<div class="catalog-result-summary"><p id="catalog-notice" class="catalog-notice" tabindex="-1">ColmapView does not host the source datasets. Some sources require login or approval.</p>'
     + `<p id="catalog-count" class="catalog-count sr-only" role="status" aria-label="${countDescription}">${result.total ? `${number(offset + 1)}–${number(offset + result.entries.length)} / ${number(result.total)}` : loading ? 'Loading…' : 'No matching datasets'}</p>`

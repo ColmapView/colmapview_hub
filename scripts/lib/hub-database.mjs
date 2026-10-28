@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { build } from 'esbuild';
@@ -13,11 +13,16 @@ export async function openHubDatabase({ remote = false, state = '.wrangler/state
   await mkdir('.tmp/hub-database', { recursive: true });
   const scratch = await mkdtemp(resolve('.tmp/hub-database/run-'));
   const configPath = resolve(scratch, 'wrangler.json');
-  await writeFile(configPath, JSON.stringify({ name: 'colmapview-hub-operator', account_id: account,
-    compatibility_date: '2026-10-25', d1_databases: [{ binding: 'HUB_DB', database_name: 'colmapview-hub', database_id: database, remote }] }));
-  const proxy = await getPlatformProxy({ configPath, persist: remote ? false : { path: resolve(state, 'v3') },
-    remoteBindings: remote, envFiles: [] });
-  return { database: proxy.env.HUB_DB, dispose: () => proxy.dispose() };
+  const clean = () => rm(scratch, { recursive: true, force: true });
+  try {
+    await writeFile(configPath, JSON.stringify({ name: 'colmapview-hub-operator', account_id: account,
+      compatibility_date: '2026-10-25', d1_databases: [{ binding: 'HUB_DB', database_name: 'colmapview-hub', database_id: database, remote }] }));
+    const proxy = await getPlatformProxy({ configPath, persist: remote ? false : { path: resolve(state, 'v3') },
+      remoteBindings: remote, envFiles: [] });
+    return { database: proxy.env.HUB_DB, dispose: async () => {
+      try { await proxy.dispose(); } finally { await clean(); }
+    } };
+  } catch (error) { await clean(); throw error; }
 }
 
 export function applyLocalMigrations(state) {

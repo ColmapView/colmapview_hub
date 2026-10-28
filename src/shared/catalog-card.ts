@@ -2,6 +2,7 @@ import { accessLabel, catalogOpenUrl, datasetFilterValue, datasetPath, deliveryL
 import type { CatalogSummary } from './catalog';
 import { escapeHtml as escape } from './html';
 import { licenseCategory, LICENSE_CATEGORY_LABELS } from './license-categories';
+import { licenseTagLabel } from './license-tags';
 import { photoLabel } from './scene-photos';
 import { catalogCardTitle } from './catalog-title';
 import { icon } from './icons';
@@ -9,7 +10,7 @@ import { datasetSharePath } from './dataset-share';
 import { HUB_ORIGIN, hubViewerLink } from './viewer-host';
 import type { ViewerHost, HubFrontend } from './viewer-host';
 import { VIDEO_CAPTURE_LABELS } from './video-capture';
-import { gaussianAvailabilityHtml, sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
+import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
 
 export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, frontend?: HubFrontend): string {
   const category = licenseCategory(entry);
@@ -33,12 +34,12 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
     + (entry.statusLabel === 'Feature links need review' || entry.statusLabel === 'Calibration needs review'
       ? `<p class="dataset-review">${escape(entry.statusLabel)}</p>` : '')
     + `<button type="button" class="dataset-info icon-button" aria-label="${escape(`Metadata for ${entry.title}`)}" title="Dataset information" aria-haspopup="dialog" aria-controls="${metadataId}" aria-expanded="false">${icon('info')}</button>`
-    + `<div class="dataset-card-hover"><p class="dataset-label">${escape(entry.dataset?.label || providerLabel(entry.provider))}</p>` + sceneContentsHtml(entry.availableData)
-    + (entry.videoCapture ? `<p>${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</p>` : '')
-    + `<p>${escape(LICENSE_CATEGORY_LABELS[category])} · ${escape(entry.license)}</p></div></div>`
+    + '</div>'
     + '<div class="dataset-card-body">'
     + `<h2><a class="dataset-open" href="${escape(hubViewerLink(share || catalogOpenUrl(entry), host, frontend))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
-    + gaussianAvailabilityHtml(entry.availableData)
+    + '<div class="dataset-card-tags" aria-label="Dataset tags">' + sceneContentsHtml(entry.availableData)
+    + (entry.videoCapture ? `<span class="dataset-tag">${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</span>` : '')
+    + `<span class="dataset-tag" aria-label="License: ${escape(entry.license)}">${escape(licenseTagLabel(entry.license, category))}</span></div>`
     + (!canOpen ? '<p class="dataset-link-note">Source only</p>' : !entry.hasViewer ? '<p class="dataset-link-note">Try · unchecked ↗</p>' : '')
     + '</div>'
     + `<dialog class="dataset-metadata" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`

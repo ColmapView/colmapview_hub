@@ -113,11 +113,6 @@ export function sceneDataText(contents?: SceneContents): string {
   }).join(', ');
 }
 
-export function gaussianAvailabilityHtml(contents?: SceneContents): string {
-  return contents?.splats?.status === 'checked'
-    ? '<span class="dataset-gaussians" aria-label="Gaussians available" title="Gaussians available. Verified Gaussian data; sparse-point counts exclude Gaussians.">Gaussians</span>' : '';
-}
-
 export function sceneContentsHtml(contents?: SceneContents): string {
   if (!contents || !Object.keys(contents).length) return '';
   const notes: Record<SceneDataStatus, string> = {

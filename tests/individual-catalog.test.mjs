@@ -17,6 +17,16 @@ test('static gallery exports are reproducible and use the single public root', (
   assert.equal(first, render.individualIndexPage(location, index, result, new URLSearchParams()));
   assert.match(first, /action="\/hub\/"/);
   assert.doesNotMatch(first, /href="\/hub\/datasets\//);
+  for (const host of [undefined, 'github']) {
+    const html = render.individualIndexPage({ ...location, viewerHost: host }, index, result, new URLSearchParams());
+    const info = html.match(/<details class="catalog-notes">[\s\S]*?<\/details>/)?.[0];
+    assert.ok(info);
+    const base = host ? 'https://colmapview.github.io/latest/' : 'https://colmapview.opsiclear.com/';
+    for (const [label, path] of [['About', 'about.html'], ['Privacy', 'privacy.html'], ['Terms', 'terms.html']]) {
+      assert.ok(info.includes(`href="${base}${path}" target="_blank" rel="noopener noreferrer">${label}</a>`));
+    }
+    assert.match(html, /class="brand"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+  }
 });
 const verified = JSON.parse(readFileSync('tests/fixtures/verified-scene-proof.json', 'utf8'));
 
@@ -767,18 +777,24 @@ const row = (number = 0, overrides = {}) => Object.assign([`data-${String(number
 const nativePhotoProof = status => ({ ...parent.verification, level: 'native_layout_checked', statusLabel: 'Native COLMAP layout checked',
   viewerUrl: verified.viewerUrl, photoAvailability: status, sceneCompatibility: { status: 'native_headers_checked', revision: 'a'.repeat(40),
     cameraRecordChecked: true, poseRecordChecked: true, cameras: 1, images: 2, points: 3 } });
-test('only verified Gaussian data gets the always-visible availability note', () => {
+test('visible thumbnail tags distinguish verified Gaussians from candidates and ordinary point clouds', () => {
   const proof = { ...nativePhotoProof('sample_checked'), availableData: { point_cloud: { status: 'checked', samplePath: 'scene/cloud.ply' } } };
   const plain = render.catalogCard(render.individualSummary(row(0, { 7: proof }), source));
-  assert.doesNotMatch(plain, /Gaussians available/);
+  assert.doesNotMatch(plain, /data-asset="splats"/);
+  assert.match(plain, /dataset-card-tags[\s\S]*data-asset="point_cloud"/);
+  assert.doesNotMatch(plain, /dataset-card-hover/);
+  assert.match(plain, /aria-label="License:/);
+  const unknown = render.catalogCard({ ...render.individualSummary(row(0, { 7: proof }), source),
+    license: 'not independently confirmed', licenseCategory: 'not-specified' });
+  assert.match(unknown, /aria-label="License: not independently confirmed">License unspecified<\/span>/);
   for (const status of ['checked', 'listed', 'archive', 'needs_setup', 'partial']) {
     const summary = render.individualSummary(row(0, { 7: { ...proof,
       availableData: { ...proof.availableData, splats: { status, count: 1, samplePath: 'scene/another.ply' } } } }), source);
     const html = render.catalogCard(summary);
-    assert.equal(html.includes('Gaussians available'), status === 'checked');
+    assert.match(html, new RegExp(`data-asset="splats" data-asset-status="${status}"`));
     assert.match(html, /data-stat="points">3<\/dd>/);
     if (status === 'checked') {
-      assert.match(html, /dataset-card-body[\s\S]*dataset-gaussians/);
+      assert.match(html, /dataset-card-tags[\s\S]*>Gaussians<\/li>/);
       assert.match(html, /Gaussian format verified/);
       assert.match(html, /1 Gaussian file\./);
     } else if (status !== 'needs_setup') {

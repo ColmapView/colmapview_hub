@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { openHubDatabase } from '../scripts/lib/hub-database.mjs';
@@ -10,12 +10,19 @@ test('restores large settings and binary previews into D1 without embedding larg
   await mkdir('.tmp', { recursive: true });
   const parent = await realpath('.tmp');
   const directory = await mkdtemp(join(parent, 'hub-backup-test-'));
+  const configurations = resolve('.tmp/hub-database');
+  await mkdir(configurations, { recursive: true });
+  const existingConfigurations = (await readdir(configurations)).sort();
   const state = join(directory, 'state'), filename = join(directory, 'backup.sql');
   let proxy;
   t.after(async () => {
-    await proxy?.dispose();
-    assert.equal(dirname(await realpath(directory)), parent);
-    await rm(directory, { recursive: true, force: true });
+    try {
+      await proxy?.dispose();
+      assert.deepEqual((await readdir(configurations)).sort(), existingConfigurations, 'Operator configurations must be removed without changing existing state.');
+    } finally {
+      assert.equal(dirname(await realpath(directory)), parent);
+      await rm(directory, { recursive: true, force: true });
+    }
   });
   const quote = value => "'" + value.replaceAll("'", "''") + "'";
   const settings = JSON.stringify({ version: 1, synthetic: "Unicode ' © ".repeat(18000) });

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+## 0.20.7 — 2026-10-28
+
+- Show data types, video capture and license tags directly on curated and shared thumbnails, with an always-visible Info button. Keep unverified Gaussian candidates distinct from verified Gaussian data.
+- Keep About, Privacy and Terms in the catalog Info panel, linked to the selected viewer host. Open the Hub brand in a new tab.
+- Remove temporary operator configuration on disposal or initialization failure while preserving database state.
+
 ## 0.20.6 — 2026-10-28
 
 - Restore 1,513 operator-reviewed, publicly listed gated scenes with clear login placeholders and pinned manifests declaring their Hugging Face access requirements. Retain exact model variants and historical evidence.
@@ -11,8 +19,6 @@
 - Audit all 1,719 entries without thumbnails. Restore original public photographs and attributed previews to 16 GS-Pool CL-Splats entries, preserving native models and Gaussian companions.
 - Exclude 1,513 ScanNetPoseRefine entries after fresh anonymous requests confirm the source now requires access approval. Retain research inventories and historical manifests.
 - Keep photo-source revisions and image terms separate from model metadata, and honor publisher restrictions during thumbnail preparation.
-
-## Unreleased
 
 ## 0.20.4 — 2026-10-28
 
