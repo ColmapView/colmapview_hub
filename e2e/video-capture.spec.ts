@@ -12,7 +12,9 @@ for (const sample of [
     await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe(sample.query);
     const card = page.locator(`[data-entry-id="${sample.id}"]`);
     await expect(card).toHaveCount(1);
-    await expect(card.locator('.dataset-card-hover')).toContainText(sample.label);
+    await page.mouse.move(0, 0);
+    await expect(card.locator('.dataset-card-tags')).toBeVisible();
+    await expect(card.locator('.dataset-card-tags')).toContainText(sample.label);
     const result = await (await page.request.get(`/hub/datasets/api/entries?dataset=${sample.dataset}&q=${encodeURIComponent(sample.query)}`)).json();
     expect(result.entries.find((entry: { id: string }) => entry.id === sample.id)?.videoCapture).toBe(sample.type);
     await card.getByRole('button', { name: /^Metadata for / }).click();

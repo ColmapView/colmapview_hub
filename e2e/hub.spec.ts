@@ -629,7 +629,10 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await page.locator('.catalog-notes > summary').click();
   const notes = page.locator('.catalog-notes');
   await expect(notes.locator('.catalog-totals')).toBeVisible();
-  await expect(notes.getByRole('link')).toHaveCount(0);
+  await expect(notes.getByRole('link')).toHaveCount(3);
+  for (const name of ['About', 'Privacy', 'Terms']) {
+    await expect(notes.getByRole('link', { name, exact: true })).toBeVisible();
+  }
   await expect(notes).not.toContainText('Audit and coverage');
   await expect(notes).not.toContainText('missing, custom or unclear terms');
   const removedManifest = await page.request.get('/hub/datasets/public-megascenes-000000-arc-de-bera-component-0-native-complete-99744eaac47a.manifest.json');

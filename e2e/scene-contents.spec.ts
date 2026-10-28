@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-test('verified Gaussians have a visible card note while ordinary point clouds do not', async ({ page }) => {
+test('verified Gaussians have a visible thumbnail tag while ordinary point clouds do not', async ({ page }) => {
   await page.goto('/hub/?q=mic&dataset=hf-pablovela5620-nerf-synthetic-mirror-9d24c0164a24');
   await page.mouse.move(0, 0);
   const gaussian = page.locator('[data-entry-id="data-d28cbb0f5daf045780e9b015"]');
-  await expect(gaussian.locator('.dataset-card-hover')).toHaveCSS('opacity', '0');
-  await expect(gaussian.locator('.dataset-card-body .dataset-gaussians')).toHaveText('Gaussians');
-  await expect(gaussian.locator('.dataset-gaussians')).toHaveAttribute('aria-label', 'Gaussians available');
-  await expect(gaussian.locator('.dataset-gaussians')).toBeVisible();
+  const tag = gaussian.locator('.dataset-card-tags [data-asset="splats"]');
+  await expect(tag).toHaveText('Gaussians');
+  await expect(tag).toHaveAttribute('data-asset-status', 'checked');
+  await expect(tag).toBeVisible();
   await expect(gaussian.locator('[data-stat="points"]')).toHaveText('0');
   await gaussian.getByRole('button', { name: 'Metadata for mic', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Gaussians');
@@ -15,7 +15,7 @@ test('verified Gaussians have a visible card note while ordinary point clouds do
   const plain = page.locator('.dataset-card').filter({ has: page.getByRole('link', { name: 'Open in viewer: scene0024_01 · i2slam_colmap', exact: true }) });
   await expect(plain).toBeVisible();
   await expect(plain.locator('[data-stat="points"]')).toHaveText('23,659');
-  await expect(plain.locator('.dataset-gaussians')).toHaveCount(0);
+  await expect(plain.locator('.dataset-card-tags [data-asset="splats"]')).toHaveCount(0);
 });
 
 test('OcularBell adds Gaussians while retaining its named camera dataset and zero sparse points', async ({ page }) => {
@@ -116,7 +116,7 @@ test('cards show content roles, load same-origin photos and open metadata only o
   await page.goto('/hub/?q=scene0024_01&licenseCategory=commercial&photos=available&dataset=hf-zhaoshiwen-blur-slam-bpn-data-fec0f75162f9');
   const first = page.locator('.dataset-card').filter({ has: page.getByRole('link', { name: 'Open in viewer: scene0024_01 · i2slam_colmap', exact: true }) });
   await page.mouse.move(0, 0);
-  await expect(first.locator('.dataset-card-hover')).toHaveCSS('visibility', 'hidden');
+  await expect(first.locator('.dataset-card-tags')).toHaveCSS('visibility', 'visible');
   await expect(first.locator('.dataset-card-body .dataset-statistics')).toHaveCount(0);
   await expect(first.locator('.dataset-card-body .dataset-label')).toHaveCount(0);
   await expect(first.locator('[data-stat="cameraPoses"]')).toHaveText('227');
@@ -137,7 +137,6 @@ test('cards show content roles, load same-origin photos and open metadata only o
   const info = first.getByRole('button', { name: /Metadata/ });
   const panel = first.getByRole('dialog', { name: /Metadata/ });
   const catalogUrl = page.url();
-  await first.hover();
   await expect(first.getByRole('list', { name: 'Available data' })).toBeVisible();
   await expect(first.locator('[data-asset="cameras"]')).toBeVisible();
   await expect(first.locator('[data-asset="images"]')).toBeVisible();
