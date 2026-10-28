@@ -31,7 +31,7 @@
     "test:browser": "playwright test --workers=1",
     "test:manifest-runner": "node --test tests/manifest-runner.test.mjs",
     "check": "npm run check:code && npm run test:catalog && npm run test:python && npm run test:backup && npm run test:deployment && npm test && npm run build",
-    "deploy": "npm run build:assets && node scripts/deploy/retain-frontend-assets.mjs && wrangler deploy"
+    "deploy": "npm run build:assets && node scripts/deploy/retain-frontend-assets.mjs && node scripts/deploy/catalog-metadata.mjs && wrangler deploy"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.4.0",

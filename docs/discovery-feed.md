@@ -66,10 +66,15 @@ every published scene and prepares 256 complete orderings for each feed mode,
 plus line-delimited card-summary packs of eight rows. Only the requested rows
 are parsed into objects. The first byte of a seed selects its
 prepared ordering. The Worker validates its generation and complete permutation,
-applies filters, and reads only the requested card summaries. Ranking and parsing
+applies filters, and reads the requested card summaries with one batch query
+against the existing D1 database's separate `catalog_summaries` table. The generated
+line packs support offline tools and seed this table before deployment. Ranking and parsing
 neighboring raw evidence records stay out of the request path, so deep pages do
 not replay an increasingly long ranked prefix under the Worker CPU limit.
 Raw records remain available for full metadata, launch checks and audit evidence.
+Deployment retains both the new and currently live catalog generations, then
+removes older generated summaries. Share records and management secrets use their
+existing tables and are excluded from these queries and cleanup.
 
 ## Stable ordering and scrolling
 

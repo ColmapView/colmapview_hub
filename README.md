@@ -30,7 +30,7 @@ Open `http://localhost:5201/hub/`. Development uses local D1/Durable Object stat
 | `npm run test:browser` | Browser integration checks; install Chromium first |
 | `npm run build:assets` | Rebuild browser assets and the public catalog offline |
 | `npm run catalog:import -- --viewer-root PATH` | Refresh metadata from the local survey inputs |
-| `npm run deploy` | Build, retain verified live frontend assets and deploy; see the operations guide |
+| `npm run deploy` | Build, retain live frontend assets, prepare public catalog rows and deploy; see the operations guide |
 
 CI runs `npm run check`, `npm run test:browser` and a redacted secret scan of the complete Git history. CI has read-only repository access and no production deployment credentials. Individual suites and audit commands are documented below.
 

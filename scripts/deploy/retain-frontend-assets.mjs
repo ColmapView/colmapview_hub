@@ -8,7 +8,7 @@ const MAX_ASSET_BYTES = 1024 * 1024;
 const MAX_FILES = 32;
 const MAX_TOTAL_BYTES = 8 * 1024 * 1024;
 
-async function readPublic(url, max, fetcher) {
+export async function readPublic(url, max, fetcher) {
   const response = await fetcher(url, { credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(30_000) });
   assert.equal(response.status, 200, `Cannot retain live frontend: ${url} returned ${response.status}.`);
   assert.ok(response.body, 'Live frontend response has no body.');

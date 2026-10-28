@@ -20,7 +20,7 @@ const respond = (request: Request, response: Response, freshFeed = false) => {
 };
 
 /** A public, operator-built metadata namespace. No user-created share record,
- * management secret, database listing, or private lookup path is reachable here. */
+ * management secret, user-record listing, or private lookup path is reachable here. */
 export async function individualRoute(request: Request, env: Env, ctx: ExecutionContext, location: HubLocation, url: URL): Promise<Response> {
   const path = url.pathname.slice(location.path.length);
   const api = path.startsWith('/datasets/api/');
@@ -89,7 +89,7 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
     if (!model) return fail(404, 'Dataset entry not found.');
     body = apiEntry ? catalogEntryContent(model, 'github', 'github') : catalogEntryPage(model, true, location.viewerHost);
   } else {
-    const result = await searchIndividuals(env.CATALOG_ASSETS, location.origin, index, filters);
+    const result = await searchIndividuals(env.CATALOG_ASSETS, location.origin, index, filters, env.HUB_DB);
     body = api ? JSON.stringify({ ...result, ...(index.unit ? { unit: index.unit } : {}), dataset: individualSelection(index.sources, filters.get('dataset') || '') })
       : individualIndexPage(location, index, result, filters);
   }

@@ -117,7 +117,7 @@ test('only pinned scripts and styles are dependency URLs, with a bounded total c
 
 test('the production deploy retains live assets after the offline build and before the upload', async () => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.match(pkg.scripts.deploy, /^npm run build:assets && node scripts\/deploy\/retain-frontend-assets\.mjs && wrangler deploy$/);
+  assert.match(pkg.scripts.deploy, /^npm run build:assets && node scripts\/deploy\/retain-frontend-assets\.mjs && node scripts\/deploy\/catalog-metadata\.mjs && wrangler deploy$/);
 });
 
 test('the deployment CLI rejects an uncommitted build before any public network preparation', async () => {
@@ -127,8 +127,10 @@ test('the deployment CLI rejects an uncommitted build before any public network 
   await writeFile(path.join(directory, 'site.json'), JSON.stringify({ ...fixture().snapshots[0].manifest, dirty: true }));
   const guard = path.resolve(output, 'no-network.mjs');
   await writeFile(guard, "globalThis.fetch = () => { throw new Error('Network ran before source validation'); };\n");
-  const result = spawnSync(process.execPath, ['--import', pathToFileURL(guard).href,
-    fileURLToPath(new URL('../scripts/deploy/retain-frontend-assets.mjs', import.meta.url))], { cwd: output });
-  assert.equal(result.status, 1);
-  assert.match(result.stderr.toString(), /Live frontend exports must come from a clean commit/);
+  for (const script of ['retain-frontend-assets.mjs', 'catalog-metadata.mjs']) {
+    const result = spawnSync(process.execPath, ['--import', pathToFileURL(guard).href,
+      fileURLToPath(new URL('../scripts/deploy/' + script, import.meta.url))], { cwd: output });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr.toString(), /Live frontend exports must come from a clean commit/);
+  }
 });

@@ -4,6 +4,7 @@ import { isCatalogSummary } from '../shared/catalog';
 import type { CatalogEntry, CatalogSummary } from '../shared/catalog';
 import { licenseCategory } from '../shared/license-categories';
 import { InputError } from './validation';
+import { catalogSummaries } from './catalog-store';
 import { FEED_MODES, defaultFeedSeed, discoveryOrder, feedBucket, feedMode, isDiscoveryAsset, preparedFeedPage } from '../shared/discovery';
 
 const ROOT = '/hub/datasets/individual/';
@@ -160,7 +161,7 @@ async function individualSummaries(assets: Assets, origin: string, index: Indivi
   }, isCatalogSummary);
 }
 
-export async function searchIndividuals(assets: Assets, origin: string, index: IndividualIndex, filters: URLSearchParams): Promise<IndividualPage> {
+export async function searchIndividuals(assets: Assets, origin: string, index: IndividualIndex, filters: URLSearchParams, database?: D1Database): Promise<IndividualPage> {
   const terms = individualTokens(filters.get('q') || '');
   const shards = await Promise.all(terms.map(tokenShard));
   const uniqueShards = [...new Set(shards)];
@@ -225,7 +226,8 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
       selected = discoveryOrder(asset, sources, matched, feed, requestedStart + INDIVIDUAL_PAGE_SIZE).slice(requestedStart);
     }
   }
-  if (index.summaries) return { entries: await individualSummaries(assets, origin, index, selected), total, page: requested, pages, generation: index.generation, ...(feed ? { feed } : {}) };
+  if (index.summaries) return { entries: database ? await catalogSummaries(database, index.generation, selected)
+    : await individualSummaries(assets, origin, index, selected), total, page: requested, pages, generation: index.generation, ...(feed ? { feed } : {}) };
   const rows = await individualRecords(assets, origin, index, selected);
   if (feed && rows.some(row => !canOpenIndividual(row, index.sources[row[1]]))) throw new Error('Discovery scene no longer qualifies for loading');
   return { entries: rows.map(row => individualSummary(row, index.sources[row[1]])), total, page: requested, pages, generation: index.generation, ...(feed ? { feed } : {}) };

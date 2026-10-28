@@ -1,6 +1,7 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import { validateNames } from './catalog/share-names.mjs';
 import { applyLocalMigrations, openHubDatabase, workerModules } from './lib/hub-database.mjs';
+import { preparedCatalog } from './lib/catalog-metadata.mjs';
 
 /** Seed only local D1, using the same storage layout as Wrangler's --persist-to. */
 export async function seedLocalHub(state) {
@@ -8,7 +9,7 @@ export async function seedLocalHub(state) {
   applyLocalMigrations(state);
   const proxy = await openHubDatabase({ state });
   try {
-    const { hubStorage, entryInsert, WORDLIST_KEY } = await workerModules();
+    const { hubStorage, entryInsert, WORDLIST_KEY, synchronizeCatalog } = await workerModules(['storage', 'catalog-store']);
     const database = proxy.database;
     await hubStorage.put(database, WORDLIST_KEY, await readFile('tests/fixtures/dev-wordlists.json', 'utf8'));
     const names = validateNames(JSON.parse(await readFile('data/catalog-share-names.json', 'utf8')));
@@ -26,5 +27,8 @@ export async function seedLocalHub(state) {
       }));
     }
     console.log(`Seeded ${entries.length} public catalog names in local D1.`);
+    const catalog = await preparedCatalog();
+    await synchronizeCatalog(database, catalog.index.generation, catalog.rows, []);
+    console.log(`Prepared ${catalog.rows.length} public catalog summaries in local D1.`);
   } finally { await proxy.dispose(); }
 }
