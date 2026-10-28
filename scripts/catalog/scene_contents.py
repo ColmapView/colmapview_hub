@@ -7,16 +7,13 @@ from pathlib import PurePosixPath
 from urllib.parse import urlsplit
 
 from .scene_qualification import scene_key
+from .photo_sources import source_photo_url
+from .source_paths import source_path
 
 
 DATA_KINDS = {'images', 'cameras', 'point_cloud', 'splats', 'masks', 'meshes', 'geometry'}
 CONTENT_KINDS = DATA_KINDS - {'images', 'cameras'}
 PHOTO_STATES = {'complete_export_checked', 'sample_checked', 'partial', 'path_policy_required', 'companion_archive'}
-
-
-def source_path(value):
-    return (isinstance(value, str) and bool(value) and not value.startswith('/') and '\\' not in value
-            and all(part not in ('', '.', '..') for part in value.split('/')))
 
 
 def is_metadata_sidecar(value):
@@ -187,6 +184,15 @@ def apply_thumbnail_evidence(entry, proof, thumbnail, video_review=None):
                 raise ValueError('Preview TAR photograph does not match the reviewed member')
         elif thumbnail['sourcePath'] != audit.get('samplePath'):
             raise ValueError('Preview photograph does not match this scene')
+        if audit.get('previewPolicy', {}).get('status') == 'not_permitted':
+            raise ValueError('Publisher terms do not permit hosting this preview')
+        external = audit.get('photoSource')
+        if external:
+            if (thumbnail.get('sourceUrl') != source_photo_url(external, thumbnail['sourcePath'])
+                    or thumbnail.get('license') != external['license'] or thumbnail.get('attribution') != external['attribution']):
+                raise ValueError('External preview must retain the exact photo source, license and attribution')
+        elif thumbnail.get('sourceUrl'):
+            raise ValueError('Preview source URL needs reviewed external photo evidence')
         result['thumbnail'] = {**deepcopy(thumbnail), 'url': '/hub/datasets/individual/thumbnails/' + thumbnail['file']}
         result['thumbnail'].pop('file')
     return result

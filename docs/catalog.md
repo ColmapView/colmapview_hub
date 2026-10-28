@@ -14,6 +14,13 @@ use immutable browser caching; catalog metadata continues to revalidate. The off
 `node scripts/audit/prepare-video-previews.mjs --apply` reads bounded keyframe
 groups and records immutable previews with their media-receipt provenance.
 
+Original photographs may live in a different public repository from the selected
+model. Reviewed `photoSource` records keep that repository's exact revision,
+inventory, association and photo terms separate. The launch manifest declares
+explicit original-photo URLs while preserving native models and Gaussian
+companions. The [missing-thumbnail audit](thumbnail-recovery-2026-10-28.md) records
+the recovered CL-Splats scenes and remaining source limitations.
+
 The Gaussian label means Gaussian data has verified format evidence and a viewer
 binding. It stays visible without hovering. PLY is a container format: ordinary point clouds and meshes keep their
 own labels. Listed, archive-only and conversion-required assets do not receive an

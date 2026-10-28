@@ -4,6 +4,7 @@ from copy import deepcopy
 import re
 from .scene_qualification import scene_key
 from .scene_contents import is_metadata_sidecar, source_path
+from .photo_sources import source_photo_url, validate_photo_source
 
 
 PHOTO_STATES = {'sample_checked', 'partial', 'not_included', 'not_found',
@@ -55,6 +56,19 @@ def photo_scene_reviews(catalog, policy):
             if status in SAMPLE_STATES and (not audit.get('samplePath') or audit.get('sampleBrowserRead') is not True
                                            or audit.get('samplePixels') not in ('decoded', 'deferred')):
                 raise ValueError('Found photographs require a matching browser-readable sample')
+            external = audit.get('photoSource')
+            if external is not None:
+                validate_photo_source(external)
+                if (external['sourceId'] == source['sourceId'] or status not in SAMPLE_STATES
+                        or audit.get('samplePixels') != 'decoded' or audit.get('sampleDimensionsMatch') is not True):
+                    raise ValueError('External photos need a decoded, calibrated sample from a different source')
+                source_photo_url(external, audit.get('samplePath'))
+            preview = audit.get('previewPolicy')
+            if preview is not None and (not isinstance(preview, dict) or preview.get('status') != 'not_permitted'
+                    or not isinstance(preview.get('reason'), str) or not preview['reason'].strip()
+                    or not isinstance(preview.get('termsUrl'), str) or not preview['termsUrl'].startswith('https://')
+                    or re.fullmatch('[a-f0-9]{64}', preview.get('sha256', '')) is None):
+                raise ValueError('A preview restriction needs the publisher terms and their receipt')
             calibration = audit.get('sampleCalibration')
             if calibration is not None:
                 archive_sample = (audit.get('archive') or {}).get('sample') or {}
@@ -133,7 +147,8 @@ def apply_photo_evidence(entry, row, revision, proof, review):
         if result.get('level') == 'native_layout_checked':
             result['summary'] = ('Native camera and registered pose headers checked; no native point file is supplied. ' if row[0] == 'cameras'
                                  else 'Native camera, registered pose and point-file headers checked. ') + audit['summary']
-    if ((entry.get('verification') or {}).get('sourceImages') or {}).get('status') == 'not_included' and audit['status'] != 'not_included':
+    if (((entry.get('verification') or {}).get('sourceImages') or {}).get('status') == 'not_included'
+            and audit['status'] != 'not_included' and not audit.get('photoSource')):
         raise ValueError('Photo evidence conflicts with the publisher RGB exclusion')
     result['photoAudit'] = audit
     return result

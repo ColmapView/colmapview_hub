@@ -1,20 +1,17 @@
 import { expect, test } from '@playwright/test';
 
-test('refinement variants have one scene card while historical model links keep their exact selections', async ({ page }) => {
+test('newly gated sources are excluded from public search, metadata and historical launches', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
-  const source = index.sources.find((item: { sourceId: string }) => item.sourceId === 'hf:Bluefish2333/ScannetPoseRefine');
-  const result = await (await page.request.get(`/hub/datasets/api/entries?dataset=${source.id}&q=scene0000_00`)).json();
-  expect(result.total).toBe(1);
-  expect(result.entries[0].title).toBe('scene0000_00');
-  const selected = await page.request.get(result.entries[0].openUrl, { maxRedirects: 0 });
-  expect(selected.status()).toBe(302);
-  expect(new URL(selected.headers().location).searchParams.get('url')).toMatch(/\/scene0000_00\/sparse\/refined_aligned$/);
+  expect(index.sources.some((item: { sourceId: string }) => item.sourceId === 'hf:Bluefish2333/ScannetPoseRefine')).toBe(false);
+  const result = await (await page.request.get('/hub/datasets/api/entries?q=ScannetPoseRefine')).json();
+  expect(result.total).toBe(0);
+  expect(result.entries).toEqual([]);
   const original = await page.request.get('/hub/open/data-93580dd2921e94e0c8d2e4e6', { maxRedirects: 0 });
-  expect(original.status()).toBe(302);
-  expect(new URL(original.headers().location).searchParams.get('url')).toMatch(/\/scene0000_00\/sparse\/init$/);
-  await page.goto(`/hub/?dataset=${source.id}&q=scene0000_00`);
-  await expect(page.locator('.dataset-card')).toHaveCount(1);
-  await expect(page.locator('.catalog-totals')).toContainText(`${index.total.toLocaleString('en-US')} scene entries`);
+  expect(original.status()).toBe(404);
+  const metadata = await page.request.get('/hub/datasets/individual/sources/hf-bluefish2333-scannetposerefine-2aaaa366183a.json');
+  expect(metadata.status()).toBe(404);
+  await page.goto('/hub/?q=ScannetPoseRefine');
+  await expect(page.locator('.dataset-card')).toHaveCount(0);
 });
 
 test('the Gaussian scene filter returns the same kind and count reported by its cards', async ({ page }) => {

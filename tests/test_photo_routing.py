@@ -55,6 +55,54 @@ class PhotoRoutingTests(unittest.TestCase):
         self.assertNotIn('viewerStatePath', manifest)
         self.assertNotIn('asset:other.ply', manifest['files'])
 
+    def external_source(self):
+        source = {'sourceId': 'hf:publisher/photos', 'revision': 'e' * 40, 'scope': 'scene/images',
+                  'inventorySha256': 'f' * 64, 'license': 'cc-by-4.0', 'attribution': 'Original publisher'}
+        self.item['photoSource'] = source
+        self.proof['photoAudit']['photoSource'] = copy.deepcopy(source)
+        self.item['nameCheck'].update(registered=1, complete=True)
+        self.proof['sceneCompatibility']['images'] = 1
+        self.item['sourceAssociation'] = {'method': 'identical_poses_and_calibration', 'matchedPoses': 1,
+            'maxPoseDelta': 0, 'maxCalibrationDelta': 0, 'sourceCameraSha256': '1' * 64,
+            'sourcePoseSha256': '2' * 64, 'publisherReceiptSha256': '3' * 64}
+
+    def test_external_photos_keep_model_masks_optional_assets_and_source_licenses_separate(self):
+        self.external_source()
+        review = self.review()
+        manifest = json.loads(routing_asset(review, self.entry, hf_url)[1])
+        self.assertEqual(manifest['imageNameToPath']['front/a.png'],
+                         'https://huggingface.co/datasets/publisher/photos/resolve/' + 'e' * 40 + '/scene/images/front/a.png')
+        self.assertEqual(manifest['files']['images'], hf_url(self.entry, 'a' * 40, self.files['images']))
+        self.assertEqual(manifest['masks'], [hf_url(self.entry, 'a' * 40, self.item['masks'][0])])
+        self.assertNotIn('splats', manifest)
+        result = self.apply()
+        self.assertEqual(result['sceneCompatibility']['points'], 23)
+        self.assertEqual(result['photoAudit']['photoSource']['license'], 'cc-by-4.0')
+        self.proof['photoAudit']['photoSource']['revision'] = 'f' * 40
+        with self.assertRaisesRegex(ValueError, 'retain the reviewed photograph source'):
+            self.apply()
+
+    def test_external_names_need_complete_source_scope_and_exact_association(self):
+        self.external_source()
+        original = copy.deepcopy(self.item)
+        mutations = [lambda r: r['photoSource'].update(revision='main'),
+            lambda r: r['photoSource'].update(sourceId='hf:publisher/../photos'),
+            lambda r: r['photoSource'].update(scope='other'),
+            lambda r: r['sourceAssociation'].update(maxPoseDelta=0.01),
+            lambda r: r['sourceAssociation'].update(maxCalibrationDelta=1),
+            lambda r: r['sourceAssociation'].update(publisherReceiptSha256='missing'),
+            lambda r: r['nameCheck'].update(complete=False, registered=2),
+            lambda r: r['sourceAssociation'].update(method='publisher_calibration_repair')]
+        for mutation in mutations:
+            self.item = copy.deepcopy(original)
+            mutation(self.item)
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                self.review()
+        self.item = copy.deepcopy(original)
+        self.item['sourceAssociation'].update(method='publisher_calibration_repair', maxCalibrationDelta=3.57,
+                                              repairReceiptSha256='4' * 64)
+        self.assertIn('photoSource', self.review())
+
     def test_routing_preserves_statistics_and_export_tier(self):
         result = self.apply()
         self.assertEqual(result['sceneCompatibility'], self.proof['sceneCompatibility'])

@@ -199,10 +199,32 @@ class SceneContentsTests(unittest.TestCase):
             self.assertEqual((len(jobs), retained, placeholders), (1, 0, {}))
             self.assertEqual(jobs[0]['url'], 'https://huggingface.co/datasets/owner/data/resolve/' + 'a' * 40 + '/scene/images/a%2520b.png')
             self.assertEqual((catalog, contents, photos), before)
+        audit['previewPolicy'] = {'status': 'not_permitted', 'reason': 'Publisher prohibits redistribution.',
+                                  'termsUrl': 'https://publisher.example/terms', 'sha256': 'f' * 64}
+        jobs, retained, placeholders = preview_jobs(catalog, contents, photos, Path('.'))
+        self.assertEqual((jobs, retained, placeholders), ([], 0, {'publisher_preview_restriction': 1}))
+        audit.pop('previewPolicy')
         audit['status'] = 'not_found'
         audit.pop('samplePath')
         jobs, retained, placeholders = preview_jobs(catalog, contents, photos, Path('.'))
         self.assertEqual((jobs, retained, placeholders), ([], 0, {'not_found': 1}))
+
+    def test_external_preview_cannot_attribute_the_photo_to_the_model_repository(self):
+        source = {'sourceId': 'hf:publisher/photos', 'revision': 'e' * 40, 'scope': 'scene/images',
+                  'inventorySha256': 'f' * 64, 'license': 'cc-by-4.0', 'attribution': 'Original publisher'}
+        proof = {'photoAvailability': 'sample_checked', 'photoAudit': {'samplePath': 'scene/images/a.png', 'photoSource': source}}
+        entry = {'license': 'mit'}
+        thumbnail = {'file': 'a' * 64 + '.jpg', 'sourcePath': 'scene/images/a.png', 'datasetLicense': 'mit',
+                     'sourceUrl': 'https://huggingface.co/datasets/publisher/photos/resolve/' + 'e' * 40 + '/scene/images/a.png',
+                     'license': 'cc-by-4.0', 'attribution': 'Original publisher'}
+        self.assertEqual(apply_thumbnail_evidence(entry, proof, thumbnail)['thumbnail']['license'], 'cc-by-4.0')
+        for change in ({'sourceUrl': 'https://huggingface.co/datasets/owner/model/resolve/' + 'e' * 40 + '/scene/images/a.png'},
+                       {'license': 'mit'}, {'attribution': 'Model publisher'}):
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, 'External preview'):
+                apply_thumbnail_evidence(entry, proof, {**thumbnail, **change})
+        proof['photoAudit']['previewPolicy'] = {'status': 'not_permitted'}
+        with self.assertRaisesRegex(ValueError, 'terms do not permit'):
+            apply_thumbnail_evidence(entry, proof, thumbnail)
 
     def test_public_preview_paths_use_the_exact_checked_https_photo(self):
         source = {'sourceId': 'public:example', 'revision': 'a' * 40}

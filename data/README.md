@@ -1,5 +1,15 @@
 # Dataset catalog
 
+The [October 28 missing-thumbnail audit](../docs/thumbnail-recovery-2026-10-28.md)
+checks all 1,719 entries without previews in the preceding public catalog.
+Sixteen GS-Pool CL-Splats entries regain original photographs and previews from
+the separately pinned original release. ScanNetPoseRefine now requires access
+approval; its 1,513 entries are excluded from the public projection while research
+and historical evidence remain intact. The resulting catalog has 3,046 scenes
+across 143 source collections. The compressed
+`thumbnail-recovery-audit-2026-10-28.json.gz` records every checked selection,
+source/access receipts, original-photo bindings and scoped pixel checks.
+
 The [October 26 photo review](../docs/photo-negative-audit-2026-10-26.md) checks all
 1,718 published photo-negative selections against 307 paginated pinned tree
 responses (268,732 files across 17 sources). Its
@@ -140,6 +150,17 @@ Run `npm run catalog:licenses` to refresh the committed snapshot from these offl
 `scene-contents.json.gz` records exact pinned scene identities, scoped mask inventories, companion model header evidence and optional preview provenance. `scripts/catalog/scene_contents.py` rejects source/model drift, guessed Gaussian PLY classifications, changed preview hashes and missing provenance. Builds copy only referenced, hash-named JPEGs from `data/scene-thumbnails/` to fixed same-origin assets. Scene cards list available data separately from full loading evidence. Empty COLMAP point sets do not claim a point cloud, and pose metadata never counts as photographs.
 
 Previews are normally 320 × 320 center-square crops of checked scene photographs. Explicit `aspect_fit` previews retain the full frame with a 320-pixel longest edge; metadata records the actual dimensions and crop policy. Operator preparation runs separately from builds using `python -m scripts.audit.prepare_scene_contents --plan <reviewed-plan.json>` and Pillow; plans must use pinned public Hugging Face file URLs. `python -m scripts.audit.prepare_scene_previews --scratch .tmp/scene-previews` fills missing previews from existing checked photo evidence, preserves existing crops and supports exact public sample URLs and bounded companion ZIP reads. Its optional `--archive-credits <publisher-images.csv>` retains per-photo terms and artists for MegaUnScene. Source hashes, original paths, known attribution, recorded image terms and crop disclosure follow the preview. Preview generation covers every license category, including non-commercial and unspecified terms, without changing license labels or model/photo loading evidence. Model-only scenes stay published.
+
+Reviewed cross-repository photographs use `photoSource` in the photo audit and
+photo-routing receipt: the exact original HF repository, immutable revision,
+media scope, complete inventory digest, image terms and attribution. Complete
+native name/pose association, calibration or a documented camera-only repair,
+and decoded sample dimensions are required before automatic routing. Manifests
+keep native files, masks and optional-asset discovery at their original source;
+only explicit photo URLs point to the original publisher. Preview `sourceUrl`
+retains that same pin. Image terms remain separate from the model repository's
+licence. An explicit `previewPolicy: { status: "not_permitted", ... }` retains the
+publisher terms receipt and prevents the preview preparer from rehosting pixels.
 
 Cards without a prepared thumbnail use a neutral placeholder. “No photo” applies only to established absence; “No preview” covers unverified or inaccessible photos.
 

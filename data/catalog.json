@@ -27637,7 +27637,7 @@
       "sourceUrl": "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine",
       "dataUrl": "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine/tree/55141d6c7228083b34619e55ebc65d9e1bf88813/scene0000_00/sparse/init",
       "license": "Not specified",
-      "access": "public",
+      "access": "gated",
       "status": "audited_header_checked",
       "statusLabel": "Format headers checked",
       "formats": [
@@ -27718,6 +27718,11 @@
         {
           "label": "PLY files listed",
           "value": "0"
+        },
+        {
+          "label": "Anonymous file access rechecked",
+          "value": "HTTP 401 GatedRepo; 2026-10-28T07:02:07.566904+00:00",
+          "url": "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine/resolve/55141d6c7228083b34619e55ebc65d9e1bf88813/scene0000_00/sparse/init/cameras.bin"
         }
       ],
       "audits": [
@@ -27861,13 +27866,16 @@
       ],
       "verification": {
         "level": "header_checked",
-        "delivery": "browser_readable",
+        "delivery": "gated",
         "checkedAt": "2026-10-16",
         "summary": "COLMAP identified from original source headers. Complete scene parsing and rendering remain unverified.",
         "scope": "Representative original format headers or SOG metadata; no full-scene render certification. Other models, photos and masks are not qualified by this sample.",
-        "viewerVersion": "0.16.14"
+        "viewerVersion": "0.16.14",
+        "opening": {
+          "status": "access_required",
+          "summary": "Hugging Face now requires access approval. Fresh anonymous model requests return HTTP 401 GatedRepo."
+        }
       },
-      "viewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FBluefish2333%2FScannetPoseRefine%2Ftree%2F55141d6c7228083b34619e55ebc65d9e1bf88813%2Fscene0000_00%2Fsparse%2Finit",
       "datasetLabel": "ScannetPoseRefine",
       "licenseCategory": "not-specified"
     },

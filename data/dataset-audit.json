@@ -19245,7 +19245,7 @@
       "fileCount": 13619,
       "listingComplete": true,
       "license": null,
-      "gated": false,
+      "gated": true,
       "archiveCount": 0,
       "plyCount": 0,
       "formats": [
@@ -19254,7 +19254,7 @@
       "modelDirectory": "scene0000_00/sparse/init",
       "level": "header_checked",
       "loadUrl": "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine/tree/55141d6c7228083b34619e55ebc65d9e1bf88813/scene0000_00/sparse/init",
-      "delivery": "browser_readable",
+      "delivery": "gated",
       "requiredUrls": [
         "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine/resolve/55141d6c7228083b34619e55ebc65d9e1bf88813/scene0000_00/sparse/init/cameras.bin",
         "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine/resolve/55141d6c7228083b34619e55ebc65d9e1bf88813/scene0000_00/sparse/init/images.bin",
@@ -19280,6 +19280,32 @@
           "delivery": "browser_readable",
           "checkedAt": "2026-10-17T01:14:40.226Z",
           "prefixStatus": 206
+        }
+      ],
+      "accessChecks": [
+        {
+          "url": "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine/resolve/55141d6c7228083b34619e55ebc65d9e1bf88813/scene0000_00/sparse/init/cameras.bin",
+          "path": "scene0000_00/sparse/init/cameras.bin",
+          "status": 401,
+          "errorCode": "GatedRepo",
+          "checkedAt": "2026-10-28T07:00:30.183657+00:00",
+          "scope": "Fresh anonymous bounded read; no access credentials used."
+        },
+        {
+          "url": "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine/resolve/55141d6c7228083b34619e55ebc65d9e1bf88813/scene0000_00/sparse/refined_aligned/cameras.bin",
+          "path": "scene0000_00/sparse/refined_aligned/cameras.bin",
+          "status": 401,
+          "errorCode": "GatedRepo",
+          "checkedAt": "2026-10-28T07:00:30.350745+00:00",
+          "scope": "Fresh anonymous bounded read; no access credentials used."
+        },
+        {
+          "url": "https://huggingface.co/datasets/Bluefish2333/ScannetPoseRefine/resolve/55141d6c7228083b34619e55ebc65d9e1bf88813/scene0000_00/sparse/refined_aligned/images.bin",
+          "path": "scene0000_00/sparse/refined_aligned/images.bin",
+          "status": 401,
+          "errorCode": "GatedRepo",
+          "checkedAt": "2026-10-28T07:00:30.488723+00:00",
+          "scope": "Fresh anonymous bounded read; no access credentials used."
         }
       ]
     },

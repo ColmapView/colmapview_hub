@@ -189,6 +189,9 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
   const repo = parent.sourceId.slice(3);
   const tree = (value: string) => `https://huggingface.co/datasets/${encodePath(repo)}/tree/${revision}${value ? `/${encodePath(value)}` : ''}`;
   const file = (value: string) => parent.provider === 'public' ? value : `https://huggingface.co/datasets/${encodePath(repo)}/resolve/${revision}/${encodePath(value)}`;
+  const photoSource = proof?.photoAudit?.photoSource;
+  const photoFile = (value: string) => photoSource
+    ? `https://huggingface.co/datasets/${encodePath(photoSource.sourceId.slice(3))}/resolve/${photoSource.revision}/${encodePath(value)}` : file(value);
   const folder = ['colmap', 'cameras', 'camera-scene', 'splat-scene'].includes(kind);
   const dataUrl = parent.provider === 'public' ? parent.dataUrl : archive ? file(archive) : folder ? tree(path) : file(path);
   const canOpen = canOpenIndividual(row, gated ? { ...source, access: 'gated' } : source);
@@ -261,7 +264,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         }, ...(evidence?.archiveMember ? [{ label: `${kind.replaceAll('_', ' ')} archive member`, value: evidence.archiveMember }] : []),
         ...(evidence?.requiresConversion ? [{ label: 'Splat loading', value: 'Compressed Gaussian PLY is supplied. Convert it to standard Gaussian PLY before importing; the current model link does not attach this asset.' }] : [])])] : []),
       ...(summary.thumbnail ? [{ label: 'Preview attribution', value: `${summary.thumbnail.attribution} · ${summary.thumbnail.license}. ${summary.thumbnail.crop === 'aspect_fit' ? 'Full-frame thumbnail' : 'Center-square crop'} of a ${summary.thumbnail.videoFrame ? 'mapped video frame' : 'checked registered image'}.` },
-        { label: 'Preview source', value: summary.thumbnail.sourcePath, ...(summary.thumbnail.sourceArchive ? {} : { url: file(summary.thumbnail.sourcePath) }) },
+        { label: 'Preview source', value: summary.thumbnail.sourcePath, ...(summary.thumbnail.sourceArchive ? {} : { url: summary.thumbnail.sourceUrl || file(summary.thumbnail.sourcePath) }) },
         ...(summary.thumbnail.sourceArchive ? [{ label: 'Preview source archive', value: summary.thumbnail.sourceArchive, url: file(summary.thumbnail.sourceArchive) }] : [])] : []),
       ...(proof?.photoAvailability ? [{ label: proof.videoFrameMapping || proof.videoFrameRouting ? 'Camera imagery' : 'Original photographs', value: proof.photoAvailability === 'complete_export_checked'
         ? 'All registered originals checked in a complete export' : proof.photoAvailability === 'not_included'
@@ -286,7 +289,9 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
             ? `${proof.photoAudit.nameCheck.matched}/${proof.photoAudit.nameCheck.registered} inspected names from ${proof.photoAudit.nameCheck.totalRegistered} registered poses. This prefix sample does not establish complete coverage.`
             : `${proof.photoAudit.nameCheck.matched}/${proof.photoAudit.nameCheck.registered} through the current loader; image pixels and complete export checked separately.` }] : []),
         ...(proof.photoAudit.proposedNameCheck ? [{ label: 'Photo names matched with proposed scope', value: `${proof.photoAudit.proposedNameCheck.matched}/${proof.photoAudit.proposedNameCheck.registered}. This media configuration is not applied by the current scene link.` }] : []),
-        ...(proof.photoAudit.samplePath ? [{ label: 'Checked photo sample', value: proof.photoAudit.samplePath, url: file(proof.photoAudit.samplePath) },
+        ...(photoSource ? [{ label: 'Photograph source', value: `${photoSource.sourceId.slice(3)} · ${photoSource.license}`,
+          url: `https://huggingface.co/datasets/${encodePath(photoSource.sourceId.slice(3))}` }] : []),
+        ...(proof.photoAudit.samplePath ? [{ label: 'Checked photo sample', value: proof.photoAudit.samplePath, url: photoFile(proof.photoAudit.samplePath) },
           { label: 'Photo sample browser read', value: proof.photoAudit.samplePixels === 'decoded' ? 'Photograph pixels decoded; other images checked separately.' : 'Photograph bytes readable; pixel decoding deferred by the audit size bound.' }] : []),
         ...(proof.photoAudit.sampleCalibration ? [{ label: 'Photo / camera resolution',
           value: `${proof.photoAudit.sampleWidth} × ${proof.photoAudit.sampleHeight} / ${proof.photoAudit.sampleCalibration.width} × ${proof.photoAudit.sampleCalibration.height} pixels` },

@@ -16,6 +16,15 @@ export type PhotoStatus = keyof typeof PHOTO_LABELS;
 export const isPhotoStatus = (value: unknown): value is PhotoStatus => typeof value === 'string' && Object.hasOwn(PHOTO_LABELS, value);
 export const photoLabel = (status: PhotoStatus) => PHOTO_LABELS[status];
 
+export interface PhotoSource {
+  sourceId: string;
+  revision: string;
+  scope: string;
+  license: string;
+  attribution: string;
+  inventorySha256: string;
+}
+
 export interface ScenePhotoAudit {
   status: Exclude<PhotoStatus, 'unresolved'>;
   checkedAt: string;
@@ -28,6 +37,8 @@ export interface ScenePhotoAudit {
   photoCollection?: string;
   mappingFile?: string;
   associationFile?: string;
+  photoSource?: PhotoSource;
+  previewPolicy?: { status: 'not_permitted'; reason: string; termsUrl: string; sha256: string };
   unmappedMedia?: { kind: 'video' | 'archive'; paths: string[]; inventorySha256: string };
   mappingCheck?: { entries: number; matched: number; manifestAgrees?: number };
   nameCheck?: { registered: number; matched: number; missing: number; ambiguous: number; scope?: 'prefix'; totalRegistered?: number };
@@ -41,6 +52,7 @@ export interface ScenePhotoAudit {
   samplePixels?: 'decoded' | 'deferred';
   sampleRegisteredName?: string;
   samplePrefixSha256?: string;
+  sampleSha256?: string;
   sampleDimensionsMatch?: boolean;
   sampleWidth?: number;
   sampleHeight?: number;

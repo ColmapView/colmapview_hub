@@ -3,11 +3,13 @@
 from copy import deepcopy
 import hashlib
 import json
+import math
 import re
 from urllib.parse import quote, parse_qs, urlsplit
 
 from .scene_contents import is_metadata_sidecar, source_path
 from .scene_qualification import LAUNCH_ASSETS, scene_key
+from .photo_sources import source_photo_url, validate_photo_source
 
 
 def json_bytes(value):
@@ -74,6 +76,26 @@ def routing_reviews(catalog, policy):
                 or check['complete'] != (check.get('registered') == check['inspected'])):
             raise ValueError('Photo routing requires sampled calibration and released-loader binding checks')
         mappings = item.get('mappingReceipts', [])
+        external = item.get('photoSource')
+        if external is not None:
+            validate_photo_source(external)
+            association = item.get('sourceAssociation', {})
+            if (not isinstance(association, dict) or external['sourceId'] == item['sourceId'] or check['complete'] is not True
+                    or check['matched'] != check['registered'] or association.get('method') not in
+                       ('identical_poses_and_calibration', 'publisher_calibration_repair')
+                    or type(association.get('matchedPoses')) is not int or association['matchedPoses'] != check['registered']
+                    or type(association.get('maxPoseDelta')) not in (int, float) or association['maxPoseDelta'] != 0
+                    or type(association.get('maxCalibrationDelta')) not in (int, float)
+                    or not math.isfinite(association['maxCalibrationDelta']) or association['maxCalibrationDelta'] < 0
+                    or not all(isinstance(association.get(key), str) and re.fullmatch('[a-f0-9]{64}', association[key])
+                               for key in ('sourceCameraSha256', 'sourcePoseSha256', 'publisherReceiptSha256'))
+                    or association['method'] == 'identical_poses_and_calibration' and association.get('maxCalibrationDelta') != 0
+                    or association['method'] == 'publisher_calibration_repair'
+                       and (not isinstance(association.get('repairReceiptSha256'), str)
+                            or re.fullmatch('[a-f0-9]{64}', association['repairReceiptSha256']) is None)):
+                raise ValueError('External photos require complete names and exact native source association')
+            for path in photos:
+                source_photo_url(external, path)
         if (not isinstance(mappings, list) or check['matched'] > len(names)
                 or len(names) > check['matched'] and not mappings):
             raise ValueError('Uninspected name overrides require an authoritative source mapping')
@@ -109,8 +131,10 @@ def routing_asset(review, entry, hf_url):
                 'files': {role: hf_url(entry, review['revision'], review['files'][key]) for role, key in
                           [('cameras', 'cameras'), ('images', 'images'), ('points3D', 'points3d'), ('rigs', 'rigs'), ('frames', 'frames')]
                           if key in review['files']},
-                'images': [relative(path) for path in review['photos']],
-                'imageNameToPath': {name: relative(path) for name, path in review['nameToPath'].items()},
+                'images': [source_photo_url(review['photoSource'], path) if review.get('photoSource') else relative(path)
+                           for path in review['photos']],
+                'imageNameToPath': {name: source_photo_url(review['photoSource'], path) if review.get('photoSource') else relative(path)
+                                    for name, path in review['nameToPath'].items()},
                 'masks': [relative(path) for path in review.get('masks', [])]}
     # Splat discovery and optional settings keep their original scene scope.
     # This policy declares photos; it does not select new companion geometry.
@@ -128,6 +152,8 @@ def apply_routing(entry, row, revision, proof, review, hf_url):
             or proof.get('sceneValidation') or proof.get('photoAvailability') not in ('sample_checked', 'partial', 'path_policy_required')):
         raise ValueError('Photo routing cannot replace a different model, launch or full-export selection')
     audit = proof.get('photoAudit', {})
+    if audit.get('photoSource') != review.get('photoSource'):
+        raise ValueError('Photo routing must retain the reviewed photograph source')
     sample = review['sample']
     previous_names = audit.get('nameCheck', {})
     if previous_names.get('scope') != 'prefix' and previous_names.get('registered', 0) > review['nameCheck']['inspected']:
@@ -170,7 +196,7 @@ def apply_routing(entry, row, revision, proof, review, hf_url):
         'The released viewer binds the sampled photograph without a collection prompt. Remaining photo bytes, calibration/alignment and full export retain their separate evidence scopes.')
     if audit.get('policy') == 'authoritative_json_mapping_required':
         result['photoAudit']['policyNote'] += ' Publisher mapping: ' + audit.get('policyNote', '')
-    elif audit.get('policy') in ('eth3d_sibling_photo_folder', 'authoritative_manifest_companion_images'):
+    elif audit.get('policy') in ('eth3d_sibling_photo_folder', 'authoritative_manifest_companion_images', 'verified_external_photo_source'):
         result['photoAudit']['policyNote'] += ' Pre-manifest photo audit (' + audit.get('checkedAt', '') + '): ' + audit.get('policyNote', '')
     return result
 

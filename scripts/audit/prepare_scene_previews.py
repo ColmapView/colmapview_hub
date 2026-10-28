@@ -26,6 +26,7 @@ from .prepare_scene_contents import ArchiveReader, Network, archive_photo, pinne
 from ..catalog.scene_contents import PHOTO_STATES, content_scene_reviews, is_metadata_sidecar, photo_source_path
 from ..catalog.scene_photos import photo_scene_reviews
 from ..catalog.scene_qualification import scene_key
+from ..catalog.photo_sources import source_photo_url
 
 
 def photo_url(source, path):
@@ -55,13 +56,16 @@ def preview_jobs(catalog, contents, photos, root):
                 retained += 1
                 continue
             audit = review['audit']
+            if audit.get('previewPolicy', {}).get('status') == 'not_permitted':
+                placeholders['publisher_preview_restriction'] += 1
+                continue
             if audit['status'] not in PHOTO_STATES:
                 placeholders[audit['status']] += 1
                 continue
             path = audit.get('samplePath') or (audit.get('archive') or {}).get('path')
             if not path or is_metadata_sidecar(path):
                 raise ValueError('Checked photos require a real sample or companion archive')
-            url = photo_url(source, path)
+            url = source_photo_url(audit['photoSource'], path) if audit.get('photoSource') else photo_url(source, path)
             jobs.append({'key': key, 'source': source, 'scene': scene, 'audit': audit,
                          'entry': parents[source['sourceId']], 'url': url})
     return jobs, retained, dict(placeholders)
@@ -179,6 +183,9 @@ def prepare(root, scratch, workers=6, credits_path=None):
             for key in ('sourceArchive', 'registeredName', 'creditUrl', 'licenseUrl'):
                 if target.get(key):
                     thumbnail[key] = target[key]
+            if audit.get('photoSource'):
+                external = audit['photoSource']
+                thumbnail.update(sourceUrl=job['url'], license=external['license'], attribution=external['attribution'])
             result['thumbnail'] = thumbnail
         except Exception as error:
             result['error'] = str(error)

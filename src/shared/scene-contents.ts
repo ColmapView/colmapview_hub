@@ -39,7 +39,7 @@ export interface SceneThumbnail {
   url: string; width: number; height: number; sourcePath: string; sourceArchive?: string;
   sourceSha256: string; datasetLicense: string; license: string; attribution: string; crop: 'center_square' | 'aspect_fit';
   originalWidth?: number; originalHeight?: number;
-  licenseUrl?: string; creditUrl?: string; registeredName?: string;
+  licenseUrl?: string; creditUrl?: string; registeredName?: string; sourceUrl?: string;
   videoFrame?: { receiptSha256: string; timestamp?: number; frameIndex?: number };
 }
 
@@ -74,6 +74,8 @@ export function isSceneThumbnail(value: unknown): value is SceneThumbnail {
     && ['sourcePath', 'sourceSha256', 'datasetLicense', 'license', 'attribution'].every(key => typeof item[key] === 'string' && item[key])
     && /^[a-f0-9]{64}$/.test(String(item.sourceSha256))
     && (item.sourceArchive === undefined || typeof item.sourceArchive === 'string')
+    && (item.sourceUrl === undefined || typeof item.sourceUrl === 'string'
+      && /^https:\/\/huggingface\.co\/datasets\/[^/?#]+\/[^/?#]+\/resolve\/[a-f0-9]{40}\/[^?#]+$/.test(item.sourceUrl))
     && (item.videoFrame === undefined || isVideoPreview(item.videoFrame)
       && typeof item.registeredName === 'string' && Boolean(item.registeredName) && item.sourceArchive === undefined)
     && (item.licenseUrl === undefined || isCreditUrl(item.licenseUrl)) && (item.creditUrl === undefined || isCreditUrl(item.creditUrl));

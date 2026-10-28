@@ -298,6 +298,28 @@ test('photo path rules preserve the model URL and expose checked source paths', 
   assert.doesNotMatch(html, /Photos checked.*all original photos/s);
 });
 
+test('external photo metadata links to its own pinned publisher and preserves the model source', () => {
+  const photoSource = { sourceId: 'hf:publisher/originals', revision: 'e'.repeat(40), scope: 'capture/images',
+    license: 'cc-by-4.0', attribution: 'Original publisher', inventorySha256: 'f'.repeat(64) };
+  const sourcePath = 'capture/images/a.png';
+  const sourceUrl = `https://huggingface.co/datasets/publisher/originals/resolve/${photoSource.revision}/${sourcePath}`;
+  const proof = { ...nativePhotoProof('sample_checked'),
+    photoAudit: { status: 'sample_checked', checkedAt: '2026-10-28', listingComplete: true, policy: 'verified_external_photo_source',
+      summary: 'Original photographs checked separately.', sceneRoot: 'colmap/scene', policyNote: 'Native models are unchanged.',
+      photoSource, samplePath: sourcePath, sampleBrowserRead: true, samplePixels: 'decoded' },
+    thumbnail: { url: `/hub/datasets/individual/thumbnails/${'a'.repeat(64)}.jpg`, width: 320, height: 320, crop: 'center_square',
+      sourcePath, sourceUrl, sourceSha256: 'b'.repeat(64), datasetLicense: parent.license, license: photoSource.license,
+      attribution: photoSource.attribution } };
+  const entry = render.individualEntry(row(0, { 7: proof }), source, parent);
+  assert.equal(render.isCatalogSummary(render.individualSummary(row(0, { 7: proof }), source)), true);
+  const facts = entry.facts;
+  assert.equal(facts.find(fact => fact.label === 'Preview source').url, sourceUrl);
+  assert.equal(facts.find(fact => fact.label === 'Checked photo sample').url, sourceUrl);
+  assert.equal(facts.find(fact => fact.label === 'Photograph source').value, 'publisher/originals · cc-by-4.0');
+  assert.equal(entry.license, parent.license);
+  assert.equal(entry.viewerUrl, proof.viewerUrl);
+});
+
 function routedPhotoProof() {
   const proof = nativePhotoProof('sample_checked');
   const sha256 = 'a'.repeat(64);

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.20.5 — 2026-10-28
+
+- Audit all 1,719 entries without thumbnails. Restore original public photographs and attributed previews to 16 GS-Pool CL-Splats entries, preserving native models and Gaussian companions.
+- Exclude 1,513 ScanNetPoseRefine entries after fresh anonymous requests confirm the source now requires access approval. Retain research inventories and historical manifests.
+- Keep photo-source revisions and image terms separate from model metadata, and honor publisher restrictions during thumbnail preparation.
+
 ## Unreleased
 
 ## 0.20.4 — 2026-10-28
