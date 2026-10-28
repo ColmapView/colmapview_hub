@@ -112,19 +112,24 @@ test('scrolling appends scenes without duplicates and shuffle preserves active f
   expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(shuffled);
 });
 
-test('failed automatic loading pauses until an explicit retry', async ({ page }) => {
+for (const failures of [1, 2]) test(failures === 1 ? 'automatic loading recovers from one transient failure' : 'persistent automatic loading failure pauses until an explicit retry', async ({ page }) => {
   let attempts = 0;
   await page.route('**/hub/datasets/api/entries?**', async route => {
-    if (new URL(route.request().url()).searchParams.get('page') === '2' && ++attempts === 1) {
+    if (new URL(route.request().url()).searchParams.get('page') === '2' && ++attempts <= failures) {
       await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Temporary failure' }) });
     } else await route.continue();
   });
   await page.goto('/hub/?sort=random&seed=12345678');
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
+  if (failures === 1) {
+    await expect(page.locator('.dataset-card')).toHaveCount(48);
+    expect(attempts).toBe(2);
+    return;
+  }
   await expect(page.locator('#catalog-status')).toContainText('Could not load more');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.waitForTimeout(300);
-  expect(attempts).toBe(1);
+  expect(attempts).toBe(2);
   await page.getByRole('button', { name: 'Retry loading more', exact: true }).click();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
 });

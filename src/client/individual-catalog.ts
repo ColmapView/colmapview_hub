@@ -8,6 +8,7 @@ import { recallFeed, rememberFeed, restoreFeedPosition } from './feed-memory';
 import { defaultFeedSeed, FEED_MODES } from '../shared/discovery';
 import { catalogViewerHost, hubApiBase, hubFrontend } from './hosting';
 import { refreshCatalogFilters } from './catalog-config';
+import { catalogRequest } from './catalog-request';
 
 const form = document.querySelector<HTMLFormElement>('#individual-search');
 if (form && document.querySelector('#catalog-more') && document.querySelector('#catalog-status')) {
@@ -201,7 +202,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     results.setAttribute('aria-busy', 'true');
     let failure = options.append ? 'Could not load more scenes. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
     try {
-      const response = await fetch(`${hubApiBase()}/datasets/api/entries${values.size ? `?${values}` : ''}`, { signal: controller.signal, credentials: 'omit' });
+      const response = await catalogRequest(`${hubApiBase()}/datasets/api/entries${values.size ? `?${values}` : ''}`, controller.signal);
       const data: (IndividualPage & { dataset: IndividualSelection | null; error?: string }) | null = await response.json().catch(() => null);
       if (!response.ok) {
         if (response.status === 400 && typeof data?.error === 'string') failure = data.error;

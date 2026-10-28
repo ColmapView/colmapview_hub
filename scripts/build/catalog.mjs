@@ -106,12 +106,17 @@ console.log(`Validated all ${checkedScenes.toLocaleString('en-US')} scene launch
 // one small permutation and only the requested summary rows, including deep pages.
 const individualRoot = resolve('public/hub/datasets/individual');
 const summaryPackSize = sceneIndex.summaries?.packSize;
-if (!Number.isSafeInteger(summaryPackSize) || summaryPackSize < 1 || summaryPackSize > 24 || !sceneIndex.discovery?.prepared) throw new Error('Missing prepared browse metadata');
+if (!Number.isSafeInteger(summaryPackSize) || summaryPackSize < 1 || summaryPackSize > 24 || sceneIndex.summaries.format !== 'jsonl' || !sceneIndex.discovery?.prepared) throw new Error('Missing prepared browse metadata');
 await mkdir(resolve(individualRoot, 'summaries'), { recursive: true });
+for (const file of await readdir(resolve(individualRoot, 'summaries'), { withFileTypes: true })) {
+  if (file.isFile() && /^\d+\.jsonl?$/.test(file.name)) await unlink(resolve(individualRoot, 'summaries', file.name));
+}
 for (let start = 0; start < summaries.length; start += summaryPackSize) {
-  await writeFile(resolve(individualRoot, 'summaries', `${start / summaryPackSize}.json`), JSON.stringify({
-    schemaVersion: 1, generation: sceneIndex.generation, entries: summaries.slice(start, start + summaryPackSize),
-  }));
+  const entries = summaries.slice(start, start + summaryPackSize);
+  await writeFile(resolve(individualRoot, 'summaries', `${start / summaryPackSize}.jsonl`), [
+    JSON.stringify({ schemaVersion: 1, generation: sceneIndex.generation, count: entries.length }),
+    ...entries.map(entry => JSON.stringify(entry)),
+  ].join('\n'));
 }
 const feed = await json(resolve(individualRoot, 'feed.json'));
 if (!isDiscoveryAsset(feed, sceneIndex)) throw new Error('Invalid discovery build input');

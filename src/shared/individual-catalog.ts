@@ -34,7 +34,7 @@ export interface IndividualIndex {
   thumbnails?: number;
   photoRouting?: Record<string, number>;
   discovery?: { schemaVersion: 1; file: 'feed.json'; prepared?: true };
-  summaries?: { schemaVersion: 1; packSize: number };
+  summaries?: { schemaVersion: 1; packSize: number; format?: 'jsonl' };
   incompleteCollections: number; scope: string;
   groupedVariants?: number;
 }

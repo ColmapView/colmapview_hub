@@ -63,7 +63,8 @@ and first-catalogued day, indexed by scene ordinal. The index, feed and all othe
 catalog assets share the existing catalog generation. Generation hashing includes
 history and discovery projection source bytes. The JavaScript build validates
 every published scene and prepares 256 complete orderings for each feed mode,
-plus card-summary packs of eight rows. The first byte of a seed selects its
+plus line-delimited card-summary packs of eight rows. Only the requested rows
+are parsed into objects. The first byte of a seed selects its
 prepared ordering. The Worker validates its generation and complete permutation,
 applies filters, and reads only the requested card summaries. Ranking and parsing
 neighboring raw evidence records stay out of the request path, so deep pages do
@@ -90,7 +91,8 @@ Copying the visible URL shares its filters and starts a fresh ordering when open
 The browser appends 24 scenes when a sentinel approaches the viewport. It keeps
 manual Load more/Retry controls and server-rendered Previous/Next links for
 disabled JavaScript, missing observers and failed requests. The end is explicit;
-the feed never cycles silently. An automatic request failure pauses automatic
+the feed never cycles silently. A transient 502, 503 or 504 response receives
+one retry after a short cancellable backoff. A persistent failure pauses automatic
 loading until an explicit retry. Stale responses, duplicate cards, wrong page
 numbers and mismatched feed selections cannot append to the current ordering.
 A catalog-generation change starts a fresh first page rather than mixing versions.

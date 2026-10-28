@@ -110,16 +110,19 @@ test('prepared searches read only bounded summary packs through the last page, w
   const sources = [{ ...source, count: 300 }, { ...source, id: 'hf-other-123456abcdef', start: 300, count: 245 }];
   const summaries = rows.map(row => render.individualSummary(row, sources[row[1]]));
   const index = { schemaVersion: 1, generation: 'prepared-runtime', total: rows.length, packSize: 24, sources,
-    summaries: { schemaVersion: 1, packSize: 8 }, discovery: { schemaVersion: 1, file: 'feed.json', prepared: true }, facets: {} };
+    summaries: { schemaVersion: 1, packSize: 8, format: 'jsonl' }, discovery: { schemaVersion: 1, file: 'feed.json', prepared: true }, facets: {} };
   const calls = [];
   let stale = false;
+  let invalidNeighbor = false;
   const order = { schemaVersion: 1, generation: index.generation, mode: 'random', bucket: '12', ordinals: rows.map((_,i) => i).reverse() };
   const binding = { fetch: async request => {
     const key = new URL(request.url).pathname.split('/individual/')[1]; calls.push(key);
     if (key === 'orders/random/12.json') return Response.json(order);
-    const pack = Number(key.match(/^summaries\/(\d+)\.json$/)?.[1]);
+    const pack = Number(key.match(/^summaries\/(\d+)\.jsonl$/)?.[1]);
     assert.ok(Number.isInteger(pack), `Unexpected expensive metadata read: ${key}`);
-    return Response.json({ schemaVersion: 1, generation: stale ? 'stale' : index.generation, entries: summaries.slice(pack * 8, (pack + 1) * 8) });
+    const entries = summaries.slice(pack * 8, (pack + 1) * 8);
+    return new Response([JSON.stringify({ schemaVersion: 1, generation: stale ? 'stale' : index.generation, count: entries.length }),
+      ...entries.map((entry, offset) => invalidNeighbor && pack * 8 + offset === 520 ? 'unrequested row is not parsed' : JSON.stringify(entry))].join('\n'));
   } };
   const all = [];
   for (let page = 1; page <= Math.ceil(rows.length / 24); page++) {
@@ -131,6 +134,10 @@ test('prepared searches read only bounded summary packs through the last page, w
     assert.deepEqual(result.entries, order.ordinals.slice((page-1)*24, page*24).map(i => summaries[i]));
   }
   assert.equal(new Set(all).size, rows.length);
+  invalidNeighbor = true;
+  const withoutNeighbor = await render.searchIndividuals(binding, 'https://example.org', index, new URLSearchParams('sort=random&seed=12345678'));
+  assert.equal(withoutNeighbor.entries.length, 24);
+  invalidNeighbor = false;
   const filtered = await render.searchIndividuals(binding, 'https://example.org', index, new URLSearchParams(`sort=random&seed=12345678&dataset=${sources[1].id}&page=2`));
   assert.equal(filtered.total, 245);
   assert.deepEqual(filtered.entries, order.ordinals.filter(i => i >= 300).slice(24,48).map(i => summaries[i]));

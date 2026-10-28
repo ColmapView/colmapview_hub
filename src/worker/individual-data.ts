@@ -13,8 +13,8 @@ type Assets = Pick<Fetcher, 'fetch'>;
 
 /** Only operator-built, fixed same-origin asset keys are read. Submitted data URLs
  * never enter this reader, and the private share-link bucket is not involved. */
-export async function individualAsset<T>(assets: Assets, origin: string, path: string): Promise<T | null> {
-  if (!/^(?:(?:index|feed)\.json|(?:(?:packs|summaries)\/\d+|orders\/(?:discover|random|new)\/[a-f0-9]{2}|(?:ids|variants)\/[a-f0-9]{2}|tokens\/[a-f0-9]{3}|facets\/[a-f0-9]{16}|sources\/[a-z0-9-]+-[a-f0-9]{12})\.json)$/.test(path)) throw new Error('Invalid built catalog key');
+async function individualAssetText(assets: Assets, origin: string, path: string): Promise<string | null> {
+  if (!/^(?:(?:index|feed)\.json|summaries\/\d+\.jsonl|(?:(?:packs|summaries)\/\d+|orders\/(?:discover|random|new)\/[a-f0-9]{2}|(?:ids|variants)\/[a-f0-9]{2}|tokens\/[a-f0-9]{3}|facets\/[a-f0-9]{16}|sources\/[a-z0-9-]+-[a-f0-9]{12})\.json)$/.test(path)) throw new Error('Invalid built catalog key');
   const response = await assets.fetch(new Request(origin + ROOT + path));
   if (response.status === 404) return null;
   if (!response.ok || !response.body) throw new Error('Catalog metadata unavailable');
@@ -34,7 +34,12 @@ export async function individualAsset<T>(assets: Assets, origin: string, path: s
     try { await reader.cancel(); } finally { reader.releaseLock(); }
   }
   parts.push(decoder.decode());
-  return JSON.parse(parts.join('')) as T;
+  return parts.join('');
+}
+
+export async function individualAsset<T>(assets: Assets, origin: string, path: string): Promise<T | null> {
+  const text = await individualAssetText(assets, origin, path);
+  return text === null ? null : JSON.parse(text) as T;
 }
 
 export async function individualIndex(assets: Assets, origin: string): Promise<IndividualIndex> {
@@ -46,7 +51,8 @@ export async function individualIndex(assets: Assets, origin: string): Promise<I
     || index.discovery && (index.discovery.schemaVersion !== 1 || index.discovery.file !== 'feed.json'
       || index.discovery.prepared !== undefined && index.discovery.prepared !== true || index.discovery.prepared && !index.summaries)
     || index.summaries && (index.summaries.schemaVersion !== 1 || !Number.isSafeInteger(index.summaries.packSize)
-      || index.summaries.packSize < 1 || index.summaries.packSize > INDIVIDUAL_PAGE_SIZE)) throw new Error('Invalid individual catalog index');
+      || index.summaries.packSize < 1 || index.summaries.packSize > INDIVIDUAL_PAGE_SIZE
+      || index.summaries.format !== undefined && index.summaries.format !== 'jsonl')) throw new Error('Invalid individual catalog index');
   return index;
 }
 
@@ -105,7 +111,7 @@ async function tokenShard(token: string): Promise<string> {
 }
 
 async function individualRows<T>(index: IndividualIndex, ordinals: number[], packSize: number,
-  readPack: (number: number) => Promise<unknown[] | null>, valid: (row: unknown) => row is T): Promise<T[]> {
+  readPack: (number: number, offsets: readonly number[]) => Promise<unknown[] | null>, valid: (row: unknown) => row is T): Promise<T[]> {
   const groups = new Map<number, Set<number>>();
   for (const ordinal of ordinals) {
     if (!Number.isSafeInteger(ordinal) || ordinal < 0 || ordinal >= index.total) throw new Error('Invalid individual metadata ordinal');
@@ -119,7 +125,7 @@ async function individualRows<T>(index: IndividualIndex, ordinals: number[], pac
   // buffers and retain only requested rows, rather than every neighboring row.
   for (let start = 0; start < numbers.length; start += MAX_PARALLEL_PACK_READS) {
     const batch = await Promise.allSettled(numbers.slice(start, start + MAX_PARALLEL_PACK_READS).map(async number => {
-      const rows = await readPack(number);
+      const rows = await readPack(number, [...groups.get(number)!].map(ordinal => ordinal % packSize));
       for (const ordinal of groups.get(number)!) {
         const row = rows?.[ordinal % packSize];
         if (!valid(row)) throw new Error('Individual metadata record missing or invalid');
@@ -137,7 +143,17 @@ export async function individualRecords(assets: Assets, origin: string, index: I
 }
 
 async function individualSummaries(assets: Assets, origin: string, index: IndividualIndex, ordinals: number[]): Promise<CatalogSummary[]> {
-  return individualRows(index, ordinals, index.summaries!.packSize, async number => {
+  return individualRows(index, ordinals, index.summaries!.packSize, async (number, offsets) => {
+    if (index.summaries!.format === 'jsonl') {
+      const text = await individualAssetText(assets, origin, `summaries/${number}.jsonl`);
+      const [header, ...lines] = text?.split('\n') || [];
+      const pack = header && JSON.parse(header);
+      const count = Math.min(index.summaries!.packSize, index.total - number * index.summaries!.packSize);
+      if (!pack || pack.schemaVersion !== 1 || pack.generation !== index.generation || pack.count !== count || lines.length !== count) throw new Error('Prepared scene summaries do not match the current catalog');
+      const rows: unknown[] = [];
+      for (const offset of offsets) rows[offset] = JSON.parse(lines[offset]);
+      return rows;
+    }
     const pack = await individualAsset<{ schemaVersion: number; generation: string; entries: unknown[] }>(assets, origin, `summaries/${number}.json`);
     if (!pack || pack.schemaVersion !== 1 || pack.generation !== index.generation || !Array.isArray(pack.entries)) throw new Error('Prepared scene summaries do not match the current catalog');
     return pack.entries;

@@ -730,7 +730,7 @@ def build(root=Path('.')):
                 'thumbnails': thumbnail_scenes,
                 'photoRouting': dict(routing_counts),
                 'discovery': {'schemaVersion': 1, 'file': 'feed.json', 'prepared': True},
-                'summaries': {'schemaVersion': 1, 'packSize': 8},
+                'summaries': {'schemaVersion': 1, 'packSize': 8, 'format': 'jsonl'},
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
                 'groupedVariants': grouped_variants,
                 'unit': 'named_scene',

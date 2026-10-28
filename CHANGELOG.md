@@ -6,6 +6,7 @@
 
 - Add a short footer for public spatial datasets and clarify that source datasets are hosted elsewhere, with instructions for sharing public Hugging Face uploads on the Hub.
 - Prepare discovery orders and compact card metadata offline so deep pagination stays within the Worker CPU budget. Preserve deterministic paging, filters and source evidence; refresh older feed generations and avoid immediately repeating a shuffled order.
+- Parse only requested card rows from line-delimited metadata packs. Retry transient catalog failures once with a short cancellable backoff, then retain the existing explicit retry control.
 - Align the Hub label with the ColmapView wordmark while retaining centered header controls and mobile touch targets.
 
 ## 0.20.2 — 2026-10-26
