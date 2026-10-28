@@ -105,10 +105,8 @@ html:has(.catalog-browse) { scroll-padding-block: 72px; }
 .catalog-secondary { top: calc(100% + var(--sp-2)); }
 .catalog-secondary .sr-only { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip-path: none; white-space: normal; }
 .dataset-selection { margin-bottom: var(--sp-2); font-size: 12px; }
-.catalog-count, .catalog-status { color: var(--text-secondary); margin: 0; font-size: 12px; }
-.catalog-result-summary { display: flex; flex: 1; min-width: 0; align-items: baseline; gap: var(--sp-3); }
-.catalog-count, .catalog-status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.catalog-count { min-width: 0; font-variant-numeric: tabular-nums; }
+.catalog-notice, .catalog-status { color: var(--text-secondary); margin: 0; font-size: 12px; line-height: 1.35; }
+.catalog-result-summary { flex: 1; min-width: 0; }
 .catalog-footbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 14; display: flex; align-items: center; gap: var(--sp-1); min-height: var(--catalog-footbar-height); padding: var(--sp-1) var(--sp-3) calc(var(--sp-1) + env(safe-area-inset-bottom)); border-top: 1px solid var(--border-color); background: var(--bg-secondary); }
 .catalog-browse .dataset-feed { margin-top: 0; }
 .catalog-browse .analytics-choice { bottom: calc(var(--catalog-footbar-height) + env(safe-area-inset-bottom) + var(--sp-3)); }
@@ -230,7 +228,6 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
 @media (max-width: 600px) {
   .catalog-toolbar .brand-name { display: none; }
   .catalog-toolbar .brand-title { gap: 0; }
-  .catalog-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .dataset-overview-has-preview { grid-template-columns: minmax(0, 1fr); }
   .dataset-facts > div { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
 }
@@ -241,6 +238,11 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
   .catalog-primary { column-gap: var(--sp-2); }
   .dataset-info { top: var(--sp-1); right: var(--sp-1); }
   .dataset-metadata-links a, .dataset-metadata-links button { min-height: 44px; display: inline-flex; align-items: center; }
+}
+@media (max-width: 600px) {
+  .catalog-browse { --catalog-footbar-height: 92px; }
+  .catalog-footbar { flex-wrap: wrap; justify-content: flex-end; }
+  .catalog-result-summary { flex-basis: 100%; }
 }
 .shared-datasets { margin-block: var(--sp-3); }
 .shared-datasets > h2 { font-size: 1rem; margin-bottom: .5rem; }

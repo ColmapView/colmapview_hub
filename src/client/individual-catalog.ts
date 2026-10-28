@@ -17,6 +17,12 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const results = document.querySelector<HTMLElement>('#catalog-results')!;
   const count = document.querySelector<HTMLElement>('#catalog-count')!;
   const status = document.querySelector<HTMLElement>('#catalog-status')!;
+  const notice = document.querySelector<HTMLElement>('#catalog-notice');
+  const feedback = (message: string, error = false) => {
+    status.textContent = message;
+    status.classList.toggle('sr-only', !error);
+    if (notice) notice.hidden = error;
+  };
   const pageLabel = document.querySelector<HTMLElement>('#catalog-page')!;
   const previous = document.querySelector<HTMLAnchorElement>('#catalog-prev')!;
   const next = document.querySelector<HTMLAnchorElement>('#catalog-next')!;
@@ -169,7 +175,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     results.replaceChildren(...entries.map(entry => catalogCardElement(entry, host)));
     results.removeAttribute('aria-busy');
     selection.textContent = saved.collectionText; selection.hidden = !saved.collectionText;
-    status.textContent = ''; canAppend = true; more.disabled = false; automaticPaused = false;
+    feedback(''); canAppend = true; more.disabled = false; automaticPaused = false;
     updateNavigation();
     busy = true;
     stopRestoring = restoreFeedPosition(results, saved.anchor, () => {
@@ -198,7 +204,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (!options.append) canAppend = false;
     more.disabled = true;
     more.textContent = options.append ? 'Loading…' : 'Load more';
-    status.textContent = options.append ? 'Loading more scenes…' : 'Searching…';
+    feedback(options.append ? 'Loading more scenes…' : 'Searching…');
     results.setAttribute('aria-busy', 'true');
     let failure = options.append ? 'Could not load more scenes. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
     try {
@@ -281,15 +287,15 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       departing = null;
       automaticPaused = false;
       if (!options.append && !options.restoring) scrollTo(0, 0);
-      status.textContent = options.append ? `Loaded ${cards.length} more scenes.` : '';
-      if (options.focus) (options.append ? cards[0]?.querySelector<HTMLElement>('a') : count)?.focus();
+      feedback(options.append ? `Loaded ${cards.length} more scenes.` : '');
+      if (options.focus) (options.append ? cards[0]?.querySelector<HTMLElement>('a') : notice || count)?.focus();
       else if (panelEntry) {
         const replacement = [...results.querySelectorAll<HTMLElement>('[data-entry-id]')].find(card => card.dataset.entryId === panelEntry);
-        (replacement?.querySelector<HTMLElement>('.dataset-info') || count).focus({ preventScroll: true });
+        (replacement?.querySelector<HTMLElement>('.dataset-info') || notice || count).focus({ preventScroll: true });
       }
     } catch {
       if (controller.signal.aborted || sequence !== request) return;
-      status.textContent = failure;
+      feedback(failure, true);
       automaticPaused = true;
       if (!options.append) {
         count.textContent = `Previous results · ${committedCount}`;

@@ -73,10 +73,11 @@ test('catalog controls stay on one row and responsive filters keep their values'
     }
     const bar = (await page.getByRole('region', { name: 'Catalog status' }).boundingBox())!;
     expect(bar.y + bar.height).toBeCloseTo(900, 0);
-    await expect(page.locator('.catalog-footbar #catalog-count')).toBeInViewport();
-    const count = (await page.locator('#catalog-count').boundingBox())!;
+    await expect(page.locator('.catalog-footbar #catalog-notice')).toBeInViewport();
+    const notice = (await page.locator('#catalog-notice').boundingBox())!;
     const shuffle = (await page.locator('#catalog-shuffle').boundingBox())!;
-    expect(count.x + count.width).toBeLessThanOrEqual(shuffle.x);
+    if (width > 600) expect(notice.x + notice.width).toBeLessThanOrEqual(shuffle.x);
+    else expect(notice.y + notice.height).toBeLessThanOrEqual(shuffle.y);
   }
   await page.locator('.catalog-notes > summary').click();
   await expect(page.locator('.catalog-totals')).toBeVisible();

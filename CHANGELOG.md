@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.20.4 — 2026-10-28
+
+- Replace the gallery's bottom-left loading statistics with the source-hosting notice. Keep progress accessible to screen readers and show actionable errors; place the notice above the controls on phones.
+
 ## 0.20.3 — 2026-10-28
 
 - Add a short footer for public spatial datasets and clarify that source datasets are hosted elsewhere, with instructions for sharing public Hugging Face uploads on the Hub.

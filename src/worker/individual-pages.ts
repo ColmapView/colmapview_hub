@@ -51,11 +51,11 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<p class="catalog-totals">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p>`
     + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
     + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
-    + '<p>ColmapView does not host the source datasets. They are publicly available elsewhere on the web.</p>'
     + '<p>Share your public dataset on the Hub by uploading it to Hugging Face through ColmapView, then selecting “Share on Hub.”</p></div></details>';
   const countDescription = loading ? 'Loading datasets…' : result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
-  const status = `<div class="catalog-result-summary"><p id="catalog-count" class="catalog-count" role="status" tabindex="-1" aria-label="${countDescription}" title="${countDescription}">${result.total ? `${number(offset + 1)}–${number(offset + result.entries.length)} / ${number(result.total)}` : loading ? 'Loading…' : 'No matching datasets'}</p>`
-    + '<p id="catalog-status" class="catalog-status" role="status"></p></div>'
+  const status = '<div class="catalog-result-summary"><p id="catalog-notice" class="catalog-notice" tabindex="-1">ColmapView does not host the source datasets. They are publicly available elsewhere on the web.</p>'
+    + `<p id="catalog-count" class="catalog-count sr-only" role="status" aria-label="${countDescription}">${result.total ? `${number(offset + 1)}–${number(offset + result.entries.length)} / ${number(result.total)}` : loading ? 'Loading…' : 'No matching datasets'}</p>`
+    + '<p id="catalog-status" class="catalog-status sr-only" role="status" tabindex="-1"></p></div>'
     + `<a id="catalog-shuffle" class="button icon-button" href="${escape(individualBrowseUrl(shuffle))}" aria-label="Shuffle" title="Shuffle">${icon('shuffle')}</a>`
     + `<a id="catalog-reset" class="button icon-button" href="${escape(hubViewerLink('/hub/', location.viewerHost))}" aria-label="Reset" title="Reset filters">${icon('reset')}</a>` + notes;
   return page(location, 'Public datasets', '<div class="catalog-index"><h1 class="sr-only">Public datasets</h1>'

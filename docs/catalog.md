@@ -26,12 +26,13 @@ The browse page has one sticky toolbar for search and collection selection.
 Licence, ordering and other filters live in More filters. On narrow
 screens collection selection also moves into More filters, retaining values and
 form submission. The menu starts closed and highlights active filters. A fixed
-bottom bar shows the result range, loading status,
-shuffle/reset, catalog information, the viewer link and appearance. Full count
-descriptions remain available to assistive technology. Catalog information and
+bottom bar shows the source-hosting notice, shuffle/reset, catalog information,
+the viewer link and appearance. Loading counts and progress remain available to
+assistive technology; actionable errors temporarily replace the notice. On phones,
+the notice sits above the controls. Catalog information and
 extra filters close with Escape or an outside click; reading catalog information
 pauses automatic appends. Catalog information contains counts, the current
-selection and a short description; operator audit and raw-data download links
+selection and public-sharing instructions; operator audit and raw-data download links
 are omitted. Audit records remain available for maintenance. Return anchors
 account for both bars. Policy links and
 Analytics settings remain in the ordinary page footer.
