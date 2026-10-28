@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.20.3 — 2026-10-28
+
+- Add a short footer for public spatial datasets and clarify that source datasets are hosted elsewhere, with instructions for sharing public Hugging Face uploads on the Hub.
+- Prepare discovery orders and compact card metadata offline so deep pagination stays within the Worker CPU budget. Preserve deterministic paging, filters and source evidence; refresh older feed generations and avoid immediately repeating a shuffled order.
+- Align the Hub label with the ColmapView wordmark while retaining centered header controls and mobile touch targets.
+
 ## 0.20.2 — 2026-10-26
 
 - Make production updates retain verified assets required by the live GitHub gallery and current Hub export, including from a clean checkout. Keep builds offline; reject dirty-source exports before network preparation, bound public downloads, verify hashes and leave the new manifest intact before upload.

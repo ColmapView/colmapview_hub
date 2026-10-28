@@ -9,10 +9,11 @@ licensing, statistics, photograph paths and access checks retain their meanings.
 
 ## Selection and ranking
 
-1. Apply search, collection, provider, license, evidence, scene type, photo and
-   available-data filters before ranking. Use the existing scene publication and
-   `canOpenIndividual` checks. Missing photographs or zero native points do not
-   disqualify a scene.
+1. Qualify scenes with the existing publication and `canOpenIndividual` checks
+   during the offline build. Missing photographs or zero native points do not
+   disqualify a scene. Search, collection, provider, license, evidence, scene type,
+   photo and available-data filters select matching IDs from a prepared order
+   before pagination; filtered results keep that order.
 2. Rank model confidence in three tiers: complete checked scene/model export;
    native model checks with browser-readable delivery; native model checks with
    checked CORS headers. Model-only and photo exports receive the same model
@@ -23,7 +24,7 @@ licensing, statistics, photograph paths and access checks retain their meanings.
 4. Balance exposure across collections. Group public source records with the same
    published collection label. Prefer at most two scenes per collection in a
    rolling twenty-item window, and separate adjacent collections. Relax these
-   preferences when filtered collections are exhausted. A single-collection
+   preferences when collections are exhausted. A single-collection
    search must still reach every matching scene.
 5. Random chooses among collections with the least exposure, using seeded random
    tie breaks, then an unselected scene in the chosen collection. This prevents
@@ -60,8 +61,14 @@ without a recorded date remain eligible and receive neutral novelty.
 The Python projection writes a compact `feed.json` of evidence tier, preview flag
 and first-catalogued day, indexed by scene ordinal. The index, feed and all other
 catalog assets share the existing catalog generation. Generation hashing includes
-history and discovery projection source bytes. The Worker validates this asset
-before ranking, then reads only the selected page's bounded metadata packs.
+history and discovery projection source bytes. The JavaScript build validates
+every published scene and prepares 256 complete orderings for each feed mode,
+plus card-summary packs of eight rows. The first byte of a seed selects its
+prepared ordering. The Worker validates its generation and complete permutation,
+applies filters, and reads only the requested card summaries. Ranking and parsing
+neighboring raw evidence records stay out of the request path, so deep pages do
+not replay an increasingly long ranked prefix under the Worker CPU limit.
+Raw records remain available for full metadata, launch checks and audit evidence.
 
 ## Stable ordering and scrolling
 
@@ -70,7 +77,7 @@ An unseeded initial request generates a fresh cryptographic seed and bypasses th
 response cache. Responses return the actual selection in `feed: {mode, seed}`.
 API requests and server-rendered fallback forms and pagination carry that seed.
 Shuffle generates a fresh
-cryptographic seed while preserving the active mode and filters. The seed is
+cryptographic seed selecting a different prepared ordering while preserving the active mode and filters. The seed is
 ordering state, not a user identifier. Search responses revalidate against both
 the current catalog generation and the UI release key. The browser keeps the visit's
 seed in history state, leaving only filters in the visible URL. API requests and

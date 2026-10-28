@@ -43,8 +43,10 @@ for (const entry of snapshot.entries) {
   for (const audit of entry.audits) if (audit.sourceUrl) publicUrl(audit.sourceUrl);
   for (const fact of [...entry.facts, ...entry.audits.flatMap(audit => audit.facts)]) if (fact.url) publicUrl(fact.url);
 }
-const { catalogAuditPage, catalogSummary, canOpenIndividual, individualSummary, decodePostings } = await catalogRenderer();
+const { catalogAuditPage, catalogSummary, canOpenIndividual, individualSummary, isCatalogSummary, decodePostings,
+  FEED_MODES, PREPARED_FEED_BUCKETS, preparedFeedSeed, feedBucket, discoveryOrder, isDiscoveryAsset } = await catalogRenderer();
 let checkedScenes = 0;
+const summaries = [];
 const observed = { kind: {}, status: {}, delivery: {}, photos: {}, data: {}, viewer: {} };
 const add = (field, value, ordinal) => (observed[field][value] ??= []).push(ordinal);
 const seen = new Set();
@@ -59,6 +61,8 @@ for (let pack = 0; pack < Math.ceil(sceneIndex.total / sceneIndex.packSize); pac
     if (!/^data-[a-f0-9]{24}$/.test(row[0]) || seen.has(row[0]) || ordinal !== source.start + sourceCounts[row[1]]++) throw new Error('Scene identities or source ranges disagree');
     seen.add(row[0]);
     const summary = individualSummary(row, source);
+    if (!isCatalogSummary(summary)) throw new Error(`Invalid published scene summary: ${row[0]}`);
+    summaries.push(summary);
     for (const value of Object.values(summary.sceneStats)) if (value !== null && (!Number.isSafeInteger(value) || value < 0)) throw new Error(`Invalid scene statistic: ${row[0]}`);
     add('kind', summary.itemKind, ordinal);
     add('status', summary.statusLabel, ordinal);
@@ -98,6 +102,32 @@ for (const name of await readdir('public/hub/datasets/individual/variants')) {
 }
 if (checkedVariants !== sceneIndex.groupedVariants) throw new Error('Retained variant assets disagree with the index');
 console.log(`Validated all ${checkedScenes.toLocaleString('en-US')} scene launches against the Hub loading contract.`);
+// Build all expensive feed ranking and card projections offline. Runtime reads
+// one small permutation and only the requested summary rows, including deep pages.
+const individualRoot = resolve('public/hub/datasets/individual');
+const summaryPackSize = sceneIndex.summaries?.packSize;
+if (!Number.isSafeInteger(summaryPackSize) || summaryPackSize < 1 || summaryPackSize > 24 || !sceneIndex.discovery?.prepared) throw new Error('Missing prepared browse metadata');
+await mkdir(resolve(individualRoot, 'summaries'), { recursive: true });
+for (let start = 0; start < summaries.length; start += summaryPackSize) {
+  await writeFile(resolve(individualRoot, 'summaries', `${start / summaryPackSize}.json`), JSON.stringify({
+    schemaVersion: 1, generation: sceneIndex.generation, entries: summaries.slice(start, start + summaryPackSize),
+  }));
+}
+const feed = await json(resolve(individualRoot, 'feed.json'));
+if (!isDiscoveryAsset(feed, sceneIndex)) throw new Error('Invalid discovery build input');
+const candidates = summaries.map((_, ordinal) => ordinal);
+for (const mode of FEED_MODES) {
+  await mkdir(resolve(individualRoot, 'orders', mode), { recursive: true });
+  for (let bucket = 0; bucket < PREPARED_FEED_BUCKETS; bucket++) {
+    const seed = preparedFeedSeed(bucket);
+    const ordinals = discoveryOrder(feed, sceneIndex.sources, candidates, { mode, seed });
+    if (ordinals.length !== candidates.length || new Set(ordinals).size !== candidates.length) throw new Error('Incomplete prepared discovery order');
+    await writeFile(resolve(individualRoot, 'orders', mode, `${feedBucket(seed)}.json`), JSON.stringify({
+      schemaVersion: 1, generation: sceneIndex.generation, mode, bucket: feedBucket(seed), ordinals,
+    }));
+  }
+}
+console.log(`Prepared ${FEED_MODES.length * PREPARED_FEED_BUCKETS} discovery orders and ${Math.ceil(summaries.length / summaryPackSize)} small card packs.`);
 const output = resolve('public/hub/datasets');
 await mkdir(output, { recursive: true });
 // Only generated files immediately inside this fixed directory are cleaned, never source data or child directories.

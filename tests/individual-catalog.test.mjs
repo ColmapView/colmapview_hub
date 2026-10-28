@@ -86,6 +86,68 @@ test('new scenes stay chronological, unknown dates stay last, and one-collection
   }
 });
 
+test('prepared feed pagination is complete beyond 480 scenes and rejects stale or malformed permutations', () => {
+  const index = { generation: 'prepared-test', total: 545 };
+  const ordinals = Array.from({ length: index.total }, (_, i) => index.total - 1 - i);
+  const selection = { mode: 'discover', seed: '12345678' };
+  const order = { schemaVersion: 1, generation: index.generation, mode: selection.mode, bucket: '12', ordinals };
+  const candidates = [...ordinals].sort((a,b) => a-b);
+  const all = [];
+  for (let offset = 0; offset < index.total; offset += 24) all.push(...render.preparedFeedPage(order, index, candidates, selection, offset, 24));
+  assert.deepEqual(all, ordinals);
+  assert.deepEqual(render.preparedFeedPage(order, index, candidates, selection, 480, 24), ordinals.slice(480, 504));
+  const filtered = candidates.filter(i => i % 3 === 0);
+  assert.deepEqual(render.preparedFeedPage(order, index, filtered, selection, 24, 24), ordinals.filter(i => i % 3 === 0).slice(24, 48));
+  for (const patch of [{ generation: 'stale' }, { bucket: 'ab' }, { mode: 'new' },
+    { ordinals: ordinals.slice(1) }, { ordinals: [...ordinals.slice(0,-1), ordinals[0]] },
+    { ordinals: [...ordinals.slice(0,-1), 545] }]) {
+    assert.throws(() => render.preparedFeedPage({ ...order, ...patch }, index, candidates, selection, 0, 24), /discovery/);
+  }
+});
+
+test('prepared searches read only bounded summary packs through the last page, with filters and original evidence intact', async () => {
+  const rows = Array.from({ length: 545 }, (_, i) => row(i, { 1: i < 300 ? 0 : 1 }));
+  const sources = [{ ...source, count: 300 }, { ...source, id: 'hf-other-123456abcdef', start: 300, count: 245 }];
+  const summaries = rows.map(row => render.individualSummary(row, sources[row[1]]));
+  const index = { schemaVersion: 1, generation: 'prepared-runtime', total: rows.length, packSize: 24, sources,
+    summaries: { schemaVersion: 1, packSize: 8 }, discovery: { schemaVersion: 1, file: 'feed.json', prepared: true }, facets: {} };
+  const calls = [];
+  let stale = false;
+  const order = { schemaVersion: 1, generation: index.generation, mode: 'random', bucket: '12', ordinals: rows.map((_,i) => i).reverse() };
+  const binding = { fetch: async request => {
+    const key = new URL(request.url).pathname.split('/individual/')[1]; calls.push(key);
+    if (key === 'orders/random/12.json') return Response.json(order);
+    const pack = Number(key.match(/^summaries\/(\d+)\.json$/)?.[1]);
+    assert.ok(Number.isInteger(pack), `Unexpected expensive metadata read: ${key}`);
+    return Response.json({ schemaVersion: 1, generation: stale ? 'stale' : index.generation, entries: summaries.slice(pack * 8, (pack + 1) * 8) });
+  } };
+  const all = [];
+  for (let page = 1; page <= Math.ceil(rows.length / 24); page++) {
+    calls.length = 0;
+    const result = await render.searchIndividuals(binding, 'https://example.org', index, new URLSearchParams(`sort=random&seed=12345678&page=${page}`));
+    all.push(...result.entries.map(entry => entry.id));
+    assert.equal(result.page, page); assert.equal(result.total, rows.length);
+    assert.ok(calls.length <= 25);
+    assert.deepEqual(result.entries, order.ordinals.slice((page-1)*24, page*24).map(i => summaries[i]));
+  }
+  assert.equal(new Set(all).size, rows.length);
+  const filtered = await render.searchIndividuals(binding, 'https://example.org', index, new URLSearchParams(`sort=random&seed=12345678&dataset=${sources[1].id}&page=2`));
+  assert.equal(filtered.total, 245);
+  assert.deepEqual(filtered.entries, order.ordinals.filter(i => i >= 300).slice(24,48).map(i => summaries[i]));
+  await assert.rejects(render.searchIndividuals(binding, 'https://example.org', index, new URLSearchParams('sort=random&seed=12345678&page=24')), /does not exist/);
+  stale = true;
+  await assert.rejects(render.searchIndividuals(binding, 'https://example.org', index, new URLSearchParams('sort=random&seed=12345678')), /summaries do not match/);
+});
+
+test('shuffle never immediately selects the previous prepared ordering', t => {
+  let chosen = 0;
+  t.mock.method(globalThis.crypto, 'getRandomValues', array => { array.fill(chosen); return array; });
+  for (const previous of ['0000000000000000', 'ff00000000000000']) {
+    chosen = Number.parseInt(previous.slice(0,2), 16);
+    assert.notEqual(render.feedBucket(render.defaultFeedSeed(previous)), render.feedBucket(previous));
+  }
+});
+
 test('discovery assets and feed inputs reject stale generations, bad tiers and unbounded seeds', () => {
   const index = { total: 1, generation: 'current' };
   const asset = { schemaVersion: 1, generation: 'current', rows: [[3, 0, 20000]] };

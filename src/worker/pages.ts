@@ -46,7 +46,7 @@ const viewerControl = (host?: ViewerHost) => `<a class="button icon-button" href
 
 const header = (path: string, filters?: string, host?: ViewerHost) => [
   `<header class="site-header${filters ? ' catalog-toolbar' : ''}">`,
-  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="ColmapView Hub"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></a>`,
+  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="ColmapView Hub"><span class="brand-title"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></span></a>`,
   ...(filters ? [filters] : [
   '<nav class="site-nav" aria-label="Main navigation">',
   `<a class="button icon-button" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
@@ -59,7 +59,7 @@ const header = (path: string, filters?: string, host?: ViewerHost) => [
 
 const footer = (publicCatalog: boolean) => [
   '<footer class="site-footer">',
-  '<p>Built with ColmapView by OpsiClear</p>',
+  `<p>${publicCatalog ? 'Explore public spatial datasets.<br>' : ''}Built with ColmapView by OpsiClear</p>`,
   '<nav class="footer-links" aria-label="Footer navigation">',
   policyLinks,
   '<a href="https://github.com/ColmapView/colmapview_hub">Source</a>',

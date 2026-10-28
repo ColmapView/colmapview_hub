@@ -6,9 +6,40 @@ export type FeedMode = typeof FEED_MODES[number];
 export type DiscoveryRow = [tier: number, preview: number, firstSeen: number];
 export interface DiscoveryAsset { schemaVersion: 1; generation: string; rows: DiscoveryRow[] }
 export interface FeedSelection { mode: FeedMode; seed: string }
-export const defaultFeedSeed = () => [...crypto.getRandomValues(new Uint8Array(8))]
-  .map(byte => byte.toString(16).padStart(2, '0')).join('');
+export const PREPARED_FEED_BUCKETS = 256;
+export const feedBucket = (seed: string) => seed.slice(0, 2);
+export const preparedFeedSeed = (bucket: number) => bucket.toString(16).padStart(2, '0') + '00000000000000';
+export function defaultFeedSeed(previous = ''): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  if (bytes[0] === Number.parseInt(feedBucket(previous), 16)) bytes[0] = (bytes[0] + 1) % PREPARED_FEED_BUCKETS;
+  return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
 export const feedMode = (value: string | null): FeedMode => FEED_MODES.find(mode => mode === value) || 'discover';
+
+export interface PreparedFeedOrder {
+  schemaVersion: 1; generation: string; mode: FeedMode; bucket: string; ordinals: number[];
+}
+
+/** Validate a built permutation and select a filtered page without ranking on the request. */
+export function preparedFeedPage(value: unknown, index: Pick<IndividualIndex, 'generation' | 'total'>,
+  candidates: readonly number[], selection: FeedSelection, offset: number, size: number): number[] {
+  const order = value as PreparedFeedOrder | null;
+  if (!order || order.schemaVersion !== 1 || order.generation !== index.generation || order.mode !== selection.mode
+    || order.bucket !== feedBucket(selection.seed) || !Array.isArray(order.ordinals) || order.ordinals.length !== index.total) {
+    throw new Error('Prepared discovery metadata does not match the current catalog');
+  }
+  const allowed = new Uint8Array(index.total), seen = new Uint8Array(index.total);
+  for (const ordinal of candidates) allowed[ordinal] = 1;
+  const result: number[] = [];
+  let matched = 0;
+  for (const ordinal of order.ordinals) {
+    if (!Number.isSafeInteger(ordinal) || ordinal < 0 || ordinal >= index.total || seen[ordinal]) throw new Error('Invalid prepared discovery permutation');
+    seen[ordinal] = 1;
+    if (allowed[ordinal] && matched++ >= offset && result.length < size) result.push(ordinal);
+  }
+  if (matched !== candidates.length) throw new Error('Prepared discovery inventory is incomplete');
+  return result;
+}
 
 export function isDiscoveryAsset(value: unknown, index: IndividualIndex): value is DiscoveryAsset {
   if (!value || typeof value !== 'object') return false;

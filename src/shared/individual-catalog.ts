@@ -33,7 +33,8 @@ export interface IndividualIndex {
   contents?: Record<string, number>;
   thumbnails?: number;
   photoRouting?: Record<string, number>;
-  discovery?: { schemaVersion: 1; file: 'feed.json' };
+  discovery?: { schemaVersion: 1; file: 'feed.json'; prepared?: true };
+  summaries?: { schemaVersion: 1; packSize: number };
   incompleteCollections: number; scope: string;
   groupedVariants?: number;
 }

@@ -10,6 +10,7 @@ import { HUB_UI_VERSION } from '../shared/ui-version';
 import { SCENE_DATA_LABELS } from '../shared/scene-contents';
 import { icon } from '../shared/icons';
 import { hubAssetUrl, hubViewerLink } from '../shared/viewer-host';
+import { defaultFeedSeed } from '../shared/discovery';
 
 const number = (value: number) => value.toLocaleString('en-US');
 export function individualBrowseUrl(filters: URLSearchParams, pageNumber = 1): string {
@@ -28,7 +29,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const advanced = ['dataset', 'licenseCategory', 'sort', 'kind', 'provider', 'license', 'status', 'photos', 'data', 'delivery', 'viewer'].some(field => filters.has(field));
   const savedFilters = savedFilterSummary(filters);
   const shuffle = new URLSearchParams(filters);
-  shuffle.set('seed', location.frontend ? '0000000000000000' : [...crypto.getRandomValues(new Uint8Array(8))].map(byte => byte.toString(16).padStart(2, '0')).join(''));
+  shuffle.set('seed', location.frontend ? '0000000000000000' : defaultFeedSeed(filters.get('seed') || ''));
   shuffle.delete('page');
   const filterForm = `<form id="individual-search" class="catalog-filters" role="search" action="/hub/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
     + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"></label>`
@@ -50,7 +51,8 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<p class="catalog-totals">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p>`
     + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
     + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
-    + '<p>Explore camera and reconstruction datasets, with photos or video where available.</p></div></details>';
+    + '<p>ColmapView does not host the source datasets. They are publicly available elsewhere on the web.</p>'
+    + '<p>Share your public dataset on the Hub by uploading it to Hugging Face through ColmapView, then selecting “Share on Hub.”</p></div></details>';
   const countDescription = loading ? 'Loading datasets…' : result.total ? `Showing ${number(offset + 1)}–${number(offset + result.entries.length)} of ${number(result.total)} ${result.total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
   const status = `<div class="catalog-result-summary"><p id="catalog-count" class="catalog-count" role="status" tabindex="-1" aria-label="${countDescription}" title="${countDescription}">${result.total ? `${number(offset + 1)}–${number(offset + result.entries.length)} / ${number(result.total)}` : loading ? 'Loading…' : 'No matching datasets'}</p>`
     + '<p id="catalog-status" class="catalog-status" role="status"></p></div>'

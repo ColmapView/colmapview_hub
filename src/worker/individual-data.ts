@@ -1,9 +1,10 @@
 import { INDIVIDUAL_PAGE_SIZE, canOpenIndividual, individualEntry, individualSummary, individualTokens, matchesIndividualDataset } from '../shared/individual-catalog';
 import type { IndividualIndex, IndividualPage, IndividualRecord, IndividualSource } from '../shared/individual-catalog';
-import type { CatalogEntry } from '../shared/catalog';
+import { isCatalogSummary } from '../shared/catalog';
+import type { CatalogEntry, CatalogSummary } from '../shared/catalog';
 import { licenseCategory } from '../shared/license-categories';
 import { InputError } from './validation';
-import { FEED_MODES, defaultFeedSeed, discoveryOrder, feedMode, isDiscoveryAsset } from '../shared/discovery';
+import { FEED_MODES, defaultFeedSeed, discoveryOrder, feedBucket, feedMode, isDiscoveryAsset, preparedFeedPage } from '../shared/discovery';
 
 const ROOT = '/hub/datasets/individual/';
 const MAX_ASSET_BYTES = 5 * 1024 * 1024;
@@ -13,7 +14,7 @@ type Assets = Pick<Fetcher, 'fetch'>;
 /** Only operator-built, fixed same-origin asset keys are read. Submitted data URLs
  * never enter this reader, and the private share-link bucket is not involved. */
 export async function individualAsset<T>(assets: Assets, origin: string, path: string): Promise<T | null> {
-  if (!/^(?:(?:index|feed)\.json|(?:packs\/\d+|(?:ids|variants)\/[a-f0-9]{2}|tokens\/[a-f0-9]{3}|facets\/[a-f0-9]{16}|sources\/[a-z0-9-]+-[a-f0-9]{12})\.json)$/.test(path)) throw new Error('Invalid built catalog key');
+  if (!/^(?:(?:index|feed)\.json|(?:(?:packs|summaries)\/\d+|orders\/(?:discover|random|new)\/[a-f0-9]{2}|(?:ids|variants)\/[a-f0-9]{2}|tokens\/[a-f0-9]{3}|facets\/[a-f0-9]{16}|sources\/[a-z0-9-]+-[a-f0-9]{12})\.json)$/.test(path)) throw new Error('Invalid built catalog key');
   const response = await assets.fetch(new Request(origin + ROOT + path));
   if (response.status === 404) return null;
   if (!response.ok || !response.body) throw new Error('Catalog metadata unavailable');
@@ -42,7 +43,10 @@ export async function individualIndex(assets: Assets, origin: string): Promise<I
     || !Number.isSafeInteger(index.packSize) || index.packSize < 1 || index.packSize > 2048
     || index.groupedVariants !== undefined && (!Number.isSafeInteger(index.groupedVariants) || index.groupedVariants < 0 || index.groupedVariants > 10000000)
     || !Array.isArray(index.sources) || index.sources.length > 10000
-    || index.discovery && (index.discovery.schemaVersion !== 1 || index.discovery.file !== 'feed.json')) throw new Error('Invalid individual catalog index');
+    || index.discovery && (index.discovery.schemaVersion !== 1 || index.discovery.file !== 'feed.json'
+      || index.discovery.prepared !== undefined && index.discovery.prepared !== true || index.discovery.prepared && !index.summaries)
+    || index.summaries && (index.summaries.schemaVersion !== 1 || !Number.isSafeInteger(index.summaries.packSize)
+      || index.summaries.packSize < 1 || index.summaries.packSize > INDIVIDUAL_PAGE_SIZE)) throw new Error('Invalid individual catalog index');
   return index;
 }
 
@@ -100,30 +104,44 @@ async function tokenShard(token: string): Promise<string> {
   return [...new Uint8Array(digest)].slice(0, 2).map(byte => byte.toString(16).padStart(2, '0')).join('').slice(0, 3);
 }
 
-export async function individualRecords(assets: Assets, origin: string, index: IndividualIndex, ordinals: number[]): Promise<IndividualRecord[]> {
+async function individualRows<T>(index: IndividualIndex, ordinals: number[], packSize: number,
+  readPack: (number: number) => Promise<unknown[] | null>, valid: (row: unknown) => row is T): Promise<T[]> {
   const groups = new Map<number, Set<number>>();
   for (const ordinal of ordinals) {
     if (!Number.isSafeInteger(ordinal) || ordinal < 0 || ordinal >= index.total) throw new Error('Invalid individual metadata ordinal');
-    const number = Math.floor(ordinal / index.packSize);
+    const number = Math.floor(ordinal / packSize);
     const group = groups.get(number) || new Set<number>();
     group.add(ordinal);
     groups.set(number, group);
   }
-  const numbers = [...groups.keys()], selected = new Map<number, IndividualRecord>();
+  const numbers = [...groups.keys()], selected = new Map<number, T>();
   // A shuffled page can touch 24 different packs. Bound simultaneous response
   // buffers and retain only requested rows, rather than every neighboring row.
   for (let start = 0; start < numbers.length; start += MAX_PARALLEL_PACK_READS) {
     const batch = await Promise.allSettled(numbers.slice(start, start + MAX_PARALLEL_PACK_READS).map(async number => {
-      const rows = await individualAsset<IndividualRecord[]>(assets, origin, `packs/${number}.json`);
+      const rows = await readPack(number);
       for (const ordinal of groups.get(number)!) {
-        const row = rows?.[ordinal % index.packSize];
-        if (!row || !index.sources[row[1]]) throw new Error('Individual metadata record missing');
+        const row = rows?.[ordinal % packSize];
+        if (!valid(row)) throw new Error('Individual metadata record missing or invalid');
         selected.set(ordinal, row);
       }
     }));
     for (const result of batch) if (result.status === 'rejected') throw result.reason;
   }
   return ordinals.map(ordinal => selected.get(ordinal)!);
+}
+
+export async function individualRecords(assets: Assets, origin: string, index: IndividualIndex, ordinals: number[]): Promise<IndividualRecord[]> {
+  return individualRows(index, ordinals, index.packSize, number => individualAsset<IndividualRecord[]>(assets, origin, `packs/${number}.json`),
+    (row): row is IndividualRecord => Array.isArray(row) && Boolean(index.sources[row[1]]));
+}
+
+async function individualSummaries(assets: Assets, origin: string, index: IndividualIndex, ordinals: number[]): Promise<CatalogSummary[]> {
+  return individualRows(index, ordinals, index.summaries!.packSize, async number => {
+    const pack = await individualAsset<{ schemaVersion: number; generation: string; entries: unknown[] }>(assets, origin, `summaries/${number}.json`);
+    if (!pack || pack.schemaVersion !== 1 || pack.generation !== index.generation || !Array.isArray(pack.entries)) throw new Error('Prepared scene summaries do not match the current catalog');
+    return pack.entries;
+  }, isCatalogSummary);
 }
 
 export async function searchIndividuals(assets: Assets, origin: string, index: IndividualIndex, filters: URLSearchParams): Promise<IndividualPage> {
@@ -182,10 +200,16 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
   const pages = Math.max(1, Math.ceil(total / INDIVIDUAL_PAGE_SIZE));
   if (requested > pages) throw new InputError('Dataset page does not exist.', 404);
   if (feed && total) {
-    const asset = await individualAsset<unknown>(assets, origin, 'feed.json');
-    if (!isDiscoveryAsset(asset, index)) throw new Error('Discovery metadata does not match the current catalog');
-    selected = discoveryOrder(asset, sources, matched, feed, requestedStart + INDIVIDUAL_PAGE_SIZE).slice(requestedStart);
+    if (index.discovery!.prepared) {
+      const order = await individualAsset<unknown>(assets, origin, `orders/${feed.mode}/${feedBucket(feed.seed)}.json`);
+      selected = preparedFeedPage(order, index, matched, feed, requestedStart, INDIVIDUAL_PAGE_SIZE);
+    } else {
+      const asset = await individualAsset<unknown>(assets, origin, 'feed.json');
+      if (!isDiscoveryAsset(asset, index)) throw new Error('Discovery metadata does not match the current catalog');
+      selected = discoveryOrder(asset, sources, matched, feed, requestedStart + INDIVIDUAL_PAGE_SIZE).slice(requestedStart);
+    }
   }
+  if (index.summaries) return { entries: await individualSummaries(assets, origin, index, selected), total, page: requested, pages, generation: index.generation, ...(feed ? { feed } : {}) };
   const rows = await individualRecords(assets, origin, index, selected);
   if (feed && rows.some(row => !canOpenIndividual(row, index.sources[row[1]]))) throw new Error('Discovery scene no longer qualifies for loading');
   return { entries: rows.map(row => individualSummary(row, index.sources[row[1]])), total, page: requested, pages, generation: index.generation, ...(feed ? { feed } : {}) };

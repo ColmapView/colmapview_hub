@@ -384,6 +384,8 @@ def build(root=Path('.')):
                                 + Path(__file__).with_name('individual-listings.mjs').read_bytes()
                                 + Path(__file__).with_name('catalog-publication.mjs').read_bytes()
                                 + (Path(__file__).parent.parent / 'build/catalog.mjs').read_bytes()
+                                + (Path(__file__).parents[2] / 'src/shared/discovery.ts').read_bytes()
+                                + (Path(__file__).parents[2] / 'src/shared/individual-catalog.ts').read_bytes()
                                 + history_bytes + Path(__file__).with_name('scene_discovery.py').read_bytes()).hexdigest()
     output = root / 'public/hub/datasets/individual'
     if (output / 'manifests').is_symlink():
@@ -727,7 +729,8 @@ def build(root=Path('.')):
                 'levels': dict(levels), 'delivery': dict(deliveries), 'photos': dict(photos), 'contents': dict(contents),
                 'thumbnails': thumbnail_scenes,
                 'photoRouting': dict(routing_counts),
-                'discovery': {'schemaVersion': 1, 'file': 'feed.json'},
+                'discovery': {'schemaVersion': 1, 'file': 'feed.json', 'prepared': True},
+                'summaries': {'schemaVersion': 1, 'packSize': 8},
                 'incompleteCollections': sum(not source['listingComplete'] for source in sources if source['count']),
                 'groupedVariants': grouped_variants,
                 'unit': 'named_scene',

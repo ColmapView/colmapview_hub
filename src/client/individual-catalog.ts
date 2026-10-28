@@ -325,7 +325,8 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     search();
   });
   const freshSeed = () => {
-    fields.find(field => field.name === 'seed')!.value = defaultFeedSeed();
+    const field = fields.find(field => field.name === 'seed')!;
+    field.value = defaultFeedSeed(field.value);
   };
   document.querySelectorAll<HTMLAnchorElement>('#catalog-shuffle, #catalog-reshuffle').forEach(link => link.addEventListener('click', event => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
