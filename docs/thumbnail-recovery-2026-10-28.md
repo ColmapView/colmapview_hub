@@ -60,3 +60,15 @@ machine-readable [audit receipt](../data/thumbnail-recovery-audit-2026-10-28.jso
 binds every selection to its outcome, inventory evidence, access checks and
 original-photo association. Historical count statements in earlier dated audits
 retain their original scope.
+
+Local validation passes the full code/unit/build checks, 47 gallery/access/photo
+browser cases, and all 3,509 referenced manifest schemas. Every retained preview
+JPEG decodes and has no EXIF metadata. All 2,534 previously published distinct
+previews return their exact expected bytes. The 17 recovered camera/photo samples
+also decode anonymously from both production viewer origins.
+
+Recompressing the decision log exposed a secret-scan fragment beginning at `Key`
+inside a public selection hash. All 7,097 selection records were independently
+recomputed. The narrowly scoped scanner exception adds only that exact verified
+digest in `data/photo-audit-decisions.json.gz`; provider-specific detectors and
+all other credential checks remain enabled.
