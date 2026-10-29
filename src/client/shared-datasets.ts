@@ -50,7 +50,9 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   // Only static labels from the reported types enter this HTML; user metadata stays textContent.
   tags.innerHTML = sceneContentsHtml(reported);
   const licenseTag = document.createElement('span'); licenseTag.className = 'dataset-tag';
-  licenseTag.textContent = licenseTagLabel(entry.license?.name || entry.license?.id || '', classifyLicense(entry.license?.id ?? ''));
+  const licenseCategory = classifyLicense(entry.license?.id ?? '');
+  licenseTag.dataset.licenseCategory = licenseCategory;
+  licenseTag.textContent = licenseTagLabel(entry.license?.name || entry.license?.id || '', licenseCategory);
   tags.append(licenseTag);
   const contents = document.createElement('p'); contents.className = 'note';
   contents.textContent = assetLine(entry.assets) ? `Reported contents: ${assetLine(entry.assets)}` : '';

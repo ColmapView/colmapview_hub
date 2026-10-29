@@ -18,6 +18,6 @@ const proxy = await openHubDatabase({ remote: true });
 try {
   await proxy.database.prepare(await readFile('migrations/0002_catalog_summaries.sql', 'utf8')).run();
   const { synchronizeCatalog } = await workerModules(['catalog-store']);
-  await synchronizeCatalog(proxy.database, catalog.index.generation, catalog.rows, [current.generation]);
-  console.log(`Prepared ${catalog.rows.length} public summaries; retained the currently live generation.`);
+  const result = await synchronizeCatalog(proxy.database, catalog.index.generation, catalog.rows, [current.generation]);
+  console.log(`Catalog summaries: ${result.written} inserted/repaired, ${result.unchanged} unchanged; retained the currently live generation.`);
 } finally { await proxy.dispose(); }

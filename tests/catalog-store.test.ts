@@ -32,3 +32,21 @@ it('rejects corrupt or mismatched stored summaries before publishing a page', as
   await env.HUB_DB.prepare('UPDATE catalog_summaries SET summary_json=? WHERE generation=? AND ordinal=0').bind(JSON.stringify(summary(2)), 'a').run();
   await expect(catalogSummaries(env.HUB_DB, 'a', [0])).rejects.toThrow('Invalid prepared catalog row');
 });
+
+
+it('writes no unchanged summaries and repairs only missing or damaged rows', async () => {
+  const many = Array.from({ length: 513 }, (_, ordinal) => ({ id: summary(ordinal).id, json: JSON.stringify(summary(ordinal)) }));
+  expect(await synchronizeCatalog(env.HUB_DB, 'repair', many, [])).toEqual({ written: 513, unchanged: 0 });
+  expect(await synchronizeCatalog(env.HUB_DB, 'repair', many, [])).toEqual({ written: 0, unchanged: 513 });
+  await env.HUB_DB.prepare('DELETE FROM catalog_summaries WHERE generation=? AND ordinal IN (0,250,512)').bind('repair').run();
+  await env.HUB_DB.prepare('UPDATE catalog_summaries SET summary_json=? WHERE generation=? AND ordinal=251').bind('{}', 'repair').run();
+  expect(await synchronizeCatalog(env.HUB_DB, 'repair', many, [])).toEqual({ written: 4, unchanged: 509 });
+  expect(await catalogSummaries(env.HUB_DB, 'repair', [512, 251, 250, 0])).toEqual([summary(512), summary(251), summary(250), summary(0)]);
+});
+
+it('cleans generations on either side and between retained generations even when every summary is unchanged', async () => {
+  for (const generation of ['a', 'b', 'c', 'd', 'e']) await synchronizeCatalog(env.HUB_DB, generation, rows, ['a', 'b', 'c', 'd', 'e']);
+  expect(await synchronizeCatalog(env.HUB_DB, 'b', rows, ['d', 'b'])).toEqual({ written: 0, unchanged: rows.length });
+  const remaining = await env.HUB_DB.prepare('SELECT DISTINCT generation FROM catalog_summaries ORDER BY generation').all<{ generation: string }>();
+  expect(remaining.results).toEqual([{ generation: 'b' }, { generation: 'd' }]);
+});

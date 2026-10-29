@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.20.8 — 2026-10-28
+
+- Give gallery data, video and license tags distinct muted colors, with readable labels in both themes.
+- Avoid rewriting unchanged public catalog summaries during deployment. Repair only missing or changed rows, report preparation counts, and clean stale generations through indexed ranges.
+
 ## 0.20.7 — 2026-10-28
 
 - Show data types, video capture and license tags directly on curated and shared thumbnails, with an always-visible Info button. Keep unverified Gaussian candidates distinct from verified Gaussian data.

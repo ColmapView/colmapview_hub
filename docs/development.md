@@ -73,6 +73,9 @@ npm run test:browser
 
 D1 schema changes live in `migrations/`. Runtime access is centralized in `src/worker/storage.ts`; operator tools use the same SQL repository through an authenticated Wrangler binding proxy. Metadata and preview deletion is one row operation. Public feeds query the verified listing index without loading preview blobs. Tests apply the real migrations to local D1, including atomic reservations and review promotion.
 
+Catalog preparation compares the built public summaries with the matching D1 generation in indexed pages of at most 250 rows. It inserts only missing rows and updates only changed rows, in batches of at most 50 statements. A UI-only deployment therefore makes zero summary writes when the catalog is unchanged, while interrupted imports and damaged rows are repaired on retry. Preparation still reads and verifies the stored catalog; matching generation names or counts alone are not treated as proof of completeness. Cleanup uses indexed generation ranges, retains the target and currently live generations, and never touches share records or settings. The deployment log reports inserted/repaired and unchanged summary counts.
+
+
 The browser suite starts its own isolated local server and storage. Viewer frames are intercepted so the suite checks the integration contract without rendering complete remote datasets. Tests use public fixtures; keep raw audit receipts and runtime state under `.tmp/`.
 
 `typecheck` covers the Worker and runtime tests, the browser client, and the Playwright tests and configuration in separate TypeScript projects. The browser-test project extends the client configuration with Node types for the test runner.

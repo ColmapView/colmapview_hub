@@ -23,17 +23,41 @@ export async function catalogSummaries(database: D1Database, generation: string,
 }
 
 /** Operator/dev seeding; never exposed as an HTTP route. Retain the live generation until rollout. */
-export async function synchronizeCatalog(database: D1Database, generation: string, rows: PreparedCatalogRow[], retain: string[]): Promise<void> {
-  for (let start = 0; start < rows.length; start += 50) {
-    const results = await database.batch(rows.slice(start, start + 50).map((row, offset) => database.prepare(
-      'INSERT INTO catalog_summaries (generation, ordinal, dataset_id, summary_json) VALUES (?, ?, ?, ?) '
-      + 'ON CONFLICT (generation, ordinal) DO UPDATE SET dataset_id = excluded.dataset_id, summary_json = excluded.summary_json',
-    ).bind(generation, start + offset, row.id, row.json)));
-    if (results.some(result => !result.success)) throw new Error('Could not prepare the catalog database');
+export async function synchronizeCatalog(database: D1Database, generation: string, rows: PreparedCatalogRow[], retain: string[]): Promise<{ written: number; unchanged: number }> {
+  let written = 0;
+  // Read bounded, indexed pages. Comparing actual bytes also repairs interrupted imports or damaged rows;
+  // a matching generation name or row count alone does not prove that preparation completed correctly.
+  for (let start = 0; start < rows.length; start += 250) {
+    const page = rows.slice(start, start + 250);
+    const stored = await database.prepare('SELECT ordinal, dataset_id, summary_json FROM catalog_summaries WHERE generation = ? AND ordinal >= ? AND ordinal < ?')
+      .bind(generation, start, start + page.length).all<{ ordinal: number; dataset_id: string; summary_json: string }>();
+    if (!stored.success) throw new Error('Could not read the catalog database');
+    const existing = new Map(stored.results.map(row => [row.ordinal, row]));
+    const changed = page.flatMap((row, offset) => {
+      const ordinal = start + offset, previous = existing.get(ordinal);
+      return previous?.dataset_id === row.id && previous.summary_json === row.json ? [] : [{ ...row, ordinal }];
+    });
+    for (let offset = 0; offset < changed.length; offset += 50) {
+      const results = await database.batch(changed.slice(offset, offset + 50).map(row => database.prepare(
+        'INSERT INTO catalog_summaries (generation, ordinal, dataset_id, summary_json) VALUES (?, ?, ?, ?) '
+        + 'ON CONFLICT (generation, ordinal) DO UPDATE SET dataset_id = excluded.dataset_id, summary_json = excluded.summary_json '
+        + 'WHERE catalog_summaries.dataset_id <> excluded.dataset_id OR catalog_summaries.summary_json <> excluded.summary_json',
+      ).bind(generation, row.ordinal, row.id, row.json)));
+      if (results.some(result => !result.success)) throw new Error('Could not prepare the catalog database');
+      written += results.reduce((sum, result) => sum + result.meta.changes, 0);
+    }
   }
   const stored = await database.prepare('SELECT COUNT(*) AS count, MIN(ordinal) AS first, MAX(ordinal) AS last FROM catalog_summaries WHERE generation = ?')
     .bind(generation).first<{ count: number; first: number; last: number }>();
   if (!stored || stored.count !== rows.length || stored.first !== 0 || stored.last !== rows.length - 1) throw new Error('Prepared catalog database is incomplete');
-  const generations = [...new Set([generation, ...retain])];
-  await database.prepare(`DELETE FROM catalog_summaries WHERE generation NOT IN (${generations.map(() => '?').join(',')})`).bind(...generations).run();
+  const generations = [...new Set([generation, ...retain])].sort();
+  // Delete disjoint indexed ranges, rather than scanning every retained row with NOT IN.
+  for (let index = 0; index <= generations.length; index++) {
+    const lower = generations[index - 1], upper = generations[index];
+    const conditions = [lower === undefined ? [] : ['generation > ?'], upper === undefined ? [] : ['generation < ?']].flat();
+    const result = await database.prepare(`DELETE FROM catalog_summaries WHERE ${conditions.join(' AND ')}`)
+      .bind(...[lower, upper].filter(value => value !== undefined)).run();
+    if (!result.success) throw new Error('Could not clean up the catalog database');
+  }
+  return { written, unchanged: rows.length - written };
 }

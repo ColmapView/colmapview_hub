@@ -123,7 +123,7 @@ html:has(.catalog-browse) { scroll-padding-block: 72px; }
 .dataset-card-body { grid-area: 1 / 1; z-index: 1; align-self: end; display: grid; min-width: 0; gap: var(--sp-1); padding: 20px var(--sp-3) var(--sp-3); background: linear-gradient(transparent, rgb(0 0 0 / .8) 30%); }
 .dataset-card-tags { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; min-width: 0; }
 .dataset-card-tags .dataset-contents { max-width: 100%; }
-.dataset-card-tags .dataset-tag, .dataset-card-tags .dataset-contents li { padding: 1px 5px; border: 1px solid rgb(255 255 255 / .18); border-radius: 3px; background: rgb(0 0 0 / .45); color: #e0e0e0; font-size: 10px; line-height: 1.5; }
+.dataset-card-tags .dataset-tag, .dataset-card-tags .dataset-contents li { padding: 1px 5px; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); border-radius: 3px; background: rgb(12 12 12 / .88); color: var(--tag-dark, #d0d0d0); font-size: 10px; line-height: 1.5; }
 .dataset-review { position: absolute; z-index: 2; left: var(--sp-2); top: var(--sp-2); max-width: calc(100% - 60px); padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--warning); font-size: 11px; pointer-events: none; }
 .dataset-thumbnail { display: block; width: 100%; height: auto; border-radius: 4px; background: var(--bg-tertiary); }
 .dataset-preview { margin: 0; max-width: 320px; }
@@ -133,6 +133,21 @@ html:has(.catalog-browse) { scroll-padding-block: 72px; }
 .dataset-preview figcaption a { position: relative; z-index: 2; }
 .dataset-contents { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0; list-style: none; }
 .dataset-contents li { margin: 0; padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); font-size: 11px; line-height: 1.4; }
+/* Data labels stay readable without color; hues are shared by cards and metadata. */
+[data-asset="images"] { --tag-dark: #9bcafa; --tag-light: #285f91; }
+[data-asset="cameras"] { --tag-dark: #a1d3b1; --tag-light: #326a44; }
+[data-asset="point_cloud"] { --tag-dark: #c6b3ed; --tag-light: #6a4999; }
+[data-asset="splats"] { --tag-dark: #e6c584; --tag-light: #805b17; }
+[data-asset="masks"] { --tag-dark: #e4afc2; --tag-light: #904763; }
+[data-asset="meshes"] { --tag-dark: #97d3d8; --tag-light: #256a73; }
+[data-asset="geometry"] { --tag-dark: #b4c3e1; --tag-light: #4e638a; }
+[data-tag="video"] { --tag-dark: #e8b39a; }
+[data-license-category="commercial"] { --tag-dark: #a4d4cb; }
+[data-license-category="non-commercial"] { --tag-dark: #e3bf9f; }
+[data-license-category="not-specified"] { --tag-dark: #c4c4c4; }
+.dataset-contents [data-asset] { color: var(--tag-dark); border-color: color-mix(in srgb, currentColor 35%, transparent); }
+:where(:root[data-ui-theme="light"]) .dataset-contents [data-asset] { color: var(--tag-light); }
+.dataset-card-tags .dataset-contents [data-asset] { color: var(--tag-dark); }
 .dataset-statistics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); max-width: 400px; margin: 0; padding-block: var(--sp-2); }
 .dataset-statistics dt { color: var(--text-secondary); font-size: 10px; line-height: 1.4; }
 .dataset-statistics dd { margin: 2px 0 0; color: var(--text-primary); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.4; }

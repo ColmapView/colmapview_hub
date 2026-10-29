@@ -38,8 +38,8 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
     + '<div class="dataset-card-body">'
     + `<h2><a class="dataset-open" href="${escape(hubViewerLink(share || catalogOpenUrl(entry), host, frontend))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
     + '<div class="dataset-card-tags" aria-label="Dataset tags">' + sceneContentsHtml(entry.availableData)
-    + (entry.videoCapture ? `<span class="dataset-tag">${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</span>` : '')
-    + `<span class="dataset-tag" aria-label="License: ${escape(entry.license)}">${escape(licenseTagLabel(entry.license, category))}</span></div>`
+    + (entry.videoCapture ? `<span class="dataset-tag" data-tag="video">${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</span>` : '')
+    + `<span class="dataset-tag" data-license-category="${category}" aria-label="License: ${escape(entry.license)}">${escape(licenseTagLabel(entry.license, category))}</span></div>`
     + (!canOpen ? '<p class="dataset-link-note">Source only</p>' : !entry.hasViewer ? '<p class="dataset-link-note">Try · unchecked ↗</p>' : '')
     + '</div>'
     + `<dialog class="dataset-metadata" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
