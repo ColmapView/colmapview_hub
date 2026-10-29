@@ -20,6 +20,7 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
   const title = catalogCardTitle(entry);
   const preview = entry.access === 'gated' ? '' : sceneThumbnailHtml(entry, true, frontend === 'github' ? HUB_ORIGIN : '');
   const share = datasetSharePath(entry.id, entry.shareName);
+  const launchUrl = hubViewerLink(share || catalogOpenUrl(entry), host, frontend);
   const facts = [
     ['Dataset', entry.dataset?.title || entry.title], ['Type', entry.itemKind || entry.formats.join(' · ') || 'Collection'],
     ['Source', providerLabel(entry.provider)], ['License', entry.license], ['License category', LICENSE_CATEGORY_LABELS[category]],
@@ -36,7 +37,7 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
     + `<button type="button" class="dataset-info icon-button" aria-label="${escape(`Metadata for ${entry.title}`)}" title="Dataset information" aria-haspopup="dialog" aria-controls="${metadataId}" aria-expanded="false">${icon('info')}</button>`
     + '</div>'
     + '<div class="dataset-card-body">'
-    + `<h2><a class="dataset-open" href="${escape(hubViewerLink(share || catalogOpenUrl(entry), host, frontend))}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
+    + `<h2><a class="dataset-open" href="${escape(launchUrl)}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
     + '<div class="dataset-card-tags" aria-label="Dataset tags">' + sceneContentsHtml(entry.availableData)
     + (entry.videoCapture ? `<span class="dataset-tag" data-tag="video">${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</span>` : '')
     + `<span class="dataset-tag" data-license-category="${category}" aria-label="License: ${escape(entry.license)}">${escape(licenseTagLabel(entry.license, category))}</span></div>`
@@ -49,9 +50,12 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
     + `<dl>${facts.map(([label, value]) => `<div><dt>${label}</dt><dd${label === 'Images' && entry.photoStatus ? ` data-photo-status="${escape(entry.photoStatus)}"` : ''}>${escape(value)}</dd></div>`).join('')}</dl>`
     + (preview ? `<p class="dataset-photo-credit">${entry.thumbnail!.videoFrame ? 'Video frame' : 'Photo'}: ${sceneThumbnailCreditHtml(entry.thumbnail!)}${entry.thumbnail!.crop === 'center_square' ? ' · Cropped' : ''}</p>` : '')
     + `<p class="note">${escape(entry.description)}</p>`
-    + `<div class="dataset-metadata-links"><a href="${escape(hubViewerLink(datasetPath(entry), host, frontend))}">Full metadata</a>`
+    + '<div class="dataset-metadata-links dataset-metadata-actions"><div class="dataset-metadata-primary">'
+    + (canOpen ? `<a class="button dataset-metadata-open" href="${escape(launchUrl)}">${entry.hasViewer ? 'Open in viewer' : 'Try in viewer · unchecked'}</a>` : '')
     + (share ? `<button type="button" class="icon-button" data-copy-dataset-link="${share}" aria-label="Copy link" title="Copy link">${icon('copy')}</button><span class="note" data-copy-status role="status"></span>` : '')
+    + '</div><div class="dataset-metadata-secondary">'
+    + `<a href="${escape(hubViewerLink(datasetPath(entry), host, frontend))}">Full metadata</a>`
     + (entry.dataset ? `<a href="${escape(hubViewerLink('/hub/?dataset=' + encodeURIComponent(datasetFilterValue(entry)), host))}">Related scenes</a>` : '')
-    + (isCatalogSourceUrl(entry.sourceUrl) ? `<a href="${escape(entry.sourceUrl)}" target="_blank" rel="noopener noreferrer">Original source ↗</a>` : '')
-    + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></dialog></article>`;
+    + (isCatalogSourceUrl(entry.sourceUrl) ? `<a href="${escape(entry.sourceUrl)}" target="_blank" rel="noopener noreferrer">Original source${icon('external')}</a>` : '')
+    + `${entry.testOrFixture ? '<span>Test / demo</span>' : ''}</div></div></div></dialog></article>`;
 }

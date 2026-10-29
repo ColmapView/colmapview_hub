@@ -71,7 +71,7 @@ test('GitHub gallery keeps browsing, search, metadata and Back on GitHub using p
   await expect(cards.first()).toBeVisible();
   const search = page.getByRole('searchbox');
   await search.fill('colmapview_nonexistent_scene_qzx'); await search.press('Enter');
-  await expect(page.locator('#catalog-count')).toHaveText('No matching datasets');
+  await expect(page.locator('#catalog-count')).toHaveText('No matches');
   expect(new URL(page.url()).origin).toBe(github);
   expect(errors).toEqual([]);
 });

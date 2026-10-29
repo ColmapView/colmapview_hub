@@ -128,3 +128,12 @@ Hub pages use ColmapView's public-page design. `public/hub/colmapview.css` is a 
 `scripts/check-colmapview-css.mjs` verifies the pinned SHA-256 as part of `check:code`. The viewer's `src/theme/policyCssCopy.test.ts` pins the same value. To update the copy, copy the viewer's file and update both hashes together.
 
 New static files outside `/hub/assets/` and `/hub/fonts/` need a matching negative entry in `wrangler.jsonc`'s `run_worker_first`, or the Worker will treat the request as a lookup. Keep static paths, routes, `HUB_PATH` and `public/_headers` aligned. See [production setup](operations.md) for deployment checks.
+
+
+## Gallery interaction state
+
+The gallery keeps search progress and matching-scene counts inside the existing search control; the footer retains the source-hosting disclosure. Active filter counts and their accessible descriptions include saved legacy constraints, but exclude query text, pagination, feed seed and viewer-host selection. Empty results reuse the same clear/reset behavior and preserve the selected viewer host.
+
+`access=public|gated|terms|unknown` filters the catalog's declared source access independently of `provider`. It is not a guarantee that every source file fully loads. Invalid access values return the normal 400 input error. Existing `status=Access+required` links remain supported, although new filter choices put access under Access rather than Evidence. No new catalog generation, D1 table or per-visitor record is needed.
+
+Eligible metadata dialogs reuse the tile's launch URL, including short names and viewer-host selection. Source-only entries do not gain a viewer launch action. Narrow cards allow two title lines while keeping data and license tags visible.

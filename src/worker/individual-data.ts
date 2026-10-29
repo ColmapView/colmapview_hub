@@ -1,3 +1,4 @@
+import { CATALOG_ACCESS_OPTIONS } from '../shared/catalog-controls';
 import { INDIVIDUAL_PAGE_SIZE, canOpenIndividual, individualEntry, individualSummary, individualTokens, matchesIndividualDataset } from '../shared/individual-catalog';
 import type { IndividualIndex, IndividualPage, IndividualRecord, IndividualSource } from '../shared/individual-catalog';
 import { isCatalogSummary } from '../shared/catalog';
@@ -89,7 +90,7 @@ export function intersectPostings(left: Uint32Array, right: Uint32Array): Uint32
   return result.subarray(0, count);
 }
 
-export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'license', 'licenseCategory', 'kind', 'status', 'delivery', 'viewer', 'photos', 'data', 'sort', 'seed', 'page'] as const;
+export const INDIVIDUAL_FILTERS = ['q', 'dataset', 'provider', 'access', 'license', 'licenseCategory', 'kind', 'status', 'delivery', 'viewer', 'photos', 'data', 'sort', 'seed', 'page'] as const;
 export function individualFilters(input: URLSearchParams): URLSearchParams {
   const filters = new URLSearchParams();
   if (input.get('viewerHost') === 'github') filters.set('viewerHost', 'github');
@@ -101,6 +102,7 @@ export function individualFilters(input: URLSearchParams): URLSearchParams {
   }
   if (individualTokens(filters.get('q') || '').length > 6) throw new InputError('Use up to six search words.');
   if (filters.has('page') && (!/^\d{1,7}$/.test(filters.get('page')!) || Number(filters.get('page')) < 1)) throw new InputError('Invalid dataset page.');
+  if (filters.has('access') && !CATALOG_ACCESS_OPTIONS.some(option => option.value === filters.get('access'))) throw new InputError('Invalid dataset access filter.');
   if (filters.has('sort') && !FEED_MODES.some(mode => mode === filters.get('sort'))) throw new InputError('Invalid dataset feed.');
   if (filters.has('seed') && !/^[a-f0-9]{8,32}$/.test(filters.get('seed')!)) throw new InputError('Invalid feed seed.');
   return filters;
@@ -188,6 +190,7 @@ export async function searchIndividuals(assets: Assets, origin: string, index: I
   for (let position = 1; position < postings.length && candidates.length; position++) candidates = intersectPostings(candidates, postings[position]);
   const sources = index.sources.filter(source => matchesIndividualDataset(source, filters.get('dataset') || '')
     && (!filters.get('provider') || source.provider === filters.get('provider')) && (!filters.get('license') || source.license === filters.get('license'))
+    && (!filters.get('access') || source.access === filters.get('access'))
     && (!filters.get('licenseCategory') || licenseCategory(source) === filters.get('licenseCategory')) && source.count);
   const requested = Number(filters.get('page') || 1);
   let total = 0;

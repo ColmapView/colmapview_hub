@@ -15,11 +15,12 @@ remains authoritative for curated labels; user-supplied manifest hints never
 override publication checks. Access-only manifests preserve exact pinned model
 files and model-folder scope; they do not claim a checked photo mapping.
 
-The Hub is a photo gallery: each tile has a single-line scene caption and, when
-verified, a small **Gaussians** label. Source, content roles and licence appear on
-hover or keyboard focus. The image opens the viewer directly; the corner info
-button opens full metadata and camera/point statistics. Touch devices keep that
-button visible. Shared-on-Hub photos use the same layout.
+The Hub is a photo gallery: each tile has a compact scene caption, with up to two
+lines on narrow screens. Data roles, video capture and licence tags remain visible
+without hover; Gaussian candidates stay distinct from verified Gaussians. The image
+opens the viewer directly. The always-visible corner info button opens metadata,
+camera/point statistics and the same eligible viewer launch action. Shared-on-Hub
+photos use the same layout.
 
 Video scenes use cached JPEG previews from their exact reviewed frame mappings.
 The preview may be the first frame or a later selected frame; it must match the
@@ -185,7 +186,7 @@ The OpenMVG SceauxCastle sample stores 6,586 landmarks and 22,564 observations i
 
 The NL3D synthetic composite sample has eight scene entries, with 400 posed views and 721,835 imported points, checked against viewer 0.19.3 commit `ba4d99866a7ec2817767a7c254157fb54449ad7c`. All eight pinned metadata URLs loaded, rendered and exported in the local production build. Independent PyCOLMAP/NumPy checks compared every calibration, camera pose and point. Each scene has one decoded original-photo sample; full RGB export and mesh/mask loading remain separate checks. These entries require viewer 0.19.3 or newer. Existing preview and license labels are retained; no new previews were generated.
 
-`/hub/` shows one card per named scene dataset on both production hosts. Reconstruction folders, camera metadata and named public captures establish scene identities. Camera train/validation/test metadata, reconstruction variants and companion assets stay inside their scene. Standalone PLY, STL, OBJ and other model filenames do not create cards. Filters cover collection, scene type, source, license, evidence and image availability. The Delivery and Viewer link controls are retired because they duplicate Evidence and the published-scene eligibility rule. Saved URLs still retain those criteria through pagination and history; API filters and detailed evidence remain available. Prepared previews are served from the Hub; browsing makes no provider requests.
+`/hub/` shows one card per named scene dataset on both production hosts. Reconstruction folders, camera metadata and named public captures establish scene identities. Camera train/validation/test metadata, reconstruction variants and companion assets stay inside their scene. Standalone PLY, STL, OBJ and other model filenames do not create cards. Filters cover collection, scene type, provider, access, license, evidence and image availability. Search progress and matching counts appear in the search control; active filter counts summarize saved constraints. Empty results offer a nearby clear action. The Delivery and Viewer link controls are retired because they duplicate Evidence and the published-scene eligibility rule. Saved URLs still retain those criteria through pagination and history; API filters and detailed evidence remain available. Prepared previews are served from the Hub; browsing makes no provider requests.
 
 The source snapshot lives in `data/catalog.json`; `data/individual-datasets.json` and its checksummed, compressed source listings preserve individual model identities. Python 3.11+ is required for the offline index build. `npm run catalog:import -- --viewer-root PATH` refreshes the collection metadata and reapplies the pinned individual listing. See [data/README.md](../data/README.md) for refresh commands and qualification limits. The normal dev, check and deploy commands build static metadata packs and compact search posting lists. The Worker reads bounded same-origin assets through `CATALOG_ASSETS`, rendering one requested page or model. The browser fetches only the current results page.
 

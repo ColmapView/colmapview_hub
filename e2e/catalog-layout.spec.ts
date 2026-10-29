@@ -166,3 +166,53 @@ test('every rendered and asynchronously replaced scene has a copyable short link
   await expect(panel.locator('[data-copy-status] a')).toHaveAttribute('href', new URL((await card.locator('.dataset-open').getAttribute('href'))!, page.url()).href);
   await expect(panel.getByRole('button', { name: 'Copy link', exact: true })).toBeEnabled();
 });
+
+
+test('search feedback, access filters and inline recovery stay concise and preserve metadata launch destinations', async ({ page }) => {
+  await page.goto('/hub/?q=SceauxCastle&viewerHost=github');
+  const count = page.locator('#catalog-count');
+  await expect(count).toBeVisible();
+  await expect(count).toHaveText('1');
+  const card = page.locator('.dataset-card').first();
+  const destination = await card.locator('.dataset-open').getAttribute('href');
+  await card.locator('.dataset-info').click();
+  await expect(card.getByRole('link', { name: 'Open in viewer', exact: true })).toHaveAttribute('href', destination!);
+  await page.keyboard.press('Escape');
+
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/hub/datasets/api/entries?**', async route => {
+    if (new URL(route.request().url()).searchParams.get('q') === 'zzzznohitreview') await gate;
+    await route.continue();
+  });
+  await page.getByRole('searchbox').fill('zzzznohitreview');
+  try {
+    await expect(count).toHaveText('Searching…');
+    await expect(page.locator('#catalog-results')).toHaveAttribute('aria-busy', 'true');
+  } finally { release(); }
+  await expect(count).toHaveText('No matches');
+  await page.getByRole('link', { name: 'Clear search and filters', exact: true }).click();
+  await expect(page.getByRole('searchbox')).toHaveValue('');
+  await expect(page.getByRole('searchbox')).toBeFocused();
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBeNull();
+  await expect(page.locator('.dataset-card').first()).toBeVisible();
+
+  const filters = page.locator('.catalog-advanced > summary');
+  await filters.click();
+  await page.getByLabel('Provider', { exact: true }).selectOption('huggingface');
+  await expect.poll(() => new URL(page.url()).searchParams.get('provider')).toBe('huggingface');
+  await page.getByLabel('Access', { exact: true }).selectOption('gated');
+  await expect.poll(() => new URL(page.url()).searchParams.get('access')).toBe('gated');
+  await expect(filters).toHaveAccessibleName(/2 active.*Approval or sign-in required/);
+  await expect(filters.locator('.catalog-filter-count')).toHaveText('2');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.dataset-card').first()).toContainText('HF login required');
+  const response = await page.request.get('/hub/datasets/api/entries?provider=huggingface&access=gated');
+  expect(response.ok()).toBe(true);
+  const data = await response.json();
+  expect(data.entries.length).toBeGreaterThan(0);
+  expect(data.entries.every((entry: { access: string }) => entry.access === 'gated')).toBe(true);
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
+  await expect(filters.locator('.catalog-filter-count')).toBeHidden();
+  expect(new URL(page.url()).searchParams.get('viewerHost')).toBe('github');
+});

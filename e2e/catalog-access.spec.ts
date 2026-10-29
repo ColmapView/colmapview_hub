@@ -378,7 +378,7 @@ test('the reported gated PLY is no longer published', async ({ page }) => {
 test('removed gated collections have no page, search result or dataset option', async ({ page }) => {
   expect((await page.goto(`/hub/datasets/${gatedSource}`))!.status()).toBe(404);
   await page.goto(`/hub/?dataset=${gatedSource}`);
-  await expect(page.locator('#catalog-count')).toHaveText('No matching datasets');
+  await expect(page.locator('#catalog-count')).toHaveText('No matches');
   await expect(page.locator(`option[value="${gatedSource}"]`)).toHaveCount(0);
   const response = await page.request.get(`/hub/datasets/api/entries?dataset=${gatedSource}`);
   expect(response.status()).toBe(200);
@@ -429,7 +429,7 @@ test('Hourglass and other standalone file names are absent from scene browsing',
   const hourglass = id('hf:adfa5456/FastRobustICP', 'stl', 'data/Hourglass.stl');
   expect((await page.goto(`/hub/entry/${hourglass}`))!.status()).toBe(404);
   await page.goto('/hub/?q=Hourglass');
-  await expect(page.locator('#catalog-count')).toHaveText('No matching datasets');
+  await expect(page.locator('#catalog-count')).toHaveText('No matches');
   const response = await page.request.get('/hub/datasets/api/entries?q=Hourglass');
   expect(await response.json()).toMatchObject({ unit: 'named_scene', total: 0, entries: [] });
 });

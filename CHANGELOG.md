@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.20.9 — 2026-10-29
+
+- Align metadata actions into a primary launch/copy row and consistent secondary buttons for curated and shared entries.
+- Show Hub search progress and counts, active filter badges and empty-result recovery; distinguish provider and access filters while preserving saved links.
+- Launch eligible scenes directly from metadata and allow two-line titles on narrow cards.
+
 ## 0.20.8 — 2026-10-28
 
 - Give gallery data, video and license tags distinct muted colors, with readable labels in both themes.

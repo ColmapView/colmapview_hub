@@ -87,7 +87,14 @@ html:has(.catalog-browse) { scroll-padding-block: 72px; }
 .catalog-primary { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--sp-2); }
 .catalog-secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
 .catalog-filters label { display: grid; flex: 1 1 160px; min-width: 0; gap: var(--sp-1); color: var(--text-secondary); font-size: 12px; }
-.catalog-primary .catalog-query { flex: 1 1 240px; }
+.catalog-primary .catalog-query { position: relative; flex: 1 1 240px; }
+.catalog-query input { padding-right: 88px; }
+.catalog-count { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); max-width: 76px; margin: 0; overflow: hidden; color: var(--text-secondary); font-size: 11px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+.catalog-advanced > summary { position: relative; }
+.catalog-filter-count { position: absolute; top: -3px; right: -3px; min-width: 15px; padding: 0 3px; border: 1px solid var(--border-light); border-radius: 3px; background: var(--bg-elevated); color: var(--text-primary); font-size: 10px; line-height: 15px; text-align: center; }
+.dataset-feed[data-searching] { opacity: .85; }
+.catalog-empty { grid-column: 1 / -1; padding: var(--sp-4); text-align: center; }
+.catalog-empty .button { margin-top: var(--sp-2); }
 .catalog-primary .catalog-field-dataset { flex: 0 1 220px; }
 .catalog-filters input, .catalog-filters select { width: 100%; }
 /* The viewer's ghost-button geometry, shared by navigation and card controls. */
@@ -186,6 +193,16 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
 .dataset-metadata-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); margin-top: var(--sp-3); }
 .dataset-metadata-links a { min-height: 24px; position: relative; z-index: 4; }
 .dataset-metadata-links .icon-button { position: relative; z-index: 4; }
+.dataset-metadata-actions { display: grid; gap: var(--sp-2); padding-top: var(--sp-3); border-top: 1px solid var(--border-color); }
+.dataset-metadata-primary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); }
+.dataset-metadata-primary:empty { display: none; }
+.dataset-metadata-primary > a { display: flex; align-items: center; justify-content: center; min-height: 36px; text-decoration: none; }
+.dataset-metadata-primary .icon-button { grid-column: 2; width: 36px; height: 36px; }
+.dataset-metadata-primary [data-copy-status] { grid-column: 1 / -1; margin: 0; overflow-wrap: anywhere; }
+.dataset-metadata-secondary { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: var(--sp-1); }
+.dataset-metadata-secondary a { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; min-height: 32px; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); font-size: 12px; line-height: 1.35; text-align: center; text-decoration: none; }
+.dataset-metadata-secondary a:hover { border-color: var(--border-light); background: var(--bg-hover); color: var(--text-primary); text-decoration: none; }
+.dataset-metadata-secondary svg { width: 12px; height: 12px; flex-shrink: 0; }
 .dataset-metadata-links [data-copy-status]:empty, .actions [data-copy-status]:empty { display: none; }
 .catalog-pagination { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--sp-3); align-items: center; margin-top: var(--sp-6); font-size: 12px; color: var(--text-secondary); }
 #catalog-more { min-width: 160px; }
@@ -222,6 +239,7 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
   .dataset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 720px) {
+  .dataset-card .dataset-open { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
   .site-header, .site-footer, main { width: calc(100% - 24px); }
   .site-header { gap: var(--sp-2); }
   .catalog-toolbar { width: 100%; }
@@ -244,6 +262,7 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
   .icon-button, .site-nav .icon-button { width: 44px; height: 44px; min-height: 44px; }
   .catalog-primary { column-gap: var(--sp-2); }
   .dataset-info { top: var(--sp-1); right: var(--sp-1); }
+  .dataset-metadata-primary .icon-button { width: 44px; height: 44px; }
   .dataset-metadata-links a, .dataset-metadata-links button { min-height: 44px; display: inline-flex; align-items: center; }
 }
 @media (max-width: 600px) {

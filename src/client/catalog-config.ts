@@ -17,7 +17,7 @@ export async function refreshCatalogFilters(form: HTMLFormElement): Promise<stri
     dataset: individualDatasetOptions(index.sources, new URLSearchParams(location.search).get('dataset') || ''),
     license: [...new Set(index.sources.map(source => source.license))].sort().map(value => ({ value, label: value })),
     kind: Object.keys(index.kinds).sort().map(value => ({ value, label: value })),
-    status: Object.keys(index.levels).sort().map(value => ({ value, label: value })),
+    status: Object.keys(index.levels).filter(value => value !== 'Access required' || new URLSearchParams(location.search).get('status') === value).sort().map(value => ({ value, label: value })),
     photos: [{ value: 'available', label: 'Images on current paths' }, ...Object.keys(index.photos || {}).sort()
       .filter(isPhotoStatus).map(value => ({ value, label: PHOTO_LABELS[value] }))],
     data: Object.entries(SCENE_DATA_LABELS).filter(([key]) => index.contents?.[key as keyof typeof SCENE_DATA_LABELS])

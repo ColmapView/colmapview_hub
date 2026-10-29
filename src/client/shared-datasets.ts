@@ -59,14 +59,16 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   const proof = document.createElement('p'); proof.className = 'note';
   proof.textContent = entry.verification.method === 'hf_colmap_headers' ? 'Public access and COLMAP headers checked. Complete loading and all photos are not verified.'
     : entry.verification.method === 'catalog_manifest' ? 'Uses an existing curated catalog manifest.' : 'Public source and dataset format reviewed.';
-  const source = document.createElement('a'); source.href = hubViewerLink(`/s/${entry.id}`, host, hubFrontend()); source.textContent = 'Open dataset';
+  const source = document.createElement('a'); source.href = hubViewerLink(`/s/${entry.id}`, host, hubFrontend()); source.textContent = 'Open dataset'; source.className = 'button dataset-metadata-open';
   const original = document.createElement('a'); original.href = originalUrl.href;
-  original.target = '_blank'; original.rel = 'noopener noreferrer'; original.textContent = 'Dataset source ↗';
-  const links = document.createElement('div'); links.className = 'dataset-metadata-links'; links.append(source, original);
+  original.target = '_blank'; original.rel = 'noopener noreferrer'; original.textContent = 'Dataset source'; original.insertAdjacentHTML('beforeend', icon('external'));
+  const links = document.createElement('div'); links.className = 'dataset-metadata-links dataset-metadata-actions';
+  const primary = document.createElement('div'); primary.className = 'dataset-metadata-primary';
+  const secondary = document.createElement('div'); secondary.className = 'dataset-metadata-secondary'; secondary.append(original);
   const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'icon-button'; copy.dataset.copyDatasetLink = `/s/${entry.id}`;
   copy.setAttribute('aria-label', 'Copy link'); copy.title = 'Copy link'; copy.innerHTML = icon('copy');
   const copied = document.createElement('span'); copied.className = 'note'; copied.dataset.copyStatus = ''; copied.setAttribute('role', 'status');
-  links.append(copy, copied);
+  primary.append(source, copy, copied); links.append(primary, secondary);
   content.append(name, description, license, category, ...(contents.textContent ? [contents] : []), proof, links); panel.append(header, content);
   const body = document.createElement('div'); body.className = 'dataset-card-body'; body.append(title, tags);
   article.append(preview, body, panel);

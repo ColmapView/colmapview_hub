@@ -1,3 +1,4 @@
+import { catalogFilterState, emptyCatalogHtml } from '../shared/catalog-controls';
 import { isCatalogSummary } from '../shared/catalog';
 import { INDIVIDUAL_PAGE_SIZE, savedFilterSummary } from '../shared/individual-catalog';
 import type { IndividualPage, IndividualSelection } from '../shared/individual-catalog';
@@ -139,7 +140,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const updateNavigation = () => {
     const offset = (firstPage - 1) * INDIVIDUAL_PAGE_SIZE;
     const description = total ? `Showing ${(offset + 1).toLocaleString()}–${(offset + loaded).toLocaleString()} of ${total.toLocaleString()} ${total === 1 ? 'scene dataset' : 'scene datasets'}` : 'No matching datasets';
-    count.textContent = total ? `${(offset + 1).toLocaleString()}–${(offset + loaded).toLocaleString()} / ${total.toLocaleString()}` : 'No matching datasets';
+    count.textContent = total ? total.toLocaleString() : 'No matches';
     count.setAttribute('aria-label', description);
     count.title = description;
     committedCount = count.textContent;
@@ -155,8 +156,16 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     end.hidden = !total || lastPage < pages;
     savedFilters.textContent = savedFilterSummary(committed);
     savedFilters.hidden = !savedFilters.textContent;
-    form.querySelector('.catalog-advanced')?.toggleAttribute('data-active',
-      ['dataset', 'licenseCategory', 'sort', 'kind', 'provider', 'license', 'status', 'photos', 'data', 'delivery', 'viewer'].some(field => committed.has(field)));
+    const labels = Object.fromEntries(fields.filter((field): field is HTMLSelectElement => field instanceof HTMLSelectElement)
+      .map(field => [field.name, field.selectedOptions[0]?.textContent || field.value]));
+    const active = catalogFilterState(committed, labels);
+    const advanced = form.querySelector('.catalog-advanced')!;
+    advanced.toggleAttribute('data-active', active.count > 0);
+    const summary = advanced.querySelector('summary')!;
+    summary.title = active.description;
+    summary.querySelector('[data-filter-description]')!.textContent = active.description;
+    const badge = summary.querySelector<HTMLElement>('.catalog-filter-count')!;
+    badge.textContent = String(active.count); badge.hidden = !active.count;
   };
   const restore = () => {
     const saved = recallFeed(key(), generation);
@@ -205,7 +214,11 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     more.disabled = true;
     more.textContent = options.append ? 'Loading…' : 'Load more';
     feedback(options.append ? 'Loading more scenes…' : 'Searching…');
+    count.textContent = options.append ? 'Loading…' : 'Searching…';
+    count.title = count.textContent;
+    count.setAttribute('aria-label', count.title);
     results.setAttribute('aria-busy', 'true');
+    results.toggleAttribute('data-searching', !options.append);
     let failure = options.append ? 'Could not load more scenes. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
     try {
       const response = await catalogRequest(`${hubApiBase()}/datasets/api/entries${values.size ? `?${values}` : ''}`, controller.signal);
@@ -269,7 +282,8 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
         entries.push(...data.entries);
         loaded += cards.length;
       } else {
-        results.replaceChildren(...(cards.length ? cards : [Object.assign(document.createElement('p'), { textContent: 'No datasets match these filters.' })]));
+        if (cards.length) results.replaceChildren(...cards);
+        else results.innerHTML = emptyCatalogHtml(document.querySelector<HTMLAnchorElement>('#catalog-reset')!.href);
         firstPage = data.page;
         entries = data.entries;
         loaded = cards.length;
@@ -297,15 +311,15 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
       if (controller.signal.aborted || sequence !== request) return;
       feedback(failure, true);
       automaticPaused = true;
-      if (!options.append) {
-        count.textContent = `Previous results · ${committedCount}`;
-        count.setAttribute('aria-label', count.textContent);
-      }
+      count.textContent = committedCount;
+      count.title = `Previous results · ${committedCount}`;
+      count.setAttribute('aria-label', count.title);
       if (options.append) more.textContent = 'Retry loading more';
     } finally {
       if (sequence === request) {
         busy = false;
         results.removeAttribute('aria-busy');
+        results.removeAttribute('data-searching');
         more.disabled = !canAppend;
         if (more.textContent === 'Loading…') more.textContent = 'Load more';
         requestAnimationFrame(() => continueAutomatic());
@@ -325,10 +339,12 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     timer = setTimeout(() => search(select ? 'push' : 'typing'), select ? 0 : 200);
   });
   form.addEventListener('submit', event => { event.preventDefault(); search(); });
-  document.querySelector<HTMLAnchorElement>('#catalog-reset')!.addEventListener('click', event => {
-    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  document.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0 || !(event.target instanceof Element)) return;
+    if (!event.target.closest('#catalog-reset, [data-clear-catalog]')) return;
     event.preventDefault();
     for (const field of fields) if (field.name !== 'viewerHost') field.value = '';
+    if (event.target.closest('[data-clear-catalog]')) form.querySelector<HTMLInputElement>('input[name="q"]')?.focus({ preventScroll: true });
     search();
   });
   const freshSeed = () => {

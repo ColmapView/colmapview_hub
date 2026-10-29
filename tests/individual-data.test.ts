@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { individualAsset, individualRecords } from '../src/worker/individual-data';
+import { individualAsset, individualRecords, individualFilters, searchIndividuals } from '../src/worker/individual-data';
 import type { IndividualIndex, IndividualRecord } from '../src/shared/individual-catalog';
 
 const origin = 'https://colmapview.opsiclear.com';
@@ -78,4 +78,23 @@ it('finishes the owned read batch on failure without scheduling later packs', as
     .rejects.toThrow('Individual metadata record missing');
   expect(finished).toBe(3);
   expect(assets.fetch).toHaveBeenCalledTimes(4);
+});
+
+
+it('filters declared access independently of provider and preserves legacy evidence URLs', async () => {
+  const index = fixtureIndex(2);
+  index.sources[0].count = 1;
+  index.sources.push({ ...index.sources[0], id: 'hf-gated-fixture-0123456789ab', access: 'gated',
+    gatedPublicListing: true, start: 1, count: 1 });
+  const gated = record(1); gated[1] = 1;
+  const assets = { fetch: async () => Response.json([record(0), gated]) };
+  for (const access of ['public', 'gated']) {
+    const filters = individualFilters(new URLSearchParams({ access, provider: 'huggingface' }));
+    const page = await searchIndividuals(assets, origin, index, filters);
+    expect(page.total).toBe(1);
+    expect(page.entries.map(entry => entry.access)).toEqual([access]);
+  }
+  expect((await searchIndividuals(assets, origin, index, new URLSearchParams('access=unknown'))).total).toBe(0);
+  expect(individualFilters(new URLSearchParams('status=Access+required')).get('status')).toBe('Access required');
+  expect(() => individualFilters(new URLSearchParams('access=private'))).toThrow('Invalid dataset access filter');
 });

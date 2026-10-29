@@ -29,7 +29,7 @@ for (const width of [1280, 360]) {
       await expect(panel.getByText('A public reconstruction.')).toBeVisible();
       await expect(panel.getByText('License: CC BY 4.0')).toBeVisible();
       await expect(panel.getByText('License category: Commercial use', { exact: true })).toBeVisible();
-      await expect(panel.getByRole('link', { name: 'Dataset source ↗' })).toHaveAttribute('href', 'https://huggingface.co/datasets/owner/scene');
+      await expect(panel.getByRole('link', { name: 'Dataset source', exact: true })).toHaveAttribute('href', 'https://huggingface.co/datasets/owner/scene');
       await panel.getByRole('button', { name: 'Close', exact: true }).click();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.screenshot({ path: test.info().outputPath(`hub-shared-${width}.png`), fullPage: false });
