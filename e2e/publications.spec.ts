@@ -27,8 +27,8 @@ for (const width of [1280, 360]) {
       await section.getByRole('button', { name: 'Metadata for Shared <script>scene</script>' }).click();
       const panel = page.getByRole('dialog', { name: 'Metadata for Shared <script>scene</script>' });
       await expect(panel.getByText('A public reconstruction.')).toBeVisible();
-      await expect(panel.getByText('License: CC BY 4.0')).toBeVisible();
-      await expect(panel.getByText('License category: Commercial use', { exact: true })).toBeVisible();
+      await expect(panel.locator('dd').filter({ hasText: /^CC BY 4.0$/ })).toBeVisible();
+      await expect(panel.locator('dd').filter({ hasText: /^Commercial use$/ })).toBeVisible();
       await expect(panel.getByRole('link', { name: 'Dataset source', exact: true })).toHaveAttribute('href', 'https://huggingface.co/datasets/owner/scene');
       await panel.getByRole('button', { name: 'Close', exact: true }).click();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

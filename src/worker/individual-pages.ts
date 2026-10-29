@@ -1,4 +1,4 @@
-import { CATALOG_ACCESS_OPTIONS, catalogFilterState, emptyCatalogHtml } from '../shared/catalog-controls';
+import { CATALOG_ACCESS_OPTIONS, catalogExtraFilterCount, catalogFilterState, emptyCatalogHtml } from '../shared/catalog-controls';
 import { LICENSE_CATEGORIES, LICENSE_CATEGORY_LABELS } from '../shared/license-categories';
 import { individualDatasetOptions, individualSelection, savedFilterSummary } from '../shared/individual-catalog';
 import type { IndividualIndex, IndividualPage } from '../shared/individual-catalog';
@@ -27,6 +27,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const values = (items: string[]) => [...new Set(items)].sort((a, b) => a.localeCompare(b, 'en')).map(value => ({ value, label: value }));
   const dataset = individualSelection(index.sources, filters.get('dataset') || '');
   const activeFilters = catalogFilterState(filters, { dataset: dataset?.label || '', access: CATALOG_ACCESS_OPTIONS.find(option => option.value === filters.get('access'))?.label || '' });
+  const extraFilters = catalogExtraFilterCount(filters);
   const resetUrl = hubViewerLink('/hub/', location.viewerHost);
   const countDescription = loading ? 'Loading datasets…' : `${number(result.total)} ${result.total === 1 ? 'scene' : 'scenes'}`;
   const savedFilters = savedFilterSummary(filters);
@@ -38,17 +39,19 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''), true)
     + `<button type="submit" class="button icon-button" aria-label="Search" title="Search">${icon('search')}</button>`
     + `<details class="catalog-advanced"${activeFilters.count ? ' data-active' : ''}><summary class="button icon-button" title="${escape(activeFilters.description)}"><span class="sr-only" data-filter-description>${escape(activeFilters.description)}</span>${icon('filters')}<span class="catalog-filter-count" aria-hidden="true"${activeFilters.count ? '' : ' hidden'}>${activeFilters.count}</span></summary><div class="catalog-secondary">`
-    + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })))
-    + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }])
-    + select('kind', 'Type', 'All scene types', values(Object.keys(index.kinds)))
-    + select('provider', 'Provider', 'All providers', [{ value: 'huggingface', label: 'Hugging Face' }, { value: 'public', label: 'Public sources' }])
+    + '<div class="catalog-filter-basics">'
     + select('access', 'Access', 'Any access', [...CATALOG_ACCESS_OPTIONS])
-    + select('license', 'License', 'All reported licenses', values(index.sources.map(source => source.license)))
-    + select('status', 'Evidence', 'All evidence levels', values(Object.keys(index.levels).filter(value => value !== 'Access required' || filters.get('status') === value)))
     + select('data', 'Available data', 'Any data', Object.entries(SCENE_DATA_LABELS).filter(([key]) => index.contents?.[key]).map(([value, label]) => ({ value, label })))
     + select('photos', 'Images', 'All image availability', [{ value: 'available', label: 'Images on current paths' },
       ...Object.keys(index.photos || {}).sort().map(value => ({ value, label: photoLabel(value as PhotoStatus) }))])
-    + '</div></details></div>'
+    + select('licenseCategory', 'License category', 'All licenses', LICENSE_CATEGORIES.map(value => ({ value, label: LICENSE_CATEGORY_LABELS[value] })))
+    + `</div><details class="catalog-filter-details"${extraFilters ? ' open' : ''}><summary>More options<span data-extra-count${extraFilters ? '' : ' hidden'}>${extraFilters} active</span></summary><div class="catalog-filter-extra">`
+    + select('sort', 'Feed', 'Discover', [{ value: 'random', label: 'Random' }, { value: 'new', label: 'New to Hub' }])
+    + select('kind', 'Type', 'All scene types', values(Object.keys(index.kinds)))
+    + select('provider', 'Provider', 'All providers', [{ value: 'huggingface', label: 'Hugging Face' }, { value: 'public', label: 'Public sources' }])
+    + select('license', 'License', 'All reported licenses', values(index.sources.map(source => source.license)))
+    + select('status', 'Evidence', 'All evidence levels', values(Object.keys(index.levels).filter(value => value !== 'Access required' || filters.get('status') === value)))
+    + '</div></details></div></details></div>'
     + ['delivery', 'viewer', 'viewerHost', 'seed'].map(field => `<input type="hidden" name="${field}" value="${escape(filters.get(field) || '')}">`).join('') + '</form>';
   const notes = '<details class="catalog-notes"><summary class="button icon-button" title="About this catalog"><span class="sr-only">About this catalog</span>' + icon('info') + '</summary><div>'
     + `<p class="catalog-totals">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p>`

@@ -736,7 +736,8 @@ test('card titles omit storage paths and retain scene names with model variants'
     const entry = { ...render.individualSummary(row(), source), title };
     const html = render.catalogCard(entry);
     assert.ok(html.includes(`>${expected}</a></h2>`), title);
-    assert.ok(html.includes(`<p class="dataset-metadata-title">${title}</p>`), title);
+    assert.equal(html.match(/<h3 class="dataset-metadata-title">(.*?)<\/h3>/)?.[1].replaceAll('<wbr>', ''), expected, title);
+    assert.ok(html.includes(`<dt>Scene path</dt><dd>${title}</dd>`), title);
     assert.equal(entry.title, title);
   }
 });

@@ -199,12 +199,23 @@ test('search feedback, access filters and inline recovery stay concise and prese
 
   const filters = page.locator('.catalog-advanced > summary');
   await filters.click();
+  await expect(page.getByLabel('Access', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Provider', { exact: true })).toBeHidden();
+  await page.locator('.catalog-filter-details > summary').click();
   await page.getByLabel('Provider', { exact: true }).selectOption('huggingface');
   await expect.poll(() => new URL(page.url()).searchParams.get('provider')).toBe('huggingface');
+  await page.locator('.catalog-filter-details > summary').click();
   await page.getByLabel('Access', { exact: true }).selectOption('gated');
   await expect.poll(() => new URL(page.url()).searchParams.get('access')).toBe('gated');
   await expect(filters).toHaveAccessibleName(/2 active.*Approval or sign-in required/);
   await expect(filters.locator('.catalog-filter-count')).toHaveText('2');
+  await expect(page.locator('[data-extra-count]')).toHaveText('1 active');
+  await expect(page.getByLabel('Provider', { exact: true })).toBeHidden();
+  await page.goBack();
+  await expect(page.getByLabel('Access', { exact: true })).toHaveValue('');
+  await expect(page.getByLabel('Provider', { exact: true })).toBeVisible();
+  await page.goForward();
+  await expect(page.getByLabel('Access', { exact: true })).toHaveValue('gated');
   await page.keyboard.press('Escape');
   await expect(page.locator('.dataset-card').first()).toContainText('HF login required');
   const response = await page.request.get('/hub/datasets/api/entries?provider=huggingface&access=gated');

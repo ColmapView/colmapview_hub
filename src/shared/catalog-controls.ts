@@ -7,6 +7,10 @@ export const CATALOG_ACCESS_OPTIONS = [
   { value: 'unknown', label: 'Access not established' },
 ] as const;
 
+export function catalogExtraFilterCount(filters: URLSearchParams): number {
+  return ['sort', 'kind', 'provider', 'license', 'status'].filter(field => filters.get(field)).length;
+}
+
 const FILTER_LABELS: Record<string, string> = { dataset: 'Collection', licenseCategory: 'License category', sort: 'Feed',
   kind: 'Type', provider: 'Provider', access: 'Access', license: 'License', status: 'Evidence', photos: 'Images',
   data: 'Available data', delivery: 'Delivery', viewer: 'Viewer' };

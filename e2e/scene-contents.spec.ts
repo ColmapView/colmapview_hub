@@ -150,7 +150,12 @@ test('cards show content roles, load same-origin photos and open metadata only o
   await expect(first.locator('[data-stat="cameraModels"]')).toBeVisible();
   await expect(first.locator('[data-photo-status]')).toBeVisible();
   await expect(first.locator('.dataset-photo-credit')).toBeVisible();
-  await expect(first.locator('.dataset-metadata-title')).toHaveText('data/i2slam_colmap/scene0024_01');
+  await expect(first.locator('.dataset-metadata-title')).toHaveText('scene0024_01 · i2slam_colmap');
+  const checks = panel.locator('.dataset-metadata-checks');
+  await expect(checks.getByText('data/i2slam_colmap/scene0024_01', { exact: true })).toBeHidden();
+  await checks.locator('summary').click();
+  await expect(checks.getByText('data/i2slam_colmap/scene0024_01', { exact: true })).toBeVisible();
+  await checks.locator('summary').click();
   await expect(panel.getByRole('link', { name: 'Original source', exact: false })).toHaveAttribute('href', 'https://huggingface.co/datasets/zhaoshiwen/blur-slam-bpn-data');
   await panel.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(first.locator('[data-stat="cameraModels"]')).not.toBeVisible();
@@ -158,6 +163,8 @@ test('cards show content roles, load same-origin photos and open metadata only o
   await expect(info).toBeFocused();
   await info.press('Enter');
   await expect(panel).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(checks.locator('summary')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(panel.getByRole('link', { name: 'Open in viewer', exact: true })).toBeFocused();
   await expect(panel.getByRole('link', { name: 'Open in viewer', exact: true })).toHaveAttribute('href', (await first.locator('.dataset-open').getAttribute('href'))!);
@@ -187,6 +194,10 @@ test('cards show content roles, load same-origin photos and open metadata only o
   await info.click();
   await expect(panel).toBeVisible();
   expect(await panel.boundingBox()).toEqual({ x: 0, y: 0, width: 390, height: 360 });
+  await expect(panel.getByRole('link', { name: 'Open in viewer', exact: true })).toBeInViewport();
+  await checks.locator('summary').scrollIntoViewIfNeeded();
+  await checks.locator('summary').click();
+  await expect(panel.getByRole('link', { name: 'Open in viewer', exact: true })).toBeInViewport();
   await panel.getByRole('link', { name: 'Full metadata', exact: true }).scrollIntoViewIfNeeded();
   await expect(panel.getByRole('link', { name: 'Full metadata', exact: true })).toBeInViewport();
   await expect(panel.getByRole('button', { name: 'Close', exact: true })).toBeInViewport();

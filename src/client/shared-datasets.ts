@@ -34,10 +34,16 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   close.setAttribute('aria-label', 'Close'); close.title = 'Close'; close.innerHTML = icon('close');
   header.append(panelTitle, close);
   const content = document.createElement('div'); content.className = 'dataset-metadata-content';
-  const name = document.createElement('p'); name.className = 'dataset-metadata-title'; name.textContent = entry.title;
+  const name = document.createElement('h3'); name.className = 'dataset-metadata-title'; name.textContent = entry.title;
   const description = document.createElement('p'); description.textContent = entry.description;
-  const license = document.createElement('p'); license.textContent = `License: ${entry.license?.name || entry.license?.id || 'Not specified'}`;
-  const category = document.createElement('p'); category.textContent = `License category: ${LICENSE_CATEGORY_LABELS[classifyLicense(entry.license?.id ?? '')]}`;
+  const facts = document.createElement('dl');
+  for (const [label, value] of [['License', entry.license?.name || entry.license?.id || 'Not specified'],
+    ['License category', LICENSE_CATEGORY_LABELS[classifyLicense(entry.license?.id ?? '')]]]) {
+    const row = document.createElement('div');
+    const term = document.createElement('dt'); term.textContent = label;
+    const detail = document.createElement('dd'); detail.textContent = value;
+    row.append(term, detail); facts.append(row);
+  }
   const preview = document.createElement('div'); preview.className = 'dataset-card-preview';
   preview.append(image, info);
   const reported: SceneContents = {};
@@ -59,6 +65,8 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   const proof = document.createElement('p'); proof.className = 'note';
   proof.textContent = entry.verification.method === 'hf_colmap_headers' ? 'Public access and COLMAP headers checked. Complete loading and all photos are not verified.'
     : entry.verification.method === 'catalog_manifest' ? 'Uses an existing curated catalog manifest.' : 'Public source and dataset format reviewed.';
+  const checks = document.createElement('details'); checks.className = 'dataset-metadata-checks';
+  const checkLabel = document.createElement('summary'); checkLabel.textContent = 'Verification details'; checks.append(checkLabel, proof);
   const source = document.createElement('a'); source.href = hubViewerLink(`/s/${entry.id}`, host, hubFrontend()); source.textContent = 'Open dataset'; source.className = 'button dataset-metadata-open';
   const original = document.createElement('a'); original.href = originalUrl.href;
   original.target = '_blank'; original.rel = 'noopener noreferrer'; original.textContent = 'Dataset source'; original.insertAdjacentHTML('beforeend', icon('external'));
@@ -69,7 +77,7 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   copy.setAttribute('aria-label', 'Copy link'); copy.title = 'Copy link'; copy.innerHTML = icon('copy');
   const copied = document.createElement('span'); copied.className = 'note'; copied.dataset.copyStatus = ''; copied.setAttribute('role', 'status');
   primary.append(source, copy, copied); links.append(primary, secondary);
-  content.append(name, description, license, category, ...(contents.textContent ? [contents] : []), proof, links); panel.append(header, content);
+  content.append(name, facts, description, ...(contents.textContent ? [contents] : []), checks); panel.append(header, content, links);
   const body = document.createElement('div'); body.className = 'dataset-card-body'; body.append(title, tags);
   article.append(preview, body, panel);
   return article;

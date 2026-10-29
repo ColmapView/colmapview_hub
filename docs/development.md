@@ -136,4 +136,8 @@ The gallery keeps search progress and matching-scene counts inside the existing 
 
 `access=public|gated|terms|unknown` filters the catalog's declared source access independently of `provider`. It is not a guarantee that every source file fully loads. Invalid access values return the normal 400 input error. Existing `status=Access+required` links remain supported, although new filter choices put access under Access rather than Evidence. No new catalog generation, D1 table or per-visitor record is needed.
 
+The filter panel shows access, data, images and license category first. Feed, type, provider, reported license and evidence sit under More options. Saved URLs and browser history reveal active advanced choices; both filter indicators update without changing the catalog API. Collection moves into the basic group on narrow screens.
+
 Eligible metadata dialogs reuse the tile's launch URL, including short names and viewer-host selection. Source-only entries do not gain a viewer launch action. Narrow cards allow two title lines while keeping data and license tags visible.
+
+Dataset information uses the readable tile caption, followed by scene counts and source, license and access facts. Descriptions, image availability and attribution remain visible; Verification details keeps the full scene path and technical evidence available on demand. The action footer sits outside the scrolling content so viewer, copy and source links remain available in short viewports. Community entries use the same structure without claiming curated statistics or verification.

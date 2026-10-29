@@ -1,4 +1,4 @@
-import { catalogFilterState, emptyCatalogHtml } from '../shared/catalog-controls';
+import { catalogExtraFilterCount, catalogFilterState, emptyCatalogHtml } from '../shared/catalog-controls';
 import { isCatalogSummary } from '../shared/catalog';
 import { INDIVIDUAL_PAGE_SIZE, savedFilterSummary } from '../shared/individual-catalog';
 import type { IndividualPage, IndividualSelection } from '../shared/individual-catalog';
@@ -40,7 +40,12 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     for (const field of fields) field.value = field.name === 'viewerHost' ? 'github' : values.get(field.name) || '';
   }
   const primary = form.querySelector<HTMLElement>('.catalog-primary')!;
-  const secondary = form.querySelector<HTMLElement>('.catalog-secondary')!;
+  const secondary = form.querySelector<HTMLElement>('.catalog-filter-basics')!;
+  const extraFilters = form.querySelector<HTMLDetailsElement>('.catalog-filter-details')!;
+  const revealExtraFilters = (values: URLSearchParams) => {
+    if (catalogExtraFilterCount(values)) extraFilters.open = true;
+  };
+  revealExtraFilters(new URLSearchParams(location.search));
   const primaryFilters = [...primary.querySelectorAll<HTMLElement>(':scope > .catalog-field')];
   const submit = primary.querySelector<HTMLButtonElement>('button[type="submit"]')!;
   const compact = matchMedia('(max-width: 1100px)');
@@ -166,6 +171,9 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     summary.querySelector('[data-filter-description]')!.textContent = active.description;
     const badge = summary.querySelector<HTMLElement>('.catalog-filter-count')!;
     badge.textContent = String(active.count); badge.hidden = !active.count;
+    const extraCount = catalogExtraFilterCount(committed);
+    const extraBadge = extraFilters.querySelector<HTMLElement>('[data-extra-count]')!;
+    extraBadge.textContent = `${extraCount} active`; extraBadge.hidden = !extraCount;
   };
   const restore = () => {
     const saved = recallFeed(key(), generation);
@@ -181,6 +189,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (firstPage > 1) committed.set('page', String(firstPage)); else committed.delete('page');
     entries = saved.data.entries; loaded = entries.length; total = saved.data.total; pages = saved.data.pages;
     for (const field of fields) field.value = committed.get(field.name) || '';
+    revealExtraFilters(committed);
     results.replaceChildren(...entries.map(entry => catalogCardElement(entry, host)));
     results.removeAttribute('aria-busy');
     selection.textContent = saved.collectionText; selection.hidden = !saved.collectionText;
@@ -391,6 +400,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const seed = navigation.feedSeed();
     if (seed) values.set('seed', seed);
     for (const field of fields) field.value = values.get(field.name) || '';
+    revealExtraFilters(values);
     void load(values, { restoring: true });
   });
   updateNavigation();
