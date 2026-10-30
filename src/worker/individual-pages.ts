@@ -57,9 +57,10 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<p class="catalog-totals">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p>`
     + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
     + `<p id="dataset-selection" class="dataset-selection"${dataset ? '' : ' hidden'}>${dataset ? `Collection: <strong>${escape(dataset.label)}</strong> · ${number(dataset.count)} scenes${dataset.listingComplete ? '' : ' · listing incomplete'}.` : ''}</p>`
+    + '<p>Some sources require login or publisher approval.</p>'
     + '<p>Share your public dataset on the Hub by uploading it to Hugging Face through ColmapView, then selecting “Share on Hub.”</p>'
     + `<nav class="footer-links" aria-label="About and policies">${policyLinks(location.viewerHost)}</nav></div></details>`;
-  const status = '<div class="catalog-result-summary"><p id="catalog-notice" class="catalog-notice" tabindex="-1">ColmapView does not host the source datasets. Some sources require login or approval.</p>'
+  const status = '<div class="catalog-result-summary"><p id="catalog-notice" class="catalog-notice" tabindex="-1">ColmapView does not host the source datasets. Export from ColmapView for a standard COLMAP layout.</p>'
 
     + '<p id="catalog-status" class="catalog-status sr-only" role="status" tabindex="-1"></p></div>'
     + `<a id="catalog-shuffle" class="button icon-button" href="${escape(individualBrowseUrl(shuffle))}" aria-label="Shuffle" title="Shuffle">${icon('shuffle')}</a>`
