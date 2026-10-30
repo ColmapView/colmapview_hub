@@ -31,7 +31,7 @@ describe('Hub pages', () => {
     const link = await create(input());
     for (const path of [`/${link.id}`, '/missing-frame']) {
       const html = await (await request(path)).text();
-      expect(html).toContain('<a class="brand" href="/hub/" target="_blank" rel="noopener noreferrer" aria-label="ColmapView Hub">');
+      expect(html).toContain('<a class="brand" href="/hub/" target="_blank" rel="noopener noreferrer" aria-label="Spatial Hub">');
       for (const [href, label] of [['/hub/', 'Datasets'], ['https://colmapview.opsiclear.com/', 'Open viewer']]) {
         expect(html).toContain(`href="${href}" aria-label="${label}" title="${label}"`);
       }
@@ -42,12 +42,12 @@ describe('Hub pages', () => {
       expect(html).toContain('<a href="https://github.com/ColmapView/colmapview_hub">Source</a>');
       expect(html).not.toContain('data-hub-public-catalog');
       expect(html).toContain('<a href="mailto:info@opsiclear.com">Contact</a>');
-      expect(html).toContain('<p class="eyebrow">ColmapView Hub</p>');
+      expect(html).toContain('<p class="eyebrow">Spatial Hub</p>');
       expect(html.indexOf('/hub/colmapview.css')).toBeLessThan(html.indexOf('/hub/styles.css'));
       expect(html).toContain(`/hub/assets/theme.js?v=${HUB_UI_VERSION}`);
       expect(html).toContain('id="hub-theme" aria-label="Appearance: Dark. Switch to Light."');
       expect(html).toContain('<link rel="icon" href="/hub/favicon.ico">');
-      expect(html).toMatch(/<title>[^<]+ · ColmapView Hub<\/title>/);
+      expect(html).toMatch(/<title>[^<]+ · Spatial Hub<\/title>/);
     }
   });
 
@@ -73,7 +73,7 @@ describe('Hub pages', () => {
       expect(html).not.toContain('<script>alert(1)</script>');
       expect(html).toContain(escaped);
     }
-    expect(await (await request(`/${link.id}`)).text()).toContain(`<title>${escaped} · ColmapView Hub</title>`);
+    expect(await (await request(`/${link.id}`)).text()).toContain(`<title>${escaped} · Spatial Hub</title>`);
   });
 
   it('allows fonts from the Hub itself', async () => {

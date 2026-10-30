@@ -18,8 +18,8 @@ const directory = 'public/hub/assets/github';
 const redirect = '<!doctype html><html lang="en" data-hub-redirect="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
   + '<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow,noarchive">'
   + '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src https://colmapview.opsiclear.com; base-uri \'none\'">'
-  + '<title>ColmapView Hub</title><script type="module" crossorigin="anonymous" src="https://colmapview.opsiclear.com/hub/assets/catalog-redirect.js"></script>'
-  + '<noscript><meta http-equiv="refresh" content="0; url=/hub/"></noscript></head><body><p>Open <a href="/hub/">ColmapView Hub</a>.</p></body></html>';
+  + '<title>Spatial Hub</title><script type="module" crossorigin="anonymous" src="https://colmapview.opsiclear.com/hub/assets/catalog-redirect.js"></script>'
+  + '<noscript><meta http-equiv="refresh" content="0; url=/hub/"></noscript></head><body><p>Open <a href="/hub/">Spatial Hub</a>.</p></body></html>';
 await mkdir(directory, { recursive: true });
 // Each document pins its dependencies. Deployment retains the live frontend's
 // files separately, including when this build starts from a clean checkout.

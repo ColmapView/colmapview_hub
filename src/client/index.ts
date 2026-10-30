@@ -72,9 +72,9 @@ if (deletion) {
       const minutes = Math.ceil(Number(response.headers.get('Retry-After') ?? 600) / 60);
       const wait = `${waitText(minutes)}.`;
       say(response.status === 429 ? `Too many missing links from your network. ${wait}`
-        : response.status >= 500 ? 'ColmapView Hub is unavailable. Try again in a few minutes.'
+        : response.status >= 500 ? 'Spatial Hub is unavailable. Try again in a few minutes.'
         : "This delete link doesn't match the Hub link.", true);
-    } catch { say("Couldn't reach ColmapView Hub.", true); }
+    } catch { say("Couldn't reach Spatial Hub.", true); }
     if (phase !== 'busy') return;
     phase = 'idle';
     enableForKey();

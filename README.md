@@ -1,4 +1,4 @@
-# ColmapView Hub
+# Spatial Hub
 
 The companion service for [ColmapView](https://github.com/ColmapView/Colmapview.github.io): a catalog of pinned public scene datasets and preview cards for links created by the viewer's upload flow.
 

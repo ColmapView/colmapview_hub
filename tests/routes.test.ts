@@ -81,7 +81,7 @@ describe('routes', () => {
     await hubStorage.put(env.HUB_DB, recordKey(link.id), 'not-json');
     const page = await request(`/${link.id}`);
     expect(page.status).toBe(503);
-    expect(await page.text()).toContain('ColmapView Hub is unavailable');
+    expect(await page.text()).toContain('Spatial Hub is unavailable');
     const api = await request('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{' });
     expect(api.status).toBe(400);
     expect(await api.json()).toEqual({ error: 'Link request is not valid JSON.' });

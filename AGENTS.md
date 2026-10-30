@@ -1,4 +1,4 @@
-# ColmapView Hub
+# Spatial Hub
 
 This project stores ColmapView share links and small JPEG previews. Keep the Worker, browser client, and tests small and separate. Do not add a database or framework without a concrete need.
 

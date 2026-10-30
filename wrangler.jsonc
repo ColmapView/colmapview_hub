@@ -37,7 +37,7 @@
     // Static files in public/hub/ are served at /hub/… without the Worker. Wrangler's warning that the routes "will attempt
     // to serve Assets on a configured path" is expected for this /hub/* → public/hub/* mapping. Setting run_worker_first
     // back to true would route static files through the Worker again.
-    "run_worker_first": ["/auth/*", "/s", "/s/*", "/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/datasets/individual/*", "!/hub/datasets/*.manifest.json", "!/hub/datasets/audit.html", "!/hub/datasets/catalog*", "!/hub/datasets/dataset-audit.json"]
+    "run_worker_first": ["/auth/*", "/s", "/s/*", "/hub", "/hub/*", "!/hub/assets/*", "!/hub/fonts/*", "!/hub/colmapview.css", "!/hub/styles.css", "!/hub/favicon.ico", "!/hub/opsiclear-logo.png", "!/hub/datasets/individual/*", "!/hub/datasets/*.manifest.json", "!/hub/datasets/audit.html", "!/hub/datasets/catalog*", "!/hub/datasets/dataset-audit.json"]
   },
   "d1_databases": [
     {

@@ -41,9 +41,9 @@ const themeControl = () => [
 
 const viewerControl = (host?: ViewerHost) => `<a class="button icon-button" href="${viewerHome(host)}" aria-label="Open viewer" title="Open viewer">${icon('viewer')}</a>`;
 
-const header = (path: string, filters?: string, host?: ViewerHost) => [
+const header = (path: string, filters?: string, host?: ViewerHost, frontend?: HubFrontend) => [
   `<header class="site-header${filters ? ' catalog-toolbar' : ''}">`,
-  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" target="_blank" rel="noopener noreferrer" aria-label="ColmapView Hub"><span class="brand-title"><span class="brand-name">ColmapView</span> <span class="brand-section">Hub</span></span></a>`,
+  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" target="_blank" rel="noopener noreferrer" aria-label="Spatial Hub"><img class="brand-logo" src="${hubAssetUrl(path + '/opsiclear-logo.png', frontend)}" width="22" height="22" alt="" title="OpsiClear"><span class="brand-title"><span class="brand-name">Spatial</span> <span class="brand-section">Hub</span></span></a>`,
   ...(filters ? [filters] : [
   '<nav class="site-nav" aria-label="Main navigation">',
   `<a class="button icon-button" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
@@ -65,7 +65,7 @@ const footer = (publicCatalog: boolean, host?: ViewerHost) => [
   '</nav></footer>',
   publicCatalog ? `<section class="analytics-choice" id="analytics-choice" data-analytics-consent-version="${ANALYTICS_CONSENT_REVISION}" aria-label="Optional analytics" hidden>`
     + `<button type="button" class="button icon-button analytics-close" id="analytics-close" aria-label="Close analytics settings" title="Close analytics settings">${icon('close')}</button>`
-    + '<h2>Help improve ColmapView</h2>'
+    + '<h2>Help improve Spatial Hub</h2>'
     + '<p id="analytics-purpose">Allow Google Analytics cookies to measure visits and Hub actions? '
     + 'Google receives cookie IDs, IP and browser/device details, but no dataset files.</p>'
     + '<p class="analytics-detail">Ads stay off. Change your choice anytime in Analytics settings. '
@@ -88,7 +88,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
       '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src https://colmapview.opsiclear.com https://www.googletagmanager.com; style-src https://colmapview.opsiclear.com; img-src https://colmapview.opsiclear.com https://www.googletagmanager.com https://*.google-analytics.com data:; font-src https://colmapview.opsiclear.com; connect-src https://colmapview.opsiclear.com https://www.googletagmanager.com https://*.google-analytics.com; base-uri \'none\'; form-action \'self\'">',
     ] : []),
     '<meta name="robots" content="noindex,nofollow,noarchive">',
-    `<title>${escapeHtml(title)} · ColmapView Hub</title>`,
+    `<title>${escapeHtml(title)} · Spatial Hub</title>`,
     metadata,
     `<link rel="icon" href="${asset('favicon.ico')}">`,
     `<link rel="stylesheet" href="${asset('colmapview.css')}"${anonymous}>`,
@@ -97,7 +97,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
     `<script type="module" src="${asset('assets/client.js')}?v=${HUB_UI_VERSION}"${anonymous}></script>`,
     `</head><body${catalog ? ' class="catalog-browse"' : ''}>`,
     '<a class="skip-link" href="#main">Skip to content</a>',
-    header(location.path, catalog?.filters, location.viewerHost),
+    header(location.path, catalog?.filters, location.viewerHost, location.frontend),
     `<main id="main" tabindex="-1"><div class="hub-content">${body}</div></main>`,
     ...(location.frontend ? ['<noscript><p>This gallery needs JavaScript. <a href="https://colmapview.opsiclear.com/hub/?viewerHost=github">Browse the server-rendered catalog</a>.</p></noscript>'] : []),
     footer(publicCatalog, location.viewerHost),
@@ -108,7 +108,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
 
 /** Eyebrow, heading and lede, as on ColmapView's public pages. */
 export function intro(heading: string, lede = '', extra = ''): string {
-  return `<div class="page-intro"><p class="eyebrow">ColmapView Hub</p><h1>${escapeHtml(heading)}</h1>`
+  return `<div class="page-intro"><p class="eyebrow">Spatial Hub</p><h1>${escapeHtml(heading)}</h1>`
     + `${lede ? `<p class="lede">${escapeHtml(lede)}</p>` : ''}${extra}</div>`;
 }
 
@@ -169,7 +169,7 @@ export function blockedPage(location: HubLocation, minutes: number): string {
 }
 
 export function unavailablePage(location: HubLocation): string {
-  return page(location, 'ColmapView Hub is unavailable', intro('ColmapView Hub is unavailable', 'Try again in a few minutes.'));
+  return page(location, 'Spatial Hub is unavailable', intro('Spatial Hub is unavailable', 'Try again in a few minutes.'));
 }
 
 export function errorPage(location: HubLocation, message: string): string {

@@ -245,7 +245,10 @@ test('renders text-only entry pages with escaped metadata, source links, license
   assert.match(html, /License \(source metadata\)/);
   assert.match(html, /Scan date/);
   assert.match(html, /href="https:\/\/huggingface.co\/datasets\/owner\/dataset"/);
-  assert.doesNotMatch(html, /<img|<iframe|<canvas|og:image|summary_large_image|<script>alert/);
+  const content = html.match(/<main\b[\s\S]*?<\/main>/)?.[0];
+  assert.ok(content);
+  assert.doesNotMatch(content, /<(?:img|iframe|canvas)\b/);
+  assert.doesNotMatch(html, /og:image|summary_large_image|<script>alert/);
   assert.match(html, /twitter:card" content="summary"/);
 });
 
@@ -379,7 +382,11 @@ test('the committed snapshot preserves every supplied public row and every audit
     assert(entry.license);
     assert.equal(entry.licenseCategory, render.classifyLicense(entry.license), entry.id);
     assert(publicUrl(entry.sourceUrl));
-    assert.doesNotMatch(render.catalogEntryPage(entry), /<(?:img|iframe|canvas)\b|og:image/);
+    const html = render.catalogEntryPage(entry);
+    const content = html.match(/<main\b[\s\S]*?<\/main>/)?.[0];
+    assert.ok(content, entry.id);
+    assert.doesNotMatch(content, /<(?:img|iframe|canvas)\b/);
+    assert.doesNotMatch(html, /og:image/);
   }
   assert(snapshot.sources.every(source => /^[a-f0-9]{64}$/.test(source.sha256)));
   assert.equal(snapshot.sources.find(source => source.kind === 'license-categories').sha256, sha256((await readFile('src/shared/license-categories.ts', 'utf8')).replace(/\r\n/g, '\n')));

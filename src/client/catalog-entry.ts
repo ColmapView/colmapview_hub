@@ -27,7 +27,7 @@ if (hubFrontend() === 'github' && container && status && retry) {
         }
       }
       container.replaceChildren(...[...parsed.body.childNodes].map(node => document.importNode(node, true)));
-      document.title = (container.querySelector('h1')?.textContent || 'Dataset') + ' · ColmapView Hub';
+      document.title = (container.querySelector('h1')?.textContent || 'Dataset') + ' · Spatial Hub';
       status.hidden = true;
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;

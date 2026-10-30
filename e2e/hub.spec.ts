@@ -427,7 +427,7 @@ test('explains a failed deletion and lets the owner try again', async ({ page })
     const button = page.getByRole('button', { name: 'Delete permanently', exact: true });
     const status = page.getByRole('status');
     for (const [reply, text] of [
-      [{ status: 503 }, 'ColmapView Hub is unavailable. Try again in a few minutes.'],
+      [{ status: 503 }, 'Spatial Hub is unavailable. Try again in a few minutes.'],
       [{ status: 429, headers: { 'Retry-After': '30' } }, 'Too many missing links from your network. Try again in 1 minute.'],
       [{ status: 404 }, "This delete link doesn't match the Hub link."],
     ] as const) {
@@ -590,7 +590,7 @@ test('opens the scene browser directly in the ColmapView frame', async ({ page }
   await page.goto('/hub/');
   await expect(page).toHaveURL(/\/hub\/$/);
   await expect(page.getByRole('region', { name: 'Catalog status' }).getByRole('link', { name: 'Open viewer' })).toHaveAttribute('href', 'https://colmapview.opsiclear.com/');
-  await expect(page.getByRole('link', { name: 'ColmapView Hub', exact: true })).toHaveAttribute('href', '/hub/');
+  await expect(page.getByRole('link', { name: 'Spatial Hub', exact: true })).toHaveAttribute('href', '/hub/');
   await expect(page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms', 'Source', 'Contact']);
   await expect(page.getByLabel('Collection', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Public datasets', exact: true })).toBeVisible();

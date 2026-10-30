@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('the Hub brand opens a fresh tab and Info retains policy links', async ({ page }) => {
   await page.goto('/hub/?q=SceauxCastle&viewerHost=github');
   const opened = page.waitForEvent('popup');
-  await page.getByRole('link', { name: 'ColmapView Hub', exact: true }).click();
+  await page.getByRole('link', { name: 'Spatial Hub', exact: true }).click();
   const hub = await opened;
   try {
     await expect(hub).toHaveURL(/\/hub\/\?viewerHost=github$/);

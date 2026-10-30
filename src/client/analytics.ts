@@ -177,7 +177,7 @@ function loadAnalytics(choice: Choice): Gtag {
   gtag('js', new Date());
   gtag('config', MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false,
     allow_ad_personalization_signals: false, ignore_referrer: true,
-    page_location: location.origin + location.pathname, page_referrer: '', page_title: 'ColmapView Hub',
+    page_location: location.origin + location.pathname, page_referrer: '', page_title: 'Spatial Hub',
     cookie_prefix: COOKIE_PREFIX, cookie_domain: location.hostname, cookie_path: COOKIE_PATH,
     cookie_expires: Math.max(1, Math.floor((choice.updatedAt + CHOICE_AGE - Date.now()) / 1000)),
     cookie_update: false, cookie_flags: 'SameSite=Lax;Secure', consent_revision: POLICY_VERSION,
