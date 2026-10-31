@@ -1,5 +1,24 @@
 import { expect, test } from '@playwright/test';
 
+test('StandardSowbelly serves the matching photo/model pair while retaining points and Gaussians', async ({ page }) => {
+  const opened = await page.request.get('/hub/open/data-7e77fe0f4355b9f36e463c8c', { maxRedirects: 0 });
+  expect(opened.status()).toBe(302);
+  const target = new URL(opened.headers().location).searchParams.get('url');
+  expect(target).toMatch(/\/manifests\/[a-f0-9]{64}\.manifest\.json$/);
+  const response = await page.request.get(new URL(target!).pathname);
+  expect(response.status()).toBe(200);
+  const manifest = await response.json();
+  expect(manifest.version).toBe(2);
+  expect(manifest.files.cameras).toContain('/anchored/solve/t2/sparse/0/cameras.bin');
+  expect(manifest.files.images).toContain('/anchored/solve/t2/sparse/0/images.bin');
+  expect(manifest.files.points3D).toContain('/anchored/undistorted/test/sparse/points3D.bin');
+  expect(manifest.mediaArchives).toEqual([{
+    url: 'https://huggingface.co/datasets/ChamudithaJay/PASLCD/resolve/aef858feb483dd81104fbb5232a8c98fbf4d3fcc/PASLCD_online.zip',
+    bytes: 13226586599, mountPath: 'images', stripPrefix: 'PASLCD/Instance_1/Pots/inference_scene/images', role: 'images',
+  }]);
+  expect(manifest.splats).toHaveLength(24);
+});
+
 test('reviewed public gated sources show login placeholders and keep authenticated viewer launches', async ({ page }) => {
   const index = await (await page.request.get('/hub/datasets/individual/index.json')).json();
   const source = index.sources.find((item: { sourceId: string }) => item.sourceId === 'hf:Bluefish2333/ScannetPoseRefine');

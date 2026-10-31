@@ -15,6 +15,14 @@ remains authoritative for curated labels; user-supplied manifest hints never
 override publication checks. Access-only manifests preserve exact pinned model
 files and model-folder scope; they do not claim a checked photo mapping.
 
+Offline `data/source-pair-repairs.json` reviews can replace a mismatched photo and
+calibration pair using pinned upstream files. These reviews retain the original
+native evidence and immutable manifests, require unchanged poses and point
+coordinates, and preserve Gaussian choices and short names. The active metadata
+shows the replacement photo scope and remaining export limits. The
+[StandardSowbelly audit](standard-sowbelly-calibration-2026-10-30.md) records the
+first repair; the Worker does not fetch source data to prepare repairs.
+
 The Hub is a photo gallery: each tile has a compact scene caption, with up to two
 lines on narrow screens. Data roles, video capture and licence tags remain visible
 without hover; Gaussian candidates stay distinct from verified Gaussians. The image

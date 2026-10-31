@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "name": "Pots / Instance 1 / anchored test - matching original photos",
+  "baseUrl": "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/inputs/Pots/Instance_1/anchored/solve/t2/sparse/0/",
+  "files": {
+    "cameras": "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/inputs/Pots/Instance_1/anchored/solve/t2/sparse/0/cameras.bin",
+    "images": "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/inputs/Pots/Instance_1/anchored/solve/t2/sparse/0/images.bin",
+    "points3D": "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/inputs/Pots/Instance_1/anchored/undistorted/test/sparse/points3D.bin"
+  },
+  "mediaArchives": [
+    {
+      "url": "https://huggingface.co/datasets/ChamudithaJay/PASLCD/resolve/aef858feb483dd81104fbb5232a8c98fbf4d3fcc/PASLCD_online.zip",
+      "bytes": 13226586599,
+      "mountPath": "images",
+      "stripPrefix": "PASLCD/Instance_1/Pots/inference_scene/images",
+      "role": "images"
+    }
+  ],
+  "splats": [
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed22/paper_results/change_detection/masks/T1_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed22/paper_results/change_detection/masks/T2_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed22/t1/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed22/t2/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed23/paper_results/change_detection/masks/T1_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed23/paper_results/change_detection/masks/T2_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed23/t1/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed23/t2/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed24/paper_results/change_detection/masks/T1_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed24/paper_results/change_detection/masks/T2_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed24/t1/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/fastpgsr/seed24/t2/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed22/paper_results/change_detection/masks/T1_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed22/paper_results/change_detection/masks/T2_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed22/t1/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed22/t2/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed23/paper_results/change_detection/masks/T1_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed23/paper_results/change_detection/masks/T2_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed23/t1/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed23/t2/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed24/paper_results/change_detection/masks/T1_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed24/paper_results/change_detection/masks/T2_change.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed24/t1/model.ply",
+    "https://huggingface.co/datasets/boazkg/gs-pool-paslcd/resolve/8344b8bc14828d2f8badb77717be954b75ccf534/members/Pots/Instance_1/anchored/vanilla/seed24/t2/model.ply"
+  ]
+}

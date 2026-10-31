@@ -16,6 +16,7 @@ import type { FeedSelection } from './discovery';
 import { CATALOG_SHARE_NAME } from './dataset-share';
 import { VIDEO_CAPTURE_LABELS } from './video-capture';
 import { isGaussianRoutingEvidence, type GaussianRoutingEvidence } from './gaussian-routing';
+import { isSourcePairRepair, type SourcePairRepairEvidence } from './source-pair-repairs';
 
 export interface IndividualSource {
   gatedPublicListing?: boolean;
@@ -42,6 +43,7 @@ export interface IndividualIndex {
 export type IndividualProof = CatalogVerification & { statusLabel: string; viewerUrl?: string; sceneTitle?: string; sampleScope?: 'companion_asset';
   companionPointCloud?: string;
   gaussianRouting?: GaussianRoutingEvidence;
+  sourcePairRepair?: SourcePairRepairEvidence;
   sceneManifest?: SceneManifestEvidence;
   videoFrameRouting?: VideoFrameRoutingEvidence;
   videoFrameMapping?: VideoFrameMappingEvidence;
@@ -119,6 +121,11 @@ function hasCheckedSceneManifest(proof: IndividualProof | null | undefined): pro
 export function canOpenIndividual(row: IndividualRecord, source: IndividualSource): boolean {
   const [, , kind, path, , archive, files, storedProof] = row;
   let proof = storedProof;
+  if (proof?.sourcePairRepair !== undefined) {
+    if (!isSourcePairRepair(proof.sourcePairRepair, source.sourceId, proof.sceneCompatibility?.revision,
+      kind, path, files, proof.viewerUrl, proof.sceneCompatibility?.images)) return false;
+    proof = { ...proof, viewerUrl: proof.sourcePairRepair.originalViewerUrl };
+  }
   if (proof?.gaussianRouting !== undefined) {
     if (!isGaussianRoutingEvidence(proof.gaussianRouting, source.sourceId,
       proof.sceneCompatibility?.revision ?? proof.sceneValidation?.revision, kind, path, files, proof.viewerUrl)) return false;
@@ -215,7 +222,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
       ...(revision ? [{ label: 'Pinned revision', value: revision }] : []),
       ...(summary.videoCapture ? [{ label: 'Video capture', value: VIDEO_CAPTURE_LABELS[summary.videoCapture] }] : []),
       ...(proof?.gaussianRouting && canOpen ? [
-        { label: 'Gaussian companions', value: `${proof.gaussianRouting.assets.length.toLocaleString('en-US')} selectable sources; loaded on demand`, url: proof.gaussianRouting.url },
+        { label: 'Gaussian companions', value: `${proof.gaussianRouting.assets.length.toLocaleString('en-US')} selectable sources; loaded on demand`, url: proof.sourcePairRepair?.url ?? proof.gaussianRouting.url },
         ...proof.gaussianRouting.assets.slice(0, 6).map(asset => ({ label: asset.role === 'change_subset' ? 'Gaussian change subset' : 'Gaussian model',
           value: `${asset.path} · ${asset.gaussians.toLocaleString('en-US')} Gaussians`, url: asset.url })),
         { label: 'Gaussian check scope', value: 'Pinned format headers, counts and scene association checked. Alternatives, levels of detail and time samples stay separate. Sparse points and full-export evidence are unchanged.' },
@@ -225,7 +232,7 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         { label: 'Checked archive photograph', value: proof.photoArchiveRouting.sampleMemberPath },
         { label: 'Archive binding scope', value: 'One registered sample and its calibration checked. Complete photo coverage and export are separate checks.' },
       ] : []),
-      ...(proof?.photoRouting && isPhotoRoutingEvidence(proof.photoRouting) ? [
+      ...(proof?.photoRouting && !proof.sourcePairRepair && isPhotoRoutingEvidence(proof.photoRouting) ? [
         { label: 'Photo path manifest', value: `${proof.photoRouting.listedPhotos.toLocaleString('en-US')} photographs and ${proof.photoRouting.mappedNames.toLocaleString('en-US')} explicit name mappings at this revision`, url: proof.photoRouting.url },
         { label: 'Manifest photo bindings', value: `${proof.photoRouting.nameCheck.matched}/${proof.photoRouting.nameCheck.inspected} inspected registered names${proof.photoRouting.nameCheck.complete ? ' (all names inspected)' : ` from ${proof.photoRouting.nameCheck.registered ?? 'an unknown number of'} poses`}. Other photo bytes and full export checked separately.` },
         { label: 'Photo manifest viewer build', value: `${proof.photoRouting.viewerVersion} (${proof.photoRouting.viewerCommit})` },
@@ -277,7 +284,11 @@ export function individualEntry(row: IndividualRecord, source: IndividualSource,
         { label: 'Relationship check scope', value: proof.sourceIntegrityReview.scope === 'complete_model' ? 'Complete original model' : 'Bounded original-file samples; remaining relationships unverified' },
         { label: 'Feature links reviewed on', value: proof.sourceIntegrityReview.checkedAt },
         { label: 'Relationship audit receipt SHA-256', value: proof.sourceIntegrityReview.receiptSha256 }] : []),
-      ...(proof?.photoAudit ? [
+      ...(proof?.sourcePairRepair ? [
+        { label: 'Matching photo source', value: `${proof.sourcePairRepair.photos} registered names and dimensions checked; ${proof.sourcePairRepair.samples} complete photos sampled`, url: proof.sourcePairRepair.archiveUrl },
+        { label: 'Corrected source manifest', value: 'Original poses and point coordinates retained', url: proof.sourcePairRepair.url },
+      ] : []),
+      ...(proof?.photoAudit && !proof.sourcePairRepair ? [
         { label: 'Image availability check', value: proof.photoAudit.summary },
         ...(!proof.videoFrameMapping && !proof.videoFrameRouting ? [{ label: 'Current media scope', value: proof.photoAudit.sceneRoot || '(repository root)' }] : []),
         ...(proof.photoAudit.mediaScope !== undefined ? [{ label: 'Required photo scope', value: proof.photoAudit.mediaScope || '(repository root)' }] : []),

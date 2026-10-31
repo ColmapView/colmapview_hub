@@ -86,6 +86,36 @@ test('calibration and resolution reviews stay visible without replacing verified
   assert.doesNotMatch(html, /All registered originals checked/);
 });
 
+test('a reviewed source pair changes only the launch and rejects stale native bindings', () => {
+  const manifest = hash => `https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${hash.repeat(64)}.manifest.json`;
+  const viewer = url => 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(url);
+  const proof = nativePhotoProof('sample_checked');
+  proof.sceneCompatibility.images = 25;
+  proof.viewerUrl = viewer(manifest('b'));
+  proof.sourcePairRepair = { sourceId: source.sourceId, revision: 'a'.repeat(40), kind: 'colmap', path: row()[3],
+    files: row()[6], originalViewerUrl: viewer(manifest('a')), url: manifest('b'), sha256: 'b'.repeat(64),
+    receiptSha256: 'c'.repeat(64), checkedAt: '2026-10-30', photos: 25, samples: 4,
+    archiveUrl: `https://huggingface.co/datasets/owner/photos/resolve/${'a'.repeat(40)}/photos.zip` };
+  proof.photoAudit = { summary: 'Superseded photo calibration', samplePath: 'old.jpg' };
+  const record = row(0, { 7: proof });
+  assert.equal(render.canOpenIndividual(record, source), true);
+  assert.deepEqual(render.individualSummary(record, source).sceneStats, { cameraPoses: 25, cameraModels: 1, points: 3 });
+  const entry = render.individualEntry(record, source, parent);
+  assert.equal(entry.viewerUrl, proof.viewerUrl);
+  assert.ok(!entry.facts.some(fact => fact.label === 'Export limitation'));
+  assert.ok(entry.facts.some(fact => fact.label === 'Matching photo source' && /4 complete/.test(fact.value)));
+  assert.ok(!entry.facts.some(fact => fact.value === 'Superseded photo calibration'));
+  for (const edit of [p => { p.sourcePairRepair.sourceId = 'hf:other/dataset'; },
+    p => { p.sourcePairRepair.revision = 'd'.repeat(40); },
+    p => { p.sourcePairRepair.files = { cameras: 'different.bin' }; },
+    p => { p.sourcePairRepair.photos = 24; }, p => { p.sourcePairRepair.samples = 0; },
+    p => { p.sourcePairRepair.originalViewerUrl = 'https://['; },
+    p => { p.viewerUrl += '&extra=value'; }, p => { p.sourcePairRepair.url = manifest('d'); }]) {
+    const altered = structuredClone(proof); edit(altered);
+    assert.equal(render.canOpenIndividual(row(0, { 7: altered }), source), false);
+  }
+});
+
 test('seeded discovery is a stable, complete permutation and pagination does not repeat scenes', () => {
   const sources = Array.from({ length: 32 }, (_, i) => ({ id: `source-${i}`, provider: 'huggingface', start: i ? 300 + (i - 1) * 5 : 0, count: i ? 5 : 300 }));
   const asset = { schemaVersion: 1, generation: 'catalog', rows: Array.from({ length: 455 }, () => [1, 0, 20000]) };

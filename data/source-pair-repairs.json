@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "repairs": [
+    {
+      "sourceId": "hf:boazkg/gs-pool-paslcd",
+      "revision": "8344b8bc14828d2f8badb77717be954b75ccf534",
+      "kind": "colmap",
+      "path": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse",
+      "files": {
+        "cameras": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/cameras.bin",
+        "images": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/images.bin",
+        "points3d": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/points3D.bin",
+        "variant:inputs/Pots/Instance_1/anchored/undistorted/test/sparse/0:cameras": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/0/cameras.bin",
+        "variant:inputs/Pots/Instance_1/anchored/undistorted/test/sparse/0:images": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/0/images.bin",
+        "variant:inputs/Pots/Instance_1/anchored/undistorted/test/sparse/0:points3d": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/0/points3D.bin"
+      },
+      "originalViewerUrl": "https://colmapview.opsiclear.com/?url=https%3A%2F%2Fcolmapview.opsiclear.com%2Fhub%2Fdatasets%2Findividual%2Fmanifests%2F891aff530d0353f58c62daef553d23f8bd8ccc6048c4de5d7d51edf785bbaf1d.manifest.json",
+      "receipt": "data/standard-sowbelly-calibration-2026-10-30.json",
+      "receiptSha256": "fd1c9d018f0ec52267fc60ce3e718c4c76b31832ab8c61c5b9a16a4290af6c3f",
+      "manifest": "docs/examples/pots-instance-1-matched-photos.manifest.json",
+      "checkedAt": "2026-10-30",
+      "summary": "Matching source photographs restored from the pinned PASLCD_online.zip archive. All 25 names and image dimensions checked; four original photographs checked for alignment and visible thumbnails decoded in the viewer. Original poses, 29,815 points and 24 Gaussian alternatives are retained. Gaussian alignment and complete photo export are separate checks."
+    }
+  ]
+}

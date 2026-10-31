@@ -28,6 +28,7 @@ from .photo_routing import apply_routing, routing_asset, routing_coverage, routi
 from .archive_routing import archive_reviews, archive_asset, apply_archive_routing
 from .photo_decisions import decision_records, decision_coverage, selection_key
 from .splat_routing import splat_reviews, splat_asset, apply_splats, verify_splat_classifications
+from .source_pair_repairs import repair_reviews, apply_repair
 from .scene_discovery import HISTORY, load_history, discovery_row
 
 # A normal results page must not parse thousands of unrelated scene records.
@@ -310,6 +311,10 @@ def build(root=Path('.')):
     if splat_routes:
         verify_splat_classifications(splat_routes, json.loads(gzip.decompress(classification_bytes)))
     matched_splats = set()
+    repair_path = root / 'data/source-pair-repairs.json'
+    repair_bytes = repair_path.read_bytes() if repair_path.exists() else b'{"schemaVersion":1,"repairs":[]}'
+    source_repairs = repair_reviews(catalog, json.loads(repair_bytes), root)
+    matched_repairs = set()
     for key, review in video_reviews.items():
         selection = selection_key(review['sourceId'], review['revision'], review['kind'], review['path'], manifest_reviews[key]['files'])
         decision = photo_decisions.get(selection, {})
@@ -368,6 +373,8 @@ def build(root=Path('.')):
                 raise ValueError('Gaussian routing must preserve the independently built original manifest: ' + review['id'])
         name, body = splat_asset(review)
         generated_manifests[name] = body
+    for review in source_repairs.values():
+        generated_manifests[review['sha256'] + '.manifest.json'] = review['body']
     matched_photos = set()
     matched_reviews = set()
     matched_native = set()
@@ -389,6 +396,8 @@ def build(root=Path('.')):
                                 + Path(__file__).with_name('archive_routing.py').read_bytes()
                                 + Path(__file__).with_name('photo_decisions.py').read_bytes()
                                 + splat_bytes + classification_bytes + Path(__file__).with_name('splat_routing.py').read_bytes()
+                                + repair_bytes + b''.join(review['body'] for review in source_repairs.values())
+                                + Path(__file__).with_name('source_pair_repairs.py').read_bytes()
                                 + Path(__file__).with_name('individual-listings.mjs').read_bytes()
                                 + Path(__file__).with_name('catalog-publication.mjs').read_bytes()
                                 + (Path(__file__).parent.parent / 'build/catalog.mjs').read_bytes()
@@ -602,6 +611,10 @@ def build(root=Path('.')):
             if item_id in splat_routes:
                 proof = apply_splats(entry, (kind, path, files, archive), revision, proof, splat_routes[item_id])
                 matched_splats.add(item_id)
+            if review_key in source_repairs:
+                repair = source_repairs[review_key]
+                proof = apply_repair(entry, [kind, path, files, archive], revision, proof, repair, generated_manifests)
+                matched_repairs.add(review_key)
             if (proof['availableData'].get('splats', {}).get('status') == 'checked'
                     and not proof.get('gaussianRouting')
                     and proof.get('sceneManifest', {}).get('frameGeometry', {}).get('role') != 'splat'):
@@ -691,6 +704,8 @@ def build(root=Path('.')):
         raise ValueError('Native layout no longer matches the scene listing; recheck its identity and file paths')
     if any(key not in matched_photos and key[0] not in excluded and key not in scene_exclusions for key in photo_reviews):
         raise ValueError('Photo evidence no longer matches a published scene; recheck its identity and file paths')
+    if matched_repairs != set(source_repairs):
+        raise ValueError('Source pair repairs no longer match the published native selections')
     if matched_splats != set(splat_routes):
         raise ValueError('Gaussian routing contains an unpublished or changed scene selection')
     if any(key not in matched_contents and key[0] not in excluded and key not in scene_exclusions for key in content_reviews):

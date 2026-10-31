@@ -1,0 +1,1160 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-30",
+  "sourceId": "hf:boazkg/gs-pool-paslcd",
+  "revision": "8344b8bc14828d2f8badb77717be954b75ccf534",
+  "sceneId": "data-7e77fe0f4355b9f36e463c8c",
+  "shareName": "StandardSowbelly",
+  "path": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse",
+  "status": "photo_source_mismatch_confirmed",
+  "correctionApplied": true,
+  "files": {
+    "cameras": {
+      "path": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/cameras.bin",
+      "bytes": 64,
+      "sha256": "51bd9ca1995b6199bce0ddd8b235efccaf8476764e396ed03dcfe7273e95ab89"
+    },
+    "images": {
+      "path": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/images.bin",
+      "bytes": 6603586,
+      "sha256": "56b325ac18a9b65cce061869adfc248d13c0ad0699c1cd37ac32c6ed30cdc174"
+    },
+    "points3d": {
+      "path": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/points3D.bin",
+      "bytes": 2101941,
+      "sha256": "fa37c5a695f9e8a10671a3567d5a12e8973e2534d7bb9f2ba579dee62146cdfa"
+    }
+  },
+  "nativeReprojection": {
+    "camera": {
+      "width": 4019,
+      "height": 2262,
+      "fx": 1618.053070495433,
+      "fy": 1616.0156927355772,
+      "cx": 1999.0052225814475,
+      "cy": 1125.005300353357,
+      "centerOffsetPx": [
+        -10.49477741855253,
+        -5.994699646643085
+      ]
+    },
+    "images": 25,
+    "points": 29815,
+    "observations": 72671,
+    "medianReprojectionPx": 1.436643297408341,
+    "p95Px": 3.1668676612072044,
+    "meanStoredPointError": -1.0,
+    "perImage": [
+      {
+        "image": "Inst_1_test_IMG_E2660.JPG",
+        "linkedPoints": 3503,
+        "medianPx": 1.6921335871058139,
+        "p95Px": 3.32033613743602,
+        "medianDx": -0.010819362177699077,
+        "medianDy": 0.0430484029100171
+      },
+      {
+        "image": "Inst_1_test_IMG_E2664.JPG",
+        "linkedPoints": 3530,
+        "medianPx": 1.636306432008867,
+        "p95Px": 3.3499589401217627,
+        "medianDx": -0.03612800140490435,
+        "medianDy": -0.01359665429299639
+      },
+      {
+        "image": "Inst_1_test_IMG_E2691.JPG",
+        "linkedPoints": 2095,
+        "medianPx": 1.5803966707768342,
+        "p95Px": 3.2632381889737654,
+        "medianDx": 0.036894687399581017,
+        "medianDy": 0.019723643270026514
+      },
+      {
+        "image": "Inst_1_test_IMG_E2700.JPG",
+        "linkedPoints": 3183,
+        "medianPx": 1.5280564790875395,
+        "p95Px": 3.2177841144879156,
+        "medianDx": -0.04996389554230518,
+        "medianDy": 0.008633013605845008
+      },
+      {
+        "image": "Inst_1_test_IMG_E2708.JPG",
+        "linkedPoints": 3240,
+        "medianPx": 1.522778079890616,
+        "p95Px": 3.221396588502695,
+        "medianDx": 0.042522458678377006,
+        "medianDy": -0.002021253690145386
+      },
+      {
+        "image": "Inst_1_test_IMG_E2682.JPG",
+        "linkedPoints": 1969,
+        "medianPx": 1.5200868394654459,
+        "p95Px": 3.232250830936121,
+        "medianDx": -0.010087666827530484,
+        "medianDy": -0.038206201456887356
+      },
+      {
+        "image": "Inst_1_test_IMG_E2693.JPG",
+        "linkedPoints": 2149,
+        "medianPx": 1.5173743245599445,
+        "p95Px": 3.203934336107575,
+        "medianDx": 0.014783848770093755,
+        "medianDy": 0.011048620135738929
+      },
+      {
+        "image": "Inst_1_test_IMG_E2673.JPG",
+        "linkedPoints": 2468,
+        "medianPx": 1.5083970879887982,
+        "p95Px": 3.192518391897952,
+        "medianDx": 0.008962419524550569,
+        "medianDy": -0.019683379446746585
+      },
+      {
+        "image": "Inst_1_test_IMG_E2669.JPG",
+        "linkedPoints": 3098,
+        "medianPx": 1.5052026980866478,
+        "p95Px": 3.174993090523422,
+        "medianDx": 0.005582069069305362,
+        "medianDy": 0.010871985239759852
+      },
+      {
+        "image": "Inst_1_test_IMG_E2679.JPG",
+        "linkedPoints": 2067,
+        "medianPx": 1.4940280459762183,
+        "p95Px": 3.1611394988700683,
+        "medianDx": -0.02903039237662597,
+        "medianDy": -0.017196645929971055
+      },
+      {
+        "image": "Inst_1_test_IMG_E2662.JPG",
+        "linkedPoints": 2504,
+        "medianPx": 1.4890432650840728,
+        "p95Px": 3.205129778676263,
+        "medianDx": -0.0038130722425648855,
+        "medianDy": -0.007375671277941365
+      },
+      {
+        "image": "Inst_1_test_IMG_E2675.JPG",
+        "linkedPoints": 3038,
+        "medianPx": 1.4576577181159869,
+        "p95Px": 3.1285524919983887,
+        "medianDx": -0.03650493888858364,
+        "medianDy": 0.0457005548497591
+      },
+      {
+        "image": "Inst_1_test_IMG_E2658.JPG",
+        "linkedPoints": 4389,
+        "medianPx": 1.4261666468647531,
+        "p95Px": 3.174563169048498,
+        "medianDx": -0.02467569991176788,
+        "medianDy": 0.007136025018780856
+      },
+      {
+        "image": "Inst_1_test_IMG_E2716.JPG",
+        "linkedPoints": 2632,
+        "medianPx": 1.4120197510641797,
+        "p95Px": 3.1742789593266965,
+        "medianDx": 0.005658345016399835,
+        "medianDy": 0.006010796654209116
+      },
+      {
+        "image": "Inst_1_test_IMG_E2703.JPG",
+        "linkedPoints": 3571,
+        "medianPx": 1.3987796514302904,
+        "p95Px": 3.151910624114166,
+        "medianDx": 0.001399838453380653,
+        "medianDy": 0.02100674992493623
+      },
+      {
+        "image": "Inst_1_test_IMG_E2688.JPG",
+        "linkedPoints": 1729,
+        "medianPx": 1.396616428025174,
+        "p95Px": 3.1260664543380554,
+        "medianDx": -0.0036109036846028175,
+        "medianDy": 0.006386225904861931
+      },
+      {
+        "image": "Inst_1_test_IMG_E2715.JPG",
+        "linkedPoints": 2706,
+        "medianPx": 1.3839751945549352,
+        "p95Px": 3.089552389130319,
+        "medianDx": -0.00794054379366571,
+        "medianDy": 0.039376561078995564
+      },
+      {
+        "image": "Inst_1_test_IMG_E2711.JPG",
+        "linkedPoints": 4517,
+        "medianPx": 1.376376833305484,
+        "p95Px": 3.1274676526615965,
+        "medianDx": 0.01376751648467689,
+        "medianDy": 0.03347923219803306
+      },
+      {
+        "image": "Inst_1_test_IMG_E2696.JPG",
+        "linkedPoints": 2456,
+        "medianPx": 1.3429426916373277,
+        "p95Px": 3.036187405252156,
+        "medianDx": -0.03450078462969941,
+        "medianDy": 0.002576340113250808
+      },
+      {
+        "image": "Inst_1_test_IMG_E2685.JPG",
+        "linkedPoints": 3407,
+        "medianPx": 1.3428946846977043,
+        "p95Px": 3.1185790296799127,
+        "medianDx": -0.007936147438613261,
+        "medianDy": -0.0007807434728874796
+      },
+      {
+        "image": "Inst_1_test_IMG_E2698.JPG",
+        "linkedPoints": 1908,
+        "medianPx": 1.3418674814819052,
+        "p95Px": 2.9229021110923026,
+        "medianDx": -0.0037365811765539547,
+        "medianDy": 0.012210885200374832
+      },
+      {
+        "image": "Inst_1_test_IMG_E2714.JPG",
+        "linkedPoints": 1499,
+        "medianPx": 1.3371503668043412,
+        "p95Px": 3.0938833054912767,
+        "medianDx": 0.050286491027009106,
+        "medianDy": -0.024091539186883892
+      },
+      {
+        "image": "Inst_1_test_IMG_E2718.JPG",
+        "linkedPoints": 3254,
+        "medianPx": 1.3345899750140275,
+        "p95Px": 3.0823243453735114,
+        "medianDx": -0.004931984728727912,
+        "medianDy": -0.013671573991587138
+      },
+      {
+        "image": "Inst_1_test_IMG_E2705.JPG",
+        "linkedPoints": 3895,
+        "medianPx": 1.31844111451624,
+        "p95Px": 3.0545609949399033,
+        "medianDx": -0.014636934863801798,
+        "medianDy": 0.0039335003334599605
+      },
+      {
+        "image": "Inst_1_test_IMG_E2667.JPG",
+        "linkedPoints": 3864,
+        "medianPx": 1.2863550861241249,
+        "p95Px": 2.979882767601069,
+        "medianDx": -9.302897183260939e-06,
+        "medianDy": 0.003791410224721403
+      }
+    ]
+  },
+  "viewerProjection": {
+    "viewerCommit": "4fcc1584068cdacd386c77c81ef300f184d1763b",
+    "method": "Actual getImageWorldPose and getFrustumPlaneSize, compared with independent COLMAP projection for IMG_E2660 observations. This checks pose and plane math, not every render path.",
+    "observations": 3503,
+    "maxDifferencePx": 1.016845989170083e-12
+  },
+  "photoColorComparison": {
+    "method": "Chromium original-resolution RGB; mean absolute channel difference to native point RGB at stored observations; integer offsets -24 through 24 at step 2. Point colors alone cannot establish geometric alignment.",
+    "samples": [
+      {
+        "name": "Inst_1_test_IMG_E2660.JPG",
+        "width": 4019,
+        "height": 2262,
+        "zero": {
+          "dx": 0,
+          "dy": 0,
+          "meanAbsoluteChannelError": 48.52383671139024
+        },
+        "best": [
+          {
+            "dx": 10,
+            "dy": 6,
+            "meanAbsoluteChannelError": 30.028927585878773
+          },
+          {
+            "dx": 12,
+            "dy": 6,
+            "meanAbsoluteChannelError": 30.27271862213341
+          },
+          {
+            "dx": 10,
+            "dy": 8,
+            "meanAbsoluteChannelError": 30.662955561899324
+          },
+          {
+            "dx": 12,
+            "dy": 8,
+            "meanAbsoluteChannelError": 30.883623560757446
+          },
+          {
+            "dx": 8,
+            "dy": 6,
+            "meanAbsoluteChannelError": 31.214482824245888
+          }
+        ],
+        "sha256": "e1f327b78912fa07ae87d0c0170d9d82d499a78f6c485915d917680cd46d6dd4",
+        "bytes": 2645717
+      },
+      {
+        "name": "Inst_1_test_IMG_E2658.JPG",
+        "width": 4019,
+        "height": 2262,
+        "zero": {
+          "dx": 0,
+          "dy": 0,
+          "meanAbsoluteChannelError": 47.22450064555327
+        },
+        "best": [
+          {
+            "dx": 10,
+            "dy": 6,
+            "meanAbsoluteChannelError": 27.094326725905674
+          },
+          {
+            "dx": 12,
+            "dy": 6,
+            "meanAbsoluteChannelError": 27.59284575074049
+          },
+          {
+            "dx": 10,
+            "dy": 8,
+            "meanAbsoluteChannelError": 27.751575909470645
+          },
+          {
+            "dx": 12,
+            "dy": 8,
+            "meanAbsoluteChannelError": 28.343358395989977
+          },
+          {
+            "dx": 8,
+            "dy": 6,
+            "meanAbsoluteChannelError": 28.98435482646009
+          }
+        ],
+        "sha256": "622dbb1cf72ac91cb9aaa3ec87c3c0f87622090f01d55aef0b90e273c4879dad",
+        "bytes": 2616357
+      },
+      {
+        "name": "Inst_1_test_IMG_E2688.JPG",
+        "width": 4019,
+        "height": 2262,
+        "zero": {
+          "dx": 0,
+          "dy": 0,
+          "meanAbsoluteChannelError": 40.42490842490842
+        },
+        "best": [
+          {
+            "dx": 10,
+            "dy": 8,
+            "meanAbsoluteChannelError": 24.68671679197995
+          },
+          {
+            "dx": 10,
+            "dy": 6,
+            "meanAbsoluteChannelError": 24.867553499132445
+          },
+          {
+            "dx": 12,
+            "dy": 8,
+            "meanAbsoluteChannelError": 25.234432234432234
+          },
+          {
+            "dx": 12,
+            "dy": 6,
+            "meanAbsoluteChannelError": 25.31386157701947
+          },
+          {
+            "dx": 8,
+            "dy": 8,
+            "meanAbsoluteChannelError": 25.95970695970696
+          }
+        ],
+        "sha256": "d57c461f796f8a5df7c694409711dd8fd66fd8e0d48a41aae64bfb326f21c505",
+        "bytes": 2752591
+      },
+      {
+        "name": "Inst_1_test_IMG_E2718.JPG",
+        "width": 4019,
+        "height": 2262,
+        "zero": {
+          "dx": 0,
+          "dy": 0,
+          "meanAbsoluteChannelError": 45.61913542306905
+        },
+        "best": [
+          {
+            "dx": 10,
+            "dy": 6,
+            "meanAbsoluteChannelError": 22.732636754763366
+          },
+          {
+            "dx": 12,
+            "dy": 6,
+            "meanAbsoluteChannelError": 22.993034214300348
+          },
+          {
+            "dx": 10,
+            "dy": 8,
+            "meanAbsoluteChannelError": 23.303011677934848
+          },
+          {
+            "dx": 12,
+            "dy": 8,
+            "meanAbsoluteChannelError": 23.880147510755993
+          },
+          {
+            "dx": 8,
+            "dy": 6,
+            "meanAbsoluteChannelError": 25.156320426142184
+          }
+        ],
+        "sha256": "785aa64eba64d657fbe679a0e65aa6151d12eba040791516db02ef5189f8ef5e",
+        "bytes": 3077776
+      }
+    ]
+  },
+  "crossPhotoComparison": {
+    "method": "Shared point coordinates identify observations; normalized grayscale 7x7 patches sampled at 2-pixel spacing; compare zero and candidate uniform image-coordinate shifts. Diagnostic only, not an optimized calibration or independent bundle adjustment.",
+    "pairs": [
+      {
+        "a": "Inst_1_test_IMG_E2660.JPG",
+        "b": "Inst_1_test_IMG_E2658.JPG",
+        "scores": [
+          {
+            "dx": 0,
+            "dy": 0,
+            "count": 1417,
+            "medianNCC": 0.6544803124088736,
+            "fractionAboveHalf": 0.6753705010585744
+          },
+          {
+            "dx": 10.5,
+            "dy": 6,
+            "count": 1453,
+            "medianNCC": 0.7109121803171872,
+            "fractionAboveHalf": 0.7529249827942188
+          },
+          {
+            "dx": -10.5,
+            "dy": -6,
+            "count": 1337,
+            "medianNCC": 0.420248171757516,
+            "fractionAboveHalf": 0.44203440538519073
+          },
+          {
+            "dx": 10.5,
+            "dy": 0,
+            "count": 1457,
+            "medianNCC": 0.7259099674989092,
+            "fractionAboveHalf": 0.759780370624571
+          },
+          {
+            "dx": 0,
+            "dy": 6,
+            "count": 1420,
+            "medianNCC": 0.6975238383653415,
+            "fractionAboveHalf": 0.7309859154929578
+          }
+        ]
+      },
+      {
+        "a": "Inst_1_test_IMG_E2660.JPG",
+        "b": "Inst_1_test_IMG_E2688.JPG",
+        "scores": [
+          {
+            "dx": 0,
+            "dy": 0,
+            "count": 167,
+            "medianNCC": 0.6544241679200483,
+            "fractionAboveHalf": 0.6946107784431138
+          },
+          {
+            "dx": 10.5,
+            "dy": 6,
+            "count": 191,
+            "medianNCC": 0.7280363198444958,
+            "fractionAboveHalf": 0.8010471204188482
+          },
+          {
+            "dx": -10.5,
+            "dy": -6,
+            "count": 165,
+            "medianNCC": 0.5033319563215503,
+            "fractionAboveHalf": 0.509090909090909
+          },
+          {
+            "dx": 10.5,
+            "dy": 0,
+            "count": 185,
+            "medianNCC": 0.7094746602803265,
+            "fractionAboveHalf": 0.7945945945945946
+          },
+          {
+            "dx": 0,
+            "dy": 6,
+            "count": 168,
+            "medianNCC": 0.6199254380581204,
+            "fractionAboveHalf": 0.6488095238095238
+          }
+        ]
+      },
+      {
+        "a": "Inst_1_test_IMG_E2660.JPG",
+        "b": "Inst_1_test_IMG_E2718.JPG",
+        "scores": [
+          {
+            "dx": 0,
+            "dy": 0,
+            "count": 543,
+            "medianNCC": 0.42433680736468754,
+            "fractionAboveHalf": 0.4125230202578269
+          },
+          {
+            "dx": 10.5,
+            "dy": 6,
+            "count": 578,
+            "medianNCC": 0.6066657800830165,
+            "fractionAboveHalf": 0.6262975778546713
+          },
+          {
+            "dx": -10.5,
+            "dy": -6,
+            "count": 517,
+            "medianNCC": 0.13042892362819794,
+            "fractionAboveHalf": 0.23017408123791103
+          },
+          {
+            "dx": 10.5,
+            "dy": 0,
+            "count": 570,
+            "medianNCC": 0.5819944632782281,
+            "fractionAboveHalf": 0.5929824561403508
+          },
+          {
+            "dx": 0,
+            "dy": 6,
+            "count": 552,
+            "medianNCC": 0.48688696779332097,
+            "fractionAboveHalf": 0.48188405797101447
+          }
+        ]
+      },
+      {
+        "a": "Inst_1_test_IMG_E2658.JPG",
+        "b": "Inst_1_test_IMG_E2688.JPG",
+        "scores": [
+          {
+            "dx": 0,
+            "dy": 0,
+            "count": 265,
+            "medianNCC": 0.5067459604127339,
+            "fractionAboveHalf": 0.5056603773584906
+          },
+          {
+            "dx": 10.5,
+            "dy": 6,
+            "count": 267,
+            "medianNCC": 0.771176492595155,
+            "fractionAboveHalf": 0.8352059925093633
+          },
+          {
+            "dx": -10.5,
+            "dy": -6,
+            "count": 250,
+            "medianNCC": 0.23313240541052344,
+            "fractionAboveHalf": 0.308
+          },
+          {
+            "dx": 10.5,
+            "dy": 0,
+            "count": 271,
+            "medianNCC": 0.6464617605511479,
+            "fractionAboveHalf": 0.7232472324723247
+          },
+          {
+            "dx": 0,
+            "dy": 6,
+            "count": 268,
+            "medianNCC": 0.5329061996200033,
+            "fractionAboveHalf": 0.5485074626865671
+          }
+        ]
+      },
+      {
+        "a": "Inst_1_test_IMG_E2658.JPG",
+        "b": "Inst_1_test_IMG_E2718.JPG",
+        "scores": [
+          {
+            "dx": 0,
+            "dy": 0,
+            "count": 1014,
+            "medianNCC": 0.6523469166927789,
+            "fractionAboveHalf": 0.6755424063116371
+          },
+          {
+            "dx": 10.5,
+            "dy": 6,
+            "count": 1035,
+            "medianNCC": 0.8097293878759207,
+            "fractionAboveHalf": 0.8666666666666667
+          },
+          {
+            "dx": -10.5,
+            "dy": -6,
+            "count": 961,
+            "medianNCC": 0.3421142580061304,
+            "fractionAboveHalf": 0.3756503642039542
+          },
+          {
+            "dx": 10.5,
+            "dy": 0,
+            "count": 1029,
+            "medianNCC": 0.7716288152706822,
+            "fractionAboveHalf": 0.8172983479105929
+          },
+          {
+            "dx": 0,
+            "dy": 6,
+            "count": 1017,
+            "medianNCC": 0.6770926962909694,
+            "fractionAboveHalf": 0.7236971484759095
+          }
+        ]
+      },
+      {
+        "a": "Inst_1_test_IMG_E2688.JPG",
+        "b": "Inst_1_test_IMG_E2718.JPG",
+        "scores": [
+          {
+            "dx": 0,
+            "dy": 0,
+            "count": 193,
+            "medianNCC": 0.3429546422394442,
+            "fractionAboveHalf": 0.3005181347150259
+          },
+          {
+            "dx": 10.5,
+            "dy": 6,
+            "count": 201,
+            "medianNCC": 0.6911040568417635,
+            "fractionAboveHalf": 0.7263681592039801
+          },
+          {
+            "dx": -10.5,
+            "dy": -6,
+            "count": 185,
+            "medianNCC": -0.03438305637354988,
+            "fractionAboveHalf": 0.12972972972972974
+          },
+          {
+            "dx": 10.5,
+            "dy": 0,
+            "count": 199,
+            "medianNCC": 0.5421163537313343,
+            "fractionAboveHalf": 0.5577889447236181
+          },
+          {
+            "dx": 0,
+            "dy": 6,
+            "count": 201,
+            "medianNCC": 0.4093544339195553,
+            "fractionAboveHalf": 0.4228855721393035
+          }
+        ]
+      }
+    ]
+  },
+  "limits": [
+    "Only four of 25 original photographs were decoded and compared.",
+    "No Gaussian model geometry was downloaded or aligned; linked t1/t2 variants require separate review.",
+    "Source point error fields are -1, so the displayed 0.000 px is not a measured reprojection error.",
+    "Native cameras, poses, feature coordinates, points, photographs, launch manifest and source revision are unchanged.",
+    "The recovered original photo/calibration pair is checked on four complete photos and all 25 JPEG headers; every-pixel alignment and COLMAP export remain separate checks."
+  ],
+  "verifiedAlternative": {
+    "manifest": "docs/examples/pots-instance-1-matched-photos.manifest.json",
+    "scope": "Matching source pair selected by the offline Hub repair policy. Original poses, points and Gaussian alternatives retained; duplicate-image tracks still block COLMAP export. Not deployed.",
+    "photos": {
+      "sourceId": "hf:ChamudithaJay/PASLCD",
+      "revision": "aef858feb483dd81104fbb5232a8c98fbf4d3fcc",
+      "archive": "PASLCD_online.zip",
+      "bytes": 13226586599,
+      "stripPrefix": "PASLCD/Instance_1/Pots/inference_scene/images",
+      "coverage": [
+        {
+          "name": "Inst_1_test_IMG_E2711.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2711.JPG",
+          "bytes": 909981,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "4f3086d602ccb34ec22b56bff2291c25d91fb1a5e6462812b6c3fd6b544b2ce1",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2658.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2658.JPG",
+          "bytes": 765152,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "9a873a70c215c3f84d38b71d4390be04bad9d66c350d41131101b2f72d5611c2",
+          "headerBytes": 65536,
+          "sha256": "cebd5fcdbcd233b9263d241c2a934cd7d3f32e9bce64fc6de0f063a28d0eb9b7"
+        },
+        {
+          "name": "Inst_1_test_IMG_E2660.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2660.JPG",
+          "bytes": 774748,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "3d489656f7e05f62cc47b3038ff70abf0b6916bdc64f997cb1b7d409eab52c80",
+          "headerBytes": 65536,
+          "sha256": "c4224a965fb7681990d91a53ee9528081449142ec234cc091fa8d1a6e6bf4a72"
+        },
+        {
+          "name": "Inst_1_test_IMG_E2664.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2664.JPG",
+          "bytes": 757981,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "a023dfd12b13062c8cfab6be4425d9f713bf41e0f4889fe7d57af023116113d0",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2718.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2718.JPG",
+          "bytes": 953189,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "cf9ece7d0062eb1232a8a3eaf255cd71dafeea68bff5de0690967d1b26374946",
+          "headerBytes": 65536,
+          "sha256": "900057bf896bf4d03b27eabb55920c6bfe2fbba05fc363dcd33dab8241228d4f"
+        },
+        {
+          "name": "Inst_1_test_IMG_E2705.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2705.JPG",
+          "bytes": 903353,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "c5ea28d5ee21825ae8c350139d8fae03c8697e5d6517fcb4ba5fba8bbcc4464b",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2667.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2667.JPG",
+          "bytes": 799142,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "e19519c1a78e2f6c327caaaf63e2a54251e45967a185d63d7ccb1ca6f4528398",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2685.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2685.JPG",
+          "bytes": 844887,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "956f997873296ba8aea32cfb36bbd7f5d6954ea81d28de675a291e140e3fc66d",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2703.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2703.JPG",
+          "bytes": 912896,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "b18b022d6a4748d8717451d055aa45ef5d61b994234ae078b0afdab19315445e",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2708.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2708.JPG",
+          "bytes": 888522,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "1068c7e816be08a61a580dd646192c54b00ba87878b8a8d5092bfa0e961e9730",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2700.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2700.JPG",
+          "bytes": 959865,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "7c3432b491d996ceb2a93181e480e7a19d651c9bdbf7b85e680d92db74464cd2",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2669.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2669.JPG",
+          "bytes": 852975,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "13f0a5e00e0c5903e0b705a27e51eb26291ed6b02685536b2d1099036c3dce84",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2675.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2675.JPG",
+          "bytes": 892778,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "0b059919f3be8d53db4b7ac15e7cf68384259e29eb2122fbcf9e519e89528009",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2716.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2716.JPG",
+          "bytes": 976710,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "8a98c3f7e6f8341c43877b95da52924d36fb372439e94ff5cc4a63d8c1129299",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2715.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2715.JPG",
+          "bytes": 829499,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "e64ea46bf588335f53a91d5f21f3f4d5dc5227178d5424e8cf37c9aff5aaa3f8",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2662.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2662.JPG",
+          "bytes": 799742,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "585f7895245bd355767e6c48894bb6f8e840dd194e1e08ec0842430b59c60ac6",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2673.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2673.JPG",
+          "bytes": 858601,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "65be6bafd6078a9d97ae9e545ba5ee112ed5b336cd3ceefb2d9048f20dc60d9c",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2679.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2679.JPG",
+          "bytes": 962831,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "26d5452c2e2954829032dae02a8b9ee58e322a174518a5ec8e497ca9a7948c33",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2693.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2693.JPG",
+          "bytes": 896028,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "3247730861db2f87dc99d6fadfb341170437a887123a106c03bb8c1794b6d755",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2696.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2696.JPG",
+          "bytes": 904201,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "8638bb298aaaf3581bebf6c5721bfd87647f850e53102f0fdc002e3a726b42f0",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2691.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2691.JPG",
+          "bytes": 923078,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "2ed3741f65497b1d0dd6e799f850f5261bf9acdb2f1456b0c1ae64ea4a3004f6",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2682.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2682.JPG",
+          "bytes": 871297,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "f5211cc7aa776cddb6adcb2c38e7108583314802c4fff9f2d43a00c23340027c",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2688.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2688.JPG",
+          "bytes": 824167,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "200e7d9e627ada672b5a27171ad060255eb4c68cba823b0562902e770fa600b2",
+          "headerBytes": 65536,
+          "sha256": "c57fa049bfa0cd5d531875c0eb7f624138135b26bb871f3d55763c17e3685c58"
+        },
+        {
+          "name": "Inst_1_test_IMG_E2698.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2698.JPG",
+          "bytes": 1000718,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "318f384917556bfb036340d052fc12d2b22329a877dbc1cd6befb645df04d998",
+          "headerBytes": 65536
+        },
+        {
+          "name": "Inst_1_test_IMG_E2714.JPG",
+          "member": "PASLCD/Instance_1/Pots/inference_scene/images/Inst_1_test_IMG_E2714.JPG",
+          "bytes": 873880,
+          "width": 4000,
+          "height": 2252,
+          "headerSha256": "b76c7ea5fbe915fa6f91fff024203a1d33cc51779e1c35afa0a2576d6444e7fd",
+          "headerBytes": 65536
+        }
+      ],
+      "colorComparison": [
+        {
+          "name": "Inst_1_test_IMG_E2658.JPG",
+          "width": 4000,
+          "height": 2252,
+          "zero": {
+            "dx": 0,
+            "dy": 0,
+            "meanAbsoluteChannelError": 24.70577960051644
+          },
+          "best": [
+            {
+              "dx": 0,
+              "dy": 0,
+              "meanAbsoluteChannelError": 24.70577960051644
+            },
+            {
+              "dx": -2,
+              "dy": 0,
+              "meanAbsoluteChannelError": 25.935292777398043
+            },
+            {
+              "dx": 0,
+              "dy": -2,
+              "meanAbsoluteChannelError": 25.978582820688086
+            },
+            {
+              "dx": 2,
+              "dy": 0,
+              "meanAbsoluteChannelError": 26.164502164502164
+            },
+            {
+              "dx": 0,
+              "dy": 2,
+              "meanAbsoluteChannelError": 26.339788866104655
+            }
+          ]
+        },
+        {
+          "name": "Inst_1_test_IMG_E2660.JPG",
+          "width": 4000,
+          "height": 2252,
+          "zero": {
+            "dx": 0,
+            "dy": 0,
+            "meanAbsoluteChannelError": 27.72404605576173
+          },
+          "best": [
+            {
+              "dx": 0,
+              "dy": 0,
+              "meanAbsoluteChannelError": 27.72404605576173
+            },
+            {
+              "dx": 0,
+              "dy": -2,
+              "meanAbsoluteChannelError": 28.35912075363974
+            },
+            {
+              "dx": 2,
+              "dy": 0,
+              "meanAbsoluteChannelError": 28.387191930726043
+            },
+            {
+              "dx": -2,
+              "dy": 0,
+              "meanAbsoluteChannelError": 28.75820725092778
+            },
+            {
+              "dx": 0,
+              "dy": 2,
+              "meanAbsoluteChannelError": 29.175468645922546
+            }
+          ]
+        },
+        {
+          "name": "Inst_1_test_IMG_E2718.JPG",
+          "width": 4000,
+          "height": 2252,
+          "zero": {
+            "dx": 0,
+            "dy": 0,
+            "meanAbsoluteChannelError": 20.089223519770538
+          },
+          "best": [
+            {
+              "dx": 0,
+              "dy": 0,
+              "meanAbsoluteChannelError": 20.089223519770538
+            },
+            {
+              "dx": 0,
+              "dy": -2,
+              "meanAbsoluteChannelError": 21.039643515673017
+            },
+            {
+              "dx": -2,
+              "dy": 0,
+              "meanAbsoluteChannelError": 21.215324728539233
+            },
+            {
+              "dx": 2,
+              "dy": 0,
+              "meanAbsoluteChannelError": 21.374718295431265
+            },
+            {
+              "dx": 0,
+              "dy": 2,
+              "meanAbsoluteChannelError": 22.024687564023765
+            }
+          ]
+        },
+        {
+          "name": "Inst_1_test_IMG_E2688.JPG",
+          "width": 4000,
+          "height": 2252,
+          "zero": {
+            "dx": 0,
+            "dy": 0,
+            "meanAbsoluteChannelError": 21.4457297088876
+          },
+          "best": [
+            {
+              "dx": 0,
+              "dy": 0,
+              "meanAbsoluteChannelError": 21.4457297088876
+            },
+            {
+              "dx": -2,
+              "dy": 0,
+              "meanAbsoluteChannelError": 22.136302294197034
+            },
+            {
+              "dx": 0,
+              "dy": -2,
+              "meanAbsoluteChannelError": 22.460381723539616
+            },
+            {
+              "dx": 2,
+              "dy": 0,
+              "meanAbsoluteChannelError": 22.690572585309425
+            },
+            {
+              "dx": 0,
+              "dy": 2,
+              "meanAbsoluteChannelError": 22.835164835164836
+            }
+          ]
+        }
+      ]
+    },
+    "originalPhotoWarp": {
+      "original": {
+        "width": 4021,
+        "height": 2264
+      },
+      "derived": {
+        "width": 4019,
+        "height": 2262
+      },
+      "zero": {
+        "dx": 0,
+        "dy": 0,
+        "mae": 0.7655227410218336,
+        "n": 24244
+      },
+      "best": [
+        {
+          "dx": 0,
+          "dy": 0,
+          "mae": 0.7655227410218336,
+          "n": 24244
+        },
+        {
+          "dx": -1,
+          "dy": 0,
+          "mae": 2.1668316559423637,
+          "n": 24244
+        },
+        {
+          "dx": 1,
+          "dy": 0,
+          "mae": 2.264161579497333,
+          "n": 24244
+        },
+        {
+          "dx": 0,
+          "dy": 1,
+          "mae": 2.3208628939118956,
+          "n": 24244
+        },
+        {
+          "dx": 0,
+          "dy": -1,
+          "mae": 2.4024225925314853,
+          "n": 24244
+        },
+        {
+          "dx": -1,
+          "dy": -1,
+          "mae": 3.0608672936259143,
+          "n": 24244
+        },
+        {
+          "dx": 1,
+          "dy": 1,
+          "mae": 3.067948083374581,
+          "n": 24244
+        },
+        {
+          "dx": -1,
+          "dy": 1,
+          "mae": 3.1183385579937304,
+          "n": 24244
+        }
+      ]
+    },
+    "samePoses": 25,
+    "sameSharedPoints": 29815,
+    "maxSharedCoordinateDelta": 0,
+    "duplicateImageTracks": 413,
+    "files": {
+      "cameras": {
+        "bytes": 96,
+        "sha256": "91316e9fdd84682d5ce5d44ef387c47e95fde27a51f3924188c766f4bd68017f",
+        "sourcePath": "inputs/Pots/Instance_1/anchored/solve/t2/sparse/0/cameras.bin"
+      },
+      "images": {
+        "bytes": 6603586,
+        "sha256": "899703254b8e35559cebd3aecf14053c9f2cbf58908e57cbbec128e2cc0b7952",
+        "sourcePath": "inputs/Pots/Instance_1/anchored/solve/t2/sparse/0/images.bin"
+      },
+      "points3D": {
+        "bytes": 2101941,
+        "sha256": "fa37c5a695f9e8a10671a3567d5a12e8973e2534d7bb9f2ba579dee62146cdfa",
+        "sourcePath": "inputs/Pots/Instance_1/anchored/undistorted/test/sparse/points3D.bin"
+      }
+    },
+    "browser": {
+      "viewerVersion": "0.25.12",
+      "uncaughtErrors": [],
+      "scope": "Exact matching-source manifest loaded via a locally intercepted manifest in the production viewer, retaining 29,815 points and all 24 Gaussian candidates; COLMAP-only selection chosen. All 16 visible archive photo thumbnails decoded. Duplicate-track export warning remains. No Gaussian geometry alignment or complete photo export claimed."
+    }
+  },
+  "deployed": false
+}
