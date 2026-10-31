@@ -110,7 +110,7 @@ test('per-pose video mappings expose view/source counts and source feature warni
   await page.goto('/hub/entry/' + id);
   await expect(page.locator('main')).toContainText('285 matched views from 6 source videos');
   await expect(page.locator('main')).toContainText('18 decoded samples');
-  await expect(page.locator('main')).toContainText('668 duplicate-image');
+  await expect(page.locator('main')).not.toContainText('duplicate-image');
   await expect(page.locator('main')).toContainText('Image availability check');
   await expect(page.locator('main')).not.toContainText('Current media scope');
   await expect(page.locator('main')).not.toContainText('Model-only export SHA-256');

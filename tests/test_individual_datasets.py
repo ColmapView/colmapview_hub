@@ -64,24 +64,16 @@ class IndividualDatasetsTests(unittest.TestCase):
                                        json.loads(gzip.decompress((root / 'data/native-layouts.json.gz').read_bytes())))
         flagged = {identity(review['sourceId'], ['colmap', review['path'], review['files'], None]): review
                    for review in reviews.values() if review.get('sourceIntegrityReview')}
-        for filename, duplicates in [('mbzuai-source-integrity-2026-10-24.json', 668),
-                                     ('campus-knowledge-center-integrity-2026-10-25.json', 1448)]:
+        # These receipts counted only points observing two features of one image. COLMAP's track
+        # merging (Reconstruction::MergePoints3D) writes such models, so they publish no warning.
+        for filename in ['mbzuai-source-integrity-2026-10-24.json', 'campus-knowledge-center-integrity-2026-10-25.json']:
             with self.subTest(receipt=filename):
-                additional = json.loads((root / 'data' / filename).read_bytes())
-                additional_review = next(review for review in reviews.values() if review['sourceId'] == additional['sourceId']
-                                         and review['path'] == additional['path'])
-                additional_id = identity(additional['sourceId'], ['colmap', additional['path'], additional_review['files'], None])
-                warning = flagged.pop(additional_id)['sourceIntegrityReview']
-                self.assertEqual(additional_review['revision'], additional['revision'])
-                self.assertEqual(warning['scope'], additional['scope'])
-                self.assertEqual(warning['checkedAt'], additional['checkedAt'])
-                self.assertEqual(warning['files'], additional['files'])
-                body = {key: value for key, value in additional.items() if key != 'receiptSha256'}
-                digest = hashlib.sha256(json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-                self.assertEqual(warning['receiptSha256'], digest)
-                self.assertEqual(additional['receiptSha256'], digest)
-                self.assertEqual(additional['observationIntegrity']['status'], 'invalid')
-                self.assertEqual(additional['observationIntegrity']['issues']['duplicateImage'], duplicates)
+                superseded = json.loads((root / 'data' / filename).read_bytes())
+                issues = superseded['observationIntegrity']['issues']
+                self.assertEqual([kind for kind, count in issues.items() if count], ['duplicateImage'])
+                review = next(review for review in reviews.values() if review['sourceId'] == superseded['sourceId']
+                              and review['path'] == superseded['path'])
+                self.assertNotIn('sourceIntegrityReview', review)
         self.assertEqual(sorted(flagged), finding['affectedIds'])
         full = {row['id']: row for row in receipt['completeModels']}
         ranges = {(row['id'], row['role']): row for row in receipt['additionalRangeReceipts']}
