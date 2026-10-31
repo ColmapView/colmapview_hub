@@ -280,9 +280,10 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
   .dataset-metadata-links a, .dataset-metadata-links button { min-height: 44px; display: inline-flex; align-items: center; }
 }
 @media (max-width: 600px) {
-  .catalog-browse { --catalog-footbar-height: 92px; }
+  .catalog-browse { --catalog-footbar-height: 84px; }
   .catalog-footbar { flex-wrap: wrap; justify-content: flex-end; }
   .catalog-result-summary { flex-basis: 100%; }
+  .catalog-result-summary .catalog-notice, .catalog-result-summary .catalog-status { font-size: 11px; line-height: 1.25; }
 }
 .shared-datasets { margin-block: var(--sp-3); }
 .shared-datasets > h2 { font-size: 1rem; margin-bottom: .5rem; }
@@ -301,4 +302,16 @@ body:has(.dataset-metadata[open]) { overflow: hidden; }
 @media (pointer: coarse) {
   .catalog-filter-details > summary, .dataset-metadata-checks > summary { min-height: 44px; }
   .footer-links button { min-height: 44px; }
+}
+/* Phones: the floating consent card plus the footbar covered 37-58% of the
+   first screen. Dock it as a flush sheet on the footbar; the heading stays for
+   screen readers, and the consent text, policy link and both choices stay. */
+@media (max-width: 600px) {
+  .analytics-choice { right: 0; bottom: 0; width: 100%; padding: var(--sp-2) var(--sp-3) calc(var(--sp-2) + env(safe-area-inset-bottom)); border-width: 1px 0 0; border-radius: 0; font-size: 12px; }
+  .catalog-browse .analytics-choice { bottom: calc(var(--catalog-footbar-height) + env(safe-area-inset-bottom)); padding-bottom: var(--sp-2); }
+  .analytics-choice h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .analytics-choice #analytics-purpose { padding-right: 40px; }
+  .analytics-choice .analytics-detail { margin-top: var(--sp-1); font-size: 11px; }
+  .analytics-choice .actions { margin-top: var(--sp-2); }
+  .analytics-close { top: 0; right: 0; }
 }
