@@ -46,6 +46,14 @@ test.afterEach(async ({ page }) => {
   await page.unrouteAll({ behavior: 'ignoreErrors' });
 });
 
+test('GitHub can load scenes when its index refresh fails', async ({ page }) => {
+  await page.route(production + '/hub/datasets/api/index', route => route.fulfill({ status: 503, body: 'Index unavailable' }));
+  await page.goto(github + '/hub/?q=SceauxCastle');
+  await expect(page.locator('#catalog-results .dataset-card').first()).toBeVisible();
+  await expect(page.getByRole('searchbox')).toHaveValue('SceauxCastle');
+  await expect(page.locator('#individual-search')).not.toHaveAttribute('inert');
+});
+
 test('GitHub gallery keeps browsing, search, metadata and Back on GitHub using public APIs', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: github });
   const errors: string[] = [];

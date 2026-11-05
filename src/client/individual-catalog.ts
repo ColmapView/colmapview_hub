@@ -15,6 +15,7 @@ const form = document.querySelector<HTMLFormElement>('#individual-search');
 if (form && document.querySelector('#catalog-more') && document.querySelector('#catalog-status')) {
   const host = catalogViewerHost();
   const staticFrontend = Boolean(hubFrontend());
+  const clientRendered = staticFrontend || document.documentElement.dataset.hubClientRendered === 'true';
   const results = document.querySelector<HTMLElement>('#catalog-results')!;
   const count = document.querySelector<HTMLElement>('#catalog-count')!;
   const status = document.querySelector<HTMLElement>('#catalog-status')!;
@@ -34,11 +35,20 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   const sentinel = document.querySelector<HTMLElement>('#catalog-sentinel')!;
   const notes = document.querySelector<HTMLDetailsElement>('.catalog-notes');
   const fields = [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[name],select[name]')];
-  if (staticFrontend) {
-    form.inert = true;
-    const values = new URLSearchParams(location.search);
-    for (const field of fields) field.value = field.name === 'viewerHost' ? 'github' : values.get(field.name) || '';
-  }
+  const fillFields = (values: URLSearchParams) => {
+    let missingChoice = false;
+    for (const field of fields) {
+      const value = field.name === 'viewerHost' ? host || '' : values.get(field.name) || '';
+      if (field instanceof HTMLSelectElement && value && ![...field.options].some(option => option.value === value)) {
+        field.add(new Option(value, value));
+        missingChoice = true;
+      }
+      field.value = value;
+    }
+    return missingChoice;
+  };
+  const missingChoice = clientRendered && fillFields(new URLSearchParams(location.search));
+  if (staticFrontend) form.inert = true;
   const primary = form.querySelector<HTMLElement>('.catalog-primary')!;
   const secondary = form.querySelector<HTMLElement>('.catalog-filter-basics')!;
   const extraFilters = form.querySelector<HTMLDetailsElement>('.catalog-filter-details')!;
@@ -80,7 +90,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   history.scrollRestoration = 'manual';
   // The select named "dataset" shadows HTMLFormElement.dataset.
   let firstPage = Number(form.getAttribute('data-page')) || 1;
-  if (staticFrontend) firstPage = Math.max(1, Number(new URLSearchParams(location.search).get('page')) || 1);
+  if (clientRendered) firstPage = Math.max(1, Number(new URLSearchParams(location.search).get('page')) || 1);
   let lastPage = firstPage;
   let generation = form.getAttribute('data-generation') || '';
   let loaded = results.querySelectorAll('.dataset-card').length;
@@ -188,7 +198,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     firstPage = saved.data.page; lastPage = saved.lastPage;
     if (firstPage > 1) committed.set('page', String(firstPage)); else committed.delete('page');
     entries = saved.data.entries; loaded = entries.length; total = saved.data.total; pages = saved.data.pages;
-    for (const field of fields) field.value = committed.get(field.name) || '';
+    fillFields(committed);
     revealExtraFilters(committed);
     results.replaceChildren(...entries.map(entry => catalogCardElement(entry, host)));
     results.removeAttribute('aria-busy');
@@ -389,7 +399,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     clearTimeout(timer);
     const values = new URL(previous.href).searchParams;
     if (committed.has('seed')) values.set('seed', committed.get('seed')!);
-    for (const field of fields) field.value = values.get(field.name) || '';
+    fillFields(values);
     void load(values, { focus: true, history: 'push' });
   });
   addEventListener('popstate', () => {
@@ -403,15 +413,21 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     revealExtraFilters(values);
     void load(values, { restoring: true });
   });
-  updateNavigation();
+  if (!clientRendered) updateNavigation();
   if (staticFrontend) {
     const requested = new URLSearchParams(location.search);
-    void refreshCatalogFilters(form).then(value => { generation = value; }).catch(() => { /* Existing shell choices remain usable during an index retry. */ })
+    let refreshed = false;
+    void refreshCatalogFilters(form).then(value => { generation = value; refreshed = true; }).catch(() => { /* Fall back to a fresh scene response, never an unvalidated old snapshot. */ })
       .then(() => {
-        for (const field of fields) field.value = field.name === 'viewerHost' ? 'github' : requested.get(field.name) || '';
+        fillFields(requested);
         form.inert = false;
-        if (!restore()) void load(query(firstPage), { history: 'replace' });
+        if (!refreshed || !restore()) void load(query(firstPage), { history: 'replace' });
       });
+  } else if (clientRendered) {
+    // This shell and its choices were built with the current backend catalog.
+    // Refresh missing saved choices in the background; scene loading must not wait.
+    if (missingChoice) void refreshCatalogFilters(form).catch(() => {});
+    if (!restore()) void load(query(firstPage), { history: 'replace' });
   } else if (committed.has('seed') && documentNavigation?.type === 'reload') {
     freshSeed();
     void load(query(), { history: 'replace' });

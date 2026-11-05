@@ -21,6 +21,17 @@ The viewer authenticates directly with providers and signs bucket requests in th
 
 To connect a local viewer, run it with `VITE_HUB_BASE_URL=http://localhost:5201/hub`. A local Hub accepts loopback origins and viewer URLs.
 
+The homepage uses an offline-built gallery shell under `public/hub/assets/`.
+`scripts/build/github.mjs` generates both the backend shells and GitHub export.
+Scenes and pagination load asynchronously through the existing catalog API.
+Backend filter choices ship with the shell; missing saved choices refresh in the
+background without blocking scenes. GitHub refreshes its independently deployed
+choices with an eight-second timeout before restoring cached results. Saved
+filters survive missing or unavailable index choices. The homepage performs no
+D1 query or catalog JSON parsing. The public index
+endpoint streams its built asset with its validator instead of parsing and
+serializing it again. See the [CPU review](cpu-budget-2026-11-05.md).
+
 Short-address navigations use the custom production app shell configured by
 `HUB_VIEWER_ORIGIN`; their assets load from the Hub host's viewer root. Browser
 tests instead start an explicit local HTML fixture, with no external app fetch.

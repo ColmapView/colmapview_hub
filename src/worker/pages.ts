@@ -18,6 +18,8 @@ export interface HubLocation {
   local: boolean;
   viewerHost?: ViewerHost;
   frontend?: HubFrontend;
+  /** Gallery shell generated offline; scenes and URL filters load in the browser. */
+  clientRendered?: boolean;
 }
 
 export function hubLocation(env: Env): HubLocation {
@@ -81,7 +83,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
   const asset = (file: string) => hubAssetUrl(`${location.path}/${file}`, location.frontend);
   const anonymous = location.frontend ? ' crossorigin="anonymous"' : '';
   return [
-    `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"${location.frontend ? ' data-hub-frontend="github"' : ''}${publicCatalog ? ' data-hub-public-catalog="true"' : ''}><head>`,
+    `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"${location.frontend ? ' data-hub-frontend="github"' : ''}${location.clientRendered ? ' data-hub-client-rendered="true"' : ''}${publicCatalog ? ' data-hub-public-catalog="true"' : ''}><head>`,
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">',
     ...(location.frontend ? [
       '<meta name="referrer" content="no-referrer">',

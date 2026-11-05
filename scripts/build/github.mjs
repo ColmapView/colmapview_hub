@@ -15,6 +15,17 @@ const detail = page(location, 'Dataset', '<p id="catalog-entry-status" role="sta
   + '<button id="catalog-entry-retry" type="button" class="button" hidden>Try again</button><div id="catalog-entry"></div>',
   `<script type="module" src="https://colmapview.opsiclear.com/hub/assets/catalog-entry.js?v=${HUB_UI_VERSION}"></script>`, true);
 const directory = 'public/hub/assets/github';
+// The backend homepage uses the same asynchronous gallery. Render its filters
+// once at build time, rather than spending the free-tier CPU budget on each visit.
+const emptyPage = { generation: index.generation, entries: [], total: 0, page: 1, pages: 1 };
+await mkdir('public/hub/assets', { recursive: true });
+for (const viewerHost of [undefined, 'github']) {
+  const home = { origin: 'https://colmapview.opsiclear.com', path: '/hub', base: 'https://colmapview.opsiclear.com/hub',
+    local: false, clientRendered: true, viewerHost };
+  const query = new URLSearchParams(viewerHost ? 'viewerHost=github' : '');
+  const html = individualIndexPage(home, index, emptyPage, query);
+  await writeFile(`public/hub/assets/catalog-home${viewerHost ? '-github' : ''}.html`, html);
+}
 const redirect = '<!doctype html><html lang="en" data-hub-redirect="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
   + '<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow,noarchive">'
   + '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src https://colmapview.opsiclear.com; base-uri \'none\'">'

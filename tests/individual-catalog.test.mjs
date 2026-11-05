@@ -17,6 +17,13 @@ test('static gallery exports are reproducible and use the single public root', (
   assert.equal(first, render.individualIndexPage(location, index, result, new URLSearchParams()));
   assert.match(first, /action="\/hub\/"/);
   assert.doesNotMatch(first, /href="\/hub\/datasets\//);
+  const backend = { origin: 'https://colmapview.opsiclear.com', path: '/hub', base: 'https://colmapview.opsiclear.com/hub',
+    local: false, clientRendered: true };
+  const shell = render.individualIndexPage(backend, index, result, new URLSearchParams());
+  assert.equal(shell, render.individualIndexPage(backend, index, result, new URLSearchParams()));
+  assert.match(shell, /data-hub-client-rendered="true"/);
+  assert.doesNotMatch(shell, /data-hub-frontend="github"/);
+  assert.match(shell, /Loading datasets/);
   for (const host of [undefined, 'github']) {
     const html = render.individualIndexPage({ ...location, viewerHost: host }, index, result, new URLSearchParams());
     const info = html.match(/<details class="catalog-notes">[\s\S]*?<\/details>/)?.[0];

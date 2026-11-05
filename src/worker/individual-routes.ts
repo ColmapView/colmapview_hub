@@ -1,6 +1,5 @@
 import { catalogEntryPage, catalogEntryContent } from './catalog-pages';
 import { individualFilters, individualIndex, readIndividual, searchIndividuals } from './individual-data';
-import { individualIndexPage } from './individual-pages';
 import { errorPage } from './pages';
 import type { HubLocation } from './pages';
 import { individualSelection } from '../shared/individual-catalog';
@@ -14,10 +13,26 @@ const respond = (request: Request, response: Response, freshFeed = false) => {
   const headers = new Headers(response.headers);
   headers.set('Cache-Control', freshFeed ? 'no-store' : REVALIDATE);
   headers.set('Cloudflare-CDN-Cache-Control', 'no-store');
-  return new Response(request.headers.get('If-None-Match') === headers.get('ETag') ? null : response.body, {
-    status: request.headers.get('If-None-Match') === headers.get('ETag') ? 304 : response.status, headers,
+  const unchanged = Boolean(headers.get('ETag') && request.headers.get('If-None-Match') === headers.get('ETag'));
+  return new Response(unchanged ? null : response.body, {
+    status: unchanged ? 304 : response.status, headers,
   });
 };
+
+/** Fixed public assets only; no catalog parsing, database query or HTML rendering. */
+async function builtResponse(request: Request, env: Env, location: HubLocation, path: string, type: string): Promise<Response> {
+  const headers = new Headers();
+  const etag = request.headers.get('If-None-Match');
+  if (etag) headers.set('If-None-Match', etag);
+  const response = await env.CATALOG_ASSETS.fetch(new Request(location.origin + path, { method: request.method, headers }));
+  if (response.status !== 200 && response.status !== 304) throw new Error('Built gallery asset unavailable');
+  const output = new Headers(response.headers);
+  output.set('Content-Type', type);
+  const discard = request.method === 'HEAD' || response.status === 304
+    || Boolean(etag && etag === output.get('ETag'));
+  if (discard) await response.body?.cancel();
+  return respond(request, new Response(discard ? null : response.body, { status: response.status, headers: output }));
+}
 
 /** A public, operator-built metadata namespace. No user-created share record,
  * management secret, user-record listing, or private lookup path is reachable here. */
@@ -62,6 +77,9 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   const open = /^\/(?:datasets\/)?open\/(data-[a-f0-9]{24})$/.exec(path);
   if (path !== '/' && path !== '/datasets/api/entries' && !apiIndex && !apiEntry && !entry && !open && !collection) return fail(404, 'Dataset entry not found.');
   const filters = entry || apiEntry || apiIndex || open || collection ? new URLSearchParams() : individualFilters(url.searchParams);
+  if (path === '/') return builtResponse(request, env, location,
+    `/hub/assets/catalog-home${location.viewerHost === 'github' ? '-github' : ''}.html`, 'text/html; charset=utf-8');
+  if (apiIndex) return builtResponse(request, env, location, '/hub/datasets/individual/index.json', 'application/json; charset=utf-8');
   // Read the current inventory before the response cache. Removed entries and
   // search results must not survive a catalog deployment in an older cache.
   const index = await individualIndex(env.CATALOG_ASSETS, location.origin);
@@ -83,15 +101,13 @@ export async function individualRoute(request: Request, env: Env, ctx: Execution
   const cached = freshFeed ? undefined : await caches.default.match(key);
   if (cached) return respond(request, cached);
   let body: string;
-  if (apiIndex) body = JSON.stringify(index);
-  else if (entry || apiEntry) {
+  if (entry || apiEntry) {
     const model = await readIndividual(env.CATALOG_ASSETS, location.origin, index, (entry || apiEntry)![1]);
     if (!model) return fail(404, 'Dataset entry not found.');
     body = apiEntry ? catalogEntryContent(model, 'github', 'github') : catalogEntryPage(model, true, location.viewerHost);
   } else {
     const result = await searchIndividuals(env.CATALOG_ASSETS, location.origin, index, filters, env.HUB_DB);
-    body = api ? JSON.stringify({ ...result, ...(index.unit ? { unit: index.unit } : {}), dataset: individualSelection(index.sources, filters.get('dataset') || '') })
-      : individualIndexPage(location, index, result, filters);
+    body = JSON.stringify({ ...result, ...(index.unit ? { unit: index.unit } : {}), dataset: individualSelection(index.sources, filters.get('dataset') || '') });
   }
   // Hash the response content so template-only releases also invalidate a
   // browser's conditional request, even when the model inventory is unchanged.

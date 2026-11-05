@@ -1,5 +1,64 @@
 import { expect, test } from '@playwright/test';
 
+test('built gallery responses preserve conditional and HEAD behavior', async ({ request }) => {
+  const first = await request.get('/hub/');
+  expect(first.status()).toBe(200);
+  const etag = first.headers().etag;
+  expect(etag).toBeTruthy();
+  const unchanged = await request.get('/hub/', { headers: { 'If-None-Match': etag } });
+  expect(unchanged.status()).toBe(304);
+  expect((await unchanged.body()).length).toBe(0);
+  expect(unchanged.headers()['content-security-policy']).toBe(first.headers()['content-security-policy']);
+  const head = await request.head('/hub/datasets/api/index');
+  expect(head.status()).toBe(200);
+  expect(head.headers()['content-type']).toContain('application/json');
+  expect((await head.body()).length).toBe(0);
+  const github = await request.get('/hub/?viewerHost=github');
+  expect(github.headers().etag).not.toBe(etag);
+  const asset = await request.get('/hub/assets/catalog-home.html');
+  expect(asset.status()).toBe(200);
+  expect(asset.headers()['cache-control']).toContain('no-transform');
+  expect(asset.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
+  expect(asset.headers()['referrer-policy']).toBe('no-referrer');
+});
+
+for (const unavailable of ['failed', 'stalled']) test(`saved collection filters survive a ${unavailable} index request`, async ({ page, request }) => {
+  const index = await (await request.get('/hub/datasets/api/index')).json();
+  const source = index.sources.find((item: { provider: string; count: number }) => item.provider === 'public' && item.count > 0);
+  expect(source).toBeTruthy();
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/hub/datasets/api/index', async route => {
+    if (unavailable === 'stalled') await gate;
+    await route.abort('failed');
+  });
+  const sceneRequests: string[] = [];
+  page.on('request', value => { if (new URL(value.url()).pathname === '/hub/datasets/api/entries') sceneRequests.push(value.url()); });
+  try {
+    await page.goto('/hub/?dataset=' + source.id);
+    await expect(page.locator('.dataset-card').first()).toBeVisible({ timeout: 5000 });
+    expect(sceneRequests.length).toBeGreaterThan(0);
+    expect(sceneRequests.every(value => new URL(value).searchParams.get('dataset') === source.id)).toBe(true);
+    await expect(page.getByRole('combobox', { name: 'Collection', exact: true })).toHaveValue(source.id);
+  } finally { release(); }
+});
+
+test('the built homepage loads filtered scenes asynchronously', async ({ page }) => {
+  let release!: () => void;
+  const ready = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/hub/datasets/api/entries*', async route => { await ready; await route.continue(); });
+  try {
+    const response = await page.goto('/hub/?q=SceauxCastle');
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('html')).toHaveAttribute('data-hub-client-rendered', 'true');
+    await expect(page.locator('.dataset-card')).toHaveCount(0);
+    release();
+    await expect(page.locator('.dataset-card').first()).toBeVisible();
+    await expect(page.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('SceauxCastle');
+    await expect(page.locator('.dataset-card').first()).toContainText('SceauxCastle');
+  } finally { release(); }
+});
+
 test('the Hub brand opens a fresh tab and Info retains policy links', async ({ page }) => {
   await page.goto('/hub/?q=SceauxCastle&viewerHost=github');
   const opened = page.waitForEvent('popup');
@@ -48,6 +107,7 @@ test('GitHub arrivals keep their viewer through async results, pagination, reset
   await expect(page.getByRole('link', { name: 'Open viewer', exact: true })).toHaveAttribute('href', 'https://colmapview.github.io/latest/');
   const cards = page.locator('#catalog-results .dataset-card');
   const checkLinks = async () => {
+    await expect(cards.locator('.dataset-open').first()).toBeVisible();
     const links = await cards.locator('.dataset-open').evaluateAll(elements => elements.map(element => (element as HTMLAnchorElement).href));
     expect(links.length).toBeGreaterThan(0);
     expect(links.every(href => new URL(href).searchParams.get('viewerHost') === 'github')).toBe(true);

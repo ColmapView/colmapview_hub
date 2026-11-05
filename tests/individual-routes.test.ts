@@ -7,7 +7,7 @@ import { datasetSharePath } from '../src/shared/dataset-share';
 
 beforeEach(resetState);
 
-it('preserves the public gallery security policy when revalidating cached HTML', async () => {
+it('preserves the public gallery security policy when revalidating built HTML', async () => {
   mockPublicCatalog();
   const path = '/?seed=52455678';
   const first = await request(path);
@@ -113,12 +113,59 @@ it('keeps seeded feed caches separate and retains deterministic pages without pr
     expect(anotherResult.entries).not.toEqual(freshResult.entries);
     queries.push(freshQuery);
     expect((await (await request(`/datasets/api/entries?${freshQuery}`)).json<Result>()).entries).toEqual(freshResult.entries);
-    const document = await request('/');
-    expect(document.headers.get('Cache-Control')).toBe('no-store, no-transform');
     expect(records).not.toHaveBeenCalled();
   } finally {
     for (const query of queries) await caches.default.delete(new Request(`${base}/datasets/api/entries?${query}&_catalog=feed-cache&_ui=${HUB_UI_VERSION}`));
   }
+});
+
+it('serves the gallery shell and index without database work or catalog parsing', async () => {
+  const database = vi.spyOn(env.HUB_DB, 'prepare');
+  const paths: string[] = [];
+  const assets = vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async input => {
+    const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
+    paths.push(path);
+    // Deliberately not parseable JSON: the index endpoint must pass bytes through.
+    return new Response(path.endsWith('.html') ? '<html>Built shell</html>' : 'raw built index bytes', {
+      headers: { ETag: '"built-fixture"' },
+    });
+  });
+  for (const [query, asset] of [['', 'catalog-home.html'], ['?q=room&page=3', 'catalog-home.html'],
+    ['?viewerHost=github', 'catalog-home-github.html']]) {
+    const response = await request('/' + query);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toContain('text/html');
+    expect(await response.text()).toBe('<html>Built shell</html>');
+    expect(paths.at(-1)).toBe('/hub/assets/' + asset);
+  }
+  const index = await request('/datasets/api/index');
+  expect(await index.text()).toBe('raw built index bytes');
+  expect(index.headers.get('Content-Type')).toContain('application/json');
+  expect(paths.at(-1)).toBe('/hub/datasets/individual/index.json');
+  const head = await request('/', { method: 'HEAD' });
+  expect(head.status).toBe(200); expect(await head.text()).toBe('');
+  const unchanged = await request('/', { headers: { 'If-None-Match': '"built-fixture"' } });
+  expect(unchanged.status).toBe(304); expect(await unchanged.text()).toBe('');
+  expect(database).not.toHaveBeenCalled();
+  expect(assets).toHaveBeenCalledTimes(6);
+});
+
+it('does not mistake two missing validators for an unchanged response', async () => {
+  vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockResolvedValue(new Response('<html>Shell without ETag</html>'));
+  expect((await request('/')).status).toBe(200);
+});
+
+it.each(['HEAD', 'conditional GET'])('cancels unused built-asset bytes for %s', async kind => {
+  let cancelled = false;
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) { controller.enqueue(new TextEncoder().encode('<html>Unused</html>')); },
+    cancel() { cancelled = true; },
+  });
+  vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockResolvedValue(new Response(body, { headers: { ETag: '"built"' } }));
+  const response = await request('/', kind === 'HEAD' ? { method: 'HEAD' } : { headers: { 'If-None-Match': '"built"' } });
+  expect(response.status).toBe(kind === 'HEAD' ? 200 : 304);
+  expect(await response.text()).toBe('');
+  expect(cancelled).toBe(true);
 });
 
 it('redirects retired browse pages without reading metadata or private records', async () => {

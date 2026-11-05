@@ -26,6 +26,14 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, no-cache, must-revalidate
 
+# The built homepage also has direct public asset URLs.
+/hub/assets/catalog-home*.html
+  ! Cache-Control
+  Cache-Control: public, no-cache, must-revalidate, no-transform
+  Cloudflare-CDN-Cache-Control: no-store
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; img-src 'self' https://www.googletagmanager.com https://*.google-analytics.com; font-src 'self'; frame-src https://colmapview.opsiclear.com https://colmapview.github.io; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+
 /hub/fonts/*
   Access-Control-Allow-Origin: *
 

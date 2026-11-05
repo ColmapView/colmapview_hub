@@ -6,7 +6,7 @@ import { hubApiBase } from './hosting';
 
 /** Refresh the static shell's choices without copying the catalog into GitHub Pages. */
 export async function refreshCatalogFilters(form: HTMLFormElement): Promise<string> {
-  const response = await fetch(`${hubApiBase()}/datasets/api/index`, { credentials: 'omit' });
+  const response = await fetch(`${hubApiBase()}/datasets/api/index`, { credentials: 'omit', signal: AbortSignal.timeout(8000) });
   if (!response.ok) throw new Error('Catalog index unavailable');
   const index = await response.json() as IndividualIndex;
   if (index.schemaVersion !== 1 || !/^[a-f0-9]{64}$/.test(index.generation)
@@ -28,6 +28,9 @@ export async function refreshCatalogFilters(form: HTMLFormElement): Promise<stri
     if (!select || !select.options[0]) continue;
     const selected = select.value;
     const options = values.map(({ value, label }) => new Option(label, value));
+    if (selected && !values.some(option => option.value === selected)) {
+      options.push(new Option(select.selectedOptions[0]?.textContent || selected, selected));
+    }
     select.replaceChildren(select.options[0].cloneNode(true), ...options);
     select.value = selected;
   }

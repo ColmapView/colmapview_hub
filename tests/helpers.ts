@@ -25,7 +25,10 @@ export const listings: Partial<Env> = { HUB_LISTINGS_ENABLED: 'true' };
 export function mockPublicCatalog(): void {
   const source = { id: 'hf-root-fixture-0123456789ab', sourceId: 'hf:owner/root', title: 'Root', label: 'Root',
     provider: 'huggingface', license: 'mit', access: 'public', start: 0, count: 1, listingComplete: true };
-  vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async resource => String(resource instanceof Request ? resource.url : resource).endsWith('/index.json')
+  vi.spyOn(env.CATALOG_ASSETS, 'fetch').mockImplementation(async resource => String(resource instanceof Request ? resource.url : resource).includes('/assets/catalog-home')
+    ? new Response('<!doctype html><html><head><title>Spatial Hub</title></head><body><div id="catalog-results">Loading datasets…</div></body></html>',
+      { headers: { 'Content-Type': 'text/html', ETag: '"gallery-fixture"' } })
+    : String(resource instanceof Request ? resource.url : resource).endsWith('/index.json')
     ? Response.json({ schemaVersion: 1, generation: '0'.repeat(64), total: 1, packSize: 24, checkedAt: '2026-10-26',
       sources: [source], facets: {}, kinds: {}, levels: {}, delivery: {}, incompleteCollections: 0, scope: 'Public catalog fixture.' })
     : Response.json([['data-' + '0'.repeat(24), 0, 'colmap', 'room/sparse/0', 'COLMAP', null, null, null]]));

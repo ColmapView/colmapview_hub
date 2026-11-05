@@ -21,7 +21,7 @@ export function individualBrowseUrl(filters: URLSearchParams, pageNumber = 1): s
 }
 
 export function individualIndexPage(location: HubLocation, index: IndividualIndex, result: IndividualPage, filters: URLSearchParams): string {
-  const loading = Boolean(location.frontend);
+  const loading = Boolean(location.frontend || location.clientRendered);
   const options = (values: { value: string; label: string }[], field: string) => values.map(({ value, label }) => `<option value="${escape(value)}"${filters.get(field) === value ? ' selected' : ''}>${escape(label)}</option>`).join('');
   const select = (field: string, title: string, all: string, values: { value: string; label: string }[], compact = false) => `<label class="catalog-field catalog-field-${field}"><span${compact ? ' class="sr-only"' : ''}>${title}</span><select name="${field}" aria-label="${title}"><option value="">${all}</option>${options(values, field)}</select></label>`;
   const values = (items: string[]) => [...new Set(items)].sort((a, b) => a.localeCompare(b, 'en')).map(value => ({ value, label: value }));
@@ -32,7 +32,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const countDescription = loading ? 'Loading datasets…' : `${number(result.total)} ${result.total === 1 ? 'scene' : 'scenes'}`;
   const savedFilters = savedFilterSummary(filters);
   const shuffle = new URLSearchParams(filters);
-  shuffle.set('seed', location.frontend ? '0000000000000000' : defaultFeedSeed(filters.get('seed') || ''));
+  shuffle.set('seed', loading ? '0000000000000000' : defaultFeedSeed(filters.get('seed') || ''));
   shuffle.delete('page');
   const filterForm = `<form id="individual-search" class="catalog-filters" role="search" action="/hub/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
     + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"><span id="catalog-count" class="catalog-count" role="status" aria-label="${countDescription}" title="${countDescription}">${loading ? 'Loading…' : result.total ? number(result.total) : 'No matches'}</span></label>`
