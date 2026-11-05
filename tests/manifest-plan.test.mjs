@@ -110,6 +110,18 @@ test('manifest plans include retained assets and variant references and detect m
     const lazy = (await manifestPlan(root, schemas)).manifests.find(item => item.file === cameraFile);
     assert.equal(lazy.requiresSplat, false);
     assert.equal(lazy.entries[0].expected.splats, undefined);
+    const repairedBody = { ...cameraBody, metadataUrl: 'https://example.org/corrected-transforms.json' };
+    const repairedDigest = manifestHash(JSON.stringify(repairedBody)), repairedFile = repairedDigest + '.manifest.json';
+    await save('manifests/' + repairedFile, repairedBody);
+    proof.sourcePairRepair = { sha256: repairedDigest };
+    proof.viewerUrl = 'https://colmapview.opsiclear.com/?url=' + encodeURIComponent(`https://colmapview.opsiclear.com/hub/datasets/individual/manifests/${repairedFile}`);
+    await save('packs/0.json', [row]);
+    const repaired = (await manifestPlan(root, schemas)).manifests.find(item => item.file === repairedFile);
+    assert.deepEqual(repaired.errors, []); // Repair owns the launch checksum; old Gaussian evidence remains intact.
+    assert.deepEqual(repaired.entries[0].expected, { cameras: 1, images: 2, points: 0 });
+    proof.sourcePairRepair.sha256 = 'f'.repeat(64);
+    await save('packs/0.json', [row]);
+    assert.match((await manifestPlan(root, schemas)).manifests.find(item => item.file === repairedFile).errors[0], /checksum/);
   } finally {
     assert.ok(resolve(root).startsWith(resolve(tmpdir(), 'colmapview-manifest-plan-')));
     await rm(root, { recursive: true, force: true });

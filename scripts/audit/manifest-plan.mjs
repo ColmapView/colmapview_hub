@@ -52,7 +52,7 @@ export async function manifestPlan(root, schemas) {
     if (expected && companions?.length === 1 && companions[0].role === 'model' && companions[0].bytes <= schemas.SPLAT_AUTO_LOAD_MAX_BYTES)
       expected.splats = companions[0].gaussians;
     const list = references.get(url) ?? [];
-    const manifestSha256 = proof.gaussianRouting?.sha256 ?? proof.videoFrameMapping?.sha256 ?? proof.videoFrameRouting?.sha256 ?? proof.sceneManifest?.sha256 ?? proof.photoRouting?.sha256 ?? proof.photoArchiveRouting?.sha256;
+    const manifestSha256 = proof.sourcePairRepair?.sha256 ?? proof.gaussianRouting?.sha256 ?? proof.videoFrameMapping?.sha256 ?? proof.videoFrameRouting?.sha256 ?? proof.sceneManifest?.sha256 ?? proof.photoRouting?.sha256 ?? proof.photoArchiveRouting?.sha256;
     list.push({ id: row[0], source: index.sources[row[1]].sourceId, path: row[3], expected, ...(manifestSha256 ? { manifestSha256 } : {}) });
     references.set(url, list);
   };
