@@ -1,0 +1,3 @@
+# This audit receipt is pinned by its complete byte digest. Preserve its original
+# line endings on every checkout instead of applying Git's text normalization.
+data/standard-sowbelly-calibration-2026-10-30.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
