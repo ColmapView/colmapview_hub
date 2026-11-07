@@ -81,21 +81,21 @@ existing tables and are excluded from these queries and cleanup.
 The API accepts `sort=discover|random|new` and an optional 8–32 lowercase hex `seed`.
 An unseeded initial request generates a fresh cryptographic seed and bypasses the
 response cache. Responses return the actual selection in `feed: {mode, seed}`.
-API requests and server-rendered fallback forms and pagination carry that seed.
+API requests carry that seed.
 Shuffle generates a fresh
 cryptographic seed selecting a different prepared ordering while preserving the active mode and filters. The seed is
 ordering state, not a user identifier. Search responses revalidate against both
 the current catalog generation and the UI release key. The browser keeps the visit's
-seed in history state, leaving only filters in the visible URL. API requests and
-the no-JavaScript pagination fallback still carry the seed. Existing seeded links
+seed in history state, leaving only filters in the visible URL. Existing seeded links
 are accepted and cleaned after loading. Separate visits and Shuffle entries have
 independent return snapshots even when their visible URLs match. Refresh
 starts a new feed at the first page with a fresh seed, preserving the active filters.
 Copying the visible URL shares its filters and starts a fresh ordering when opened.
 
 The browser appends 24 scenes when a sentinel approaches the viewport. It keeps
-manual Load more/Retry controls and server-rendered Previous/Next links for
-disabled JavaScript, missing observers and failed requests. The end is explicit;
+manual Load more/Retry controls for missing observers and failed requests.
+Both gallery hosts require JavaScript; disabled scripting shows an explanation
+and retains viewer and policy links. The end is explicit;
 the feed never cycles silently. A transient 502, 503 or 504 response receives
 one retry after a short cancellable backoff. A persistent failure pauses automatic
 loading until an explicit retry. Stale responses, duplicate cards, wrong page
@@ -110,7 +110,7 @@ Preview images are lazy loaded, uncropped and dimensioned. Offscreen cards defer
 layout with `content-visibility`; full 3D scenes are opened only through a viewer
 link. Existing information buttons keep metadata in a dialog panel.
 Empty previews retain the full card preview space. Information panels link to the
-recorded original source page for both server-rendered and appended scene cards.
+recorded original source page for both initially loaded and appended scene cards.
 Cards reserve two title lines and two data-label lines, expanding the latter when
 needed. Each data label stays together and camera/point statistics use two columns.
 Preview frames fill the remaining row space while photographs retain their proportions.

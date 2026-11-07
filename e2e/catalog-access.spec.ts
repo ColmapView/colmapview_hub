@@ -144,6 +144,7 @@ for (const failures of [1, 2]) test(failures === 1 ? 'automatic loading recovers
     } else await route.continue();
   });
   await page.goto('/hub/?sort=random&seed=12345678');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   if (failures === 1) {
     await expect(page.locator('.dataset-card')).toHaveCount(48);
@@ -171,6 +172,7 @@ test('reading catalog notes defers an in-flight append until the notes close', a
     await route.fulfill({ response });
   });
   await page.goto('/hub/?sort=random&seed=12345678');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await started;
   await page.locator('.catalog-notes > summary').click();
@@ -192,6 +194,7 @@ test('duplicate response pages never append repeated cards', async ({ page }) =>
     } else await route.continue();
   });
   await page.goto('/hub/?sort=random&seed=12345678');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('#catalog-status')).toContainText('catalog changed');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
@@ -211,6 +214,7 @@ for (const width of [1280, 390]) test(`Back restores the visible scene and refre
   });
   await page.route('**/s/**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Viewer navigation fixture</h1>' }));
   await page.goto('/hub/?sort=random&seed=12345678');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('.dataset-card')).toHaveCount(48);
   const ids = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
@@ -250,24 +254,30 @@ test('a catalog update restarts the feed instead of mixing generations', async (
   const first = await (await page.request.get(url)).json();
   const next = await (await page.request.get(url + '&page=2')).json();
   let refreshed = false;
+  let changed = false;
   await page.route('**/hub/datasets/api/entries?**', async route => {
     const pageNumber = new URL(route.request().url()).searchParams.get('page');
-    if (pageNumber !== '2') refreshed = true;
-    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...(pageNumber === '2' ? next : first), generation: 'updated-catalog-fixture' }) });
+    if (pageNumber === '2') changed = true;
+    else if (changed) refreshed = true;
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...(pageNumber === '2' ? next : first),
+      generation: changed ? 'updated-catalog-fixture' : first.generation }) });
   });
   await page.goto('/hub/?sort=random&seed=12345678');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect.poll(() => refreshed).toBe(true);
   await expect(page.locator('.dataset-card')).toHaveCount(24);
   expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id'))))
     .toEqual(first.entries.map((entry: { id: string }) => entry.id));
-  expect(await page.evaluate(() => scrollY)).toBe(0);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
 });
 
 for (const action of ['navigate', 'close']) test(`pending searches retain open metadata until ${action}`, async ({ page }) => {
   await page.goto('/hub/?sort=random&seed=12345678');
-  const initial = JSON.parse((await page.locator('#catalog-initial-data').textContent())!);
-  const identity = initial.entries[0].id;
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  const identity = await page.locator('.dataset-card').first().getAttribute('data-entry-id');
+  const initial = await (await page.request.get('/hub/datasets/api/entries?sort=random&seed=12345678')).json();
+  expect(identity).toBe(initial.entries[0].id);
   let releaseSearch: (() => void) | undefined;
   const held = new Promise<void>(resolve => { releaseSearch = resolve; });
   let requested = false;
@@ -305,12 +315,16 @@ for (const malformed of ['short page', 'duplicate within page']) test(`rejects a
   if (malformed === 'short page') next.entries.pop();
   else next.entries[1] = next.entries[0];
   await page.route('**/hub/datasets/api/entries?**', async route => {
+    if (new URL(route.request().url()).searchParams.get('page') !== '2') { await route.continue(); return; }
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify(next) });
   });
   await page.goto('/hub/?sort=random&seed=12345678');
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  const identities = await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')));
   await page.locator('#catalog-sentinel').scrollIntoViewIfNeeded();
   await expect(page.locator('#catalog-status')).toContainText('incomplete metadata');
   await expect(page.locator('.dataset-card')).toHaveCount(24);
+  expect(await page.locator('.dataset-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-entry-id')))).toEqual(identities);
 });
 
 test('blocked storage and unavailable intersection observers retain manual pagination', async ({ page }) => {
@@ -399,10 +413,22 @@ test('removed gated collections have no page, search result or dataset option', 
   await page.goto(`/hub/?dataset=${gatedSource}`);
   await expect(page.locator('#catalog-count')).toHaveText('No matches');
   await expect(page.locator(`option[value="${gatedSource}"]`)).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: 'Collection', exact: true })).toHaveValue('');
+  expect(new URL(page.url()).searchParams.get('dataset')).toBe(gatedSource);
   const response = await page.request.get(`/hub/datasets/api/entries?dataset=${gatedSource}`);
   expect(response.status()).toBe(200);
   expect(await response.json()).toMatchObject({ total: 0, entries: [], dataset: null });
   expect((await page.request.get(`/hub/datasets/individual/sources/${gatedSource}.json`)).status()).toBe(404);
+  await page.getByRole('searchbox', { name: 'Search datasets' }).fill('scene');
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('scene');
+  await expect(page.locator('#catalog-count')).toHaveText('No matches');
+  expect(new URL(page.url()).searchParams.get('dataset')).toBe(gatedSource);
+  await page.getByRole('link', { name: 'Reset', exact: true }).click();
+  await expect(page.locator('.dataset-card')).toHaveCount(24);
+  expect(new URL(page.url()).searchParams.has('dataset')).toBe(false);
+  await page.goBack();
+  await expect(page.locator('#catalog-count')).toHaveText('No matches');
+  await expect(page.locator(`option[value="${gatedSource}"]`)).toHaveCount(0);
 });
 
 test('extraction-only collections are removed from pages and public metadata', async ({ page }) => {

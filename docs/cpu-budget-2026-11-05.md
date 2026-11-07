@@ -44,5 +44,23 @@ code cost and does not reproduce Cloudflare's hardware, cold isolates or network
 The scene search API is unchanged; its measured mean was about 1.1–1.3 ms in the
 same fixture. Local timings do not establish production CPU headroom. After
 deployment, repeat the live tail and check resource-limit outcomes and successful
-page loads. The pre-deployment measurements and sanitized tail are retained in
+page loads. The local comparison and post-deployment samples are retained in
 the ignored `.tmp/cf-usage/` directory.
+
+## Production observation, November 7
+
+A read-only `workersInvocationsAdaptive` query for `colmapview-hub` covering
+November 6 at 05:56:24 UTC through November 7 at 05:56:24 UTC returned 4,007
+successful requests and zero errors. No resource-limit outcome appeared in
+that 24-hour response. This is an aggregate observation of the deployed
+optimization, not a measurement of per-route CPU time or a guarantee against
+future failures. The sanitized response is retained locally as
+`.tmp/cf-usage/worker-outcomes-24h-2026-11-07.json`.
+
+The follow-up keeps scene requests scoped to saved collection IDs without
+creating options for unknown or excluded collections. Valid source-specific
+aliases can be confirmed by the existing scene response even if index refresh
+fails. Both gallery hosts explicitly require JavaScript; their fallback text
+retains viewer and policy links without promising server-rendered pagination.
+The homepage continues streaming its built HTML without D1 queries or runtime
+catalog parsing.

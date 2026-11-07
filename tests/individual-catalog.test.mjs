@@ -1119,7 +1119,7 @@ test('grouped variants retain exact old selections without changing browse total
   assert.equal(render.individualSummary(row(0, { 7: { ...original[7], sceneTitle: 'scene0000_00' } }), source).title, 'scene0000_00');
 });
 
-test('search bounds work before reading metadata and pagination remains shareable without JavaScript', () => {
+test('search bounds work before reading metadata and page URLs retain their filters', () => {
   assert.throws(() => render.individualFilters(new URLSearchParams('q=one two three four five six seven')), /six search/);
   assert.throws(() => render.individualFilters(new URLSearchParams('page=-1')), /Invalid dataset page/);
   const values = new URLSearchParams(`dataset=${source.id}&q=NGS`);

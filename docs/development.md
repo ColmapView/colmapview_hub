@@ -27,7 +27,12 @@ Scenes and pagination load asynchronously through the existing catalog API.
 Backend filter choices ship with the shell; missing saved choices refresh in the
 background without blocking scenes. GitHub refreshes its independently deployed
 choices with an eight-second timeout before restoring cached results. Saved
-filters survive missing or unavailable index choices. The homepage performs no
+filters survive missing or unavailable index choices. Unrecognized collection
+IDs remain scoped queries, not new dropdown options; a successful scene response
+can confirm a saved source-specific alias. Both gallery hosts require JavaScript
+and show an explicit fallback message when it is disabled. Viewer and policy
+links remain available; the fallback does not claim to provide gallery search or
+pagination. The homepage performs no
 D1 query or catalog JSON parsing. The public index
 endpoint streams its built asset with its validator instead of parsing and
 serializing it again. See the [CPU review](cpu-budget-2026-11-05.md).

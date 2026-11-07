@@ -552,7 +552,7 @@ test('long titles stay within a narrow management page and delete keys never ent
   } finally { expect((await removeLink(page, link)).status()).toBe(204); }
 });
 
-test('preserves saved filters after their redundant controls are removed', async ({ page, browser }) => {
+test('preserves saved filters after their redundant controls are removed', async ({ page }) => {
   const path = '/hub/?delivery=cors_headers_checked&viewer=available';
   await page.goto(path);
   await expect(page.locator('select[name="delivery"],select[name="viewer"]')).toHaveCount(0);
@@ -568,22 +568,6 @@ test('preserves saved filters after their redundant controls are removed', async
   await page.goBack();
   await expect(page.locator('#catalog-saved-filters')).toContainText('Model links only');
   await expect(page.locator('input[name="delivery"]')).toHaveValue('cors_headers_checked');
-  const fallback = await browser.newContext({ javaScriptEnabled: false });
-  try {
-    const serverPage = await fallback.newPage();
-    await serverPage.goto(origin + path.replace('?', '?q=large_overlap&'));
-    await expect(serverPage.locator('#catalog-saved-filters')).toContainText('Model links only');
-    const next = new URL((await serverPage.locator('#catalog-next').getAttribute('href'))!, origin);
-    expect(next.searchParams.get('delivery')).toBe('cors_headers_checked');
-    expect(next.searchParams.get('viewer')).toBe('available');
-    expect(next.searchParams.get('page')).toBe('2');
-    await expect(serverPage.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('large_overlap');
-    await serverPage.getByRole('link', { name: 'Reset', exact: true }).click();
-    await expect(serverPage).toHaveURL(origin + '/hub/');
-    await expect(serverPage.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('');
-    await expect(serverPage.locator('#catalog-saved-filters')).toBeHidden();
-    await expect(serverPage.locator('.dataset-card')).toHaveCount(24);
-  } finally { await fallback.close(); }
 });
 
 test('opens the scene browser directly in the ColmapView frame', async ({ page }) => {

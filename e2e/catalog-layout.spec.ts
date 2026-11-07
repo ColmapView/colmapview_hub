@@ -40,6 +40,12 @@ for (const unavailable of ['failed', 'stalled']) test(`saved collection filters 
     expect(sceneRequests.length).toBeGreaterThan(0);
     expect(sceneRequests.every(value => new URL(value).searchParams.get('dataset') === source.id)).toBe(true);
     await expect(page.getByRole('combobox', { name: 'Collection', exact: true })).toHaveValue(source.id);
+    await page.locator('.dataset-card').first().locator('.dataset-info').click();
+    await page.getByRole('dialog').getByRole('link', { name: 'Full metadata', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Dataset information', exact: true })).toBeVisible();
+    await page.goBack();
+    await expect(page.locator('.dataset-card').first()).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Collection', exact: true })).toHaveValue(source.id);
   } finally { release(); }
 });
 
@@ -57,6 +63,20 @@ test('the built homepage loads filtered scenes asynchronously', async ({ page })
     await expect(page.getByRole('searchbox', { name: 'Search datasets' })).toHaveValue('SceauxCastle');
     await expect(page.locator('.dataset-card').first()).toContainText('SceauxCastle');
   } finally { release(); }
+});
+
+test('the gallery explains its JavaScript requirement and retains viewer and policy links', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await page.goto((process.env.HUB_E2E_ORIGIN || `http://localhost:${process.env.HUB_E2E_PORT || '5201'}`) + '/hub/');
+    await expect(page.locator('noscript p')).toHaveText('Enable JavaScript to browse and search datasets. The viewer and policy links remain available.');
+    await expect(page.getByRole('link', { name: 'Open viewer', exact: true })).toBeVisible();
+    const info = page.locator('.catalog-notes');
+    await info.locator('summary').click();
+    for (const name of ['About', 'Privacy', 'Terms']) await expect(info.getByRole('link', { name, exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Browse the server-rendered catalog' })).toHaveCount(0);
+  } finally { await context.close(); }
 });
 
 test('the Hub brand opens a fresh tab and Info retains policy links', async ({ page }) => {

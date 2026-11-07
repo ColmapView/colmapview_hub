@@ -46,6 +46,18 @@ test.afterEach(async ({ page }) => {
   await page.unrouteAll({ behavior: 'ignoreErrors' });
 });
 
+test.describe('JavaScript disabled', () => {
+  test.use({ javaScriptEnabled: false });
+  test('GitHub explains the gallery requirement without advertising a nonexistent fallback', async ({ page }) => {
+    await page.goto(github + '/hub/');
+    await expect(page.locator('noscript p')).toHaveText('Enable JavaScript to browse and search datasets. The viewer and policy links remain available.');
+    await expect(page.getByRole('link', { name: 'Open viewer', exact: true })).toHaveAttribute('href', github + '/latest/');
+    await expect(page.getByRole('link', { name: 'Browse the server-rendered catalog' })).toHaveCount(0);
+    await page.locator('.catalog-notes > summary').click();
+    await expect(page.getByRole('navigation', { name: 'About and policies' }).getByRole('link')).toHaveText(['About', 'Privacy', 'Terms']);
+  });
+});
+
 test('GitHub can load scenes when its index refresh fails', async ({ page }) => {
   await page.route(production + '/hub/datasets/api/index', route => route.fulfill({ status: 503, body: 'Index unavailable' }));
   await page.goto(github + '/hub/?q=SceauxCastle');

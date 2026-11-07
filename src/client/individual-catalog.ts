@@ -8,7 +8,7 @@ import type { CatalogHistoryMode } from './catalog-history';
 import { recallFeed, rememberFeed, restoreFeedPosition } from './feed-memory';
 import { defaultFeedSeed, FEED_MODES } from '../shared/discovery';
 import { catalogViewerHost, hubApiBase, hubFrontend } from './hosting';
-import { refreshCatalogFilters } from './catalog-config';
+import { catalogFieldValue, refreshCatalogFilters, setCatalogFieldValue } from './catalog-config';
 import { catalogRequest } from './catalog-request';
 
 const form = document.querySelector<HTMLFormElement>('#individual-search');
@@ -39,11 +39,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     let missingChoice = false;
     for (const field of fields) {
       const value = field.name === 'viewerHost' ? host || '' : values.get(field.name) || '';
-      if (field instanceof HTMLSelectElement && value && ![...field.options].some(option => option.value === value)) {
-        field.add(new Option(value, value));
-        missingChoice = true;
-      }
-      field.value = value;
+      if (setCatalogFieldValue(field, value)) missingChoice = true;
     }
     return missingChoice;
   };
@@ -109,7 +105,10 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
 
   const query = (page = 1) => {
     const values = new URLSearchParams();
-    for (const field of fields) if (field.value.trim() && !(staticFrontend && field.name === 'viewerHost')) values.set(field.name, field.value.trim());
+    for (const field of fields) {
+      const value = catalogFieldValue(field).trim();
+      if (value && !(staticFrontend && field.name === 'viewerHost')) values.set(field.name, value);
+    }
     if (page > 1) values.set('page', String(page));
     return values;
   };
@@ -185,6 +184,13 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const extraBadge = extraFilters.querySelector<HTMLElement>('[data-extra-count]')!;
     extraBadge.textContent = `${extraCount} active`; extraBadge.hidden = !extraCount;
   };
+  const confirmCollection = (source: Pick<IndividualSelection, 'id' | 'label' | 'title'> | null | undefined) => {
+    const field = form.querySelector<HTMLSelectElement>('select[name="dataset"]')!;
+    const value = field.dataset.unavailableValue;
+    if (!value || !source || value !== source.id && value !== `public:${source.label}`) return;
+    field.add(new Option(`${source.label} · ${source.title}`, value));
+    setCatalogFieldValue(field, value);
+  };
   const restore = () => {
     const saved = recallFeed(key(), generation);
     if (!saved) return false;
@@ -199,6 +205,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (firstPage > 1) committed.set('page', String(firstPage)); else committed.delete('page');
     entries = saved.data.entries; loaded = entries.length; total = saved.data.total; pages = saved.data.pages;
     fillFields(committed);
+    confirmCollection(entries[0]?.dataset);
     revealExtraFilters(committed);
     results.replaceChildren(...entries.map(entry => catalogCardElement(entry, host)));
     results.removeAttribute('aria-busy');
@@ -215,8 +222,17 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     return true;
   };
   const updateSelection = (source: IndividualSelection | null) => {
-    selection.hidden = !source;
-    if (!source) { selection.replaceChildren(); return; }
+    // Confirm source-specific aliases using the scene API, even if the optional
+    // index refresh failed or the shell only offers the grouped public label.
+    confirmCollection(source);
+    const field = form.querySelector<HTMLSelectElement>('select[name="dataset"]')!;
+    const unavailable = field.dataset.unavailableValue;
+    selection.hidden = !source && !unavailable;
+    if (!source) {
+      selection.textContent = unavailable ? 'This collection is not available in the catalog. Reset filters to browse other datasets.' : '';
+      if (unavailable) field.options[0].textContent = 'Unavailable collection';
+      return;
+    }
     selection.textContent = `Collection: ${source.label} · ${source.count.toLocaleString()} scenes${source.listingComplete ? '' : ' · listing incomplete'}.`;
   };
   const load = async (values: URLSearchParams, options: { append?: boolean; focus?: boolean; history?: CatalogHistoryMode; restoring?: boolean } = {}): Promise<void> => {
@@ -347,6 +363,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
   };
   const search = (history: CatalogHistoryMode = 'push') => { clearTimeout(timer); void load(query(), { history }); };
   form.addEventListener('input', event => {
+    if (event.target instanceof HTMLSelectElement && event.target.name === 'dataset') setCatalogFieldValue(event.target, event.target.value);
     stopRestoring?.();
     clearTimeout(timer);
     pending?.abort();
@@ -362,7 +379,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0 || !(event.target instanceof Element)) return;
     if (!event.target.closest('#catalog-reset, [data-clear-catalog]')) return;
     event.preventDefault();
-    for (const field of fields) if (field.name !== 'viewerHost') field.value = '';
+    for (const field of fields) if (field.name !== 'viewerHost') setCatalogFieldValue(field, '');
     if (event.target.closest('[data-clear-catalog]')) form.querySelector<HTMLInputElement>('input[name="q"]')?.focus({ preventScroll: true });
     search();
   });
@@ -409,7 +426,7 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const values = new URLSearchParams(location.search);
     const seed = navigation.feedSeed();
     if (seed) values.set('seed', seed);
-    for (const field of fields) field.value = values.get(field.name) || '';
+    fillFields(values);
     revealExtraFilters(values);
     void load(values, { restoring: true });
   });
