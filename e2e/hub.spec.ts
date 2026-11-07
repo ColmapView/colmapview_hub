@@ -16,8 +16,16 @@ async function seedAnalyticsCookies(context: BrowserContext): Promise<void> {
 
 async function mockCatalogAnalytics(page: Page): Promise<string[]> {
   const tags: string[] = [];
+  // Never fall through to the live site while page routes are being removed.
+  await page.context().route(production + '/hub/**', route => route.abort('blockedbyclient'));
   await page.route(production + '/hub/**', async route => {
     const url = new URL(route.request().url());
+    // Publication content has its own suite. Keep this unrelated D1 request out
+    // of consent tests that deliberately cancel page requests by reloading.
+    if (url.pathname === '/hub/api/publications') {
+      await route.fulfill({ json: { entries: [] } });
+      return;
+    }
     const response = await route.fetch({ url: origin + url.pathname + url.search });
     await route.fulfill({ response });
   });
