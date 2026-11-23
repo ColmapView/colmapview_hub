@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.20.14 — 2026-11-23
+
+- Preserve `data-*`, ARIA, and inline SVG attributes when parsing catalog entry fragments on GitHub Pages by using inert `DOMParser` validation instead of default `Document.parseHTML()` sanitization.
+
 ## 0.20.13 — 2026-11-23
 
 - Prebuild catalog homepage shells, compact mobile analytics consent layout, match `StandardSowbelly` source photos, clean false feature-link warnings on MBZUAI scenes, and preserve async gallery collection filter selection across reloads.

@@ -17,12 +17,13 @@ if (hubFrontend() === 'github' && container && status && retry) {
       if (!response.ok || !response.headers.get('Content-Type')?.startsWith('text/html')) throw new Error();
       const html = await response.text();
       if (html.length > 2 * 1024 * 1024) throw new Error();
-      const parseHtml = (Document as typeof Document & { parseHTML?: (input: string) => Document }).parseHTML;
-      const parsed = parseHtml ? parseHtml.call(Document, html) : new DOMParser().parseFromString(html, 'text/html');
+      // Operator-built entry HTML relies on data-*, ARIA, and inline <svg> attributes that default
+      // Document.parseHTML() strips; validate explicitly in an inert DOMParser document instead.
+      const parsed = new DOMParser().parseFromString(html, 'text/html');
       if (!parsed.querySelector(`.dataset-overview[data-entry-id="${id}"]`)) throw new Error();
-      if (!parseHtml && parsed.querySelector('script,style,iframe,object,embed,base,form,link,meta')) throw new Error();
+      if (parsed.querySelector('script,style,iframe,object,embed,base,form,link,meta')) throw new Error();
       for (const element of parsed.body.querySelectorAll('*')) {
-        if (!parseHtml && [...element.attributes].some(attribute => /^on/i.test(attribute.name) || attribute.name === 'style')) throw new Error();
+        if ([...element.attributes].some(attribute => /^on/i.test(attribute.name) || attribute.name === 'style')) throw new Error();
         for (const name of ['href', 'src']) {
           const value = element.getAttribute(name);
           if (value && !['https:', 'http:'].includes(new URL(value, location.href).protocol)) throw new Error();
