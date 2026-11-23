@@ -17,7 +17,7 @@ const say = (text: string, focus = false) => {
 };
 
 const play = document.querySelector<HTMLButtonElement>('#play');
-if (play) play.onclick = () => {
+if (play) play.addEventListener('click', () => {
   const url = new URL(play.dataset.viewerUrl!);
   url.searchParams.set('embed', '1');
   const frame = document.createElement('iframe');
@@ -30,7 +30,7 @@ if (play) play.onclick = () => {
   player.classList.add('playing');
   player.replaceChildren(frame);
   frame.focus();
-};
+});
 
 const deletion = document.querySelector<HTMLFormElement>('#delete-link');
 if (deletion) {

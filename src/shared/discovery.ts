@@ -87,7 +87,7 @@ export function discoveryOrder(asset: DiscoveryAsset, sources: IndividualSource[
     groups.set(key, group);
   }
   const queues = [...groups].map(([key, ordinals]) => ({ key,
-    lanes: Object.fromEntries(FEED_MODES.map(mode => [mode, { values: [...ordinals].sort(compare(mode)), position: 0 }])) as Record<FeedMode, { values: number[]; position: number }>,
+    lanes: Object.fromEntries(FEED_MODES.map(mode => [mode, { values: ordinals.toSorted(compare(mode)), position: 0 }])) as Record<FeedMode, { values: number[]; position: number }>,
     shown: 0, random: hash(`${salt}:collection:${key}`) }));
   const used = new Set<number>(), result: number[] = [], recent: string[] = [];
   const counts = new Map<string, number>();

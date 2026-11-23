@@ -12,13 +12,13 @@ import type { ViewerHost, HubFrontend } from './viewer-host';
 import { VIDEO_CAPTURE_LABELS } from './video-capture';
 import { sceneContentsHtml, sceneDataText, sceneStatisticsHtml, sceneThumbnailHtml, sceneThumbnailCreditHtml, scenePlaceholderHtml } from './scene-contents';
 
-export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, frontend?: HubFrontend): string {
+export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, frontend?: HubFrontend, eager = false): string {
   const category = licenseCategory(entry);
   const canOpen = catalogOpenUrl(entry) !== datasetPath(entry);
   const action = canOpen ? entry.hasViewer ? 'Open in viewer' : 'Try in viewer · unchecked' : 'Source details';
   const metadataId = `metadata-${entry.id}`;
   const title = catalogCardTitle(entry);
-  const preview = entry.access === 'gated' ? '' : sceneThumbnailHtml(entry, true, frontend === 'github' ? HUB_ORIGIN : '');
+  const preview = entry.access === 'gated' ? '' : sceneThumbnailHtml(entry, true, frontend === 'github' ? HUB_ORIGIN : '', eager);
   const share = datasetSharePath(entry.id, entry.shareName);
   const launchUrl = hubViewerLink(share || catalogOpenUrl(entry), host, frontend);
   const facts = [
@@ -39,12 +39,12 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
     + '</div>'
     + '<div class="dataset-card-body">'
     + `<h2><a class="dataset-open" href="${escape(launchUrl)}" title="${escape(title)}" aria-label="${escape(`${action}: ${title}`)}">${escape(title)}</a></h2>`
-    + '<div class="dataset-card-tags" aria-label="Dataset tags">' + sceneContentsHtml(entry.availableData)
+    + '<div class="dataset-card-tags">' + sceneContentsHtml(entry.availableData)
     + (entry.videoCapture ? `<span class="dataset-tag" data-tag="video">${escape(VIDEO_CAPTURE_LABELS[entry.videoCapture])}</span>` : '')
     + `<span class="dataset-tag" data-license-category="${category}" aria-label="License: ${escape(entry.license)}">${escape(licenseTagLabel(entry.license, category))}</span></div>`
     + (!canOpen ? '<p class="dataset-link-note">Source only</p>' : !entry.hasViewer ? '<p class="dataset-link-note">Try · unchecked ↗</p>' : '')
     + '</div>'
-    + `<dialog class="dataset-metadata" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
+    + `<dialog class="dataset-metadata" closedby="any" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
     + `<div class="dataset-metadata-header"><h2>Dataset information</h2><button type="button" class="dataset-metadata-close icon-button" aria-label="Close" title="Close" autofocus>${icon('close')}</button></div>`
     + '<div class="dataset-metadata-content">'
     + `<h3 class="dataset-metadata-title">${escape(title).replaceAll('_', '_<wbr>')}</h3>` + sceneStatisticsHtml(entry.sceneStats)

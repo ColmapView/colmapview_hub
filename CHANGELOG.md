@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.20.13 — 2026-11-23
+
+- Prebuild catalog homepage shells, compact mobile analytics consent layout, match `StandardSowbelly` source photos, clean false feature-link warnings on MBZUAI scenes, and preserve async gallery collection filter selection across reloads.
+- Align UI tokens and controls with OS preferences and assistive technology: convert stylesheet typography to `rem`, add `color-scheme` and `text-scale` metadata with synced theme toggles, preload critical variable fonts, wrap catalog filters in a `<search>` landmark with explicit form labels, use `closedby="any"` dialogs with overscroll containment, add `@media (forced-colors: active)` styles, and serve `X-Frame-Options` and `Permissions-Policy` headers.
+- Improve client resilience and performance: use progressive `Document.parseHTML()` sanitization on entry metadata, add `AbortSignal` request timeouts, replace shared-card `innerHTML` sinks with safe DOM construction, use `.toSorted()`, and track visible cards with `IntersectionObserver` so scroll-memory measurement avoids layout thrashing.
+
 ## 0.20.9 — 2026-10-29
 
 - Align metadata actions into a primary launch/copy row and consistent secondary buttons for curated and shared entries.

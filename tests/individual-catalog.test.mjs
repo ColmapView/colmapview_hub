@@ -746,6 +746,17 @@ test('square previews remain same-origin and attributed for every source and ima
   assert.match(html, /dataset-photo-credit.*Original photographer.*cc-by-sa-4.0.*Cropped/);
   const detail = render.catalogEntryPage(render.individualEntry(row(0, { 7: { ...nativePhotoProof('sample_checked'), thumbnail: squareThumbnail } }), source, parent));
   assert.match(detail, /Center-square crop of a checked registered image/);
+  assert.match(detail, /width="320" height="320" loading="eager" fetchpriority="high" decoding="async"/);
+  const ssrPage = render.individualIndexPage(
+    { origin: 'https://colmapview.opsiclear.com', path: '/hub', base: 'https://colmapview.opsiclear.com/hub', local: false },
+    { schemaVersion: 1, generation: 'a'.repeat(64), total: 4, sources: [], kinds: {}, levels: {}, photos: {}, contents: {} },
+    { entries: [0, 1, 2, 3].map(i => ({ ...summary, id: `data-${String(i).padStart(24, '0')}` })), total: 4, page: 1, pages: 1, generation: 'a'.repeat(64) },
+    new URLSearchParams(),
+  );
+  assert.match(ssrPage, /<search class="catalog-search"><form id="individual-search"/);
+  assert.match(ssrPage, /<label for="catalog-query" class="catalog-query">/);
+  assert.equal((ssrPage.match(/loading="eager" fetchpriority="high"/g) ?? []).length, 3);
+  assert.equal((ssrPage.match(/loading="lazy" decoding="async"/g) ?? []).length, 1);
   for (const license of ['cc-by-nc-4.0', 'unknown', 'other']) {
     assert.match(render.catalogCard({ ...summary, license, thumbnail: { ...squareThumbnail, datasetLicense: license, license } }), /class="dataset-thumbnail"/);
     assert.match(render.catalogCard({ ...summary, thumbnail: { ...squareThumbnail, license } }), /class="dataset-thumbnail"/);

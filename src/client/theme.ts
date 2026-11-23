@@ -11,7 +11,10 @@
     catch { return 'dark'; }
   };
   const apply = () => {
-    document.documentElement.dataset.uiTheme = preference === 'system' ? media.matches ? 'light' : 'dark' : preference;
+    const resolved = preference === 'system' ? (media.matches ? 'light' : 'dark') : preference;
+    document.documentElement.dataset.uiTheme = resolved;
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    if (meta) meta.setAttribute('content', preference === 'system' ? 'dark light' : resolved);
     const control = document.querySelector<HTMLButtonElement>('#hub-theme');
     if (control) {
       control.dataset.theme = preference;

@@ -159,7 +159,8 @@ describe('routes', () => {
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ error: 'The Hub is temporarily unavailable. Please try again.' });
     for (const [name, value] of [['Cache-Control', 'no-store'], ['X-Content-Type-Options', 'nosniff'],
-      ['X-Robots-Tag', 'noindex, nofollow, noarchive'], ['Referrer-Policy', 'no-referrer']]) expect(response.headers.get(name), name).toBe(value);
+      ['X-Robots-Tag', 'noindex, nofollow, noarchive'], ['Referrer-Policy', 'no-referrer'],
+      ['X-Frame-Options', 'DENY'], ['Permissions-Policy', 'camera=(), geolocation=(), microphone=()']]) expect(response.headers.get(name), name).toBe(value);
     expect(response.headers.get('Content-Security-Policy')).toContain("frame-ancestors 'none'");
   });
 

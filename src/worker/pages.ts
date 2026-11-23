@@ -45,7 +45,7 @@ const viewerControl = (host?: ViewerHost) => `<a class="button icon-button" href
 
 const header = (path: string, filters?: string, host?: ViewerHost, frontend?: HubFrontend) => [
   `<header class="site-header${filters ? ' catalog-toolbar' : ''}">`,
-  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" target="_blank" rel="noopener noreferrer" aria-label="Spatial Hub"><img class="brand-logo" src="${hubAssetUrl(path + '/opsiclear-logo.png', frontend)}" width="22" height="22" alt="" title="OpsiClear"><span class="brand-title"><span class="brand-name">Spatial</span> <span class="brand-section">Hub</span></span></a>`,
+  `<a class="brand" href="${escapeHtml(hubViewerLink(path + '/', host))}" target="_blank" rel="noopener noreferrer" aria-label="Spatial Hub"><img class="brand-logo" src="${hubAssetUrl(path + '/opsiclear-logo.png', frontend)}" width="22" height="22" alt=""><span class="brand-title"><span class="brand-name">Spatial</span> <span class="brand-section">Hub</span></span></a>`,
   ...(filters ? [filters] : [
   '<nav class="site-nav" aria-label="Main navigation">',
   `<a class="button icon-button" href="${escapeHtml(hubViewerLink(path + '/', host))}" aria-label="Datasets" title="Datasets">${icon('datasets')}</a>`,
@@ -85,6 +85,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
   return [
     `<!doctype html><html lang="en" data-hub-path="${escapeHtml(location.path)}"${location.frontend ? ' data-hub-frontend="github"' : ''}${location.clientRendered ? ' data-hub-client-rendered="true"' : ''}${publicCatalog ? ' data-hub-public-catalog="true"' : ''}><head>`,
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">',
+    '<meta name="color-scheme" content="dark light"><meta name="text-scale" content="scale">',
     ...(location.frontend ? [
       '<meta name="referrer" content="no-referrer">',
       '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src https://colmapview.opsiclear.com https://www.googletagmanager.com; style-src https://colmapview.opsiclear.com; img-src https://colmapview.opsiclear.com https://www.googletagmanager.com https://*.google-analytics.com data:; font-src https://colmapview.opsiclear.com; connect-src https://colmapview.opsiclear.com https://www.googletagmanager.com https://*.google-analytics.com; base-uri \'none\'; form-action \'self\'">',
@@ -93,6 +94,7 @@ export function page(location: HubLocation, title: string, body: string, metadat
     `<title>${escapeHtml(title)} · Spatial Hub</title>`,
     metadata,
     `<link rel="icon" href="${asset('favicon.ico')}">`,
+    `<link rel="preload" href="${asset('fonts/ibm-plex-sans-latin-wght-normal.woff2')}" as="font" type="font/woff2" crossorigin>`,
     `<link rel="stylesheet" href="${asset('colmapview.css')}"${anonymous}>`,
     `<script src="${asset('assets/theme.js')}?v=${HUB_UI_VERSION}"${anonymous}></script>`,
     `<link rel="stylesheet" href="${asset('styles.css')}?v=${HUB_UI_VERSION}"${anonymous}>`,
@@ -144,7 +146,7 @@ export function cardPage(location: HubLocation, record: CardRecord): string {
   const meta = [escapeHtml(assets), license].filter(Boolean).join(' · ');
   const privateLink = record.access === 'private';
   // Signing in inside an iframe is unreliable, so private cards open the viewer instead of playing inline.
-  const player = `<div class="player" id="player"><img src="${pageUrl}/preview.jpg" width="${PREVIEW_WIDTH}" height="${PREVIEW_HEIGHT}" alt="${escapeHtml(record.title)}">`
+  const player = `<div class="player" id="player"><img src="${pageUrl}/preview.jpg" width="${PREVIEW_WIDTH}" height="${PREVIEW_HEIGHT}" fetchpriority="high" alt="${escapeHtml(record.title)}">`
     + (privateLink ? '' : `<button type="button" class="button button-primary" id="play" data-viewer-url="${escapeHtml(record.viewerUrl)}">Play 3D</button>`)
     + '</div>';
   const actions = '<div class="actions">'

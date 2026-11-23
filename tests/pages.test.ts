@@ -11,6 +11,7 @@ describe('Hub pages', () => {
     expect(html).toContain('<p class="lede">A small test scene.</p>');
     expect(html).toContain('<p class="meta">83 images · 83,749 points · 1 splat · License: <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer">CC BY 4.0</a></p>');
     expect(html).toContain('<meta name="twitter:description" content="A small test scene.">');
+    expect(html).toContain('fetchpriority="high" alt="Demo reconstruction"');
     expect(html).toContain('id="play"');
   });
 
@@ -32,6 +33,7 @@ describe('Hub pages', () => {
     for (const path of [`/${link.id}`, '/missing-frame']) {
       const html = await (await request(path)).text();
       expect(html).toContain('<a class="brand" href="/hub/" target="_blank" rel="noopener noreferrer" aria-label="Spatial Hub">');
+      expect(html).not.toContain('title="OpsiClear"');
       for (const [href, label] of [['/hub/', 'Datasets'], ['https://colmapview.opsiclear.com/', 'Open viewer']]) {
         expect(html).toContain(`href="${href}" aria-label="${label}" title="${label}"`);
       }
@@ -47,6 +49,8 @@ describe('Hub pages', () => {
       expect(html).toContain(`/hub/assets/theme.js?v=${HUB_UI_VERSION}`);
       expect(html).toContain('id="hub-theme" aria-label="Appearance: Dark. Switch to Light."');
       expect(html).toContain('<link rel="icon" href="/hub/favicon.ico">');
+      expect(html).toContain('<meta name="color-scheme" content="dark light"><meta name="text-scale" content="scale">');
+      expect(html).toContain('<link rel="preload" href="/hub/fonts/ibm-plex-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>');
       expect(html).toMatch(/<title>[^<]+ · Spatial Hub<\/title>/);
     }
   });

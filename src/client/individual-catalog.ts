@@ -1,4 +1,4 @@
-import { catalogExtraFilterCount, catalogFilterState, emptyCatalogHtml } from '../shared/catalog-controls';
+import { catalogExtraFilterCount, catalogFilterState } from '../shared/catalog-controls';
 import { isCatalogSummary } from '../shared/catalog';
 import { INDIVIDUAL_PAGE_SIZE, savedFilterSummary } from '../shared/individual-catalog';
 import type { IndividualPage, IndividualSelection } from '../shared/individual-catalog';
@@ -103,6 +103,25 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     if (Array.isArray(initial.entries) && initial.entries.every(isCatalogSummary)) entries = initial.entries;
   } catch { /* The server-rendered page still works when initial metadata is absent. */ }
 
+  const visibleCards = new Set<HTMLElement>();
+  const cardObserver = typeof IntersectionObserver === 'undefined' ? undefined : new IntersectionObserver(changes => {
+    for (const { target, isIntersecting } of changes) {
+      const card = target as HTMLElement;
+      if (isIntersecting && card.isConnected) visibleCards.add(card);
+      else visibleCards.delete(card);
+    }
+  });
+  const observeCards = (cardsToObserve: Iterable<HTMLElement>) => {
+    if (!cardObserver) return;
+    for (const card of cardsToObserve) cardObserver.observe(card);
+  };
+  const resetObservedCards = (nextCards: Iterable<HTMLElement>) => {
+    visibleCards.clear();
+    cardObserver?.disconnect();
+    observeCards(nextCards);
+  };
+  observeCards(results.querySelectorAll<HTMLElement>('[data-entry-id]'));
+
   const query = (page = 1) => {
     const values = new URLSearchParams();
     for (const field of fields) {
@@ -138,18 +157,40 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     const cards = [...results.querySelectorAll<HTMLElement>('[data-entry-id]')];
     const focused = document.activeElement?.closest<HTMLElement>('[data-entry-id]');
     const preferred = departing?.isConnected ? departing : focused;
+    const selected = Boolean(departing?.isConnected);
     const preferredIndex = preferred ? cards.indexOf(preferred) : -1;
     const viewportTop = document.querySelector('.catalog-toolbar')!.getBoundingClientRect().bottom;
     const viewportBottom = document.querySelector('.catalog-footbar')!.getBoundingClientRect().top;
-    const areas = cards.map(card => { const box = card.getBoundingClientRect(); return Math.max(0, Math.min(box.bottom, viewportBottom) - Math.max(box.top, viewportTop)); });
-    const selected = Boolean(departing?.isConnected);
-    const visible = preferredIndex >= 0 && (selected || areas[preferredIndex] > 0) ? preferredIndex : Math.max(0, areas.indexOf(Math.max(...areas)));
+    const overlap = (box: DOMRect) => Math.max(0, Math.min(box.bottom, viewportBottom) - Math.max(box.top, viewportTop));
+    const preferredBox = preferred && preferredIndex >= 0 ? preferred.getBoundingClientRect() : undefined;
+    let visible = -1;
+    let anchorTop = viewportTop;
+    if (preferredBox) {
+      const preferredArea = overlap(preferredBox);
+      if (selected || preferredArea > 0) {
+        visible = preferredIndex;
+        anchorTop = selected && preferredArea === 0 ? viewportTop : preferredBox.top;
+      }
+    }
+    if (visible < 0) {
+      const hasVisibleCards = visibleCards.size > 0 && cards.some(card => visibleCards.has(card));
+      let largestArea = -1;
+      for (let index = 0; index < cards.length; index++) {
+        const card = cards[index];
+        if (hasVisibleCards && !visibleCards.has(card)) continue;
+        const box = index === preferredIndex && preferredBox ? preferredBox : card.getBoundingClientRect();
+        const area = overlap(box);
+        if (area <= largestArea) continue;
+        largestArea = area;
+        visible = index;
+        anchorTop = box.top;
+      }
+    }
     const start = Math.max(0, Math.floor(visible / INDIVIDUAL_PAGE_SIZE) * INDIVIDUAL_PAGE_SIZE - 96);
     const cached = entries.slice(start, start + 240);
     rememberFeed({ key: viewKey, query: committed.toString(), data: { entries: cached, page: firstPage + start / INDIVIDUAL_PAGE_SIZE,
       pages, total, generation }, lastPage: firstPage + start / INDIVIDUAL_PAGE_SIZE + Math.ceil(cached.length / INDIVIDUAL_PAGE_SIZE) - 1,
-    collectionText: selection.textContent || '', anchor: cards[visible] ? { id: entries[visible].id,
-      top: selected && areas[visible] === 0 ? viewportTop : cards[visible].getBoundingClientRect().top } : null });
+    collectionText: selection.textContent || '', anchor: visible >= 0 ? { id: entries[visible].id, top: anchorTop } : null });
   };
   const updateNavigation = () => {
     const offset = (firstPage - 1) * INDIVIDUAL_PAGE_SIZE;
@@ -207,7 +248,9 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     fillFields(committed);
     confirmCollection(entries[0]?.dataset);
     revealExtraFilters(committed);
-    results.replaceChildren(...entries.map(entry => catalogCardElement(entry, host)));
+    const cards = entries.map(entry => catalogCardElement(entry, host));
+    results.replaceChildren(...cards);
+    resetObservedCards(cards);
     results.removeAttribute('aria-busy');
     selection.textContent = saved.collectionText; selection.hidden = !saved.collectionText;
     feedback(''); canAppend = true; more.disabled = false; automaticPaused = false;
@@ -256,7 +299,8 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
     results.toggleAttribute('data-searching', !options.append);
     let failure = options.append ? 'Could not load more scenes. Try again.' : 'Dataset search is unavailable. Use Search to retry.';
     try {
-      const response = await catalogRequest(`${hubApiBase()}/datasets/api/entries${values.size ? `?${values}` : ''}`, controller.signal);
+      const response = await catalogRequest(`${hubApiBase()}/datasets/api/entries${values.size ? `?${values}` : ''}`,
+        AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]));
       const data: (IndividualPage & { dataset: IndividualSelection | null; error?: string }) | null = await response.json().catch(() => null);
       if (!response.ok) {
         if (response.status === 400 && typeof data?.error === 'string') failure = data.error;
@@ -314,11 +358,25 @@ if (form && document.querySelector('#catalog-more') && document.querySelector('#
           throw new Error(failure);
         }
         results.append(...cards);
+        observeCards(cards);
         entries.push(...data.entries);
         loaded += cards.length;
       } else {
         if (cards.length) results.replaceChildren(...cards);
-        else results.innerHTML = emptyCatalogHtml(document.querySelector<HTMLAnchorElement>('#catalog-reset')!.href);
+        else {
+          const empty = document.createElement('div');
+          empty.className = 'catalog-empty';
+          const message = document.createElement('p');
+          message.textContent = 'No datasets match these filters.';
+          const clear = document.createElement('a');
+          clear.className = 'button';
+          clear.dataset.clearCatalog = '';
+          clear.href = document.querySelector<HTMLAnchorElement>('#catalog-reset')!.href;
+          clear.textContent = 'Clear search and filters';
+          empty.append(message, clear);
+          results.replaceChildren(empty);
+        }
+        resetObservedCards(cards);
         firstPage = data.page;
         entries = data.entries;
         loaded = cards.length;

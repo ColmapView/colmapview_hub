@@ -23,7 +23,7 @@ export function individualBrowseUrl(filters: URLSearchParams, pageNumber = 1): s
 export function individualIndexPage(location: HubLocation, index: IndividualIndex, result: IndividualPage, filters: URLSearchParams): string {
   const loading = Boolean(location.frontend || location.clientRendered);
   const options = (values: { value: string; label: string }[], field: string) => values.map(({ value, label }) => `<option value="${escape(value)}"${filters.get(field) === value ? ' selected' : ''}>${escape(label)}</option>`).join('');
-  const select = (field: string, title: string, all: string, values: { value: string; label: string }[], compact = false) => `<label class="catalog-field catalog-field-${field}"><span${compact ? ' class="sr-only"' : ''}>${title}</span><select name="${field}" aria-label="${title}"><option value="">${all}</option>${options(values, field)}</select></label>`;
+  const select = (field: string, title: string, all: string, values: { value: string; label: string }[], compact = false) => `<label for="catalog-filter-${field}" class="catalog-field catalog-field-${field}"><span${compact ? ' class="sr-only"' : ''}>${title}</span><select id="catalog-filter-${field}" name="${field}"><option value="">${all}</option>${options(values, field)}</select></label>`;
   const values = (items: string[]) => [...new Set(items)].sort((a, b) => a.localeCompare(b, 'en')).map(value => ({ value, label: value }));
   const dataset = individualSelection(index.sources, filters.get('dataset') || '');
   const activeFilters = catalogFilterState(filters, { dataset: dataset?.label || '', access: CATALOG_ACCESS_OPTIONS.find(option => option.value === filters.get('access'))?.label || '' });
@@ -34,8 +34,8 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
   const shuffle = new URLSearchParams(filters);
   shuffle.set('seed', loading ? '0000000000000000' : defaultFeedSeed(filters.get('seed') || ''));
   shuffle.delete('page');
-  const filterForm = `<form id="individual-search" class="catalog-filters" role="search" action="/hub/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
-    + `<div class="catalog-primary"><label class="catalog-query"><span class="sr-only">Search datasets</span><input aria-label="Search datasets" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"><span id="catalog-count" class="catalog-count" role="status" aria-label="${countDescription}" title="${countDescription}">${loading ? 'Loading…' : result.total ? number(result.total) : 'No matches'}</span></label>`
+  const filterForm = `<search class="catalog-search"><form id="individual-search" class="catalog-filters" action="/hub/" method="get" data-page="${result.page}" data-pages="${result.pages}" data-total="${result.total}" data-generation="${escape(result.generation)}">`
+    + `<div class="catalog-primary"><label for="catalog-query" class="catalog-query"><span class="sr-only">Search datasets</span><input id="catalog-query" type="search" name="q" value="${escape(filters.get('q') || '')}" maxlength="160" placeholder="Search datasets or scenes…"><span id="catalog-count" class="catalog-count" role="status" aria-label="${countDescription}" title="${countDescription}">${loading ? 'Loading…' : result.total ? number(result.total) : 'No matches'}</span></label>`
     + select('dataset', 'Collection', 'All collections', individualDatasetOptions(index.sources, filters.get('dataset') || ''), true)
     + `<button type="submit" class="button icon-button" aria-label="Search" title="Search">${icon('search')}</button>`
     + `<details class="catalog-advanced"${activeFilters.count ? ' data-active' : ''}><summary class="button icon-button" title="${escape(activeFilters.description)}"><span class="sr-only" data-filter-description>${escape(activeFilters.description)}</span>${icon('filters')}<span class="catalog-filter-count" aria-hidden="true"${activeFilters.count ? '' : ' hidden'}>${activeFilters.count}</span></summary><div class="catalog-secondary">`
@@ -52,7 +52,7 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + select('license', 'License', 'All reported licenses', values(index.sources.map(source => source.license)))
     + select('status', 'Evidence', 'All evidence levels', values(Object.keys(index.levels).filter(value => value !== 'Access required' || filters.get('status') === value)))
     + '</div></details></div></details></div>'
-    + ['delivery', 'viewer', 'viewerHost', 'seed'].map(field => `<input type="hidden" name="${field}" value="${escape(filters.get(field) || '')}">`).join('') + '</form>';
+    + ['delivery', 'viewer', 'viewerHost', 'seed'].map(field => `<input type="hidden" name="${field}" value="${escape(filters.get(field) || '')}">`).join('') + '</form></search>';
   const notes = '<details class="catalog-notes"><summary class="button icon-button" title="About this catalog"><span class="sr-only">About this catalog</span>' + icon('info') + '</summary><div>'
     + `<p class="catalog-totals">${number(index.total)} scene entries · ${number(index.sources.filter(source => source.count).length)} sources</p>`
     + `<p id="catalog-saved-filters" class="note"${savedFilters ? '' : ' hidden'}>${escape(savedFilters)}</p>`
@@ -67,9 +67,9 @@ export function individualIndexPage(location: HubLocation, index: IndividualInde
     + `<a id="catalog-reset" class="button icon-button" href="${escape(hubViewerLink('/hub/', location.viewerHost))}" aria-label="Reset" title="Reset filters">${icon('reset')}</a>` + notes;
   return page(location, 'Public datasets', '<div class="catalog-index"><h1 class="sr-only">Public datasets</h1>'
     + '<section id="shared-datasets" class="shared-datasets" aria-label="Shared on Hub" hidden><h2>Shared on Hub</h2>'
-    + '<p role="status">Loading shared datasets…</p><div class="dataset-grid" aria-label="Shared datasets"></div>'
+    + '<p role="status">Loading shared datasets…</p><div class="dataset-grid"></div>'
     + '<button type="button" class="button" data-shared-more hidden>Load more shared datasets</button></section>'
-    + `<div id="catalog-results" class="dataset-grid dataset-feed" aria-label="Scene feed">${loading ? '<p>Loading datasets…</p>' : result.entries.length ? result.entries.map(entry => catalogCard(entry, location.viewerHost)).join('') : emptyCatalogHtml(resetUrl)}</div>`
+    + `<div id="catalog-results" class="dataset-grid dataset-feed">${loading ? '<p>Loading datasets…</p>' : result.entries.length ? result.entries.map((entry, index) => catalogCard(entry, location.viewerHost, undefined, index < 3)).join('') : emptyCatalogHtml(resetUrl)}</div>`
     + '<div id="catalog-sentinel" aria-hidden="true"></div>'
     + `<p id="catalog-end" class="catalog-end"${result.page === result.pages && result.total ? '' : ' hidden'}>You’ve reached the end of these scenes. <a id="catalog-reshuffle" href="${escape(individualBrowseUrl(shuffle))}">Shuffle again</a></p>`
     + '<nav class="catalog-pagination" aria-label="Dataset pages">'

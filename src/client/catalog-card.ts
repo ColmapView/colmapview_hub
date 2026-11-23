@@ -19,31 +19,48 @@ export function initializeCatalogMetadata(): void {
     const box = panel.getBoundingClientRect();
     return event.clientX < box.left || event.clientX >= box.right || event.clientY < box.top || event.clientY >= box.bottom;
   };
+  const hasNativeClosedBy = 'closedBy' in HTMLDialogElement.prototype;
+  const copying = new WeakSet<HTMLButtonElement>();
+  const copyTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+  const lastCopyMessages = new WeakMap<HTMLElement, string>();
   let backdrop: HTMLDialogElement | null = null;
-  // Require both the press and click on the backdrop, so dragging out of the
-  // panel while selecting text does not dismiss it.
-  document.addEventListener('pointerdown', event => {
-    backdrop = isPanel(event.target) && outside(event.target, event) ? event.target : null;
-  });
+  if (!hasNativeClosedBy) {
+    // Require both the press and click on the backdrop, so dragging out of the
+    // panel while selecting text does not dismiss it.
+    document.addEventListener('pointerdown', event => {
+      backdrop = isPanel(event.target) && outside(event.target, event) ? event.target : null;
+    });
+  }
   document.addEventListener('click', event => {
     const target = event.target;
     if (!(target instanceof Element)) return;
     const copy = target.closest<HTMLButtonElement>('[data-copy-dataset-link]');
     if (copy) {
+      if (copying.has(copy)) return;
       const path = copy.dataset.copyDatasetLink || '';
       if (!(path.startsWith(`${DATASET_SHARE_PATH}/`) && datasetShareId(path.slice(DATASET_SHARE_PATH.length + 1)))
         && !(path.startsWith(`${SHARE_PATH}/`) && ID_PATTERN.test(path.slice(SHARE_PATH.length + 1)))) return;
       const status = copy.parentElement?.querySelector<HTMLElement>('[data-copy-status]');
       const url = new URL(path, canonicalHubOrigin()).href;
-      copy.disabled = true;
+      copying.add(copy);
       void Promise.resolve().then(() => navigator.clipboard.writeText(url)).then(() => {
-        if (status) status.textContent = 'Link copied';
+        if (!status) return;
+        clearTimeout(copyTimers.get(status));
+        let message = 'Link copied';
+        if (lastCopyMessages.get(status) === message) message += '\u00A0';
+        lastCopyMessages.set(status, message);
+        status.textContent = message;
+        copyTimers.set(status, setTimeout(() => {
+          status.textContent = '';
+          lastCopyMessages.delete(status);
+        }, 3000));
       }).catch(() => {
-        if (status) {
-          const link = document.createElement('a'); link.href = url; link.textContent = url;
-          status.replaceChildren('Copy this link: ', link);
-        }
-      }).finally(() => { copy.disabled = false; });
+        if (!status) return;
+        clearTimeout(copyTimers.get(status));
+        lastCopyMessages.delete(status);
+        const link = document.createElement('a'); link.href = url; link.textContent = url;
+        status.replaceChildren('Copy this link: ', link);
+      }).finally(() => { copying.delete(copy); });
       return;
     }
     const button = target.closest<HTMLButtonElement>('.dataset-info');
@@ -56,7 +73,7 @@ export function initializeCatalogMetadata(): void {
       }
     } else if (target.closest('.dataset-metadata-close')) {
       target.closest<HTMLDialogElement>('.dataset-metadata')?.close();
-    } else if (isPanel(target) && backdrop === target && outside(target, event)) {
+    } else if (!hasNativeClosedBy && isPanel(target) && backdrop === target && outside(target, event)) {
       target.close();
     }
     backdrop = null;
@@ -67,6 +84,6 @@ export function initializeCatalogMetadata(): void {
     if (!isPanel(event.target) || event.target.open) return;
     const button = event.target.closest('[data-dataset-card]')?.querySelector<HTMLButtonElement>('.dataset-info');
     button?.setAttribute('aria-expanded', 'false');
-    button?.focus({ preventScroll: true });
+    if (document.activeElement === document.body) button?.focus();
   }, true);
 }

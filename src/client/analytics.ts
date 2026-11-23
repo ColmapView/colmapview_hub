@@ -129,13 +129,13 @@ export function initializeAnalytics(): void {
     settings.focus({ preventScroll: true });
   };
   settings.hidden = false;
-  settings.onclick = () => show(panel.hidden, true);
-  close.onclick = () => show(false, true);
+  settings.addEventListener('click', () => show(panel.hidden, true));
+  close.addEventListener('click', () => show(false, true));
   panel.addEventListener('keydown', event => {
     if (event.key === 'Escape') { event.preventDefault(); show(false, true); }
   });
-  allow.onclick = () => choose('allow');
-  decline.onclick = () => choose('decline');
+  allow.addEventListener('click', () => choose('allow'));
+  decline.addEventListener('click', () => choose('decline'));
   window.addEventListener('storage', event => {
     if (event.key === CHOICE_KEY || event.key === null) reconcile();
   });

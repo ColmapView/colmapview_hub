@@ -113,8 +113,10 @@ export function sceneDataText(contents?: SceneContents): string {
   }).join(', ');
 }
 
-export function sceneContentsHtml(contents?: SceneContents): string {
-  if (!contents || !Object.keys(contents).length) return '';
+export function sceneContentItems(contents?: SceneContents): {
+  kind: SceneDataKind; status: SceneDataStatus; suffix: string; title: string; label: string;
+}[] {
+  if (!contents) return [];
   const notes: Record<SceneDataStatus, string> = {
     checked: 'Presence checked. Complete loading and alignment have separate evidence.',
     listed: 'Listed in this scene. Complete loading and alignment have separate evidence.',
@@ -122,27 +124,34 @@ export function sceneContentsHtml(contents?: SceneContents): string {
     archive: 'This data is stored in an archive. Check the scene’s loading details for automatic loading or source-access requirements.',
     partial: 'Some registered images are available; the photo audit records the coverage.',
   };
-  return '<ul class="dataset-contents" aria-label="Available data">'
-    + (Object.keys(SCENE_DATA_LABELS) as SceneDataKind[]).filter(kind => contents[kind]).map(kind => {
-      const evidence = contents[kind]!;
-      const candidate = isGaussianCandidate(kind, evidence.status);
-      const suffix = evidence.sourceFormat === 'video' ? ' · video frames'
-        : { checked: '', listed: ' · listed', needs_setup: ' · setup', archive: ' · archive', partial: ' · partial' }[evidence.status];
-      const units: Record<SceneDataKind, string> = { images: 'images', cameras: 'camera definitions', point_cloud: 'points',
-        splats: `${candidate ? 'candidate' : 'Gaussian'} ${evidence.count === 1 ? 'file' : 'files'}`, masks: 'masks', meshes: 'mesh files', geometry: 'model files' };
-      const count = evidence.count ? `${evidence.count.toLocaleString('en-US')} ${units[kind]}. ` : '';
-      const note = kind === 'splats' && evidence.status === 'checked'
-        ? 'Gaussian format verified. Sparse-point counts exclude Gaussians. Complete loading and alignment have separate evidence.'
-        : candidate
-          ? 'Gaussian content is unverified. ' + notes[evidence.status] : notes[evidence.status];
-      return `<li data-asset="${kind}" data-asset-status="${evidence.status}" title="${escape(count + note)}">${sceneDataLabel(kind, evidence.status)}${suffix}</li>`;
-    }).join('') + '</ul>';
+  return (Object.keys(SCENE_DATA_LABELS) as SceneDataKind[]).filter(kind => contents[kind]).map(kind => {
+    const evidence = contents[kind]!;
+    const candidate = isGaussianCandidate(kind, evidence.status);
+    const suffix = evidence.sourceFormat === 'video' ? ' · video frames'
+      : { checked: '', listed: ' · listed', needs_setup: ' · setup', archive: ' · archive', partial: ' · partial' }[evidence.status];
+    const units: Record<SceneDataKind, string> = { images: 'images', cameras: 'camera definitions', point_cloud: 'points',
+      splats: `${candidate ? 'candidate' : 'Gaussian'} ${evidence.count === 1 ? 'file' : 'files'}`, masks: 'masks', meshes: 'mesh files', geometry: 'model files' };
+    const count = evidence.count ? `${evidence.count.toLocaleString('en-US')} ${units[kind]}. ` : '';
+    const note = kind === 'splats' && evidence.status === 'checked'
+      ? 'Gaussian format verified. Sparse-point counts exclude Gaussians. Complete loading and alignment have separate evidence.'
+      : candidate
+        ? 'Gaussian content is unverified. ' + notes[evidence.status] : notes[evidence.status];
+    return { kind, status: evidence.status, suffix, title: count + note, label: sceneDataLabel(kind, evidence.status) };
+  });
 }
 
-export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }, compact = false, assetOrigin = ''): string {
+export function sceneContentsHtml(contents?: SceneContents): string {
+  if (!contents || !Object.keys(contents).length) return '';
+  return '<ul class="dataset-contents" aria-label="Available data">' + sceneContentItems(contents)
+    .map(({ kind, status, title, label, suffix }) => `<li data-asset="${kind}" data-asset-status="${status}" title="${escape(title)}">${label}${suffix}</li>`)
+    .join('') + '</ul>';
+}
+
+export function sceneThumbnailHtml(entry: { title: string; license: string; licenseCategory?: LicenseCategory; thumbnail?: SceneThumbnail }, compact = false, assetOrigin = '', eager = false): string {
   const thumbnail = entry.thumbnail;
   if (!thumbnail || !isSceneThumbnail(thumbnail) || thumbnail.datasetLicense !== entry.license) return '';
-  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(assetOrigin + thumbnail.url)}" width="${thumbnail.width}" height="${thumbnail.height}" loading="lazy" decoding="async" alt="${escape(`${thumbnail.videoFrame ? 'Video frame' : 'Scene photograph'} from ${entry.title}`)}">`
+  const loading = eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+  return `<figure class="dataset-preview"><img class="dataset-thumbnail" src="${escape(assetOrigin + thumbnail.url)}" width="${thumbnail.width}" height="${thumbnail.height}" ${loading} decoding="async" alt="${escape(`${thumbnail.videoFrame ? 'Video frame' : 'Scene photograph'} from ${entry.title}`)}">`
     + (compact ? '' : `<figcaption>${sceneThumbnailCreditHtml(thumbnail)}</figcaption>`) + '</figure>';
 }
 

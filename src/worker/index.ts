@@ -97,10 +97,14 @@ function withSharedHeaders(request: Request, result: Response, location?: HubLoc
   }
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  headers.set('Permissions-Policy', 'camera=(), geolocation=(), microphone=()');
   if (!viewer) headers.set('Referrer-Policy', 'no-referrer');
   const publicCatalog = [200, 304].includes(result.status) && htmlResponse
     && /^\/hub\/(?:$|entry\/data-[a-f0-9]{24}$)/.test(new URL(request.url).pathname);
-  if (!viewer) headers.set('Content-Security-Policy', publicCatalog ? contentSecurityPolicy(Boolean(location?.local), true) : location?.local ? LOCAL_CSP : CSP);
+  if (!viewer) {
+    headers.set('X-Frame-Options', 'DENY');
+    headers.set('Content-Security-Policy', publicCatalog ? contentSecurityPolicy(Boolean(location?.local), true) : location?.local ? LOCAL_CSP : CSP);
+  }
   return new Response(request.method === 'HEAD' ? null : result.body, { status: result.status, headers });
 }
 

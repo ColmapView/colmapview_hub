@@ -49,7 +49,7 @@ export function catalogEntryContent(entry: CatalogEntry, host?: ViewerHost, fron
       + (audit.sourceUrl ? `<p><a href="${escape(audit.sourceUrl)}" rel="noreferrer">Inspected source ↗</a></p>` : '')
       + facts(audit.facts) + '</details>';
   }).join('');
-  const preview = sceneThumbnailHtml(entry, false, frontend === 'github' ? HUB_ORIGIN : '');
+  const preview = sceneThumbnailHtml(entry, false, frontend === 'github' ? HUB_ORIGIN : '', true);
   return (
     `<p class="dataset-back"><a href="${escape(hubViewerLink('/hub/', host))}">← All datasets</a></p>`
     + `<div class="dataset-overview${preview ? ' dataset-overview-has-preview' : ''}" data-entry-id="${escape(entry.id)}">`
