@@ -19,18 +19,16 @@ export function initializeCatalogMetadata(): void {
     const box = panel.getBoundingClientRect();
     return event.clientX < box.left || event.clientX >= box.right || event.clientY < box.top || event.clientY >= box.bottom;
   };
-  const hasNativeClosedBy = 'closedBy' in HTMLDialogElement.prototype;
   const copying = new WeakSet<HTMLButtonElement>();
   const copyTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
   const lastCopyMessages = new WeakMap<HTMLElement, string>();
   let backdrop: HTMLDialogElement | null = null;
-  if (!hasNativeClosedBy) {
-    // Require both the press and click on the backdrop, so dragging out of the
-    // panel while selecting text does not dismiss it.
-    document.addEventListener('pointerdown', event => {
-      backdrop = isPanel(event.target) && outside(event.target, event) ? event.target : null;
-    });
-  }
+  // Require both the press and click on the backdrop, so dragging out of the
+  // panel while selecting text does not dismiss it. Native closedby="any" closes at
+  // pointerup, and a touch tap's click then lands on the card link underneath.
+  document.addEventListener('pointerdown', event => {
+    backdrop = isPanel(event.target) && outside(event.target, event) ? event.target : null;
+  });
   document.addEventListener('click', event => {
     const target = event.target;
     if (!(target instanceof Element)) return;
@@ -73,7 +71,7 @@ export function initializeCatalogMetadata(): void {
       }
     } else if (target.closest('.dataset-metadata-close')) {
       target.closest<HTMLDialogElement>('.dataset-metadata')?.close();
-    } else if (!hasNativeClosedBy && isPanel(target) && backdrop === target && outside(target, event)) {
+    } else if (isPanel(target) && backdrop === target && outside(target, event)) {
       target.close();
     }
     backdrop = null;

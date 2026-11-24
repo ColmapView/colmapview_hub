@@ -44,7 +44,7 @@ export function catalogCardHtml(entry: CatalogSummary, host?: ViewerHost, fronte
     + `<span class="dataset-tag" data-license-category="${category}" aria-label="License: ${escape(entry.license)}">${escape(licenseTagLabel(entry.license, category))}</span></div>`
     + (!canOpen ? '<p class="dataset-link-note">Source only</p>' : !entry.hasViewer ? '<p class="dataset-link-note">Try · unchecked ↗</p>' : '')
     + '</div>'
-    + `<dialog class="dataset-metadata" closedby="any" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
+    + `<dialog class="dataset-metadata" id="${metadataId}" aria-label="${escape(`Metadata for ${entry.title}`)}">`
     + `<div class="dataset-metadata-header"><h2>Dataset information</h2><button type="button" class="dataset-metadata-close icon-button" aria-label="Close" title="Close" autofocus>${icon('close')}</button></div>`
     + '<div class="dataset-metadata-content">'
     + `<h3 class="dataset-metadata-title">${escape(title).replaceAll('_', '_<wbr>')}</h3>` + sceneStatisticsHtml(entry.sceneStats)

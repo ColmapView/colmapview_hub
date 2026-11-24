@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.20.16 — 2026-11-24
+
+- Dismiss the dataset information panel with the hand-written backdrop check again instead of `closedby="any"`: on touch screens the native dismissal closed the panel before the tap's click, which then opened the card underneath.
+
 ## 0.20.15 — 2026-11-24
 
 - Name the catalog search field and filters by `aria-label` again: the search field's name no longer includes the result count, and the browser checks that look the filters up by exact label pass again.

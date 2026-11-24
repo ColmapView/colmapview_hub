@@ -59,7 +59,7 @@ function sharedCard(entry: SharedDataset, hubPath: string, host?: ViewerHost): H
   const image = document.createElement('img'); image.src = entry.previewBase64 ? `data:image/jpeg;base64,${entry.previewBase64}` : `${hubPath}/${entry.id}/preview.jpg`; image.alt = ''; image.loading = 'lazy';
   image.width = 320; image.height = 168; image.className = 'shared-dataset-preview';
   const originalUrl = publicationSource(entry.viewerUrl);
-  const panel = document.createElement('dialog'); panel.className = 'dataset-metadata'; panel.setAttribute('closedby', 'any'); panel.id = `metadata-shared-${entry.id}`;
+  const panel = document.createElement('dialog'); panel.className = 'dataset-metadata'; panel.id = `metadata-shared-${entry.id}`;
   panel.setAttribute('aria-label', `Metadata for ${entry.title}`);
   const header = document.createElement('div'); header.className = 'dataset-metadata-header';
   const panelTitle = document.createElement('h2'); panelTitle.textContent = 'Dataset information';
