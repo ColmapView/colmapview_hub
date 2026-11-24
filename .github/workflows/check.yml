@@ -4,7 +4,7 @@ permissions:
   contents: read
 jobs:
   secrets:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
@@ -21,7 +21,7 @@ jobs:
           tar --extract --gzip --file "$RUNNER_TEMP/gitleaks/archive.tar.gz" --directory "$RUNNER_TEMP/gitleaks" gitleaks
           "$RUNNER_TEMP/gitleaks/gitleaks" git . --log-opts="--all --full-history" --redact=100 --ignore-gitleaks-allow --max-archive-depth=2 --no-banner --no-color
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:

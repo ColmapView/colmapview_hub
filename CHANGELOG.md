@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.20.15 — 2026-11-24
+
+- Name the catalog search field and filters by `aria-label` again: the search field's name no longer includes the result count, and the browser checks that look the filters up by exact label pass again.
+- Keep the gallery from scrolling behind an open dataset information panel in Firefox and Safari, which do not contain scrolling on a box with nothing to scroll.
+- Pin the Hub workflows to `ubuntu-24.04`: Playwright `1.58` cannot install Chromium on the `ubuntu-latest` image, so the browser checks had stopped running.
+
 ## 0.20.14 — 2026-11-23
 
 - Preserve `data-*`, ARIA, and inline SVG attributes when parsing catalog entry fragments on GitHub Pages by using inert `DOMParser` validation instead of default `Document.parseHTML()` sanitization.

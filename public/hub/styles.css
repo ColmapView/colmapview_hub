@@ -190,6 +190,8 @@ html:has(.catalog-browse) { scroll-padding-block: 72px; }
 .dataset-metadata[open] { display: flex; flex-direction: column; }
 .dataset-metadata:modal { overscroll-behavior: contain; }
 .dataset-metadata::backdrop { background: rgb(0 0 0 / .35); overflow: hidden; overscroll-behavior: contain; }
+/* Firefox and Safari ignore overscroll containment on a box with nothing to scroll: lock the page too. */
+body:has(.dataset-metadata[open]) { overflow: hidden; }
 .dataset-metadata-header { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-shrink: 0; padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border-color); }
 .dataset-metadata-header h2 { font-size: 1rem; font-weight: 600; }
 .dataset-metadata-content { flex: 1; min-height: 0; padding: var(--sp-4); overflow-y: auto; overscroll-behavior: contain; }
